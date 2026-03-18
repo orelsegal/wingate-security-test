@@ -27,7 +27,7 @@ const StudentsPage = () => {
 
   const filtered = useMemo(() => {
     return baseData.filter((s) => {
-      if (search && !s.name.includes(search) && !s.branch.includes(search)) return false;
+      if (search && !s.name.includes(search) && !s.branch.includes(search) && !s.grade.includes(search)) return false;
       if (statusFilter && s.status !== statusFilter) return false;
       if (branchFilter && s.branch !== branchFilter) return false;
       if (gradeFilter && s.grade !== gradeFilter) return false;
