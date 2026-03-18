@@ -22,9 +22,9 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         <div className="w-7 h-7 rounded-lg overflow-hidden md:hidden shrink-0">
           <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
         </div>
-        <span className="text-foreground font-semibold text-[14px]">לוח ראשי</span>
+        <span className="text-foreground font-semibold text-[14px]">האקדמיה למצוינות</span>
         <span className="text-border hidden sm:inline">/</span>
-        <span className="text-muted-foreground text-[13px] hidden sm:inline">סקירה כללית</span>
+        <span className="text-muted-foreground text-[13px] hidden sm:inline">מעקב אקדמי</span>
       </div>
 
       <div className="flex items-center gap-2">

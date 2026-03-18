@@ -32,11 +32,11 @@ const LoginPage = () => {
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-[22px] font-semibold text-foreground tracking-tight">
-              האקדמיה למצוינות בספורט
+           <h1 className="text-[22px] font-semibold text-foreground tracking-tight">
+              ברוכים הבאים לאקדמיה
             </h1>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              מערכת מעקב אקדמי · מכון וינגייט
+              מערכת המעקב האקדמי של מכון וינגייט
             </p>
           </div>
         </div>
@@ -44,7 +44,7 @@ const LoginPage = () => {
         {/* Divider */}
         <div className="flex items-center gap-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <div className="flex-1 h-px bg-border" />
-          <span className="text-[12px] text-muted-foreground/60 px-1">כניסה למערכת</span>
+          <span className="text-[12px] text-muted-foreground/60 px-1">בחרו תפקיד להתחברות</span>
           <div className="flex-1 h-px bg-border" />
         </div>
 
@@ -78,7 +78,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <p className="text-[11px] text-muted-foreground/40 text-center leading-relaxed">
-          גרסת הדגמה · אין צורך בסיסמה
+          סביבת הדגמה · ללא סיסמה · לחצו על תפקיד כדי להיכנס
         </p>
       </div>
     </div>

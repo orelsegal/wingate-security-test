@@ -77,9 +77,9 @@ const StudentsPage = () => {
   return (
     <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
       <div className="space-y-1.5">
-        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">ספורטאים</h2>
+        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">הספורטאים שלנו</h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : "רשומים"} &middot; {filtered.length} מוצגים
+          {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : "באקדמיה"} &middot; מוצגים {filtered.length}
         </p>
       </div>
 
@@ -91,7 +91,7 @@ const StudentsPage = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="חיפוש לפי שם, ענף או כיתה..."
+            placeholder="מחפשים ספורטאי? הקלידו שם, ענף או כיתה..."
             className="w-full h-10 ps-10 pe-4 bg-accent/50 border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-150"
           />
           {search && (
@@ -197,7 +197,7 @@ const StudentsPage = () => {
 
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-[13px] text-muted-foreground">
-            לא נמצאו ספורטאים התואמים את הסינון
+            לא מצאנו ספורטאים שמתאימים לחיפוש — נסו לשנות את הסינון
           </div>
         ) : (
           filtered.map((student, i) => (

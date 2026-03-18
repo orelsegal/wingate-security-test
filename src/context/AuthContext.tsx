@@ -34,10 +34,10 @@ export const roleLabels: Record<UserRole, string> = {
 };
 
 export const roleDescriptions: Record<UserRole, string> = {
-  admin: "גישה מלאה לכל הנתונים וההגדרות",
-  teacher: "צפייה בכל הספורטאים והמקצועות",
-  parent: "צפייה בנתוני הילד/ה בלבד",
-  coach: "צפייה בספורטאי הענף בלבד",
+  admin: "ניהול מלא — ספורטאים, ציונים, דוחות והגדרות",
+  teacher: "מעקב אחר כל הספורטאים והמקצועות",
+  parent: "צפייה בהתקדמות הילד/ה שלי",
+  coach: "מעקב אחר ספורטאי הענף שלי",
 };
 
 /** Demo users for each role */

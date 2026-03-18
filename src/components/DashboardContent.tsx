@@ -8,10 +8,10 @@ const totalSubjects = 6;
 const totalIndicators = totalStudents * totalSubjects;
 
 const stats = [
-  { label: "ספורטאים", value: String(totalStudents), icon: Users, subtitle: "רשומים במערכת", description: "מספר הספורטאים הפעילים באקדמיה" },
-  { label: "מדדי התקדמות", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "סה״כ נקודות מעקב אקדמיות" },
-  { label: "ממוצע ציונים", value: "82.4", icon: TrendingUp, subtitle: "+1.2 מהסמסטר הקודם", description: "ממוצע משוקלל כלל המקצועות" },
-  { label: "התראות", value: "7", icon: AlertTriangle, subtitle: "ספורטאים בסיכון", description: "דורשים התייחסות מיידית" },
+  { label: "ספורטאים פעילים", value: String(totalStudents), icon: Users, subtitle: "רשומים באקדמיה", description: "כל הספורטאים הפעילים בתוכנית" },
+  { label: "נקודות מעקב", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "סה״כ מדדים אקדמיים במעקב" },
+  { label: "ממוצע כללי", value: "82.4", icon: TrendingUp, subtitle: "עלייה של 1.2 מהסמסטר הקודם", description: "ממוצע משוקלל של כל המקצועות" },
+  { label: "דורשים תשומת לב", value: "7", icon: AlertTriangle, subtitle: "ספורטאים שצריך לטפל בהם", description: "מצריכים התערבות של הצוות החינוכי" },
 ];
 
 const branches = [
@@ -35,10 +35,10 @@ const DashboardContent = () => {
       {/* Page Title */}
       <div className="space-y-1.5">
         <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">
-          סקירה כללית
+          מה המצב היום?
         </h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          האקדמיה למצוינות בספורט &middot; מכון וינגייט &middot; סמסטר א׳ תשפ״ה
+          תמונת מצב אקדמית &middot; האקדמיה למצוינות בספורט &middot; סמסטר א׳ תשפ״ה
         </p>
       </div>
 
@@ -67,10 +67,10 @@ const DashboardContent = () => {
         <div className="lg:col-span-3 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              מצב אקדמי לפי ענף
+              איך הענפים מתקדמים?
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              סטטוס כללי של כל ענף ספורט
+              תמונת מצב אקדמית לפי ענף ספורט
             </p>
           </div>
 
@@ -87,13 +87,13 @@ const DashboardContent = () => {
                   <div className="flex items-center gap-4">
                     <span className="text-[13px] font-medium text-foreground w-20">{branch.name}</span>
                     <div className="hidden sm:flex items-center gap-3 text-[12px] text-muted-foreground">
-                      <span>{branch.green} תקין</span>
+                      <span>{branch.green} במסלול</span>
                       <span className="text-border">·</span>
                       <span>{branch.yellow} במעקב</span>
                       {branch.red > 0 && (
                         <>
                           <span className="text-border">·</span>
-                          <span>{branch.red} בסיכון</span>
+                          <span>{branch.red} דורשים התערבות</span>
                         </>
                       )}
                     </div>
@@ -122,10 +122,10 @@ const DashboardContent = () => {
         <div className="lg:col-span-2 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              התראות אחרונות
+              שימו לב אליהם 👀
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              ספורטאים שדורשים תשומת לב
+              ספורטאים שמצריכים מענה מהצוות
             </p>
           </div>
 

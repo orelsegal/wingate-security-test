@@ -157,7 +157,7 @@ const StudentProfilePage = () => {
         className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-150"
       >
         <ArrowRight className="h-4 w-4" />
-        <span>חזרה לרשימת ספורטאים</span>
+        <span>חזרה לכל הספורטאים</span>
       </button>
 
       {/* Hero Card - Student Info */}
@@ -189,7 +189,7 @@ const StudentProfilePage = () => {
           {/* Progress Ring */}
           <div className="flex flex-col items-center gap-2 shrink-0">
             <ProgressRing value={student.overallProgress} />
-            <span className="text-[12px] text-muted-foreground">התקדמות כללית</span>
+            <span className="text-[12px] text-muted-foreground">ציון משוקלל</span>
           </div>
         </div>
       </div>
@@ -199,8 +199,8 @@ const StudentProfilePage = () => {
         {/* Bar Chart - Grades per Subject */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">ציונים לפי מקצוע</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">השוואת ציונים בין המקצועות</p>
+            <h3 className="text-[15px] font-semibold text-foreground">איפה עומדים הציונים?</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">השוואה בין כל המקצועות</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={student.subjects.map(s => ({ name: s.name, ציון: s.grade }))} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
@@ -219,8 +219,8 @@ const StudentProfilePage = () => {
         {/* Radar Chart - Overall Profile */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">פרופיל אקדמי</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">מיפוי חוזקות וחולשות</p>
+            <h3 className="text-[15px] font-semibold text-foreground">חוזקות וחולשות</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">מבט רחב על הפרופיל האקדמי</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <RadarChart data={student.subjects.map(s => ({ subject: s.name, ציון: s.grade, fullMark: 100 }))}>
@@ -236,8 +236,8 @@ const StudentProfilePage = () => {
       {/* Trend Chart - Simulated semester progress */}
       <div className="card-premium p-5 md:p-7">
         <div className="mb-6">
-          <h3 className="text-[15px] font-semibold text-foreground">מגמת התקדמות</h3>
-          <p className="text-[13px] text-muted-foreground mt-1">ציון ממוצע לפי חודשים &middot; סמסטר א׳ תשפ״ה</p>
+          <h3 className="text-[15px] font-semibold text-foreground">לאן פנינו? 📈</h3>
+          <p className="text-[13px] text-muted-foreground mt-1">מגמת הממוצע לאורך סמסטר א׳ תשפ״ה</p>
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={(() => {
@@ -261,7 +261,7 @@ const StudentProfilePage = () => {
 
       {/* Subjects Grid */}
       <div>
-        <h3 className="text-[15px] font-semibold text-foreground mb-4">מקצועות לימוד</h3>
+        <h3 className="text-[15px] font-semibold text-foreground mb-4">פירוט לפי מקצוע</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {student.subjects.map((subject) => (
             <div key={subject.name} className="card-premium p-5">
@@ -303,7 +303,7 @@ const StudentProfilePage = () => {
               {subject.coveredTopics && subject.coveredTopics.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border space-y-3">
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">נושאים שנלמדו</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">כבר למדנו</p>
                     <div className="flex flex-wrap gap-1.5">
                       {subject.coveredTopics.map((topic) => (
                         <span key={topic} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success/10 text-[11px] text-success font-medium">
@@ -318,7 +318,7 @@ const StudentProfilePage = () => {
                     <div>
                       <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-warning" />
-                        נושאים חסרים
+                        עוד צריך להשלים
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {subject.missingTopics.map((topic) => (
@@ -335,7 +335,7 @@ const StudentProfilePage = () => {
               {/* Milestones Roadmap */}
               {subject.milestones && subject.milestones.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-3">מפת דרכים</p>
+                  <p className="text-[11px] font-medium text-muted-foreground mb-3">שלבי התקדמות</p>
                   <div className="space-y-0">
                     {subject.milestones.map((ms, idx) => {
                       const isLast = idx === (subject.milestones?.length ?? 0) - 1;
@@ -390,8 +390,8 @@ const StudentProfilePage = () => {
         {/* Absences */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">רשימת חיסורים</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">חיסורים אחרונים</p>
+            <h3 className="text-[15px] font-semibold text-foreground">נוכחות והיעדרויות</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">היעדרויות אחרונות שנרשמו</p>
           </div>
           <div className="space-y-0.5">
             {student.absences.map((absence, i) => (
@@ -421,8 +421,8 @@ const StudentProfilePage = () => {
         {/* Roadmap */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">מפת דרכים</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">משימות ויעדים קרובים</p>
+            <h3 className="text-[15px] font-semibold text-foreground">מה בתכנית? ✅</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">משימות ויעדים שצריך להשלים</p>
           </div>
           <div className="space-y-1">
             {student.roadmap.map((item, i) => (
@@ -453,7 +453,7 @@ const StudentProfilePage = () => {
           {/* Progress summary */}
           <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
             <span className="text-[12px] text-muted-foreground">
-              {student.roadmap.filter(r => r.done).length} מתוך {student.roadmap.length} הושלמו
+              הושלמו {student.roadmap.filter(r => r.done).length} מתוך {student.roadmap.length}
             </span>
             <div className="w-24 h-1.5 rounded-full bg-accent overflow-hidden">
               <div

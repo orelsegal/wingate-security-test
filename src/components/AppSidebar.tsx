@@ -4,12 +4,12 @@ import { useAuth, roleLabels } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 const allMenuItems = [
-  { title: "לוח ראשי", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
-  { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
-  { title: "קורסים", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
-  { title: "ציונים", icon: GraduationCap, path: "/grades", roles: ["admin", "teacher"] },
-  { title: "דוחות", icon: BarChart3, path: "/reports", roles: ["admin"] },
-  { title: "הגדרות", icon: Settings, path: "/settings", roles: ["admin"] },
+  { title: "סקירה כללית", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
+  { title: "הספורטאים שלנו", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
+  { title: "מקצועות לימוד", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
+  { title: "ציונים והערכות", icon: GraduationCap, path: "/grades", roles: ["admin", "teacher"] },
+  { title: "דוחות וניתוח", icon: BarChart3, path: "/reports", roles: ["admin"] },
+  { title: "הגדרות מערכת", icon: Settings, path: "/settings", roles: ["admin"] },
 ];
 
 interface AppSidebarProps {
@@ -45,7 +45,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-5 space-y-0.5">
-        <p className="text-[11px] font-medium text-muted-foreground/50 tracking-wider px-4 mb-3">ניווט ראשי</p>
+        <p className="text-[11px] font-medium text-muted-foreground/50 tracking-wider px-4 mb-3">תפריט</p>
         {menuItems.map((item) => {
           const active = location.pathname === item.path;
           return (
