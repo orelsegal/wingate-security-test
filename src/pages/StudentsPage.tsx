@@ -105,7 +105,7 @@ const StudentsPage = () => {
 
         <div className="flex flex-wrap gap-2 md:gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-[12px] text-muted-foreground ms-1 me-1">סטטוס:</span>
+            <span className="text-[12px] text-muted-foreground ms-1 me-1">סטטוס כולל:</span>
             {(["green", "yellow", "red"] as StatusType[]).map((type) => {
               const config = statusConfig[type];
               const active = statusFilter === type;
