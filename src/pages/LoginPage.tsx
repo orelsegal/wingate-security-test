@@ -32,11 +32,11 @@ const LoginPage = () => {
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-[22px] font-semibold text-foreground tracking-tight">
-              האקדמיה למצוינות בספורט
+           <h1 className="text-[22px] font-semibold text-foreground tracking-tight">
+              ברוכים הבאים לאקדמיה
             </h1>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              מערכת מעקב אקדמי · מכון וינגייט
+              מערכת המעקב האקדמי של מכון וינגייט
             </p>
           </div>
         </div>
