@@ -24,7 +24,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-6" dir="rtl">
       <div className="w-full max-w-[420px] space-y-10">
         {/* Header */}
-        <div className="text-center space-y-5">
+        <div className="text-center space-y-5 animate-fade-in-up">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-card border border-border p-3 flex items-center justify-center shadow-sm">
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
