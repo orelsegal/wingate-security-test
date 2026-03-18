@@ -453,7 +453,7 @@ const StudentProfilePage = () => {
           {/* Progress summary */}
           <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
             <span className="text-[12px] text-muted-foreground">
-              {student.roadmap.filter(r => r.done).length} מתוך {student.roadmap.length} הושלמו
+              הושלמו {student.roadmap.filter(r => r.done).length} מתוך {student.roadmap.length}
             </span>
             <div className="w-24 h-1.5 rounded-full bg-accent overflow-hidden">
               <div
