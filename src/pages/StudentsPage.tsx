@@ -9,11 +9,38 @@ import type { StatusType } from "@/lib/studentData";
 
 const subjectNames = ["מתמטיקה", "אנגלית", "היסטוריה", "ספרות", "מדעים", "חינ״ג", "כללי"];
 
+const missingTopicsBySubject: Record<string, string[]> = {
+  "מתמטיקה": ["טריגונומטריה", "הסתברות", "חדו״א"],
+  "אנגלית": ["כתיבה אקדמית", "ספרות אנגלית"],
+  "היסטוריה": ["עת חדשה", "עבודת חקר"],
+  "ספרות": ["עבודת סיכום", "שירה מודרנית"],
+  "מדעים": ["כימיה", "ביולוגיה"],
+  "חינ״ג": ["מבחן שנתי"],
+  "כללי": ["פרויקט גמר", "מעורבות חברתית"],
+};
+
 const getSubjectStatus = (student: typeof studentsData[0], subject: string): StatusType => {
   const seed = student.id.charCodeAt(0) + subject.charCodeAt(0);
   if (student.status === "red") return seed % 3 === 0 ? "red" : seed % 3 === 1 ? "yellow" : "green";
   if (student.status === "yellow") return seed % 2 === 0 ? "yellow" : "green";
   return "green";
+};
+
+/** Get missing topics for a student based on their non-green subjects */
+const getMissingTopics = (student: typeof studentsData[0]): string[] => {
+  const missing: string[] = [];
+  for (const subj of subjectNames) {
+    const status = getSubjectStatus(student, subj);
+    if (status !== "green") {
+      const topics = missingTopicsBySubject[subj];
+      if (topics) {
+        // Pick 1 topic deterministically
+        const idx = (student.id.charCodeAt(0) + subj.charCodeAt(0)) % topics.length;
+        missing.push(topics[idx]);
+      }
+    }
+  }
+  return missing;
 };
 
 const branches = ["שחייה", "טניס", "כדורסל", "אתלטיקה", "התעמלות"];
