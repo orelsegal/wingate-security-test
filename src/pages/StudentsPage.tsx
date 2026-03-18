@@ -49,7 +49,7 @@ const StudentsPage = () => {
       <div className="space-y-1.5">
         <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">ספורטאים</h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          {studentsData.length} ספורטאים רשומים &middot; {filtered.length} מוצגים
+          {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : "רשומים"} &middot; {filtered.length} מוצגים
         </p>
       </div>
 
