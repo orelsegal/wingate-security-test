@@ -45,15 +45,15 @@
     --shadow-card: 0 1px 3px 0 hsla(215, 28%, 17%, 0.04), 0 1px 2px -1px hsla(215, 28%, 17%, 0.03);
     --shadow-card-hover: 0 4px 12px -2px hsla(215, 28%, 17%, 0.06), 0 2px 4px -2px hsla(215, 28%, 17%, 0.04);
 
-    --sidebar-background: 224 65% 33%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 40% 98%;
-    --sidebar-primary-foreground: 224 65% 33%;
-    --sidebar-accent: 224 55% 28%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 224 45% 40%;
-    --sidebar-ring: 210 40% 98%;
-    --sidebar-muted: 224 40% 45%;
+    --sidebar-background: 210 30% 96%;
+    --sidebar-foreground: 215 28% 20%;
+    --sidebar-primary: 224 55% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 25% 91%;
+    --sidebar-accent-foreground: 215 28% 17%;
+    --sidebar-border: 214 18% 90%;
+    --sidebar-ring: 224 55% 38%;
+    --sidebar-muted: 215 14% 55%;
   }
 }
 
