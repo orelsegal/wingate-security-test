@@ -16,6 +16,9 @@ const useBreadcrumbs = (): Crumb[] => {
   const location = useLocation();
   const path = location.pathname;
 
+  // On home page, no breadcrumbs needed
+  if (path === "/") return [];
+
   const crumbs: Crumb[] = [{ label: "דשבורד", path: "/" }];
 
   if (path.startsWith("/students")) {
@@ -57,32 +60,38 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
         </div>
 
-        {/* Breadcrumbs */}
-        <nav className="hidden md:flex items-center gap-1 text-[12px]" dir="rtl">
-          {crumbs.map((crumb, i) => {
-            const isLast = i === crumbs.length - 1;
-            return (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/25 shrink-0" strokeWidth={1.5} />}
-                {isLast || !crumb.path ? (
-                  <span className={isLast ? "text-foreground font-medium" : "text-muted-foreground"}>
-                    {crumb.label}
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => navigate(crumb.path!)}
-                    className="text-muted-foreground hover:text-foreground transition-colors duration-150"
-                  >
-                    {crumb.label}
-                  </button>
-                )}
-              </span>
-            );
-          })}
-        </nav>
-        <span className="md:hidden text-[13px] font-medium text-foreground">
-          {crumbs[crumbs.length - 1].label}
-        </span>
+        {/* Breadcrumbs — only on inner pages */}
+        {crumbs.length > 0 && (
+          <nav className="hidden md:flex items-center gap-1 text-[12px]" dir="rtl">
+            {crumbs.map((crumb, i) => {
+              const isLast = i === crumbs.length - 1;
+              return (
+                <span key={i} className="flex items-center gap-1">
+                  {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/25 shrink-0" strokeWidth={1.5} />}
+                  {isLast || !crumb.path ? (
+                    <span className={isLast ? "text-foreground font-medium" : "text-muted-foreground"}>
+                      {crumb.label}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => navigate(crumb.path!)}
+                      className="text-muted-foreground hover:text-foreground transition-colors duration-150"
+                    >
+                      {crumb.label}
+                    </button>
+                  )}
+                </span>
+              );
+            })}
+          </nav>
+        )}
+
+        {/* Mobile: show current page name only on inner pages */}
+        {isInnerPage && crumbs.length > 0 && (
+          <span className="md:hidden text-[13px] font-medium text-foreground">
+            {crumbs[crumbs.length - 1].label}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-1.5">
