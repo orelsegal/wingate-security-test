@@ -9,6 +9,9 @@ interface SubjectData {
   grade: number;
   status: StatusType;
   absences: number;
+  units?: number;
+  coveredTopics?: string[];
+  missingTopics?: string[];
 }
 
 interface RoadmapItem {
