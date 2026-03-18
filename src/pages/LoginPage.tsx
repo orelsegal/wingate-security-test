@@ -61,12 +61,12 @@ const LoginPage = () => {
         {/* Hero text */}
         <div className="text-center space-y-4 mb-6 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
           <h1 className="text-[26px] md:text-[30px] font-bold text-foreground tracking-tight leading-snug">
-            מובילים למצוינות —
+            מערכת מעקב אקדמי
             <br />
-            <span className="text-primary">גם בלימודים</span>
+            <span className="text-primary">האקדמיה למצוינות בספורט</span>
           </h1>
           <p className="text-[14px] text-muted-foreground leading-relaxed max-w-[340px] mx-auto">
-            מעקב חכם אחר התקדמות לימודית לצד אימונים
+            ניהול ובקרת התקדמות לימודית לספורטאי מכון וינגייט
           </p>
         </div>
 
