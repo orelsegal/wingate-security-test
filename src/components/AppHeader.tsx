@@ -48,28 +48,27 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const isInnerPage = location.pathname !== "/";
 
   return (
-    <header className="h-[56px] bg-card border-b border-border flex items-center justify-between px-5 md:px-8 sticky top-0 z-10">
-      <div className="flex items-center gap-3">
+    <header className="h-[52px] bg-card border-b border-border flex items-center justify-between px-5 md:px-8 sticky top-0 z-10">
+      <div className="flex items-center gap-2.5">
         <button
           onClick={onMenuToggle}
           className="p-2 -me-1 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150 md:hidden"
         >
           <Menu className="h-5 w-5" strokeWidth={1.5} />
         </button>
-        {/* Small logo in header on mobile */}
-        <div className="w-7 h-7 rounded-lg overflow-hidden md:hidden shrink-0">
+        <div className="w-6 h-6 rounded-md overflow-hidden md:hidden shrink-0">
           <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
         </div>
 
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-1.5 text-[13px]" dir="rtl">
+        <nav className="hidden md:flex items-center gap-1 text-[12px]" dir="rtl">
           {crumbs.map((crumb, i) => {
             const isLast = i === crumbs.length - 1;
             return (
-              <span key={i} className="flex items-center gap-1.5">
-                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />}
+              <span key={i} className="flex items-center gap-1">
+                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/30 shrink-0" strokeWidth={1.5} />}
                 {isLast || !crumb.path ? (
-                  <span className={`${isLast ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
+                  <span className={isLast ? "text-foreground font-medium" : "text-muted-foreground"}>
                     {crumb.label}
                   </span>
                 ) : (
@@ -84,6 +83,10 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             );
           })}
         </nav>
+        {/* Mobile: just show current page name */}
+        <span className="md:hidden text-[13px] font-medium text-foreground">
+          {crumbs[crumbs.length - 1].label}
+        </span>
       </div>
 
       <div className="flex items-center gap-2">

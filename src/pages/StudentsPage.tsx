@@ -54,7 +54,7 @@ const StudentsPage = () => {
   const initialStatus = searchParams.get("status") as StatusType | null;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
-  const [branchFilter, setBranchFilter] = useState<string | null>(null);
+  const [branchFilters, setBranchFilters] = useState<string[]>([]);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -72,7 +72,7 @@ const StudentsPage = () => {
     const list = baseData.filter((s) => {
       if (search && !s.name.includes(search) && !s.branch.includes(search) && !s.grade.includes(search)) return false;
       if (statusFilter && s.status !== statusFilter) return false;
-      if (branchFilter && s.branch !== branchFilter) return false;
+      if (branchFilters.length > 0 && !branchFilters.includes(s.branch)) return false;
       if (gradeFilter && s.grade !== gradeFilter) return false;
       return true;
     });
@@ -86,9 +86,9 @@ const StudentsPage = () => {
       });
     }
     return list;
-  }, [baseData, search, statusFilter, branchFilter, gradeFilter, sortBy, sortDir]);
+  }, [baseData, search, statusFilter, branchFilters, gradeFilter, sortBy, sortDir]);
 
-  const hasFilters = search || statusFilter || branchFilter || gradeFilter || sortBy;
+  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || sortBy;
 
   const toggleSort = (col: "name" | "avg" | "status") => {
     if (sortBy === col) {
@@ -108,7 +108,7 @@ const StudentsPage = () => {
   const clearAll = () => {
     setSearch("");
     setStatusFilter(null);
-    setBranchFilter(null);
+    setBranchFilters([]);
     setGradeFilter(null);
     setSortBy(null);
     setSortDir("asc");
@@ -227,23 +227,38 @@ const StudentsPage = () => {
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">ענף:</span>
+              <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">בחירת ענפים:</span>
               {branches.map((b) => {
-                const active = branchFilter === b;
+                const active = branchFilters.includes(b);
                 return (
                   <button
                     key={b}
-                    onClick={() => setBranchFilter(active ? null : b)}
-                    className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                    onClick={() => setBranchFilters(prev =>
+                      active ? prev.filter(x => x !== b) : [...prev, b]
+                    )}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
                       active
                         ? "bg-primary/10 text-primary ring-1 ring-primary/20"
                         : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                     }`}
                   >
+                    <span className={`w-3 h-3 rounded border flex items-center justify-center shrink-0 transition-colors duration-150 ${
+                      active ? "bg-primary border-primary" : "border-muted-foreground/30"
+                    }`}>
+                      {active && <span className="text-primary-foreground text-[8px] font-bold">✓</span>}
+                    </span>
                     {b}
                   </button>
                 );
               })}
+              {branchFilters.length > 0 && (
+                <button
+                  onClick={() => setBranchFilters([])}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1"
+                >
+                  <X className="h-3 w-3" strokeWidth={1.5} />
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap">
