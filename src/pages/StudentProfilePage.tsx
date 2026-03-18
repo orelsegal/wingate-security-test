@@ -4,6 +4,13 @@ import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { StatusType } from "@/lib/studentData";
 
+type MilestoneStatus = "done" | "in_progress" | "missing";
+
+interface SubjectMilestone {
+  title: string;
+  status: MilestoneStatus;
+}
+
 interface SubjectData {
   name: string;
   grade: number;
@@ -12,6 +19,7 @@ interface SubjectData {
   units?: number;
   coveredTopics?: string[];
   missingTopics?: string[];
+  milestones?: SubjectMilestone[];
 }
 
 interface RoadmapItem {
@@ -24,12 +32,54 @@ const getStudentDetails = (id: string) => {
   if (!student) return null;
 
   const subjects: SubjectData[] = [
-    { name: "מתמטיקה", grade: student.status === "red" ? 48 : student.status === "yellow" ? 65 : 88, status: student.status === "red" ? "red" : student.status === "yellow" ? "yellow" : "green", absences: student.status === "red" ? 6 : 1, units: student.status === "red" ? 3 : 4, coveredTopics: ["אלגברה", "גיאומטריה", "חדו״א"], missingTopics: student.status === "red" ? ["הסתברות", "טריגונומטריה", "סטטיסטיקה"] : student.status === "yellow" ? ["הסתברות", "טריגונומטריה"] : [] },
-    { name: "אנגלית", grade: student.avg > 70 ? 82 : 59, status: student.avg > 70 ? "green" : "red", absences: student.avg > 70 ? 0 : 4 },
-    { name: "היסטוריה", grade: student.avg > 80 ? 91 : 72, status: student.avg > 80 ? "green" : "yellow", absences: 2 },
-    { name: "ספרות", grade: student.avg > 75 ? 86 : 68, status: student.avg > 75 ? "green" : "yellow", absences: 1 },
-    { name: "מדעים", grade: student.avg > 85 ? 94 : 74, status: student.avg > 85 ? "green" : "yellow", absences: 0 },
-    { name: "חינוך גופני", grade: 95, status: "green", absences: 0 },
+    { name: "מתמטיקה", grade: student.status === "red" ? 48 : student.status === "yellow" ? 65 : 88, status: student.status === "red" ? "red" : student.status === "yellow" ? "yellow" : "green", absences: student.status === "red" ? 6 : 1, units: student.status === "red" ? 3 : 4, coveredTopics: ["אלגברה", "גיאומטריה", "חדו״א"], missingTopics: student.status === "red" ? ["הסתברות", "טריגונומטריה", "סטטיסטיקה"] : student.status === "yellow" ? ["הסתברות", "טריגונומטריה"] : [],
+      milestones: [
+        { title: "מבוא לאלגברה", status: "done" },
+        { title: "משוואות ריבועיות", status: "done" },
+        { title: "גיאומטריה אנליטית", status: student.status === "green" ? "done" : "in_progress" },
+        { title: "חדו״א א׳", status: student.status === "green" ? "done" : "missing" },
+        { title: "הסתברות", status: student.status === "red" ? "missing" : student.status === "yellow" ? "missing" : "in_progress" },
+        { title: "מבחן בגרות", status: "missing" },
+      ]
+    },
+    { name: "אנגלית", grade: student.avg > 70 ? 82 : 59, status: student.avg > 70 ? "green" : "red", absences: student.avg > 70 ? 0 : 4,
+      milestones: [
+        { title: "קריאה והבנה", status: "done" },
+        { title: "כתיבה אקדמית", status: student.avg > 70 ? "done" : "in_progress" },
+        { title: "ספרות אנגלית", status: student.avg > 70 ? "in_progress" : "missing" },
+        { title: "מבחן בגרות", status: "missing" },
+      ]
+    },
+    { name: "היסטוריה", grade: student.avg > 80 ? 91 : 72, status: student.avg > 80 ? "green" : "yellow", absences: 2,
+      milestones: [
+        { title: "תקופה עתיקה", status: "done" },
+        { title: "ימי הביניים", status: "done" },
+        { title: "עת חדשה", status: student.avg > 80 ? "done" : "in_progress" },
+        { title: "עבודת חקר", status: student.avg > 80 ? "in_progress" : "missing" },
+        { title: "מבחן בגרות", status: "missing" },
+      ]
+    },
+    { name: "ספרות", grade: student.avg > 75 ? 86 : 68, status: student.avg > 75 ? "green" : "yellow", absences: 1,
+      milestones: [
+        { title: "שירה", status: "done" },
+        { title: "סיפורת", status: student.avg > 75 ? "done" : "in_progress" },
+        { title: "עבודת סיכום", status: "missing" },
+      ]
+    },
+    { name: "מדעים", grade: student.avg > 85 ? 94 : 74, status: student.avg > 85 ? "green" : "yellow", absences: 0,
+      milestones: [
+        { title: "פיזיקה בסיסית", status: "done" },
+        { title: "כימיה", status: student.avg > 85 ? "done" : "in_progress" },
+        { title: "ביולוגיה", status: student.avg > 85 ? "in_progress" : "missing" },
+        { title: "פרויקט מעבדה", status: "missing" },
+      ]
+    },
+    { name: "חינוך גופני", grade: 95, status: "green", absences: 0,
+      milestones: [
+        { title: "כושר גופני", status: "done" },
+        { title: "מבחן שנתי", status: "in_progress" },
+      ]
+    },
   ];
 
   const absences = [
@@ -209,6 +259,55 @@ const StudentProfilePage = () => {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Milestones Roadmap */}
+              {subject.milestones && subject.milestones.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-[11px] font-medium text-muted-foreground mb-3">מפת דרכים</p>
+                  <div className="space-y-0">
+                    {subject.milestones.map((ms, idx) => {
+                      const isLast = idx === (subject.milestones?.length ?? 0) - 1;
+                      return (
+                        <div key={idx} className="flex items-start gap-3">
+                          {/* Timeline column */}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                              ms.status === "done"
+                                ? "bg-success/15"
+                                : ms.status === "in_progress"
+                                ? "bg-primary/15"
+                                : "bg-accent"
+                            }`}>
+                              {ms.status === "done" ? (
+                                <CheckCircle2 className="h-3 w-3 text-success" />
+                              ) : ms.status === "in_progress" ? (
+                                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                              ) : (
+                                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                              )}
+                            </div>
+                            {!isLast && (
+                              <div className={`w-px h-5 ${
+                                ms.status === "done" ? "bg-success/30" : "bg-border"
+                              }`} />
+                            )}
+                          </div>
+                          {/* Label */}
+                          <span className={`text-[12px] pt-0.5 ${
+                            ms.status === "done"
+                              ? "text-muted-foreground"
+                              : ms.status === "in_progress"
+                              ? "text-foreground font-medium"
+                              : "text-muted-foreground/60"
+                          }`}>
+                            {ms.title}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
