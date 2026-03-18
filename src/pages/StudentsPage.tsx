@@ -11,9 +11,11 @@ const grades = ["י׳", "י״א", "י״ב"];
 
 const StudentsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const initialStatus = searchParams.get("status") as StatusType | null;
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
