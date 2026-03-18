@@ -319,7 +319,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
   );
 };
 
-
+const StudentProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
