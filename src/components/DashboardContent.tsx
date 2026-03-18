@@ -62,7 +62,7 @@ const DashboardContent = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/10 text-destructive text-[13px] font-medium hover:bg-destructive/15 transition-colors duration-150 shrink-0 self-start sm:self-auto"
           >
             <AlertTriangle className="h-4 w-4" />
-            <span>הצג ספורטאים שדורשים תשומת לב</span>
+            <span>הצג ספורטאים בסיכון</span>
             <span className="px-1.5 py-0.5 rounded-md bg-destructive/15 text-[11px] font-semibold">{redCount}</span>
           </button>
         )}
