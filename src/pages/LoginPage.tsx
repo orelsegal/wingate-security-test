@@ -118,7 +118,7 @@ const LoginPage = () => {
         {/* CTA */}
         <div className="text-center animate-fade-in-up" style={{ animationDelay: "540ms" }}>
           <p className="text-[12px] text-muted-foreground/50 leading-relaxed">
-            לחצו על תפקיד כדי להמשיך למערכת
+            יש לבחור תפקיד כדי להמשיך
           </p>
         </div>
 
