@@ -208,7 +208,7 @@ const StudentProfilePage = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, direction: "rtl" }}
                 cursor={{ fill: "hsl(var(--accent))", radius: 8 }}
               />
