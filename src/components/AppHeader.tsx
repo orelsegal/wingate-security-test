@@ -1,17 +1,53 @@
-import { Bell, Search, Menu } from "lucide-react";
+import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { studentsData } from "@/lib/studentData";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 interface AppHeaderProps {
   onMenuToggle?: () => void;
 }
 
+interface Crumb {
+  label: string;
+  path?: string;
+}
+
+const useBreadcrumbs = (): Crumb[] => {
+  const location = useLocation();
+  const path = location.pathname;
+
+  const crumbs: Crumb[] = [{ label: "דשבורד", path: "/" }];
+
+  if (path.startsWith("/students")) {
+    crumbs.push({ label: "ספורטאים", path: "/students" });
+
+    const match = path.match(/^\/students\/(\d+)/);
+    if (match) {
+      const student = studentsData.find(s => s.id === match[1]);
+      crumbs.push({ label: student?.name ?? "פרופיל" });
+    }
+  } else if (path.startsWith("/courses")) {
+    crumbs.push({ label: "מקצועות לימוד" });
+  } else if (path.startsWith("/grades")) {
+    crumbs.push({ label: "ציונים והערכות" });
+  } else if (path.startsWith("/reports")) {
+    crumbs.push({ label: "דוחות וניתוח" });
+  } else if (path.startsWith("/settings")) {
+    crumbs.push({ label: "הגדרות מערכת" });
+  }
+
+  return crumbs;
+};
+
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const crumbs = useBreadcrumbs();
 
   return (
     <header className="h-[56px] bg-card border-b border-border flex items-center justify-between px-5 md:px-8 sticky top-0 z-10">
-      <div className="flex items-center gap-3 text-sm">
+      <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
           className="p-2 -me-1 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150 md:hidden"
@@ -22,9 +58,30 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         <div className="w-7 h-7 rounded-lg overflow-hidden md:hidden shrink-0">
           <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
         </div>
-        <span className="text-foreground font-semibold text-[14px]">האקדמיה למצוינות</span>
-        <span className="text-border hidden sm:inline">/</span>
-        <span className="text-muted-foreground text-[13px] hidden sm:inline">מעקב אקדמי</span>
+
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-1.5 text-[13px]" dir="rtl">
+          {crumbs.map((crumb, i) => {
+            const isLast = i === crumbs.length - 1;
+            return (
+              <span key={i} className="flex items-center gap-1.5">
+                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/40 shrink-0" />}
+                {isLast || !crumb.path ? (
+                  <span className={`${isLast ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
+                    {crumb.label}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => navigate(crumb.path!)}
+                    className="text-muted-foreground hover:text-foreground transition-colors duration-150"
+                  >
+                    {crumb.label}
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </nav>
       </div>
 
       <div className="flex items-center gap-2">
