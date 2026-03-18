@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { Search, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
@@ -16,6 +16,8 @@ const StudentsPage = () => {
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   // Role-based base data
   const baseData = useMemo(() => {
@@ -26,22 +28,50 @@ const StudentsPage = () => {
   }, [user]);
 
   const filtered = useMemo(() => {
-    return baseData.filter((s) => {
+    const statusOrder: Record<StatusType, number> = { red: 0, yellow: 1, green: 2 };
+    const list = baseData.filter((s) => {
       if (search && !s.name.includes(search) && !s.branch.includes(search) && !s.grade.includes(search)) return false;
       if (statusFilter && s.status !== statusFilter) return false;
       if (branchFilter && s.branch !== branchFilter) return false;
       if (gradeFilter && s.grade !== gradeFilter) return false;
       return true;
     });
-  }, [baseData, search, statusFilter, branchFilter, gradeFilter]);
+    if (sortBy) {
+      list.sort((a, b) => {
+        let cmp = 0;
+        if (sortBy === "name") cmp = a.name.localeCompare(b.name, "he");
+        else if (sortBy === "avg") cmp = a.avg - b.avg;
+        else if (sortBy === "status") cmp = statusOrder[a.status] - statusOrder[b.status];
+        return sortDir === "desc" ? -cmp : cmp;
+      });
+    }
+    return list;
+  }, [baseData, search, statusFilter, branchFilter, gradeFilter, sortBy, sortDir]);
 
-  const hasFilters = search || statusFilter || branchFilter || gradeFilter;
+  const hasFilters = search || statusFilter || branchFilter || gradeFilter || sortBy;
+
+  const toggleSort = (col: "name" | "avg" | "status") => {
+    if (sortBy === col) {
+      if (sortDir === "asc") setSortDir("desc");
+      else { setSortBy(null); setSortDir("asc"); }
+    } else {
+      setSortBy(col);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: "name" | "avg" | "status" }) => {
+    if (sortBy !== col) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />;
+  };
 
   const clearAll = () => {
     setSearch("");
     setStatusFilter(null);
     setBranchFilter(null);
     setGradeFilter(null);
+    setSortBy(null);
+    setSortDir("asc");
   };
 
   return (
@@ -152,11 +182,17 @@ const StudentsPage = () => {
       {/* Students Table */}
       <div className="card-premium overflow-hidden">
         <div className="hidden md:grid grid-cols-[1fr_100px_80px_80px_100px] gap-4 px-6 py-3.5 border-b border-border bg-accent/30">
-          <span className="text-[12px] font-medium text-muted-foreground">שם</span>
+          <button onClick={() => toggleSort("name")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            שם <SortIcon col="name" />
+          </button>
           <span className="text-[12px] font-medium text-muted-foreground">ענף</span>
           <span className="text-[12px] font-medium text-muted-foreground">כיתה</span>
-          <span className="text-[12px] font-medium text-muted-foreground">ממוצע</span>
-          <span className="text-[12px] font-medium text-muted-foreground">סטטוס</span>
+          <button onClick={() => toggleSort("avg")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            ממוצע <SortIcon col="avg" />
+          </button>
+          <button onClick={() => toggleSort("status")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            סטטוס <SortIcon col="status" />
+          </button>
         </div>
 
         {filtered.length === 0 ? (
