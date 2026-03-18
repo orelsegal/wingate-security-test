@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, GraduationCap, Medal, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, ClipboardEdit, Medal, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
@@ -7,7 +7,7 @@ const allMenuItems = [
   { title: "סקירה כללית", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
   { title: "הספורטאים שלנו", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
   { title: "מקצועות לימוד", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
-  { title: "ציונים והערכות", icon: GraduationCap, path: "/grades", roles: ["admin", "teacher"] },
+  { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
   { title: "דוחות וניתוח", icon: BarChart3, path: "/reports", roles: ["admin"] },
   { title: "הגדרות מערכת", icon: Settings, path: "/settings", roles: ["admin"] },
 ];
