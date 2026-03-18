@@ -249,7 +249,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                                     title={ms.status === "done" ? "סמן כלא הושלם" : "סמן כהושלם"}
                                   >
                                     {ms.status === "done" ? (
-                                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-success" strokeWidth={1.5} />
                                     ) : ms.status === "in_progress" ? (
                                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                                     ) : (
