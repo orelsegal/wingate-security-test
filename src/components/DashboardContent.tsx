@@ -49,10 +49,10 @@ const DashboardContent = () => {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-4">
         <div className="space-y-1.5">
           <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">
-            מה המצב היום?
+            מפת מצב לימודית
           </h2>
           <p className="text-muted-foreground text-[13px] md:text-sm">
-            תמונת מצב אקדמית &middot; האקדמיה למצוינות בספורט &middot; סמסטר א׳ תשפ״ה
+            תמונת מצב עדכנית לפי מקצועות &middot; סמסטר א׳ תשפ״ה
           </p>
         </div>
 
