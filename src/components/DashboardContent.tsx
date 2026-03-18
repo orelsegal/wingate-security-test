@@ -42,7 +42,7 @@ const DashboardContent = () => {
   const recentAlerts = scopedStudents
     .filter(s => s.status === "red" || s.status === "yellow")
     .slice(0, 5)
-    .map(s => ({ name: s.name, sport: s.branch, status: s.status }));
+    .map(s => ({ name: s.name, sport: s.branch, status: s.status, avatar: s.avatar }));
 
   // Teacher: show only subjects-related view (no full dashboard stats)
   const isTeacher = user?.role === "teacher";
@@ -190,6 +190,7 @@ const DashboardContent = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
+                    <img src={alert.avatar} alt={alert.name} className="w-8 h-8 rounded-full bg-accent shrink-0" />
                     <div>
                       <p className="text-[13px] font-medium text-foreground leading-tight">{alert.name}</p>
                       <p className="text-[12px] text-muted-foreground mt-0.5">{alert.sport}</p>
