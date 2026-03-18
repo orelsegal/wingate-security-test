@@ -129,8 +129,8 @@ const StudentsPage = () => {
         })}
       </div>
 
-      {/* Filters */}
-      <div className="card-premium p-4 md:p-5 space-y-4">
+      {/* Filters — always visible */}
+      <div className="card-premium p-4 md:p-5 space-y-3.5">
         <div className="relative">
           <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" strokeWidth={1.5} />
           <input
@@ -147,9 +147,11 @@ const StudentsPage = () => {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 md:gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[12px] text-muted-foreground ms-1 me-1">סטטוס כולל:</span>
+        {/* Filter rows — stacked for mobile clarity */}
+        <div className="space-y-2.5">
+          {/* Status filter */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">סטטוס:</span>
             {(["green", "yellow", "red"] as StatusType[]).map((type) => {
               const config = statusConfig[type];
               const active = statusFilter === type;
@@ -160,7 +162,7 @@ const StudentsPage = () => {
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
                     active
                       ? config.activeBg + " " + config.textClass
-                      : "bg-accent/60 text-muted-foreground hover:bg-accent"
+                      : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
                   <span className={`w-[6px] h-[6px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/40"}`} />
@@ -170,10 +172,9 @@ const StudentsPage = () => {
             })}
           </div>
 
-          <div className="hidden md:block w-px h-7 bg-border self-center" />
-
+          {/* Branch filter */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[12px] text-muted-foreground ms-1 me-1">ענף:</span>
+            <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">ענף:</span>
             {branches.map((b) => {
               const active = branchFilter === b;
               return (
@@ -183,7 +184,7 @@ const StudentsPage = () => {
                   className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
                     active
                       ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                      : "bg-accent/60 text-muted-foreground hover:bg-accent"
+                      : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
                   {b}
@@ -192,10 +193,9 @@ const StudentsPage = () => {
             })}
           </div>
 
-          <div className="hidden md:block w-px h-7 bg-border self-center" />
-
-          <div className="flex items-center gap-1.5">
-            <span className="text-[12px] text-muted-foreground ms-1 me-1">כיתה:</span>
+          {/* Grade filter */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">כיתה:</span>
             {grades.map((g) => {
               const active = gradeFilter === g;
               return (
@@ -205,7 +205,7 @@ const StudentsPage = () => {
                   className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
                     active
                       ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                      : "bg-accent/60 text-muted-foreground hover:bg-accent"
+                      : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
                   {g}
@@ -213,16 +213,19 @@ const StudentsPage = () => {
               );
             })}
           </div>
+        </div>
 
-          {hasFilters && (
+        {/* Clear all */}
+        {hasFilters && (
+          <div className="pt-1">
             <button
               onClick={clearAll}
               className="px-3 py-1.5 rounded-full text-[12px] font-medium text-destructive hover:bg-destructive/10 transition-all duration-150"
             >
               נקה הכל
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Students Cards */}
