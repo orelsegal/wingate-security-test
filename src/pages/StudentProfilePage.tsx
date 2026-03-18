@@ -148,10 +148,16 @@ const StudentProfilePage = () => {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2.5">
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[14px] font-medium text-foreground">{subject.name}</span>
+                  <div>
+                    <span className="text-[14px] font-medium text-foreground">{subject.name}</span>
+                    {subject.units && (
+                      <span className="text-[12px] text-muted-foreground ms-2">{subject.units} יח״ל</span>
+                    )}
+                  </div>
                 </div>
                 <StatusBadge type={subject.status} />
               </div>
+
               <div className="flex items-end justify-between mt-4">
                 <div>
                   <p className="text-[12px] text-muted-foreground">ציון</p>
@@ -164,13 +170,47 @@ const StudentProfilePage = () => {
                   </div>
                 )}
               </div>
-              {/* Mini progress bar */}
+
+              {/* Progress bar */}
               <div className="mt-4 h-1.5 rounded-full bg-accent overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${statusConfig[subject.status].dotClass}`}
                   style={{ width: `${subject.grade}%` }}
                 />
               </div>
+
+              {/* Topics section */}
+              {subject.coveredTopics && subject.coveredTopics.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border space-y-3">
+                  <div>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">נושאים שנלמדו</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {subject.coveredTopics.map((topic) => (
+                        <span key={topic} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success/10 text-[11px] text-success font-medium">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {subject.missingTopics && subject.missingTopics.length > 0 && (
+                    <div>
+                      <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 text-warning" />
+                        נושאים חסרים
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {subject.missingTopics.map((topic) => (
+                          <span key={topic} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-warning/10 text-[11px] text-warning font-medium">
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
