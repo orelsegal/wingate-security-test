@@ -1,4 +1,5 @@
 import { Users, BookOpen, TrendingUp, AlertTriangle, BarChart3, ChevronLeft } from "lucide-react";
+import InitialsAvatar from "@/components/InitialsAvatar";
 import { useNavigate } from "react-router-dom";
 import { statusConfig, studentsData } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
