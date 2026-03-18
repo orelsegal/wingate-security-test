@@ -4,12 +4,12 @@ import { useAuth, roleLabels } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 const allMenuItems = [
-  { title: "לוח ראשי", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
-  { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
-  { title: "קורסים", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
-  { title: "ציונים", icon: GraduationCap, path: "/grades", roles: ["admin", "teacher"] },
-  { title: "דוחות", icon: BarChart3, path: "/reports", roles: ["admin"] },
-  { title: "הגדרות", icon: Settings, path: "/settings", roles: ["admin"] },
+  { title: "סקירה כללית", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
+  { title: "הספורטאים שלנו", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
+  { title: "מקצועות לימוד", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
+  { title: "ציונים והערכות", icon: GraduationCap, path: "/grades", roles: ["admin", "teacher"] },
+  { title: "דוחות וניתוח", icon: BarChart3, path: "/reports", roles: ["admin"] },
+  { title: "הגדרות מערכת", icon: Settings, path: "/settings", roles: ["admin"] },
 ];
 
 interface AppSidebarProps {
