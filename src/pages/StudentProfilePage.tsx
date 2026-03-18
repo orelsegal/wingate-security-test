@@ -2,9 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle } from "lucide-react";
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { StatusType } from "@/lib/studentData";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   LineChart, Line,
 } from "recharts";
@@ -207,7 +208,7 @@ const StudentProfilePage = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, direction: "rtl" }}
                 cursor={{ fill: "hsl(var(--accent))", radius: 8 }}
               />
@@ -251,7 +252,7 @@ const StudentProfilePage = () => {
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
             <YAxis domain={[40, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30} />
-            <Tooltip
+            <RechartsTooltip
               contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, direction: "rtl" }}
             />
             <Line type="monotone" dataKey="ממוצע" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--card))", stroke: "hsl(var(--primary))", strokeWidth: 2 }} activeDot={{ r: 6 }} />
@@ -275,7 +276,30 @@ const StudentProfilePage = () => {
                     )}
                   </div>
                 </div>
-                <StatusBadge type={subject.status} />
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-default"><StatusBadge type={subject.status} /></span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[220px] p-3 space-y-1.5 text-start" dir="rtl">
+                      <p className="text-[12px] font-medium text-popover-foreground">
+                        {subject.status === "green" ? "במסלול — הציון והנוכחות תקינים" :
+                         subject.status === "yellow" ? "במעקב — יש מה לשפר, שווה לעקוב" :
+                         "דורש התערבות — נדרשת תשומת לב מיידית"}
+                      </p>
+                      {subject.missingTopics && subject.missingTopics.length > 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          נושאים להשלמה: {subject.missingTopics.join("، ")}
+                        </p>
+                      )}
+                      {subject.absences > 2 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          {subject.absences} היעדרויות רשומות
+                        </p>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               <div className="flex items-end justify-between mt-4">
