@@ -94,10 +94,11 @@
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
-    transition: box-shadow 150ms ease, border-color 150ms ease;
+    transition: box-shadow 200ms ease, border-color 200ms ease;
   }
   .card-premium:hover {
     box-shadow: var(--shadow-card-hover);
+    border-color: hsl(150 10% 86%);
   }
   .gradient-brand {
     background: var(--gradient-brand);
