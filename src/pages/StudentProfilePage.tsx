@@ -221,7 +221,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                 </div>
                 <div className="flex items-center gap-2 ms-4 shrink-0">
                   <StatusBadge type={subject.status} />
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} strokeWidth={1.5} />
                 </div>
               </button>
 
