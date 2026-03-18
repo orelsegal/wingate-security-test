@@ -24,7 +24,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-6" dir="rtl">
       <div className="w-full max-w-[420px] space-y-10">
         {/* Header */}
-        <div className="text-center space-y-5">
+        <div className="text-center space-y-5 animate-fade-in-up">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-card border border-border p-3 flex items-center justify-center shadow-sm">
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
@@ -39,7 +39,7 @@ const LoginPage = () => {
         </div>
 
         {/* Divider */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <div className="flex-1 h-px bg-border" />
           <span className="text-[12px] text-muted-foreground/60 px-1">כניסה למערכת</span>
           <div className="flex-1 h-px bg-border" />
@@ -47,13 +47,14 @@ const LoginPage = () => {
 
         {/* Role Selection */}
         <div className="space-y-3">
-          {demoUsers.map((demoUser) => {
+          {demoUsers.map((demoUser, i) => {
             const Icon = roleIcons[demoUser.role];
             return (
               <button
                 key={demoUser.role}
                 onClick={() => handleLogin(demoUser)}
-                className="w-full card-premium p-5 flex items-center gap-4 text-start hover:border-primary/25 transition-all duration-150 group cursor-pointer"
+                className="w-full card-premium p-5 flex items-center gap-4 text-start hover:border-primary/25 transition-all duration-150 group cursor-pointer animate-fade-in-up"
+                style={{ animationDelay: `${200 + i * 80}ms` }}
               >
                 <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors duration-150">
                   <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-150" strokeWidth={1.6} />
