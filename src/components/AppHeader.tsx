@@ -92,7 +92,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150 me-1"
           >
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} />
             <span>חזרה</span>
           </button>
         )}
