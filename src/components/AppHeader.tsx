@@ -54,7 +54,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           onClick={onMenuToggle}
           className="p-2 -me-1 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150 md:hidden"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5" strokeWidth={1.5} />
         </button>
         {/* Small logo in header on mobile */}
         <div className="w-7 h-7 rounded-lg overflow-hidden md:hidden shrink-0">
