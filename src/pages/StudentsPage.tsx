@@ -88,7 +88,7 @@ const StudentsPage = () => {
       {/* Filters */}
       <div className="card-premium p-4 md:p-5 space-y-4">
         <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" strokeWidth={1.5} />
           <input
             type="text"
             value={search}
