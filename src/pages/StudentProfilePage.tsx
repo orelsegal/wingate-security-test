@@ -370,7 +370,7 @@ const StudentProfilePage = () => {
   if (!hasAccess) {
     return (
       <div className="p-10 text-center space-y-3">
-        <ShieldAlert className="h-10 w-10 text-destructive mx-auto" />
+        <ShieldAlert className="h-10 w-10 text-destructive mx-auto" strokeWidth={1.5} />
         <p className="text-foreground font-medium">אין הרשאת גישה</p>
         <p className="text-muted-foreground text-[13px]">אין לך הרשאה לצפות בפרופיל זה.</p>
         <button onClick={() => navigate("/")} className="text-primary text-[13px] hover:underline mt-2">חזרה לדף הראשי</button>
