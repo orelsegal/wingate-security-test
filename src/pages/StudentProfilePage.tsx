@@ -219,8 +219,8 @@ const StudentProfilePage = () => {
         {/* Radar Chart - Overall Profile */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">פרופיל אקדמי</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">מיפוי חוזקות וחולשות</p>
+            <h3 className="text-[15px] font-semibold text-foreground">חוזקות וחולשות</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">מבט רחב על הפרופיל האקדמי</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <RadarChart data={student.subjects.map(s => ({ subject: s.name, ציון: s.grade, fullMark: 100 }))}>
