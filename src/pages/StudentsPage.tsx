@@ -227,23 +227,38 @@ const StudentsPage = () => {
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">ענף:</span>
+              <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">בחירת ענפים:</span>
               {branches.map((b) => {
-                const active = branchFilter === b;
+                const active = branchFilters.includes(b);
                 return (
                   <button
                     key={b}
-                    onClick={() => setBranchFilter(active ? null : b)}
-                    className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                    onClick={() => setBranchFilters(prev =>
+                      active ? prev.filter(x => x !== b) : [...prev, b]
+                    )}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
                       active
                         ? "bg-primary/10 text-primary ring-1 ring-primary/20"
                         : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                     }`}
                   >
+                    <span className={`w-3 h-3 rounded border flex items-center justify-center shrink-0 transition-colors duration-150 ${
+                      active ? "bg-primary border-primary" : "border-muted-foreground/30"
+                    }`}>
+                      {active && <span className="text-primary-foreground text-[8px] font-bold">✓</span>}
+                    </span>
                     {b}
                   </button>
                 );
               })}
+              {branchFilters.length > 0 && (
+                <button
+                  onClick={() => setBranchFilters([])}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1"
+                >
+                  <X className="h-3 w-3" strokeWidth={1.5} />
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap">
