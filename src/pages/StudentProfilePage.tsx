@@ -3,6 +3,11 @@ import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTr
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { StatusType } from "@/lib/studentData";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  LineChart, Line,
+} from "recharts";
 
 type MilestoneStatus = "done" | "in_progress" | "missing";
 
@@ -187,6 +192,71 @@ const StudentProfilePage = () => {
             <span className="text-[12px] text-muted-foreground">התקדמות כללית</span>
           </div>
         </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
+        {/* Bar Chart - Grades per Subject */}
+        <div className="card-premium p-5 md:p-7">
+          <div className="mb-6">
+            <h3 className="text-[15px] font-semibold text-foreground">ציונים לפי מקצוע</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">השוואת ציונים בין המקצועות</p>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={student.subjects.map(s => ({ name: s.name, ציון: s.grade }))} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, direction: "rtl" }}
+                cursor={{ fill: "hsl(var(--accent))", radius: 8 }}
+              />
+              <Bar dataKey="ציון" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={18} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Radar Chart - Overall Profile */}
+        <div className="card-premium p-5 md:p-7">
+          <div className="mb-6">
+            <h3 className="text-[15px] font-semibold text-foreground">פרופיל אקדמי</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">מיפוי חוזקות וחולשות</p>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <RadarChart data={student.subjects.map(s => ({ subject: s.name, ציון: s.grade, fullMark: 100 }))}>
+              <PolarGrid stroke="hsl(var(--border))" />
+              <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+              <Radar dataKey="ציון" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Trend Chart - Simulated semester progress */}
+      <div className="card-premium p-5 md:p-7">
+        <div className="mb-6">
+          <h3 className="text-[15px] font-semibold text-foreground">מגמת התקדמות</h3>
+          <p className="text-[13px] text-muted-foreground mt-1">ציון ממוצע לפי חודשים &middot; סמסטר א׳ תשפ״ה</p>
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={(() => {
+            const base = student.overallProgress;
+            const months = ["ספט׳", "אוק׳", "נוב׳", "דצמ׳", "ינו׳", "פבר׳"];
+            return months.map((m, i) => ({
+              month: m,
+              ממוצע: Math.max(40, Math.min(100, Math.round(base - 15 + i * 3 + (Math.sin(i * 1.5) * 4)))),
+            }));
+          })()} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+            <YAxis domain={[40, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30} />
+            <Tooltip
+              contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, direction: "rtl" }}
+            />
+            <Line type="monotone" dataKey="ממוצע" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--card))", stroke: "hsl(var(--primary))", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Subjects Grid */}
