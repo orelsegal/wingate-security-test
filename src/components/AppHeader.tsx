@@ -67,7 +67,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             const isLast = i === crumbs.length - 1;
             return (
               <span key={i} className="flex items-center gap-1.5">
-                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/40 shrink-0" />}
+                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />}
                 {isLast || !crumb.path ? (
                   <span className={`${isLast ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
                     {crumb.label}
