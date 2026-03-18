@@ -405,7 +405,7 @@ const StudentProfilePage = () => {
             </div>
             <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <Target className="h-3.5 w-3.5" />
+                <Target className="h-3.5 w-3.5" strokeWidth={1.5} />
                 {student.branch}
               </span>
               <span className="text-border">·</span>
