@@ -24,7 +24,7 @@ const getStudentDetails = (id: string) => {
   if (!student) return null;
 
   const subjects: SubjectData[] = [
-    { name: "מתמטיקה", grade: student.status === "red" ? 48 : student.status === "yellow" ? 65 : 88, status: student.status === "red" ? "red" : student.status === "yellow" ? "yellow" : "green", absences: student.status === "red" ? 6 : 1 },
+    { name: "מתמטיקה", grade: student.status === "red" ? 48 : student.status === "yellow" ? 65 : 88, status: student.status === "red" ? "red" : student.status === "yellow" ? "yellow" : "green", absences: student.status === "red" ? 6 : 1, units: student.status === "red" ? 3 : 4, coveredTopics: ["אלגברה", "גיאומטריה", "חדו״א"], missingTopics: student.status === "red" ? ["הסתברות", "טריגונומטריה", "סטטיסטיקה"] : student.status === "yellow" ? ["הסתברות", "טריגונומטריה"] : [] },
     { name: "אנגלית", grade: student.avg > 70 ? 82 : 59, status: student.avg > 70 ? "green" : "red", absences: student.avg > 70 ? 0 : 4 },
     { name: "היסטוריה", grade: student.avg > 80 ? 91 : 72, status: student.avg > 80 ? "green" : "yellow", absences: 2 },
     { name: "ספרות", grade: student.avg > 75 ? 86 : 68, status: student.avg > 75 ? "green" : "yellow", absences: 1 },
