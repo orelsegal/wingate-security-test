@@ -421,8 +421,8 @@ const StudentProfilePage = () => {
         {/* Roadmap */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">מפת דרכים</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">משימות ויעדים קרובים</p>
+            <h3 className="text-[15px] font-semibold text-foreground">מה בתכנית? ✅</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">משימות ויעדים שצריך להשלים</p>
           </div>
           <div className="space-y-1">
             {student.roadmap.map((item, i) => (
