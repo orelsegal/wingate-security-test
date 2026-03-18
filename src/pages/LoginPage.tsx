@@ -38,14 +38,15 @@ const LoginPage = () => {
         </div>
 
         {/* Hero text */}
-        <div className="text-center space-y-4 mb-12 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-          <h1 className="text-[26px] md:text-[30px] font-bold text-foreground tracking-tight leading-snug">
+        <div className="text-center mb-12 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
+          <p className="text-[14px] font-light text-muted-foreground tracking-wide">
             מערכת מעקב אקדמי
-            <br />
-            <span className="text-primary">האקדמיה למצוינות בספורט</span>
+          </p>
+          <h1 className="text-[22px] md:text-[26px] font-medium text-foreground tracking-tight mt-3">
+            האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[14px] text-muted-foreground leading-relaxed max-w-[340px] mx-auto">
-            ניהול ובקרת התקדמות לימודית לספורטאי מכון וינגייט
+          <p className="text-[13px] text-muted-foreground leading-relaxed mt-4 max-w-[320px] mx-auto">
+            ניהול ובקרת התקדמות לימודית — מכון וינגייט
           </p>
         </div>
 
