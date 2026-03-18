@@ -48,6 +48,24 @@ const StudentProfilePage = () => {
 
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // Group roadmap items by subject (must be before early returns)
+  const roadmapBySubject = useMemo(() => {
+    const map = new Map<string, typeof roadmapItems>();
+    roadmapItems.forEach((item) => {
+      const subjName = (item as any).subjects?.subject_name || "אחר";
+      if (!map.has(subjName)) map.set(subjName, []);
+      map.get(subjName)!.push(item);
+    });
+    return map;
+  }, [roadmapItems]);
+
+  const overallProgress = useMemo(() => {
+    if (subjectProgress.length > 0) {
+      return Math.round(subjectProgress.reduce((sum, sp) => sum + (sp.grade || 0), 0) / subjectProgress.length);
+    }
+    return student?.completion_percent ?? 0;
+  }, [subjectProgress, student]);
+
   if (studentLoading || progressLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -82,21 +100,15 @@ const StudentProfilePage = () => {
     );
   }
 
-  const overallProgress = subjectProgress.length > 0
-    ? Math.round(subjectProgress.reduce((sum, sp) => sum + (sp.grade || 0), 0) / subjectProgress.length)
-    : student.completion_percent;
-
   const handleToggleRoadmapItem = async (itemId: string, currentCompleted: boolean) => {
     const newCompleted = !currentCompleted;
     if (currentCompleted) {
-      // Mark as incomplete - delete the progress record
       await supabase
         .from("student_roadmap_progress")
         .delete()
         .eq("student_id", student.id)
         .eq("roadmap_item_id", itemId);
     } else {
-      // Mark as complete - upsert
       await supabase
         .from("student_roadmap_progress")
         .upsert({
@@ -117,17 +129,6 @@ const StudentProfilePage = () => {
       .eq("id", student.id);
     queryClient.invalidateQueries({ queryKey: ["student", student.id] });
   };
-
-  // Group roadmap items by subject
-  const roadmapBySubject = useMemo(() => {
-    const map = new Map<string, typeof roadmapItems>();
-    roadmapItems.forEach((item) => {
-      const subjName = (item as any).subjects?.subject_name || "אחר";
-      if (!map.has(subjName)) map.set(subjName, []);
-      map.get(subjName)!.push(item);
-    });
-    return map;
-  }, [roadmapItems]);
 
   return (
     <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
