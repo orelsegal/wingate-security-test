@@ -11,20 +11,29 @@ const grades = ["י׳", "י״א", "י״ב"];
 
 const StudentsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
 
+  // Role-based base data
+  const baseData = useMemo(() => {
+    if (!user) return studentsData;
+    if (user.role === "parent") return studentsData.filter(s => user.scopeFilter?.includes(s.id));
+    if (user.role === "coach") return studentsData.filter(s => user.scopeFilter?.includes(s.branch));
+    return studentsData; // admin, teacher
+  }, [user]);
+
   const filtered = useMemo(() => {
-    return studentsData.filter((s) => {
+    return baseData.filter((s) => {
       if (search && !s.name.includes(search)) return false;
       if (statusFilter && s.status !== statusFilter) return false;
       if (branchFilter && s.branch !== branchFilter) return false;
       if (gradeFilter && s.grade !== gradeFilter) return false;
       return true;
     });
-  }, [search, statusFilter, branchFilter, gradeFilter]);
+  }, [baseData, search, statusFilter, branchFilter, gradeFilter]);
 
   const hasFilters = search || statusFilter || branchFilter || gradeFilter;
 
