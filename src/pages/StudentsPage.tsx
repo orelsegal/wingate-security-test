@@ -93,7 +93,7 @@ const StudentsPage = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="מחפשים ספורטאי? הקלידו שם, ענף או כיתה..."
+            placeholder="חיפוש ספורטאי..."
             className="w-full h-10 ps-10 pe-4 bg-accent/50 border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-150"
           />
           {search && (
