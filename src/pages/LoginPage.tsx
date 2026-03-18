@@ -22,38 +22,31 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden" dir="rtl">
-      {/* Background — deep green radial + subtle track pattern */}
+      {/* Background accents */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-40 start-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,hsl(152_42%_28%/0.07)_0%,transparent_65%)]" />
-        <div className="absolute -bottom-32 -end-24 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,hsl(152_42%_28%/0.04)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 pattern-track" />
+        <div className="absolute top-0 start-0 w-full h-[340px] bg-gradient-to-b from-primary/[0.04] to-transparent" />
+        <div className="absolute -bottom-40 start-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,hsl(152_42%_28%/0.03)_0%,transparent_70%)]" />
       </div>
 
-      <div className="w-full max-w-[440px] px-6 relative z-10">
-        {/* Logo */}
-        <div className="flex justify-center mb-10 animate-fade-in-up">
-          <div className="w-[72px] h-[72px] rounded-2xl bg-card border border-border p-3 flex items-center justify-center shadow-sm">
+      <div className="w-full max-w-[420px] px-6 relative z-10">
+        {/* Logo + Title — compact hero */}
+        <div className="flex flex-col items-center mb-8 animate-fade-in-up pt-2">
+          <div className="w-16 h-16 rounded-2xl bg-card border border-primary/15 p-2.5 flex items-center justify-center shadow-sm mb-5">
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
-        </div>
 
-        {/* Hero text */}
-        <div className="text-center mb-12 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-          <p className="text-[14px] font-light text-muted-foreground tracking-wide">
-            מערכת מעקב אקדמי
-          </p>
-          <h1 className="text-[22px] md:text-[26px] font-medium text-foreground tracking-tight mt-3">
+          <h1 className="text-[22px] md:text-[26px] font-medium text-primary tracking-tight text-center leading-snug">
             האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[13px] text-muted-foreground leading-relaxed mt-4 max-w-[320px] mx-auto">
+          <p className="text-[13px] text-foreground/60 leading-relaxed mt-1.5 text-center">
             ניהול ובקרת התקדמות לימודית — מכון וינגייט
           </p>
         </div>
 
         {/* Role cards */}
-        <div className="space-y-2.5 mb-8">
-          <p className="text-[12px] text-muted-foreground/50 text-center mb-4 animate-fade-in-up" style={{ animationDelay: "160ms" }}>
-            בחירת תפקיד לכניסה למערכת
+        <div className="space-y-2.5 mb-6">
+          <p className="text-[11px] text-muted-foreground/60 text-center mb-3 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+            בחירת תפקיד לכניסה
           </p>
 
           {demoUsers.map((demoUser, i) => {
@@ -62,11 +55,11 @@ const LoginPage = () => {
               <button
                 key={demoUser.role}
                 onClick={() => handleLogin(demoUser)}
-                className="w-full group relative bg-card border border-border rounded-2xl p-4 md:p-5 flex items-center gap-4 text-start transition-all duration-200 hover:border-primary/30 hover:shadow-[0_4px_20px_-4px_hsl(152_42%_28%/0.12)] active:scale-[0.995] cursor-pointer animate-fade-in-up"
-                style={{ animationDelay: `${220 + i * 70}ms` }}
+                className="w-full group relative bg-card border border-primary/10 rounded-2xl p-4 flex items-center gap-3.5 text-start transition-all duration-200 hover:border-primary/25 hover:shadow-[0_4px_20px_-6px_hsl(152_42%_28%/0.15)] active:scale-[0.995] cursor-pointer animate-fade-in-up"
+                style={{ animationDelay: `${180 + i * 60}ms` }}
               >
-                <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors duration-200">
-                  <Icon className="h-[20px] w-[20px] text-muted-foreground group-hover:text-primary transition-colors duration-200" strokeWidth={1.6} />
+                <div className="w-10 h-10 rounded-xl bg-primary/[0.06] flex items-center justify-center shrink-0 group-hover:bg-primary/[0.12] transition-colors duration-200">
+                  <Icon className="h-[18px] w-[18px] text-primary/70 group-hover:text-primary transition-colors duration-200" strokeWidth={1.5} />
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -78,28 +71,21 @@ const LoginPage = () => {
                   </p>
                 </div>
 
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-primary/10">
-                  <ArrowLeft className="h-4 w-4 text-primary" />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-primary/10">
+                  <ArrowLeft className="h-3.5 w-3.5 text-primary" />
                 </div>
               </button>
             );
           })}
         </div>
 
-        {/* CTA */}
-        <div className="text-center animate-fade-in-up" style={{ animationDelay: "520ms" }}>
-          <p className="text-[12px] text-muted-foreground/50 leading-relaxed">
-            יש לבחור תפקיד כדי להמשיך
-          </p>
-        </div>
-
         {/* Bottom branding */}
-        <div className="mt-14 text-center animate-fade-in-up" style={{ animationDelay: "600ms" }}>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/50 border border-border/50">
-            <div className="w-4 h-4 rounded overflow-hidden">
+        <div className="mt-10 text-center animate-fade-in-up" style={{ animationDelay: "500ms" }}>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/[0.04] border border-primary/[0.08]">
+            <div className="w-3.5 h-3.5 rounded overflow-hidden">
               <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
             </div>
-            <span className="text-[11px] text-muted-foreground/60">
+            <span className="text-[11px] text-muted-foreground/70">
               האקדמיה למצוינות בספורט · מכון וינגייט
             </span>
           </div>
