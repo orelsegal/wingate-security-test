@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, GraduationCap, Medal, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, ClipboardEdit, Medal, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
