@@ -4,6 +4,13 @@ import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { StatusType } from "@/lib/studentData";
 
+type MilestoneStatus = "done" | "in_progress" | "missing";
+
+interface SubjectMilestone {
+  title: string;
+  status: MilestoneStatus;
+}
+
 interface SubjectData {
   name: string;
   grade: number;
@@ -12,6 +19,7 @@ interface SubjectData {
   units?: number;
   coveredTopics?: string[];
   missingTopics?: string[];
+  milestones?: SubjectMilestone[];
 }
 
 interface RoadmapItem {
