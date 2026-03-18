@@ -261,7 +261,7 @@ const StudentProfilePage = () => {
 
       {/* Subjects Grid */}
       <div>
-        <h3 className="text-[15px] font-semibold text-foreground mb-4">מקצועות לימוד</h3>
+        <h3 className="text-[15px] font-semibold text-foreground mb-4">פירוט לפי מקצוע</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {student.subjects.map((subject) => (
             <div key={subject.name} className="card-premium p-5">
