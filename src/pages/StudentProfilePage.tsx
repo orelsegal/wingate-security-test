@@ -296,7 +296,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                           <div className="flex flex-wrap gap-1.5">
                             {subject.coveredTopics.map((topic) => (
                               <span key={topic} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-success/10 text-[12px] text-success font-medium">
-                                <CheckCircle2 className="h-3 w-3" />
+                                <CheckCircle2 className="h-3 w-3" strokeWidth={1.5} />
                                 {topic}
                               </span>
                             ))}
