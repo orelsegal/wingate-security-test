@@ -158,7 +158,7 @@ const StudentProfilePage = () => {
         className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-150"
       >
         <ArrowRight className="h-4 w-4" />
-        <span>חזרה לכל הספורטאים</span>
+        <span>חזרה לרשימת ספורטאים</span>
       </button>
 
       {/* Hero Card - Student Info */}
@@ -200,8 +200,8 @@ const StudentProfilePage = () => {
         {/* Bar Chart - Grades per Subject */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">איפה עומדים הציונים?</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">השוואה בין כל המקצועות</p>
+            <h3 className="text-[15px] font-semibold text-foreground">ציונים לפי מקצוע</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">השוואת ציונים בין המקצועות</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={student.subjects.map(s => ({ name: s.name, ציון: s.grade }))} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
@@ -220,8 +220,8 @@ const StudentProfilePage = () => {
         {/* Radar Chart - Overall Profile */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">חוזקות וחולשות</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">מבט רחב על הפרופיל האקדמי</p>
+            <h3 className="text-[15px] font-semibold text-foreground">פרופיל אקדמי</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">מיפוי רמות לפי מקצוע</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <RadarChart data={student.subjects.map(s => ({ subject: s.name, ציון: s.grade, fullMark: 100 }))}>
@@ -237,8 +237,8 @@ const StudentProfilePage = () => {
       {/* Trend Chart - Simulated semester progress */}
       <div className="card-premium p-5 md:p-7">
         <div className="mb-6">
-          <h3 className="text-[15px] font-semibold text-foreground">לאן פנינו? 📈</h3>
-          <p className="text-[13px] text-muted-foreground mt-1">מגמת הממוצע לאורך סמסטר א׳ תשפ״ה</p>
+          <h3 className="text-[15px] font-semibold text-foreground">מגמת ממוצע</h3>
+          <p className="text-[13px] text-muted-foreground mt-1">התפתחות הציון הממוצע &middot; סמסטר א׳ תשפ״ה</p>
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={(() => {
@@ -327,7 +327,7 @@ const StudentProfilePage = () => {
               {subject.coveredTopics && subject.coveredTopics.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border space-y-3">
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">כבר למדנו</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">נושאים שנלמדו</p>
                     <div className="flex flex-wrap gap-1.5">
                       {subject.coveredTopics.map((topic) => (
                         <span key={topic} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success/10 text-[11px] text-success font-medium">
@@ -342,7 +342,7 @@ const StudentProfilePage = () => {
                     <div>
                       <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-warning" />
-                        עוד צריך להשלים
+                        נושאים חסרים
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {subject.missingTopics.map((topic) => (
@@ -445,8 +445,8 @@ const StudentProfilePage = () => {
         {/* Roadmap */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">מה בתכנית? ✅</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">משימות ויעדים שצריך להשלים</p>
+            <h3 className="text-[15px] font-semibold text-foreground">משימות ויעדים</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">פעולות נדרשות להשלמה</p>
           </div>
           <div className="space-y-1">
             {student.roadmap.map((item, i) => (
