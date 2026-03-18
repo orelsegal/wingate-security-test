@@ -9,28 +9,28 @@ const stats = [
 
 const DashboardContent = () => {
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8">
       {/* Page Title */}
       <div>
-        <h2 className="text-2xl font-semibold text-foreground">סקירה כללית</h2>
+        <h2 className="text-xl md:text-2xl font-semibold text-foreground">סקירה כללית</h2>
         <p className="text-muted-foreground text-sm mt-1">סמסטר א׳ תשפ״ה • עדכון אחרון: היום, 10:30</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-card rounded-2xl border border-border p-6 transition-colors duration-150 hover:border-primary/20"
+            className="bg-card rounded-2xl border border-border p-4 md:p-6 transition-colors duration-150 hover:border-primary/20"
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-3xl font-semibold text-foreground mt-2">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-2">{stat.change}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
+                <p className="text-2xl md:text-3xl font-semibold text-foreground mt-1 md:mt-2">{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-1 md:mt-2">{stat.change}</p>
               </div>
-              <div className="p-2.5 bg-accent rounded-xl">
-                <stat.icon className="h-5 w-5 text-primary" />
+              <div className="p-2 md:p-2.5 bg-accent rounded-xl">
+                <stat.icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
               </div>
             </div>
           </div>
@@ -38,8 +38,8 @@ const DashboardContent = () => {
       </div>
 
       {/* Placeholder Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-5">
+        <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-4 md:p-6">
           <h3 className="text-base font-semibold text-foreground mb-1">מצב רמזור לפי ענף</h3>
           <p className="text-sm text-muted-foreground mb-6">התפלגות הסטטוס האקדמי של הספורטאים</p>
           <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
@@ -47,7 +47,7 @@ const DashboardContent = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-6">
+        <div className="bg-card rounded-2xl border border-border p-4 md:p-6">
           <h3 className="text-base font-semibold text-foreground mb-1">התראות אחרונות</h3>
           <p className="text-sm text-muted-foreground mb-6">ספורטאים שדורשים תשומת לב</p>
           <div className="space-y-3">
