@@ -27,7 +27,7 @@ const StudentsPage = () => {
 
   const filtered = useMemo(() => {
     return baseData.filter((s) => {
-      if (search && !s.name.includes(search) && !s.branch.includes(search)) return false;
+      if (search && !s.name.includes(search) && !s.branch.includes(search) && !s.grade.includes(search)) return false;
       if (statusFilter && s.status !== statusFilter) return false;
       if (branchFilter && s.branch !== branchFilter) return false;
       if (gradeFilter && s.grade !== gradeFilter) return false;
@@ -61,7 +61,7 @@ const StudentsPage = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="חיפוש לפי שם או ענף..."
+            placeholder="חיפוש לפי שם, ענף או כיתה..."
             className="w-full h-10 ps-10 pe-4 bg-accent/50 border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-150"
           />
           {search && (
