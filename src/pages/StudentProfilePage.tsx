@@ -3,6 +3,11 @@ import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTr
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { StatusType } from "@/lib/studentData";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  LineChart, Line,
+} from "recharts";
 
 type MilestoneStatus = "done" | "in_progress" | "missing";
 
