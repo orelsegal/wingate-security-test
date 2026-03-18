@@ -1,5 +1,23 @@
 import { Users, BookOpen, TrendingUp, AlertTriangle } from "lucide-react";
 
+type StatusType = "green" | "yellow" | "red";
+
+const statusConfig: Record<StatusType, { label: string; dotClass: string; bgClass: string; textClass: string }> = {
+  green: { label: "תקין", dotClass: "bg-success", bgClass: "bg-success/10", textClass: "text-success" },
+  yellow: { label: "במעקב", dotClass: "bg-warning", bgClass: "bg-warning/10", textClass: "text-warning" },
+  red: { label: "בסיכון", dotClass: "bg-destructive", bgClass: "bg-destructive/10", textClass: "text-destructive" },
+};
+
+const StatusBadge = ({ type }: { type: StatusType }) => {
+  const config = statusConfig[type];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${config.bgClass}`}>
+      <span className={`w-[6px] h-[6px] rounded-full ${config.dotClass}`} />
+      <span className={`text-[11px] font-medium ${config.textClass}`}>{config.label}</span>
+    </span>
+  );
+};
+
 const stats = [
   { label: "ספורטאים פעילים", value: "142", icon: Users, subtitle: "+3 החודש" },
   { label: "קורסים פעילים", value: "18", icon: BookOpen, subtitle: "סמסטר א׳" },
@@ -7,19 +25,19 @@ const stats = [
   { label: "התראות", value: "7", icon: AlertTriangle, subtitle: "ספורטאים בסיכון" },
 ];
 
-const recentAlerts = [
-  { name: "יעל כהן", sport: "טניס", status: "אדום", color: "bg-destructive" },
-  { name: "אורי לוי", sport: "שחייה", status: "כתום", color: "bg-warning" },
-  { name: "נועם ברק", sport: "כדורסל", status: "כתום", color: "bg-warning" },
-  { name: "מיכל אברהם", sport: "אתלטיקה", status: "אדום", color: "bg-destructive" },
+const branches = [
+  { name: "שחייה", green: 18, yellow: 4, red: 1, overall: "green" as StatusType },
+  { name: "טניס", green: 12, yellow: 6, red: 3, overall: "yellow" as StatusType },
+  { name: "כדורסל", green: 22, yellow: 5, red: 2, overall: "green" as StatusType },
+  { name: "אתלטיקה", green: 15, yellow: 7, red: 1, overall: "yellow" as StatusType },
+  { name: "התעמלות", green: 10, yellow: 3, red: 0, overall: "green" as StatusType },
 ];
 
-const branches = [
-  { name: "שחייה", green: 18, yellow: 4, red: 1 },
-  { name: "טניס", green: 12, yellow: 6, red: 3 },
-  { name: "כדורסל", green: 22, yellow: 5, red: 2 },
-  { name: "אתלטיקה", green: 15, yellow: 7, red: 1 },
-  { name: "התעמלות", green: 10, yellow: 3, red: 0 },
+const recentAlerts = [
+  { name: "יעל כהן", sport: "טניס", status: "red" as StatusType },
+  { name: "אורי לוי", sport: "שחייה", status: "yellow" as StatusType },
+  { name: "נועם ברק", sport: "כדורסל", status: "yellow" as StatusType },
+  { name: "מיכל אברהם", sport: "אתלטיקה", status: "red" as StatusType },
 ];
 
 const DashboardContent = () => {
@@ -59,41 +77,40 @@ const DashboardContent = () => {
         <div className="lg:col-span-3 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              מצב רמזור לפי ענף
+              מצב אקדמי לפי ענף
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              התפלגות הסטטוס האקדמי של הספורטאים
+              סטטוס כללי של כל ענף ספורט
             </p>
           </div>
 
-          <div className="space-y-4">
-            {branches.map((branch) => {
+          <div className="space-y-1">
+            {branches.map((branch, i) => {
               const total = branch.green + branch.yellow + branch.red;
-              const greenPct = (branch.green / total) * 100;
-              const yellowPct = (branch.yellow / total) * 100;
-              const redPct = (branch.red / total) * 100;
-
               return (
-                <div key={branch.name} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-medium text-foreground">{branch.name}</span>
-                    <span className="text-[12px] text-muted-foreground">{total} ספורטאים</span>
+                <div
+                  key={branch.name}
+                  className={`flex items-center justify-between py-4 ${
+                    i < branches.length - 1 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-[13px] font-medium text-foreground w-20">{branch.name}</span>
+                    <div className="hidden sm:flex items-center gap-3 text-[12px] text-muted-foreground">
+                      <span>{branch.green} תקין</span>
+                      <span className="text-border">·</span>
+                      <span>{branch.yellow} במעקב</span>
+                      {branch.red > 0 && (
+                        <>
+                          <span className="text-border">·</span>
+                          <span>{branch.red} בסיכון</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex h-2 rounded-full overflow-hidden bg-accent gap-[2px]">
-                    <div
-                      className="bg-success rounded-full transition-all duration-300"
-                      style={{ width: `${greenPct}%` }}
-                    />
-                    <div
-                      className="bg-warning rounded-full transition-all duration-300"
-                      style={{ width: `${yellowPct}%` }}
-                    />
-                    {redPct > 0 && (
-                      <div
-                        className="bg-destructive rounded-full transition-all duration-300"
-                        style={{ width: `${redPct}%` }}
-                      />
-                    )}
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-muted-foreground">{total}</span>
+                    <StatusBadge type={branch.overall} />
                   </div>
                 </div>
               );
@@ -101,19 +118,13 @@ const DashboardContent = () => {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-5 mt-7 pt-5 border-t border-border">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-success" />
-              <span className="text-[12px] text-muted-foreground">תקין</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-warning" />
-              <span className="text-[12px] text-muted-foreground">דורש תשומת לב</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-destructive" />
-              <span className="text-[12px] text-muted-foreground">בסיכון</span>
-            </div>
+          <div className="flex items-center gap-4 mt-6 pt-5 border-t border-border">
+            {(["green", "yellow", "red"] as StatusType[]).map((type) => (
+              <div key={type} className="flex items-center gap-1.5">
+                <span className={`w-[6px] h-[6px] rounded-full ${statusConfig[type].dotClass}`} />
+                <span className="text-[12px] text-muted-foreground">{statusConfig[type].label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -137,13 +148,12 @@ const DashboardContent = () => {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={`w-2 h-2 rounded-full ${alert.color} shrink-0`} />
                   <div>
                     <p className="text-[13px] font-medium text-foreground leading-tight">{alert.name}</p>
                     <p className="text-[12px] text-muted-foreground mt-0.5">{alert.sport}</p>
                   </div>
                 </div>
-                <span className="text-[12px] text-muted-foreground">{alert.status}</span>
+                <StatusBadge type={alert.status} />
               </div>
             ))}
           </div>
