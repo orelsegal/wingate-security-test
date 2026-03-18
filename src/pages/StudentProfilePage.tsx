@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle } from "lucide-react";
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { StatusType } from "@/lib/studentData";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
