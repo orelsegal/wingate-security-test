@@ -1,4 +1,5 @@
 import { Users, BookOpen, TrendingUp, AlertTriangle, BarChart3 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { statusConfig, studentsData } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { StatusType } from "@/lib/studentData";
