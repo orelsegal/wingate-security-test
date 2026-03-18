@@ -29,29 +29,28 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   };
 
   return (
-    <aside className="w-[260px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-s border-sidebar-border" dir="rtl">
+    <aside className="w-[256px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-s border-sidebar-border" dir="rtl">
       {/* Logo & Branding */}
-      <button onClick={() => { navigate("/"); onNavigate?.(); }} className="px-6 pt-7 pb-6 w-full text-start group cursor-pointer">
+      <button onClick={() => { navigate("/"); onNavigate?.(); }} className="px-6 pt-6 pb-5 w-full text-start group cursor-pointer">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-card border border-sidebar-border p-1.5 flex items-center justify-center shrink-0 transition-opacity duration-150 group-hover:opacity-75">
+          <div className="w-9 h-9 rounded-xl bg-card border border-sidebar-border p-1.5 flex items-center justify-center shrink-0 transition-opacity duration-150 group-hover:opacity-75">
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-[14px] font-semibold tracking-tight text-start leading-tight text-sidebar-foreground">האקדמיה למצוינות</h1>
-            <p className="text-[11px] text-sidebar-muted mt-0.5 text-start">מכון וינגייט</p>
+            <h1 className="text-[13.5px] font-semibold tracking-tight text-start leading-tight text-sidebar-foreground">האקדמיה למצוינות</h1>
+            <p className="text-[10.5px] text-sidebar-muted mt-0.5 text-start">מכון וינגייט</p>
           </div>
         </div>
       </button>
 
-      {/* Divider */}
       <div className="mx-5 h-px bg-sidebar-border" />
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 pt-6 pb-4">
-        <p className="text-[10px] font-semibold text-sidebar-muted/60 tracking-widest uppercase px-3 mb-4">תפריט</p>
-        <div className="space-y-1">
+      <nav className="flex-1 px-3.5 pt-5 pb-4">
+        <p className="text-[9.5px] font-semibold text-sidebar-muted/50 tracking-[0.1em] uppercase px-3 mb-3">תפריט</p>
+        <div className="space-y-0.5">
           {menuItems.map((item) => {
-            const active = location.pathname === item.path;
+            const active = location.pathname === item.path || (item.path !== "/" && location.pathname.startsWith(item.path));
             return (
               <button
                 key={item.title}
@@ -62,7 +61,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
                     : "text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground font-medium"
                 }`}
               >
-                <item.icon className={`h-[17px] w-[17px] shrink-0 ${active ? "text-primary" : "text-sidebar-muted"}`} strokeWidth={1.5} />
+                <item.icon className={`h-[16px] w-[16px] shrink-0 ${active ? "text-primary" : "text-sidebar-muted"}`} strokeWidth={1.5} />
                 <span>{item.title}</span>
               </button>
             );
@@ -71,24 +70,23 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
       </nav>
 
       {/* Semester */}
-      <div className="px-5 pb-4">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] text-sidebar-muted">
-          <Medal className="h-3.5 w-3.5 shrink-0 text-sidebar-muted/50" strokeWidth={1.5} />
+      <div className="px-5 pb-3">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-[10.5px] text-sidebar-muted/70">
+          <Medal className="h-3.5 w-3.5 shrink-0 text-sidebar-muted/40" strokeWidth={1.5} />
           <span>סמסטר א׳ תשפ״ה</span>
         </div>
       </div>
 
-      {/* Divider */}
       <div className="mx-5 h-px bg-sidebar-border" />
 
       {/* User */}
-      <div className="px-5 py-5">
-        <div className="flex flex-row items-center gap-3 px-1">
-          <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center text-[12px] font-semibold text-primary shrink-0">
+      <div className="px-4 py-4">
+        <div className="flex flex-row items-center gap-3 px-2">
+          <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
             {user?.name.split(" ").map(n => n[0]).join("") || "?"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium truncate text-start text-sidebar-foreground">{user?.name}</p>
+            <p className="text-[12.5px] font-medium truncate text-start text-sidebar-foreground">{user?.name}</p>
             <p className="text-[10px] text-sidebar-muted truncate text-start">
               {user ? roleLabels[user.role] : ""}
             </p>

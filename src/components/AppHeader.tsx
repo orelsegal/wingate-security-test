@@ -20,7 +20,6 @@ const useBreadcrumbs = (): Crumb[] => {
 
   if (path.startsWith("/students")) {
     crumbs.push({ label: "ספורטאים", path: "/students" });
-
     const match = path.match(/^\/students\/(.+)/);
     if (match) {
       crumbs.push({ label: "פרופיל ספורטאי" });
@@ -46,7 +45,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const isInnerPage = location.pathname !== "/";
 
   return (
-    <header className="h-[52px] bg-card border-b border-border flex items-center justify-between px-5 md:px-8 sticky top-0 z-10">
+    <header className="h-[50px] bg-card border-b border-border flex items-center justify-between px-5 md:px-7 sticky top-0 z-10">
       <div className="flex items-center gap-2.5">
         <button
           onClick={onMenuToggle}
@@ -54,7 +53,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         >
           <Menu className="h-5 w-5" strokeWidth={1.5} />
         </button>
-        <div className="w-6 h-6 rounded-md overflow-hidden md:hidden shrink-0">
+        <div className="w-5 h-5 rounded overflow-hidden md:hidden shrink-0">
           <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
         </div>
 
@@ -64,7 +63,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             const isLast = i === crumbs.length - 1;
             return (
               <span key={i} className="flex items-center gap-1">
-                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/30 shrink-0" strokeWidth={1.5} />}
+                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/25 shrink-0" strokeWidth={1.5} />}
                 {isLast || !crumb.path ? (
                   <span className={isLast ? "text-foreground font-medium" : "text-muted-foreground"}>
                     {crumb.label}
@@ -86,27 +85,27 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {isInnerPage && (
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150 me-1"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11.5px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150 me-1"
           >
             <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} />
             <span>חזרה</span>
           </button>
         )}
         {user && (
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent text-[12px] font-medium text-muted-foreground me-1">
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/60 text-[11px] font-medium text-muted-foreground me-1">
             {roleLabels[user.role]}
           </span>
         )}
-        <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150">
-          <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150">
+          <Search className="h-4 w-4" strokeWidth={1.5} />
         </button>
-        <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150 relative">
-          <Bell className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          <span className="absolute top-2 start-2 w-[7px] h-[7px] bg-primary rounded-full ring-2 ring-card" />
+        <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150 relative">
+          <Bell className="h-4 w-4" strokeWidth={1.5} />
+          <span className="absolute top-1.5 start-1.5 w-[6px] h-[6px] bg-primary rounded-full ring-2 ring-card" />
         </button>
       </div>
     </header>
