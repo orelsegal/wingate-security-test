@@ -54,7 +54,7 @@ const StudentsPage = () => {
   const initialStatus = searchParams.get("status") as StatusType | null;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
-  const [branchFilter, setBranchFilter] = useState<string | null>(null);
+  const [branchFilters, setBranchFilters] = useState<string[]>([]);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
