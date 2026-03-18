@@ -303,7 +303,7 @@ const StudentProfilePage = () => {
               {subject.coveredTopics && subject.coveredTopics.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border space-y-3">
                   <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">נושאים שנלמדו</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">כבר למדנו</p>
                     <div className="flex flex-wrap gap-1.5">
                       {subject.coveredTopics.map((topic) => (
                         <span key={topic} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success/10 text-[11px] text-success font-medium">
