@@ -82,7 +82,7 @@ const LoginPage = () => {
         {/* Role cards */}
         <div className="space-y-2.5 mb-8">
           <p className="text-[12px] text-muted-foreground/50 text-center mb-4 animate-fade-in-up" style={{ animationDelay: "180ms" }}>
-            התחברו כדי לראות את מצב ההתקדמות העדכני
+            בחירת תפקיד לכניסה למערכת
           </p>
 
           {demoUsers.map((demoUser, i) => {
