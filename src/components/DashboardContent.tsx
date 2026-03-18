@@ -93,10 +93,10 @@ const DashboardContent = () => {
         <div className="lg:col-span-3 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              איך הענפים מתקדמים?
+              סטטוס כולל לפי ענף
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              תמונת מצב אקדמית לפי ענף ספורט
+              התפלגות מצב אקדמי בכל ענף
             </p>
           </div>
 
