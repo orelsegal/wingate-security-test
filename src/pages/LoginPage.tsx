@@ -22,7 +22,10 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6" dir="rtl">
-      <div className="w-full max-w-[420px] space-y-10">
+      {/* Subtle gradient at top */}
+      <div className="fixed top-0 inset-x-0 h-64 gradient-brand opacity-60 pointer-events-none" />
+
+      <div className="w-full max-w-[420px] space-y-10 relative z-10">
         {/* Header */}
         <div className="text-center space-y-5 animate-fade-in-up">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-card border border-border p-3 flex items-center justify-center shadow-sm">
@@ -53,7 +56,7 @@ const LoginPage = () => {
               <button
                 key={demoUser.role}
                 onClick={() => handleLogin(demoUser)}
-                className="w-full card-premium p-5 flex items-center gap-4 text-start hover:border-primary/25 transition-all duration-150 group cursor-pointer animate-fade-in-up"
+                className="w-full card-premium p-5 flex items-center gap-4 text-start hover:border-primary/20 transition-all duration-150 group cursor-pointer animate-fade-in-up"
                 style={{ animationDelay: `${200 + i * 80}ms` }}
               >
                 <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors duration-150">
