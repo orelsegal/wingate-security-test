@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, BookOpen, Heart, Dumbbell, ArrowLeft, BarChart3, Target, Route } from "lucide-react";
+import { Shield, BookOpen, Heart, Dumbbell, ArrowLeft, Sparkles } from "lucide-react";
 import { useAuth, demoUsers, roleLabels, roleDescriptions } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
@@ -12,11 +12,18 @@ const roleIcons: Record<UserRole, typeof Shield> = {
   coach: Dumbbell,
 };
 
-const roleAccents: Record<UserRole, string> = {
-  admin: "from-primary/8 to-primary/3",
-  teacher: "from-[hsl(200_50%_94%)] to-[hsl(200_40%_97%)]",
-  parent: "from-[hsl(340_40%_95%)] to-[hsl(340_30%_97%)]",
-  coach: "from-warning/8 to-warning/3",
+const roleCircleColors: Record<UserRole, string> = {
+  admin: "bg-[hsl(150,20%,92%)]",
+  teacher: "bg-[hsl(35,40%,92%)]",
+  parent: "bg-[hsl(350,30%,93%)]",
+  coach: "bg-[hsl(25,45%,91%)]",
+};
+
+const roleIconColors: Record<UserRole, string> = {
+  admin: "text-primary",
+  teacher: "text-[hsl(35,50%,45%)]",
+  parent: "text-[hsl(350,40%,50%)]",
+  coach: "text-[hsl(25,55%,45%)]",
 };
 
 const LoginPage = () => {
@@ -30,54 +37,63 @@ const LoginPage = () => {
     setTimeout(() => {
       login(user);
       navigate("/");
-    }, 300);
+    }, 350);
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden" dir="rtl">
-      {/* Ambient background layers */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,hsl(150_20%_95%)_0%,transparent_50%)]" />
-        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_bottom_left,hsl(148_15%_94%)_0%,transparent_50%)]" />
-        <div className="absolute top-[20%] start-[10%] w-[300px] h-[300px] rounded-full bg-primary/[0.025] blur-[80px]" />
-        <div className="absolute bottom-[15%] end-[15%] w-[250px] h-[250px] rounded-full bg-primary/[0.02] blur-[60px]" />
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "linear-gradient(hsl(150 30% 40%) 1px, transparent 1px), linear-gradient(90deg, hsl(150 30% 40%) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+    <div className="min-h-screen bg-[hsl(40,25%,96%)] flex items-center justify-center relative overflow-hidden" dir="rtl">
+      {/* Decorative organic background shapes */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Large soft circle top-right */}
+        <div className="absolute -top-[120px] -left-[80px] w-[400px] h-[400px] rounded-full bg-primary/[0.04]" />
+        {/* Medium circle bottom-left */}
+        <div className="absolute -bottom-[60px] -right-[100px] w-[300px] h-[300px] rounded-full bg-[hsl(35,40%,92%)]/60" />
+        {/* Small accent circle */}
+        <div className="absolute top-[15%] right-[8%] w-[80px] h-[80px] rounded-full bg-primary/[0.06]" />
+        <div className="absolute bottom-[25%] left-[12%] w-[50px] h-[50px] rounded-full bg-[hsl(25,45%,90%)]/50" />
+        {/* Decorative star/sparkle elements inspired by yoga pin */}
+        <svg className="absolute top-[12%] left-[18%] w-5 h-5 text-primary/10" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" />
+        </svg>
+        <svg className="absolute bottom-[18%] right-[20%] w-4 h-4 text-primary/8" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" />
+        </svg>
+        {/* Leaf-like decorative element */}
+        <svg className="absolute top-[60%] left-[6%] w-12 h-12 text-primary/[0.05] rotate-45" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
+        </svg>
       </div>
 
-      <div className="w-full max-w-[420px] px-6 relative z-10">
+      <div className="w-full max-w-[380px] px-6 relative z-10">
 
-        {/* ── Logo ── */}
-        <div className="flex justify-center mb-5 animate-fade-in-up">
+        {/* ── Logo in soft pastel circle ── */}
+        <div className="flex justify-center mb-6 animate-fade-in-up">
           <div className="relative">
-            <div className="w-[56px] h-[56px] rounded-2xl bg-card border border-border/80 p-2.5 flex items-center justify-center shadow-[0_4px_24px_-4px_hsl(150_20%_20%/0.08)]">
-              <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
+            <div className="w-[72px] h-[72px] rounded-full bg-[hsl(40,20%,94%)] border border-[hsl(40,15%,90%)] flex items-center justify-center shadow-[0_4px_20px_-4px_hsl(40,20%,50%,0.1)]">
+              <div className="w-[44px] h-[44px] rounded-full bg-card flex items-center justify-center shadow-[0_2px_8px_-2px_hsl(150,20%,30%,0.08)]">
+                <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-7 h-7 object-contain" />
+              </div>
             </div>
-            {/* Glow ring */}
-            <div className="absolute -inset-2 rounded-3xl bg-primary/[0.04] blur-xl -z-10" />
           </div>
         </div>
 
         {/* ── Title ── */}
-        <div className="text-center mb-8 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-          <h1 className="text-[20px] md:text-[24px] font-semibold text-primary tracking-tight leading-snug">
+        <div className="text-center mb-8 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+          <h1 className="text-[22px] font-bold text-primary tracking-tight leading-snug">
             האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[13px] text-muted-foreground leading-relaxed mt-2 max-w-[320px] mx-auto">
+          <p className="text-[12.5px] text-muted-foreground leading-relaxed mt-2 max-w-[300px] mx-auto">
             מערכת חכמה לניהול ובקרת התקדמות לימודית
           </p>
         </div>
 
-        {/* ── Role Cards ── */}
-        <div className="space-y-2.5 mb-5">
-          <p className="text-[10.5px] text-muted-foreground/40 text-center mb-3 animate-fade-in-up font-medium tracking-wide" style={{ animationDelay: "80ms" }}>
-            בחירת תפקיד
-          </p>
-
+        {/* ── Role Cards – pastel circle style ── */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
           {demoUsers.map((demoUser, i) => {
             const Icon = roleIcons[demoUser.role];
             const isSelected = selectedRole === demoUser.role;
             const isHovered = hoveredRole === demoUser.role;
+            const isActive = isSelected || isHovered;
 
             return (
               <button
@@ -85,68 +101,57 @@ const LoginPage = () => {
                 onClick={() => handleLogin(demoUser)}
                 onMouseEnter={() => setHoveredRole(demoUser.role)}
                 onMouseLeave={() => setHoveredRole(null)}
-                className={`w-full group relative bg-card border rounded-2xl p-4 flex items-center gap-4 text-start transition-all duration-300 cursor-pointer animate-fade-in-up overflow-hidden ${
+                className={`group relative bg-card rounded-2xl p-4 flex flex-col items-center gap-2.5 text-center transition-all duration-300 cursor-pointer animate-fade-in-up ${
                   isSelected
-                    ? "border-primary/30 shadow-[0_8px_32px_-8px_hsl(150_30%_30%/0.15)] scale-[0.98]"
-                    : "border-border/70 hover:border-primary/20 hover:shadow-[0_8px_32px_-8px_hsl(150_20%_20%/0.1)] hover:translate-y-[-1px]"
-                }`}
-                style={{ animationDelay: `${100 + i * 60}ms` }}
+                    ? "shadow-[0_8px_30px_-6px_hsl(150,30%,30%,0.15)] scale-[0.97] ring-1 ring-primary/20"
+                    : "shadow-[0_2px_12px_-4px_hsl(40,20%,40%,0.08)] hover:shadow-[0_8px_30px_-6px_hsl(150,20%,30%,0.12)] hover:-translate-y-1"
+                } border ${isActive ? "border-primary/20" : "border-[hsl(40,15%,91%)]"}`}
+                style={{ animationDelay: `${120 + i * 70}ms` }}
               >
-                {/* Gradient accent background */}
-                <div className={`absolute inset-0 bg-gradient-to-l ${roleAccents[demoUser.role]} opacity-0 transition-opacity duration-300 ${isHovered || isSelected ? "opacity-100" : ""}`} />
-
-                <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
-                  isHovered || isSelected ? "bg-primary/10" : "bg-accent/70"
+                {/* Pastel circle icon – inspired by Pin 1 */}
+                <div className={`w-12 h-12 rounded-full ${roleCircleColors[demoUser.role]} flex items-center justify-center transition-all duration-300 ${
+                  isActive ? "scale-110 shadow-[0_4px_16px_-4px_hsl(150,20%,40%,0.15)]" : ""
                 }`}>
-                  <Icon className={`h-[18px] w-[18px] transition-all duration-300 ${
-                    isHovered || isSelected ? "text-primary" : "text-muted-foreground/60"
-                  }`} strokeWidth={1.5} />
+                  <Icon className={`h-5 w-5 ${roleIconColors[demoUser.role]} transition-all duration-300`} strokeWidth={1.5} />
                 </div>
 
-                <div className="relative flex-1 min-w-0">
-                  <p className={`text-[13.5px] font-semibold leading-tight transition-colors duration-200 ${
-                    isHovered || isSelected ? "text-foreground" : "text-foreground/90"
+                <div>
+                  <p className={`text-[13px] font-semibold leading-tight transition-colors duration-200 ${
+                    isActive ? "text-primary" : "text-foreground/85"
                   }`}>
                     {roleLabels[demoUser.role]}
                   </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                  <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-snug">
                     {roleDescriptions[demoUser.role]}
                   </p>
                 </div>
 
-                <div className={`relative w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${
-                  isHovered || isSelected ? "opacity-100 bg-primary/8 translate-x-0" : "opacity-0 translate-x-1"
-                }`}>
-                  <ArrowLeft className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                </div>
+                {/* Active indicator dot */}
+                <div className={`absolute top-2.5 start-2.5 w-2 h-2 rounded-full bg-primary transition-all duration-300 ${
+                  isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
+                }`} />
               </button>
             );
           })}
         </div>
 
-        {/* ── Capability hint ── */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "380ms" }}>
-          <div className="flex items-center justify-center gap-4 py-3 px-4 rounded-xl bg-accent/30 border border-border/40">
-            {[
-              { icon: BarChart3, label: "ציונים" },
-              { icon: Route, label: "מפות דרכים" },
-              { icon: Target, label: "חוסרים" },
-            ].map(({ icon: FIcon, label }) => (
-              <div key={label} className="flex items-center gap-1.5">
-                <FIcon className="h-3 w-3 text-primary/40" strokeWidth={1.5} />
-                <span className="text-[10px] text-muted-foreground/50 font-medium">{label}</span>
-              </div>
-            ))}
+        {/* ── System capability hint ── */}
+        <div className="animate-fade-in-up" style={{ animationDelay: "420ms" }}>
+          <div className="flex items-center justify-center gap-2 py-2.5 px-3">
+            <Sparkles className="h-3 w-3 text-primary/30 shrink-0" strokeWidth={1.5} />
+            <span className="text-[10px] text-muted-foreground/45 font-medium leading-relaxed">
+              מעקב חכם · מקצועות · חוסרים · מפות דרכים
+            </span>
           </div>
         </div>
 
         {/* ── Bottom branding ── */}
-        <div className="mt-6 text-center animate-fade-in-up" style={{ animationDelay: "420ms" }}>
-          <div className="inline-flex items-center gap-2">
-            <div className="w-3 h-3 rounded overflow-hidden opacity-40">
+        <div className="mt-4 text-center animate-fade-in-up" style={{ animationDelay: "480ms" }}>
+          <div className="inline-flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full overflow-hidden opacity-30">
               <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
             </div>
-            <span className="text-[10px] text-muted-foreground/30 font-medium">
+            <span className="text-[9.5px] text-muted-foreground/25 font-medium">
               מכון וינגייט · סמסטר א׳ תשפ״ה
             </span>
           </div>
