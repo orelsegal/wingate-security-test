@@ -24,8 +24,8 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
       {/* Logo & Branding */}
       <div className="px-6 py-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sidebar-foreground/10 p-1.5 flex items-center justify-center shrink-0">
-            <img src={wingateLogoSrc} alt="אקדמיית וינגייט" className="w-full h-full object-contain brightness-0 invert" />
+          <div className="w-11 h-11 rounded-xl bg-sidebar-foreground/95 p-1.5 flex items-center justify-center shrink-0">
+            <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain rounded-sm" />
           </div>
           <div className="min-w-0">
             <h1 className="text-[15px] font-semibold tracking-tight text-start leading-tight">האקדמיה למצוינות</h1>
