@@ -77,9 +77,9 @@ const StudentsPage = () => {
   return (
     <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
       <div className="space-y-1.5">
-        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">ספורטאים</h2>
+        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">הספורטאים שלנו</h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : "רשומים"} &middot; {filtered.length} מוצגים
+          {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : "באקדמיה"} &middot; מוצגים {filtered.length}
         </p>
       </div>
 
