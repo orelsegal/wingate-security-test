@@ -276,7 +276,30 @@ const StudentProfilePage = () => {
                     )}
                   </div>
                 </div>
-                <StatusBadge type={subject.status} />
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-default"><StatusBadge type={subject.status} /></span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[220px] p-3 space-y-1.5 text-start" dir="rtl">
+                      <p className="text-[12px] font-medium text-popover-foreground">
+                        {subject.status === "green" ? "במסלול — הציון והנוכחות תקינים" :
+                         subject.status === "yellow" ? "במעקב — יש מה לשפר, שווה לעקוב" :
+                         "דורש התערבות — נדרשת תשומת לב מיידית"}
+                      </p>
+                      {subject.missingTopics && subject.missingTopics.length > 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          נושאים להשלמה: {subject.missingTopics.join("، ")}
+                        </p>
+                      )}
+                      {subject.absences > 2 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          {subject.absences} היעדרויות רשומות
+                        </p>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               <div className="flex items-end justify-between mt-4">
