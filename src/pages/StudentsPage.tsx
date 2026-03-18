@@ -86,6 +86,40 @@ const StudentsPage = () => {
         </p>
       </div>
 
+      {/* KPI Summary Cards */}
+      <div className="grid grid-cols-3 gap-3 md:gap-4">
+        {([
+          { type: "green" as StatusType, icon: "✓", count: baseData.filter(s => s.status === "green").length },
+          { type: "yellow" as StatusType, icon: "!", count: baseData.filter(s => s.status === "yellow").length },
+          { type: "red" as StatusType, icon: "⚠", count: baseData.filter(s => s.status === "red").length },
+        ]).map((kpi) => {
+          const config = statusConfig[kpi.type];
+          const isActive = statusFilter === kpi.type;
+          return (
+            <button
+              key={kpi.type}
+              onClick={() => setStatusFilter(isActive ? null : kpi.type)}
+              className={`card-premium p-4 md:p-5 text-start transition-all duration-200 cursor-pointer group ${
+                isActive ? "ring-2 ring-offset-1 " + (kpi.type === "green" ? "ring-success/40" : kpi.type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : "hover:shadow-md"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-[13px] ${config.bgClass} ${config.textClass}`}>
+                  <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass}`} />
+                </div>
+                {isActive && (
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>מסונן</span>
+                )}
+              </div>
+              <p className={`text-[28px] md:text-[34px] font-semibold leading-none tracking-tight ${config.textClass}`}>
+                {kpi.count}
+              </p>
+              <p className="text-[12px] text-muted-foreground mt-1.5">{config.label}</p>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters */}
       <div className="card-premium p-4 md:p-5 space-y-4">
         <div className="relative">
