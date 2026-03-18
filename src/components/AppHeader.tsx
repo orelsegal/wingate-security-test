@@ -102,7 +102,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           </span>
         )}
         <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150">
-          <Search className="h-[18px] w-[18px]" />
+          <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </button>
         <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150 relative">
           <Bell className="h-[18px] w-[18px]" />
