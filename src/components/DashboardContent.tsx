@@ -36,8 +36,17 @@ const DashboardContent = () => {
 
   return (
     <div className="p-5 md:p-10 lg:p-12 space-y-8 md:space-y-10 max-w-[1400px]">
+      {/* Live status strip */}
+      <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+        </span>
+        <span>מצב עדכני להיום &middot; {new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}</span>
+      </div>
+
       {/* Page Title + Quick Action */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-4">
         <div className="space-y-1.5">
           <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">
             מה המצב היום?
