@@ -335,7 +335,7 @@ const StudentProfilePage = () => {
               {/* Milestones Roadmap */}
               {subject.milestones && subject.milestones.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-3">מפת דרכים</p>
+                  <p className="text-[11px] font-medium text-muted-foreground mb-3">שלבי התקדמות</p>
                   <div className="space-y-0">
                     {subject.milestones.map((ms, idx) => {
                       const isLast = idx === (subject.milestones?.length ?? 0) - 1;

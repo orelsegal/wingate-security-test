@@ -122,10 +122,10 @@ const DashboardContent = () => {
         <div className="lg:col-span-2 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              התראות אחרונות
+              שימו לב אליהם 👀
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              ספורטאים שדורשים תשומת לב
+              ספורטאים שמצריכים מענה מהצוות
             </p>
           </div>
 

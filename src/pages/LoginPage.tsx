@@ -78,7 +78,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <p className="text-[11px] text-muted-foreground/40 text-center leading-relaxed">
-          גרסת הדגמה · אין צורך בסיסמה
+          סביבת הדגמה · ללא סיסמה · לחצו על תפקיד כדי להיכנס
         </p>
       </div>
     </div>

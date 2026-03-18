@@ -45,7 +45,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-5 space-y-0.5">
-        <p className="text-[11px] font-medium text-muted-foreground/50 tracking-wider px-4 mb-3">ניווט ראשי</p>
+        <p className="text-[11px] font-medium text-muted-foreground/50 tracking-wider px-4 mb-3">תפריט</p>
         {menuItems.map((item) => {
           const active = location.pathname === item.path;
           return (
