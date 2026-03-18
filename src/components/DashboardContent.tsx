@@ -1,4 +1,5 @@
 import { Users, BookOpen, TrendingUp, AlertTriangle, BarChart3, ChevronLeft } from "lucide-react";
+import InitialsAvatar from "@/components/InitialsAvatar";
 import { useNavigate } from "react-router-dom";
 import { statusConfig, studentsData } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -43,7 +44,7 @@ const DashboardContent = () => {
   const recentAlerts = scopedStudents
     .filter(s => s.status === "red" || s.status === "yellow")
     .slice(0, 5)
-    .map(s => ({ name: s.name, sport: s.branch, status: s.status, avatar: s.avatar }));
+    .map(s => ({ name: s.name, sport: s.branch, status: s.status }));
 
   const isTeacher = user?.role === "teacher";
 
@@ -228,7 +229,7 @@ const DashboardContent = () => {
                 className="flex items-center justify-between px-5 md:px-6 py-4 cursor-pointer hover:bg-accent/30 transition-colors duration-100"
               >
                 <div className="flex items-center gap-3">
-                  <img src={alert.avatar} alt={alert.name} className="w-8 h-8 rounded-full bg-accent shrink-0" />
+                  <InitialsAvatar name={alert.name} size="sm" />
                   <div>
                     <p className="text-[13px] font-medium text-foreground leading-tight">{alert.name}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{alert.sport}</p>
