@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, BookOpen, Heart, Dumbbell, ArrowLeft, Sparkles } from "lucide-react";
+import { Shield, BookOpen, Heart, Dumbbell, Sparkles } from "lucide-react";
 import { useAuth, demoUsers, roleLabels, roleDescriptions } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
@@ -31,34 +31,36 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [hoveredRole, setHoveredRole] = useState<UserRole | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [exiting, setExiting] = useState(false);
 
   const handleLogin = (user: AppUser) => {
     setSelectedRole(user.role);
+    setExiting(true);
     setTimeout(() => {
       login(user);
       navigate("/");
-    }, 350);
+    }, 500);
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(40,25%,96%)] flex items-center justify-center relative overflow-hidden" dir="rtl">
+    <div
+      className={`min-h-screen bg-[hsl(40,25%,96%)] flex items-center justify-center relative overflow-hidden transition-all duration-500 ${
+        exiting ? "opacity-0 scale-[1.02]" : "opacity-100 scale-100"
+      }`}
+      dir="rtl"
+    >
       {/* Decorative organic background shapes */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Large soft circle top-right */}
         <div className="absolute -top-[120px] -left-[80px] w-[400px] h-[400px] rounded-full bg-primary/[0.04]" />
-        {/* Medium circle bottom-left */}
         <div className="absolute -bottom-[60px] -right-[100px] w-[300px] h-[300px] rounded-full bg-[hsl(35,40%,92%)]/60" />
-        {/* Small accent circle */}
         <div className="absolute top-[15%] right-[8%] w-[80px] h-[80px] rounded-full bg-primary/[0.06]" />
         <div className="absolute bottom-[25%] left-[12%] w-[50px] h-[50px] rounded-full bg-[hsl(25,45%,90%)]/50" />
-        {/* Decorative star/sparkle elements inspired by yoga pin */}
         <svg className="absolute top-[12%] left-[18%] w-5 h-5 text-primary/10" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" />
         </svg>
-        <svg className="absolute bottom-[18%] right-[20%] w-4 h-4 text-primary/8" viewBox="0 0 24 24" fill="currentColor">
+        <svg className="absolute bottom-[18%] right-[20%] w-4 h-4 text-primary/[0.08]" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" />
         </svg>
-        {/* Leaf-like decorative element */}
         <svg className="absolute top-[60%] left-[6%] w-12 h-12 text-primary/[0.05] rotate-45" viewBox="0 0 24 24" fill="currentColor">
           <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/>
         </svg>
@@ -66,7 +68,7 @@ const LoginPage = () => {
 
       <div className="w-full max-w-[380px] px-6 relative z-10">
 
-        {/* ── Logo in soft pastel circle ── */}
+        {/* ── Logo ── */}
         <div className="flex justify-center mb-6 animate-fade-in-up">
           <div className="relative">
             <div className="w-[72px] h-[72px] rounded-full bg-[hsl(40,20%,94%)] border border-[hsl(40,15%,90%)] flex items-center justify-center shadow-[0_4px_20px_-4px_hsl(40,20%,50%,0.1)]">
@@ -87,7 +89,7 @@ const LoginPage = () => {
           </p>
         </div>
 
-        {/* ── Role Cards – pastel circle style ── */}
+        {/* ── Role Cards ── */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           {demoUsers.map((demoUser, i) => {
             const Icon = roleIcons[demoUser.role];
@@ -108,7 +110,6 @@ const LoginPage = () => {
                 } border ${isActive ? "border-primary/20" : "border-[hsl(40,15%,91%)]"}`}
                 style={{ animationDelay: `${120 + i * 70}ms` }}
               >
-                {/* Pastel circle icon – inspired by Pin 1 */}
                 <div className={`w-12 h-12 rounded-full ${roleCircleColors[demoUser.role]} flex items-center justify-center transition-all duration-300 ${
                   isActive ? "scale-110 shadow-[0_4px_16px_-4px_hsl(150,20%,40%,0.15)]" : ""
                 }`}>
@@ -126,7 +127,6 @@ const LoginPage = () => {
                   </p>
                 </div>
 
-                {/* Active indicator dot */}
                 <div className={`absolute top-2.5 start-2.5 w-2 h-2 rounded-full bg-primary transition-all duration-300 ${
                   isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
                 }`} />
@@ -135,7 +135,7 @@ const LoginPage = () => {
           })}
         </div>
 
-        {/* ── System capability hint ── */}
+        {/* ── System hint ── */}
         <div className="animate-fade-in-up" style={{ animationDelay: "420ms" }}>
           <div className="flex items-center justify-center gap-2 py-2.5 px-3">
             <Sparkles className="h-3 w-3 text-primary/30 shrink-0" strokeWidth={1.5} />
@@ -145,7 +145,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* ── Bottom branding ── */}
+        {/* ── Branding ── */}
         <div className="mt-4 text-center animate-fade-in-up" style={{ animationDelay: "480ms" }}>
           <div className="inline-flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full overflow-hidden opacity-30">
