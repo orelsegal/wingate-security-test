@@ -44,7 +44,7 @@ const LoginPage = () => {
         {/* Divider */}
         <div className="flex items-center gap-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
           <div className="flex-1 h-px bg-border" />
-          <span className="text-[12px] text-muted-foreground/60 px-1">כניסה למערכת</span>
+          <span className="text-[12px] text-muted-foreground/60 px-1">בחרו תפקיד להתחברות</span>
           <div className="flex-1 h-px bg-border" />
         </div>
 
