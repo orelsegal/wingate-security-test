@@ -43,7 +43,9 @@ const useBreadcrumbs = (): Crumb[] => {
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const crumbs = useBreadcrumbs();
+  const isInnerPage = location.pathname !== "/";
 
   return (
     <header className="h-[56px] bg-card border-b border-border flex items-center justify-between px-5 md:px-8 sticky top-0 z-10">
