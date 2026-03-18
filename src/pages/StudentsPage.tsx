@@ -48,13 +48,30 @@ const StudentsPage = () => {
     return list;
   }, [baseData, search, statusFilter, branchFilter, gradeFilter, sortBy, sortDir]);
 
-  const hasFilters = search || statusFilter || branchFilter || gradeFilter;
+  const hasFilters = search || statusFilter || branchFilter || gradeFilter || sortBy;
+
+  const toggleSort = (col: "name" | "avg" | "status") => {
+    if (sortBy === col) {
+      if (sortDir === "asc") setSortDir("desc");
+      else { setSortBy(null); setSortDir("asc"); }
+    } else {
+      setSortBy(col);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: "name" | "avg" | "status" }) => {
+    if (sortBy !== col) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />;
+  };
 
   const clearAll = () => {
     setSearch("");
     setStatusFilter(null);
     setBranchFilter(null);
     setGradeFilter(null);
+    setSortBy(null);
+    setSortDir("asc");
   };
 
   return (
