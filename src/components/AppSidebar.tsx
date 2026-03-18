@@ -1,14 +1,15 @@
-import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, GraduationCap, Trophy, Medal } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, GraduationCap, Trophy, Medal, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth, roleLabels } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
-const menuItems = [
-  { title: "לוח ראשי", icon: LayoutDashboard, path: "/" },
-  { title: "ספורטאים", icon: Users, path: "/students" },
-  { title: "קורסים", icon: BookOpen, path: "/courses" },
-  { title: "ציונים", icon: GraduationCap, path: "/grades" },
-  { title: "דוחות", icon: BarChart3, path: "/reports" },
-  { title: "הגדרות", icon: Settings, path: "/settings" },
+const allMenuItems = [
+  { title: "לוח ראשי", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
+  { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
+  { title: "קורסים", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
+  { title: "ציונים", icon: GraduationCap, path: "/grades", roles: ["admin", "teacher"] },
+  { title: "דוחות", icon: BarChart3, path: "/reports", roles: ["admin"] },
+  { title: "הגדרות", icon: Settings, path: "/settings", roles: ["admin"] },
 ];
 
 interface AppSidebarProps {
@@ -18,10 +19,18 @@ interface AppSidebarProps {
 const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const menuItems = allMenuItems.filter((item) => user && item.roles.includes(user.role));
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <aside className="w-[260px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col" dir="rtl">
-      {/* Logo & Branding */}
+      {/* Logo */}
       <div className="px-6 py-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-card p-1.5 flex items-center justify-center shrink-0 border border-sidebar-border">
@@ -59,7 +68,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
         })}
       </nav>
 
-      {/* Semester badge */}
+      {/* Semester */}
       <div className="px-5 pb-3">
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sidebar-accent/30 text-[12px] text-sidebar-foreground/60">
           <Medal className="h-3.5 w-3.5 shrink-0" />
@@ -67,16 +76,25 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
         </div>
       </div>
 
-      {/* User */}
+      {/* User + Logout */}
       <div className="px-5 py-5 border-t border-sidebar-border">
         <div className="flex flex-row items-center gap-3 px-2">
           <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center text-[13px] font-semibold shrink-0">
-            מנ
+            {user?.name.split(" ").map(n => n[0]).join("") || "?"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium truncate text-start">מנהל מערכת</p>
-            <p className="text-[12px] opacity-50 truncate text-start">admin@wingate.ac.il</p>
+            <p className="text-[13px] font-medium truncate text-start">{user?.name}</p>
+            <p className="text-[11px] text-sidebar-foreground/50 truncate text-start">
+              {user ? roleLabels[user.role] : ""}
+            </p>
           </div>
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-lg text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors duration-150"
+            title="התנתק"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </aside>
