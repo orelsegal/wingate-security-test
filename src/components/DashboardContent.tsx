@@ -190,6 +190,7 @@ const DashboardContent = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
+                    <img src={alert.avatar} alt={alert.name} className="w-8 h-8 rounded-full bg-accent shrink-0" />
                     <div>
                       <p className="text-[13px] font-medium text-foreground leading-tight">{alert.name}</p>
                       <p className="text-[12px] text-muted-foreground mt-0.5">{alert.sport}</p>
