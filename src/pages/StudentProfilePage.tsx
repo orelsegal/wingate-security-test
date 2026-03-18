@@ -306,7 +306,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                       {subject.missingTopics && subject.missingTopics.length > 0 && (
                         <div>
                           <p className="text-[12px] font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3 text-warning" />
+                            <AlertTriangle className="h-3 w-3 text-warning" strokeWidth={1.5} />
                             נושאים להשלמה
                           </p>
                           <div className="flex flex-wrap gap-1.5">
