@@ -23,10 +23,10 @@ const branches = [
 ];
 
 const recentAlerts = [
-  { name: "יעל כהן", sport: "טניס", status: "red" as StatusType },
-  { name: "אורי לוי", sport: "שחייה", status: "yellow" as StatusType },
-  { name: "נועם ברק", sport: "כדורסל", status: "yellow" as StatusType },
-  { name: "מיכל אברהם", sport: "אתלטיקה", status: "red" as StatusType },
+  { name: "ליאה חשאי", sport: "אתלטיקה", status: "red" as StatusType },
+  { name: "ניקול גולובנסקי", sport: "כדורסל", status: "red" as StatusType },
+  { name: "יעל עטר", sport: "אתלטיקה", status: "red" as StatusType },
+  { name: "אביתר נאור", sport: "שחייה", status: "yellow" as StatusType },
 ];
 
 const DashboardContent = () => {
