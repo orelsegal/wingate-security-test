@@ -390,8 +390,8 @@ const StudentProfilePage = () => {
         {/* Absences */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">רשימת חיסורים</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">חיסורים אחרונים</p>
+            <h3 className="text-[15px] font-semibold text-foreground">נוכחות והיעדרויות</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">היעדרויות אחרונות שנרשמו</p>
           </div>
           <div className="space-y-0.5">
             {student.absences.map((absence, i) => (
