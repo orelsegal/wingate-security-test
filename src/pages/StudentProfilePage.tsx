@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target } from "lucide-react";
-import { studentsData, StatusBadge, statusConfig } from "@/lib/studentData";
+import { studentsData, statusConfig } from "@/lib/studentData";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { StatusType } from "@/lib/studentData";
 
 interface SubjectData {
