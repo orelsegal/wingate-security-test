@@ -19,6 +19,7 @@ export interface StudentData {
   grade: string;
   status: StatusType;
   avg: number;
+  avatar: string;
 }
 
 export const studentsData: StudentData[] = [
