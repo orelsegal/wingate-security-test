@@ -150,6 +150,20 @@ const ProgressRing = ({ value }: { value: number }) => {
 
 const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Track milestone overrides: { "מתמטיקה-2": "done" }
+  const [overrides, setOverrides] = useState<Record<string, MilestoneStatus>>({});
+
+  const getMilestoneStatus = (subjectName: string, idx: number, original: MilestoneStatus): MilestoneStatus => {
+    return overrides[`${subjectName}-${idx}`] ?? original;
+  };
+
+  const toggleMilestone = (subjectName: string, idx: number, current: MilestoneStatus) => {
+    const key = `${subjectName}-${idx}`;
+    setOverrides(prev => ({
+      ...prev,
+      [key]: current === "done" ? "missing" : "done",
+    }));
+  };
 
   return (
     <div>
@@ -157,8 +171,12 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {subjects.map((subject) => {
           const isOpen = expanded === subject.name;
-          const doneCount = subject.milestones?.filter(m => m.status === "done").length ?? 0;
-          const totalCount = subject.milestones?.length ?? 0;
+          const resolvedMilestones = subject.milestones?.map((ms, idx) => ({
+            ...ms,
+            status: getMilestoneStatus(subject.name, idx, ms.status),
+          }));
+          const doneCount = resolvedMilestones?.filter(m => m.status === "done").length ?? 0;
+          const totalCount = resolvedMilestones?.length ?? 0;
           const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
           return (
@@ -212,20 +230,24 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                 <div className="px-5 pb-5 border-t border-border animate-fade-in-up" style={{ animationDuration: "200ms" }}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-5">
                     {/* Column 1: Milestones roadmap */}
-                    {subject.milestones && subject.milestones.length > 0 && (
+                    {resolvedMilestones && resolvedMilestones.length > 0 && (
                       <div>
                         <p className="text-[12px] font-medium text-muted-foreground mb-3">שלבי התקדמות</p>
                         <div className="space-y-0">
-                          {subject.milestones.map((ms, idx) => {
-                            const isLast = idx === (subject.milestones?.length ?? 0) - 1;
+                          {resolvedMilestones.map((ms, idx) => {
+                            const isLast = idx === resolvedMilestones.length - 1;
                             return (
                               <div key={idx} className="flex items-start gap-3">
                                 <div className="flex flex-col items-center">
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                                    ms.status === "done" ? "bg-success/15"
-                                    : ms.status === "in_progress" ? "bg-primary/15"
-                                    : "bg-accent"
-                                  }`}>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); toggleMilestone(subject.name, idx, ms.status); }}
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 cursor-pointer hover:scale-110 ${
+                                      ms.status === "done" ? "bg-success/15 hover:bg-success/25"
+                                      : ms.status === "in_progress" ? "bg-primary/15 hover:bg-primary/25"
+                                      : "bg-accent hover:bg-accent/80"
+                                    }`}
+                                    title={ms.status === "done" ? "סמן כלא הושלם" : "סמן כהושלם"}
+                                  >
                                     {ms.status === "done" ? (
                                       <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                                     ) : ms.status === "in_progress" ? (
@@ -233,18 +255,23 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                                     ) : (
                                       <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                                     )}
-                                  </div>
+                                  </button>
                                   {!isLast && (
                                     <div className={`w-px h-5 ${ms.status === "done" ? "bg-success/30" : "bg-border"}`} />
                                   )}
                                 </div>
-                                <span className={`text-[13px] pt-1 ${
-                                  ms.status === "done" ? "text-muted-foreground"
-                                  : ms.status === "in_progress" ? "text-foreground font-medium"
-                                  : "text-muted-foreground/60"
-                                }`}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); toggleMilestone(subject.name, idx, ms.status); }}
+                                  className={`text-[13px] pt-1 text-start transition-colors duration-150 cursor-pointer hover:text-foreground ${
+                                    ms.status === "done"
+                                      ? "text-muted-foreground line-through decoration-success/40"
+                                      : ms.status === "in_progress"
+                                      ? "text-foreground font-medium"
+                                      : "text-muted-foreground/60"
+                                  }`}
+                                >
                                   {ms.title}
-                                </span>
+                                </button>
                               </div>
                             );
                           })}
