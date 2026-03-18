@@ -200,8 +200,8 @@ const StudentProfilePage = () => {
         {/* Bar Chart - Grades per Subject */}
         <div className="card-premium p-5 md:p-7">
           <div className="mb-6">
-            <h3 className="text-[15px] font-semibold text-foreground">איפה עומדים הציונים?</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">השוואה בין כל המקצועות</p>
+            <h3 className="text-[15px] font-semibold text-foreground">ציונים לפי מקצוע</h3>
+            <p className="text-[13px] text-muted-foreground mt-1">השוואת ציונים בין המקצועות</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={student.subjects.map(s => ({ name: s.name, ציון: s.grade }))} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
