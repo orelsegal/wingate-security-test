@@ -182,11 +182,17 @@ const StudentsPage = () => {
       {/* Students Table */}
       <div className="card-premium overflow-hidden">
         <div className="hidden md:grid grid-cols-[1fr_100px_80px_80px_100px] gap-4 px-6 py-3.5 border-b border-border bg-accent/30">
-          <span className="text-[12px] font-medium text-muted-foreground">שם</span>
+          <button onClick={() => toggleSort("name")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            שם <SortIcon col="name" />
+          </button>
           <span className="text-[12px] font-medium text-muted-foreground">ענף</span>
           <span className="text-[12px] font-medium text-muted-foreground">כיתה</span>
-          <span className="text-[12px] font-medium text-muted-foreground">ממוצע</span>
-          <span className="text-[12px] font-medium text-muted-foreground">סטטוס</span>
+          <button onClick={() => toggleSort("avg")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            ממוצע <SortIcon col="avg" />
+          </button>
+          <button onClick={() => toggleSort("status")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            סטטוס <SortIcon col="status" />
+          </button>
         </div>
 
         {filtered.length === 0 ? (
