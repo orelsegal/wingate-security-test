@@ -1,5 +1,6 @@
-import { statusConfig } from "@/lib/studentData";
-import type { StatusType } from "@/lib/studentData";
+import { statusConfig, type StatusType } from "@/hooks/useStudents";
+
+export { type StatusType };
 
 export const StatusBadge = ({ type, size = "sm" }: { type: StatusType; size?: "sm" | "md" }) => {
   const config = statusConfig[type];

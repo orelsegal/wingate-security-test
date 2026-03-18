@@ -6,55 +6,55 @@
 
 @layer base {
   :root {
-    /* Backgrounds — warm off-white with the faintest green undertone */
+    /* Backgrounds — warm off-white */
     --background: 150 6% 97.5%;
-    --foreground: 160 8% 12%;
+    --foreground: 160 10% 12%;
 
-    /* Cards & surfaces — pure white for contrast against bg */
+    /* Cards & surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 160 8% 12%;
+    --card-foreground: 160 10% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 160 8% 12%;
+    --popover-foreground: 160 10% 12%;
 
     /* Primary — Wingate green */
     --primary: 152 34% 34%;
     --primary-foreground: 0 0% 100%;
 
-    /* Primary glow — slightly lighter for gradients */
+    /* Primary glow */
     --primary-glow: 148 28% 42%;
 
     /* Soft green accent */
     --primary-soft: 150 18% 56%;
 
-    /* Secondary — green-tinted neutral */
+    /* Secondary */
     --secondary: 150 6% 95.5%;
-    --secondary-foreground: 160 8% 12%;
+    --secondary-foreground: 160 10% 12%;
 
-    /* Muted — warm, not dead gray */
+    /* Muted */
     --muted: 150 5% 94%;
-    --muted-foreground: 160 5% 44%;
+    --muted-foreground: 160 5% 46%;
 
-    /* Accent — green-kissed light surface */
-    --accent: 150 6% 93%;
-    --accent-foreground: 160 8% 12%;
+    /* Accent */
+    --accent: 150 6% 93.5%;
+    --accent-foreground: 160 10% 12%;
 
-    /* Status colors — saturated, punchy */
-    --destructive: 0 65% 50%;
+    /* Status colors */
+    --destructive: 0 68% 52%;
     --destructive-foreground: 0 0% 100%;
     --success: 148 48% 38%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 75% 50%;
+    --warning: 38 78% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Borders — warm with green hint */
-    --border: 150 6% 90%;
-    --input: 150 6% 90%;
+    /* Borders */
+    --border: 150 6% 91%;
+    --input: 150 6% 91%;
     --ring: 152 34% 34%;
 
-    --radius: 1rem;
+    --radius: 0.875rem;
 
-    /* Card shadows — warm green tint instead of pure gray */
+    /* Shadows */
     --shadow-card: 0 1px 3px 0 hsla(150, 10%, 20%, 0.04), 0 1px 2px -1px hsla(150, 10%, 20%, 0.03);
     --shadow-card-hover: 0 4px 20px -4px hsla(150, 20%, 20%, 0.08), 0 2px 6px -2px hsla(150, 15%, 20%, 0.04);
 
@@ -62,16 +62,16 @@
     --gradient-brand: linear-gradient(135deg, hsl(150, 8%, 97%) 0%, hsl(148, 10%, 94.5%) 100%);
     --gradient-hero: linear-gradient(160deg, hsl(152, 34%, 34%) 0%, hsl(148, 28%, 42%) 50%, hsl(145, 24%, 36%) 100%);
 
-    /* Sidebar — gentle green warmth */
-    --sidebar-background: 150 8% 97%;
-    --sidebar-foreground: 160 8% 18%;
+    /* Sidebar */
+    --sidebar-background: 150 8% 97.5%;
+    --sidebar-foreground: 160 10% 16%;
     --sidebar-primary: 152 34% 34%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 150 10% 92%;
-    --sidebar-accent-foreground: 160 8% 18%;
-    --sidebar-border: 150 8% 90%;
+    --sidebar-accent-foreground: 160 10% 16%;
+    --sidebar-border: 150 8% 91%;
     --sidebar-ring: 152 34% 34%;
-    --sidebar-muted: 160 5% 48%;
+    --sidebar-muted: 160 5% 50%;
   }
 }
 
@@ -98,7 +98,7 @@
   }
   .card-premium:hover {
     box-shadow: var(--shadow-card-hover);
-    border-color: hsl(150 10% 86%);
+    border-color: hsl(150 10% 87%);
   }
   .gradient-brand {
     background: var(--gradient-brand);
@@ -106,7 +106,6 @@
   .gradient-hero {
     background: var(--gradient-hero);
   }
-  /* Subtle athletic track pattern */
   .pattern-track {
     background-image: repeating-linear-gradient(
       90deg,
