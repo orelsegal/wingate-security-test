@@ -542,7 +542,7 @@ const StudentProfilePage = () => {
                   item.done ? "bg-success/15" : "bg-accent"
                 }`}>
                   {item.done ? (
-                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.5} />
                   ) : (
                     <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
                   )}

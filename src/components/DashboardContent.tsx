@@ -153,7 +153,7 @@ const DashboardContent = () => {
             className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>כל המקצועות</span>
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           </button>
         </div>
 
@@ -210,7 +210,7 @@ const DashboardContent = () => {
             className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>הצג הכל</span>
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           </button>
         </div>
 

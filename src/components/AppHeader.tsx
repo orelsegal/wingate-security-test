@@ -105,7 +105,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </button>
         <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150 relative">
-          <Bell className="h-[18px] w-[18px]" />
+          <Bell className="h-[18px] w-[18px]" strokeWidth={1.5} />
           <span className="absolute top-2 start-2 w-[7px] h-[7px] bg-primary rounded-full ring-2 ring-card" />
         </button>
       </div>
