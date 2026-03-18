@@ -180,182 +180,203 @@ const StudentsPage = () => {
         </div>
       </section>
 
-      {/* Filters — always visible */}
-      <div className="card-premium p-4 md:p-5 space-y-3.5">
-        <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" strokeWidth={1.5} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="חיפוש ספורטאי..."
-            className="w-full h-10 ps-10 pe-4 bg-accent/50 border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-150"
-          />
-          {search && (
-            <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground">
-              <X className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </button>
+      {/* ── SECTION 2: FILTERS (middle) ── */}
+      <section className="mb-8 md:mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-[14px] font-medium text-foreground">סינון וחיפוש</h3>
+          <span className="text-[11px] text-muted-foreground">{filtered.length} תוצאות</span>
+        </div>
+        <div className="card-premium p-4 md:p-5 space-y-3.5">
+          <div className="relative">
+            <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" strokeWidth={1.5} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="חיפוש ספורטאי..."
+              className="w-full h-10 ps-10 pe-4 bg-accent/50 border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-150"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">סטטוס:</span>
+              {(["green", "yellow", "red"] as StatusType[]).map((type) => {
+                const config = statusConfig[type];
+                const active = statusFilter === type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setStatusFilter(active ? null : type)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                      active
+                        ? config.activeBg + " " + config.textClass
+                        : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    <span className={`w-[6px] h-[6px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/40"}`} />
+                    {config.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">ענף:</span>
+              {branches.map((b) => {
+                const active = branchFilter === b;
+                return (
+                  <button
+                    key={b}
+                    onClick={() => setBranchFilter(active ? null : b)}
+                    className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                      active
+                        ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                        : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    {b}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">כיתה:</span>
+              {grades.map((g) => {
+                const active = gradeFilter === g;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => setGradeFilter(active ? null : g)}
+                    className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                      active
+                        ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                        : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {hasFilters && (
+            <div className="pt-1">
+              <button
+                onClick={clearAll}
+                className="px-3 py-1.5 rounded-full text-[12px] font-medium text-destructive hover:bg-destructive/10 transition-all duration-150"
+              >
+                נקה הכל
+              </button>
+            </div>
           )}
         </div>
+      </section>
 
-        {/* Filter rows — stacked for mobile clarity */}
-        <div className="space-y-2.5">
-          {/* Status filter */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">סטטוס:</span>
-            {(["green", "yellow", "red"] as StatusType[]).map((type) => {
-              const config = statusConfig[type];
-              const active = statusFilter === type;
-              return (
-                <button
-                  key={type}
-                  onClick={() => setStatusFilter(active ? null : type)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
-                    active
-                      ? config.activeBg + " " + config.textClass
-                      : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  }`}
-                >
-                  <span className={`w-[6px] h-[6px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/40"}`} />
-                  {config.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Branch filter */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">ענף:</span>
-            {branches.map((b) => {
-              const active = branchFilter === b;
-              return (
-                <button
-                  key={b}
-                  onClick={() => setBranchFilter(active ? null : b)}
-                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
-                    active
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                      : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  }`}
-                >
-                  {b}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Grade filter */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-medium text-muted-foreground/70 w-14 shrink-0">כיתה:</span>
-            {grades.map((g) => {
-              const active = gradeFilter === g;
-              return (
-                <button
-                  key={g}
-                  onClick={() => setGradeFilter(active ? null : g)}
-                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
-                    active
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                      : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  }`}
-                >
-                  {g}
-                </button>
-              );
-            })}
-          </div>
+      {/* ── SECTION 3: STUDENTS (bottom) ── */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[14px] font-medium text-foreground">ספורטאים</h3>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent transition-colors">
+                <Info className="h-3.5 w-3.5" strokeWidth={1.5} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[240px] text-start" dir="rtl">
+              <p className="text-[12px] font-semibold mb-1">מה זה ״חסרים״?</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                נושאים לימודיים שטרם הושלמו או שהציון בהם נמוך מהמצופה. הרשימה נגזרת ממפת ההתקדמות של כל ספורטאי.
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
-        {/* Clear all */}
-        {hasFilters && (
-          <div className="pt-1">
-            <button
-              onClick={clearAll}
-              className="px-3 py-1.5 rounded-full text-[12px] font-medium text-destructive hover:bg-destructive/10 transition-all duration-150"
-            >
-              נקה הכל
-            </button>
+        {filtered.length === 0 ? (
+          <div className="card-premium py-16 text-center text-[13px] text-muted-foreground">
+            לא נמצאו תוצאות — נסו לשנות את הסינון
           </div>
-        )}
-      </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            {filtered.map((student) => {
+              const subjects = subjectNames.map(s => ({ name: s, status: getSubjectStatus(student, s) }));
+              const config = statusConfig[student.status];
+              const missing = getMissingTopics(student);
+              return (
+                <div
+                  key={student.id}
+                  onClick={() => navigate(`/students/${student.id}`)}
+                  className="card-premium p-0 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 group"
+                >
+                  {/* Top: Name + Sport */}
+                  <div className="px-5 pt-5 pb-4">
+                    <div className="flex items-start gap-3">
+                      <InitialsAvatar name={student.name} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-semibold text-foreground leading-tight truncate group-hover:text-primary transition-colors duration-150">
+                          {student.name}
+                        </p>
+                        <p className="text-[12px] text-muted-foreground mt-0.5">
+                          {student.branch} · כיתה {student.grade}
+                        </p>
+                      </div>
+                      <span className="text-[18px] font-semibold text-foreground tabular-nums shrink-0">{student.avg}</span>
+                    </div>
+                  </div>
 
-      {/* Students Cards */}
-      {filtered.length === 0 ? (
-        <div className="card-premium py-16 text-center text-[13px] text-muted-foreground">
-          לא נמצאו תוצאות — נסו לשנות את הסינון
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          {filtered.map((student) => {
-            const subjects = subjectNames.map(s => ({ name: s, status: getSubjectStatus(student, s) }));
-            const config = statusConfig[student.status];
-            const missing = getMissingTopics(student);
-            return (
-              <div
-                key={student.id}
-                onClick={() => navigate(`/students/${student.id}`)}
-                className="card-premium p-0 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 group"
-              >
-                {/* Top: Name + Sport */}
-                <div className="px-5 pt-5 pb-4">
-                  <div className="flex items-start gap-3">
-                    <InitialsAvatar name={student.name} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-semibold text-foreground leading-tight truncate group-hover:text-primary transition-colors duration-150">
-                        {student.name}
-                      </p>
-                      <p className="text-[12px] text-muted-foreground mt-0.5">
-                        {student.branch} · כיתה {student.grade}
+                  {/* Middle: Status */}
+                  <div className={`mx-5 mb-3 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
+                    <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass} shrink-0`} />
+                    <span className={`text-[13px] font-medium ${config.textClass}`}>{config.label}</span>
+                    {student.status === "red" && (
+                      <AlertTriangle className="h-3.5 w-3.5 ms-auto text-destructive/60" strokeWidth={1.5} />
+                    )}
+                  </div>
+
+                  {/* Missing topics */}
+                  {missing.length > 0 && (
+                    <div className="mx-5 mb-3 px-3.5 py-2 rounded-lg bg-accent/60">
+                      <p className="text-[10px] text-muted-foreground/60 font-medium mb-1">חסרים:</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed truncate">
+                        {missing.join("، ")}
                       </p>
                     </div>
-                    <span className="text-[18px] font-semibold text-foreground tabular-nums shrink-0">{student.avg}</span>
-                  </div>
-                </div>
-
-                {/* Middle: Status — traffic light style */}
-                <div className={`mx-5 mb-3 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
-                  <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass} shrink-0`} />
-                  <span className={`text-[13px] font-medium ${config.textClass}`}>{config.label}</span>
-                  {student.status === "red" && (
-                    <AlertTriangle className="h-3.5 w-3.5 ms-auto text-destructive/60" strokeWidth={1.5} />
                   )}
-                </div>
 
-                {/* Missing topics — visible but subtle */}
-                {missing.length > 0 && (
-                  <div className="mx-5 mb-3 px-3.5 py-2 rounded-lg bg-accent/60">
-                    <p className="text-[10px] text-muted-foreground/60 font-medium mb-1">חסרים:</p>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed truncate">
-                      {missing.join("، ")}
-                    </p>
-                  </div>
-                )}
-
-                {/* Bottom: Subjects overview */}
-                <div className="px-5 pb-4 pt-1 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground/60 mb-2 mt-3 font-medium tracking-wide">מקצועות</p>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {subjects.map((subj) => {
-                      const sc = statusConfig[subj.status];
-                      return (
-                        <span
-                          key={subj.name}
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${sc.bgClass} ${sc.textClass}`}
-                          title={subj.name}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${sc.dotClass}`} />
-                          {subj.name}
-                        </span>
-                      );
-                    })}
+                  {/* Bottom: Subjects overview */}
+                  <div className="px-5 pb-4 pt-1 border-t border-border">
+                    <p className="text-[10px] text-muted-foreground/60 mb-2 mt-3 font-medium tracking-wide">מקצועות</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {subjects.map((subj) => {
+                        const sc = statusConfig[subj.status];
+                        return (
+                          <span
+                            key={subj.name}
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${sc.bgClass} ${sc.textClass}`}
+                            title={subj.name}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dotClass}`} />
+                            {subj.name}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
+    </TooltipProvider>
   );
 };
 
