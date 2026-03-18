@@ -38,7 +38,7 @@ const DashboardContent = () => {
           סקירה כללית
         </h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          סמסטר א׳ תשפ״ה &middot; עדכון אחרון: היום, 10:30
+          האקדמיה למצוינות בספורט &middot; מכון וינגייט &middot; סמסטר א׳ תשפ״ה
         </p>
       </div>
 
