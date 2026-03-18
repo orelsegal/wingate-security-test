@@ -6,54 +6,68 @@
 
 @layer base {
   :root {
-    --background: 210 33% 97%;
-    --foreground: 215 28% 17%;
+    /* Backgrounds */
+    --background: 210 20% 98%;
+    --foreground: 0 0% 10%;
 
+    /* Cards & surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 215 28% 17%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 28% 17%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 220 45% 50%;
+    /* Primary — Wingate green, used sparingly */
+    --primary: 138 58% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 25% 95%;
-    --secondary-foreground: 215 28% 17%;
+    /* Soft green accent */
+    --primary-soft: 145 45% 72%;
 
-    --muted: 210 20% 94%;
-    --muted-foreground: 215 14% 55%;
+    /* Secondary */
+    --secondary: 150 15% 95%;
+    --secondary-foreground: 0 0% 10%;
 
-    --accent: 210 25% 95%;
-    --accent-foreground: 215 28% 17%;
+    /* Muted */
+    --muted: 210 15% 95%;
+    --muted-foreground: 220 9% 46%;
 
+    /* Accent — very light green */
+    --accent: 145 30% 93%;
+    --accent-foreground: 0 0% 10%;
+
+    /* Status colors — only for indicators */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
-    --success: 160 60% 40%;
+    --success: 145 58% 42%;
     --success-foreground: 0 0% 100%;
-
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 214 18% 93%;
-    --input: 214 18% 93%;
-    --ring: 224 65% 33%;
+    /* Borders & inputs */
+    --border: 210 14% 92%;
+    --input: 210 14% 92%;
+    --ring: 138 58% 42%;
 
     --radius: 1rem;
 
-    --shadow-card: 0 1px 3px 0 hsla(215, 28%, 17%, 0.04), 0 1px 2px -1px hsla(215, 28%, 17%, 0.03);
-    --shadow-card-hover: 0 4px 12px -2px hsla(215, 28%, 17%, 0.06), 0 2px 4px -2px hsla(215, 28%, 17%, 0.04);
+    /* Card shadows */
+    --shadow-card: 0 1px 3px 0 hsla(0, 0%, 10%, 0.03), 0 1px 2px -1px hsla(0, 0%, 10%, 0.02);
+    --shadow-card-hover: 0 4px 12px -2px hsla(0, 0%, 10%, 0.05), 0 2px 4px -2px hsla(0, 0%, 10%, 0.03);
 
-    --sidebar-background: 210 30% 96%;
-    --sidebar-foreground: 215 28% 20%;
-    --sidebar-primary: 224 55% 38%;
+    /* Gradient — very subtle green */
+    --gradient-brand: linear-gradient(135deg, hsl(145, 30%, 96%) 0%, hsl(145, 35%, 93%) 100%);
+
+    /* Sidebar — light, airy */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 138 58% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 25% 91%;
-    --sidebar-accent-foreground: 215 28% 17%;
-    --sidebar-border: 214 18% 90%;
-    --sidebar-ring: 224 55% 38%;
-    --sidebar-muted: 215 14% 55%;
+    --sidebar-accent: 145 25% 95%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 210 14% 93%;
+    --sidebar-ring: 138 58% 42%;
+    --sidebar-muted: 220 9% 46%;
   }
 }
 
@@ -80,6 +94,8 @@
   }
   .card-premium:hover {
     box-shadow: var(--shadow-card-hover);
-    border-color: hsl(var(--border));
+  }
+  .gradient-brand {
+    background: var(--gradient-brand);
   }
 }
