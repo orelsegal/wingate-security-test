@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
+import { Bell, Search, Menu, ChevronLeft, ArrowRight } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { studentsData } from "@/lib/studentData";
