@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert, ChevronDown, X } from "lucide-react";
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -147,6 +148,177 @@ const ProgressRing = ({ value }: { value: number }) => {
   );
 };
 
+const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  return (
+    <div>
+      <h3 className="text-[15px] font-semibold text-foreground mb-4">פירוט לפי מקצוע</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        {subjects.map((subject) => {
+          const isOpen = expanded === subject.name;
+          const doneCount = subject.milestones?.filter(m => m.status === "done").length ?? 0;
+          const totalCount = subject.milestones?.length ?? 0;
+          const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+          return (
+            <div key={subject.name} className={`card-premium transition-all duration-200 ${isOpen ? "sm:col-span-2 lg:col-span-3" : ""}`}>
+              {/* Clickable header */}
+              <button
+                onClick={() => setExpanded(isOpen ? null : subject.name)}
+                className="w-full p-5 flex items-start justify-between text-start group"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-[14px] font-medium text-foreground">{subject.name}</span>
+                    {subject.units && (
+                      <span className="text-[12px] text-muted-foreground">{subject.units} יח״ל</span>
+                    )}
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-[12px] text-muted-foreground">ציון</p>
+                      <p className="text-[28px] font-semibold text-foreground leading-none mt-1">{subject.grade}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {subject.absences > 0 && (
+                        <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{subject.absences} חיסורים</span>
+                        </div>
+                      )}
+                      {totalCount > 0 && (
+                        <span className="text-[11px] text-muted-foreground">{doneCount}/{totalCount} שלבים</span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-4 h-1.5 rounded-full bg-accent overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${statusConfig[subject.status].dotClass}`}
+                      style={{ width: `${subject.grade}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ms-4 shrink-0">
+                  <StatusBadge type={subject.status} />
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                </div>
+              </button>
+
+              {/* Expanded detail panel */}
+              {isOpen && (
+                <div className="px-5 pb-5 border-t border-border animate-fade-in-up" style={{ animationDuration: "200ms" }}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-5">
+                    {/* Column 1: Milestones roadmap */}
+                    {subject.milestones && subject.milestones.length > 0 && (
+                      <div>
+                        <p className="text-[12px] font-medium text-muted-foreground mb-3">שלבי התקדמות</p>
+                        <div className="space-y-0">
+                          {subject.milestones.map((ms, idx) => {
+                            const isLast = idx === (subject.milestones?.length ?? 0) - 1;
+                            return (
+                              <div key={idx} className="flex items-start gap-3">
+                                <div className="flex flex-col items-center">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                                    ms.status === "done" ? "bg-success/15"
+                                    : ms.status === "in_progress" ? "bg-primary/15"
+                                    : "bg-accent"
+                                  }`}>
+                                    {ms.status === "done" ? (
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                    ) : ms.status === "in_progress" ? (
+                                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                                    ) : (
+                                      <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                                    )}
+                                  </div>
+                                  {!isLast && (
+                                    <div className={`w-px h-5 ${ms.status === "done" ? "bg-success/30" : "bg-border"}`} />
+                                  )}
+                                </div>
+                                <span className={`text-[13px] pt-1 ${
+                                  ms.status === "done" ? "text-muted-foreground"
+                                  : ms.status === "in_progress" ? "text-foreground font-medium"
+                                  : "text-muted-foreground/60"
+                                }`}>
+                                  {ms.title}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {/* Progress summary */}
+                        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+                          <span className="text-[11px] text-muted-foreground">
+                            הושלמו {doneCount} מתוך {totalCount}
+                          </span>
+                          <div className="w-20 h-1.5 rounded-full bg-accent overflow-hidden">
+                            <div className="h-full rounded-full bg-success transition-all duration-500" style={{ width: `${progressPct}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Column 2: Topics covered */}
+                    <div>
+                      {subject.coveredTopics && subject.coveredTopics.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-[12px] font-medium text-muted-foreground mb-2">נושאים שנלמדו</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {subject.coveredTopics.map((topic) => (
+                              <span key={topic} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-success/10 text-[12px] text-success font-medium">
+                                <CheckCircle2 className="h-3 w-3" />
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {subject.missingTopics && subject.missingTopics.length > 0 && (
+                        <div>
+                          <p className="text-[12px] font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3 text-warning" />
+                            נושאים להשלמה
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {subject.missingTopics.map((topic) => (
+                              <span key={topic} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-warning/10 text-[12px] text-warning font-medium">
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Column 3: Summary stats */}
+                    <div className="space-y-4">
+                      <div className="card-premium p-4 bg-accent/30 border-border/50">
+                        <p className="text-[11px] text-muted-foreground mb-1">ציון נוכחי</p>
+                        <p className="text-[32px] font-bold text-foreground leading-none">{subject.grade}</p>
+                      </div>
+                      <div className="card-premium p-4 bg-accent/30 border-border/50">
+                        <p className="text-[11px] text-muted-foreground mb-1">היעדרויות</p>
+                        <p className={`text-[24px] font-bold leading-none ${subject.absences > 3 ? "text-destructive" : "text-foreground"}`}>{subject.absences}</p>
+                      </div>
+                      <div className="card-premium p-4 bg-accent/30 border-border/50">
+                        <p className="text-[11px] text-muted-foreground mb-1">התקדמות</p>
+                        <p className="text-[24px] font-bold text-foreground leading-none">{progressPct}%</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const StudentProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -290,153 +462,7 @@ const StudentProfilePage = () => {
       </div>
 
       {/* Subjects Grid */}
-      <div>
-        <h3 className="text-[15px] font-semibold text-foreground mb-4">פירוט לפי מקצוע</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          {student.subjects.map((subject) => (
-            <div key={subject.name} className="card-premium p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <span className="text-[14px] font-medium text-foreground">{subject.name}</span>
-                    {subject.units && (
-                      <span className="text-[12px] text-muted-foreground ms-2">{subject.units} יח״ל</span>
-                    )}
-                  </div>
-                </div>
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="cursor-default"><StatusBadge type={subject.status} /></span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[220px] p-3 space-y-1.5 text-start" dir="rtl">
-                      <p className="text-[12px] font-medium text-popover-foreground">
-                        {subject.status === "green" ? "במסלול — ציון ונוכחות תקינים" :
-                         subject.status === "yellow" ? "פערים — נדרש מעקב וחיזוק" :
-                         "בסיכון — נדרשת התערבות מיידית"}
-                      </p>
-                      {subject.missingTopics && subject.missingTopics.length > 0 && (
-                        <p className="text-[11px] text-muted-foreground">
-                          נושאים להשלמה: {subject.missingTopics.join("، ")}
-                        </p>
-                      )}
-                      {subject.absences > 2 && (
-                        <p className="text-[11px] text-muted-foreground">
-                          {subject.absences} היעדרויות רשומות
-                        </p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-
-              <div className="flex items-end justify-between mt-4">
-                <div>
-                  <p className="text-[12px] text-muted-foreground">ציון</p>
-                  <p className="text-[28px] font-semibold text-foreground leading-none mt-1">{subject.grade}</p>
-                </div>
-                {subject.absences > 0 && (
-                  <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{subject.absences} חיסורים</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Progress bar */}
-              <div className="mt-4 h-1.5 rounded-full bg-accent overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${statusConfig[subject.status].dotClass}`}
-                  style={{ width: `${subject.grade}%` }}
-                />
-              </div>
-
-              {/* Topics section */}
-              {subject.coveredTopics && subject.coveredTopics.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-border space-y-3">
-                  <div>
-                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">נושאים שנלמדו</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {subject.coveredTopics.map((topic) => (
-                        <span key={topic} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-success/10 text-[11px] text-success font-medium">
-                          <CheckCircle2 className="h-3 w-3" />
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {subject.missingTopics && subject.missingTopics.length > 0 && (
-                    <div>
-                      <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3 text-warning" />
-                        נושאים חסרים
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {subject.missingTopics.map((topic) => (
-                          <span key={topic} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-warning/10 text-[11px] text-warning font-medium">
-                            {topic}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Milestones Roadmap */}
-              {subject.milestones && subject.milestones.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-3">שלבי התקדמות</p>
-                  <div className="space-y-0">
-                    {subject.milestones.map((ms, idx) => {
-                      const isLast = idx === (subject.milestones?.length ?? 0) - 1;
-                      return (
-                        <div key={idx} className="flex items-start gap-3">
-                          {/* Timeline column */}
-                          <div className="flex flex-col items-center">
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                              ms.status === "done"
-                                ? "bg-success/15"
-                                : ms.status === "in_progress"
-                                ? "bg-primary/15"
-                                : "bg-accent"
-                            }`}>
-                              {ms.status === "done" ? (
-                                <CheckCircle2 className="h-3 w-3 text-success" />
-                              ) : ms.status === "in_progress" ? (
-                                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                              ) : (
-                                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
-                              )}
-                            </div>
-                            {!isLast && (
-                              <div className={`w-px h-5 ${
-                                ms.status === "done" ? "bg-success/30" : "bg-border"
-                              }`} />
-                            )}
-                          </div>
-                          {/* Label */}
-                          <span className={`text-[12px] pt-0.5 ${
-                            ms.status === "done"
-                              ? "text-muted-foreground"
-                              : ms.status === "in_progress"
-                              ? "text-foreground font-medium"
-                              : "text-muted-foreground/60"
-                          }`}>
-                            {ms.title}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      <SubjectGrid subjects={student.subjects} />
 
       {/* Bottom Row: Absences + Roadmap */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
