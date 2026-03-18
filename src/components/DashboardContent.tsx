@@ -45,7 +45,7 @@ const DashboardContent = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
         {stats.map((stat) => (
-          <div key={stat.label} className="card-premium p-5 md:p-7">
+          <div key={stat.label} className="card-premium p-5 md:p-7" title={stat.description}>
             <div className="flex items-start justify-between mb-4 md:mb-5">
               <div className="p-2.5 bg-accent rounded-xl">
                 <stat.icon className="h-[18px] w-[18px] text-primary" />
@@ -55,7 +55,8 @@ const DashboardContent = () => {
             <p className="text-[28px] md:text-[34px] font-semibold text-foreground mt-1.5 leading-none tracking-tight">
               {stat.value}
             </p>
-            <p className="text-[12px] text-muted-foreground mt-3">{stat.subtitle}</p>
+            <p className="text-[12px] text-muted-foreground mt-2">{stat.subtitle}</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-1 leading-snug">{stat.description}</p>
           </div>
         ))}
       </div>
