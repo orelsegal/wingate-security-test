@@ -42,7 +42,7 @@ const DashboardContent = () => {
   const recentAlerts = scopedStudents
     .filter(s => s.status === "red" || s.status === "yellow")
     .slice(0, 5)
-    .map(s => ({ name: s.name, sport: s.branch, status: s.status }));
+    .map(s => ({ name: s.name, sport: s.branch, status: s.status, avatar: s.avatar }));
 
   // Teacher: show only subjects-related view (no full dashboard stats)
   const isTeacher = user?.role === "teacher";
