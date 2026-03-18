@@ -31,9 +31,9 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   return (
     <aside className="w-[260px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-s border-sidebar-border" dir="rtl">
       {/* Logo & Branding */}
-      <div className="px-6 pt-7 pb-6">
+      <button onClick={() => { navigate("/"); onNavigate?.(); }} className="px-6 pt-7 pb-6 w-full text-start group cursor-pointer">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-card border border-sidebar-border p-1.5 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-card border border-sidebar-border p-1.5 flex items-center justify-center shrink-0 transition-opacity duration-150 group-hover:opacity-75">
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
@@ -41,7 +41,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             <p className="text-[11px] text-sidebar-muted mt-0.5 text-start">מכון וינגייט</p>
           </div>
         </div>
-      </div>
+      </button>
 
       {/* Divider */}
       <div className="mx-5 h-px bg-sidebar-border" />
