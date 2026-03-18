@@ -318,7 +318,7 @@ const StudentProfilePage = () => {
                     <div>
                       <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-warning" />
-                        נושאים חסרים
+                        עוד צריך להשלים
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {subject.missingTopics.map((topic) => (
