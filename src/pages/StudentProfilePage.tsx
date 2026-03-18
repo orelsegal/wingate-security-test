@@ -261,6 +261,55 @@ const StudentProfilePage = () => {
                   )}
                 </div>
               )}
+
+              {/* Milestones Roadmap */}
+              {subject.milestones && subject.milestones.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-[11px] font-medium text-muted-foreground mb-3">מפת דרכים</p>
+                  <div className="space-y-0">
+                    {subject.milestones.map((ms, idx) => {
+                      const isLast = idx === (subject.milestones?.length ?? 0) - 1;
+                      return (
+                        <div key={idx} className="flex items-start gap-3">
+                          {/* Timeline column */}
+                          <div className="flex flex-col items-center">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                              ms.status === "done"
+                                ? "bg-success/15"
+                                : ms.status === "in_progress"
+                                ? "bg-primary/15"
+                                : "bg-accent"
+                            }`}>
+                              {ms.status === "done" ? (
+                                <CheckCircle2 className="h-3 w-3 text-success" />
+                              ) : ms.status === "in_progress" ? (
+                                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                              ) : (
+                                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                              )}
+                            </div>
+                            {!isLast && (
+                              <div className={`w-px h-5 ${
+                                ms.status === "done" ? "bg-success/30" : "bg-border"
+                              }`} />
+                            )}
+                          </div>
+                          {/* Label */}
+                          <span className={`text-[12px] pt-0.5 ${
+                            ms.status === "done"
+                              ? "text-muted-foreground"
+                              : ms.status === "in_progress"
+                              ? "text-foreground font-medium"
+                              : "text-muted-foreground/60"
+                          }`}>
+                            {ms.title}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
