@@ -225,61 +225,71 @@ const StudentsPage = () => {
         </div>
       </div>
 
-      {/* Students Table */}
-      <div className="card-premium overflow-hidden">
-        <div className="hidden md:grid grid-cols-[1fr_100px_80px_80px_100px] gap-4 px-6 py-3.5 border-b border-border bg-accent/30">
-          <button onClick={() => toggleSort("name")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
-            שם <SortIcon col="name" />
-          </button>
-          <span className="text-[12px] font-medium text-muted-foreground">ענף</span>
-          <span className="text-[12px] font-medium text-muted-foreground">כיתה</span>
-          <button onClick={() => toggleSort("avg")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
-            ממוצע <SortIcon col="avg" />
-          </button>
-          <button onClick={() => toggleSort("status")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
-            סטטוס <SortIcon col="status" />
-          </button>
+      {/* Students Cards */}
+      {filtered.length === 0 ? (
+        <div className="card-premium py-16 text-center text-[13px] text-muted-foreground">
+          לא נמצאו תוצאות — נסו לשנות את הסינון
         </div>
-
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center text-[13px] text-muted-foreground">
-            לא נמצאו תוצאות — נסו לשנות את הסינון
-          </div>
-        ) : (
-          filtered.map((student, i) => (
-            <div
-              key={student.id}
-              onClick={() => navigate(`/students/${student.id}`)}
-              className={`grid grid-cols-1 md:grid-cols-[1fr_100px_80px_80px_100px] gap-1 md:gap-4 px-5 md:px-6 py-4 md:py-3.5 cursor-pointer ${
-                i < filtered.length - 1 ? "border-b border-border" : ""
-              } hover:bg-accent/20 transition-colors duration-100`}
-            >
-              <div className="flex items-center justify-between md:contents">
-                <div className="flex items-center gap-3">
-                  <InitialsAvatar name={student.name} size="sm" />
-                  <div>
-                    <span className="text-[13px] font-medium text-foreground">{student.name}</span>
-                    <p className="text-[11px] text-muted-foreground md:hidden">{student.branch}</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          {filtered.map((student) => {
+            const subjects = subjectNames.map(s => ({ name: s, status: getSubjectStatus(student, s) }));
+            const config = statusConfig[student.status];
+            return (
+              <div
+                key={student.id}
+                onClick={() => navigate(`/students/${student.id}`)}
+                className="card-premium p-0 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 group"
+              >
+                {/* Top: Name + Sport */}
+                <div className="px-5 pt-5 pb-4">
+                  <div className="flex items-start gap-3">
+                    <InitialsAvatar name={student.name} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-semibold text-foreground leading-tight truncate group-hover:text-primary transition-colors duration-150">
+                        {student.name}
+                      </p>
+                      <p className="text-[12px] text-muted-foreground mt-0.5">
+                        {student.branch} · כיתה {student.grade}
+                      </p>
+                    </div>
+                    <span className="text-[18px] font-semibold text-foreground tabular-nums shrink-0">{student.avg}</span>
                   </div>
                 </div>
-                <div className="md:hidden">
-                  <StatusBadge type={student.status} />
+
+                {/* Middle: Status — traffic light style */}
+                <div className={`mx-5 mb-4 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
+                  <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass} shrink-0`} />
+                  <span className={`text-[13px] font-medium ${config.textClass}`}>{config.label}</span>
+                  {student.status === "red" && (
+                    <AlertTriangle className="h-3.5 w-3.5 ms-auto text-destructive/60" strokeWidth={1.5} />
+                  )}
+                </div>
+
+                {/* Bottom: Subjects overview */}
+                <div className="px-5 pb-4 pt-1 border-t border-border">
+                  <p className="text-[10px] text-muted-foreground/60 mb-2 mt-3 font-medium tracking-wide">מקצועות</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {subjects.map((subj) => {
+                      const sc = statusConfig[subj.status];
+                      return (
+                        <span
+                          key={subj.name}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${sc.bgClass} ${sc.textClass}`}
+                          title={subj.name}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${sc.dotClass}`} />
+                          {subj.name}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 md:contents text-[12px] text-muted-foreground">
-                <span>{student.branch}</span>
-                <span className="text-border md:hidden">·</span>
-                <span>{student.grade}</span>
-                <span className="text-border md:hidden">·</span>
-                <span>{student.avg}</span>
-              </div>
-              <div className="hidden md:flex items-center">
-                <StatusBadge type={student.status} />
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
