@@ -237,8 +237,8 @@ const StudentProfilePage = () => {
       {/* Trend Chart - Simulated semester progress */}
       <div className="card-premium p-5 md:p-7">
         <div className="mb-6">
-          <h3 className="text-[15px] font-semibold text-foreground">לאן פנינו? 📈</h3>
-          <p className="text-[13px] text-muted-foreground mt-1">מגמת הממוצע לאורך סמסטר א׳ תשפ״ה</p>
+          <h3 className="text-[15px] font-semibold text-foreground">מגמת ממוצע</h3>
+          <p className="text-[13px] text-muted-foreground mt-1">התפתחות הציון הממוצע &middot; סמסטר א׳ תשפ״ה</p>
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={(() => {
