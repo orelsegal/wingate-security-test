@@ -32,8 +32,8 @@ const DashboardContent = () => {
   }, [user]);
 
   const totalStudents = scopedStudents.length;
-  const totalSubjects = 6;
-  const totalIndicators = totalStudents * totalSubjects;
+  const totalSubjects = 7; // מתמטיקה, אנגלית, היסטוריה, ספרות, מדעים, חינוך גופני, השכלה כללית
+  const totalStatuses = totalStudents * totalSubjects;
   const redCount = scopedStudents.filter(s => s.status === "red").length;
   const avgScore = totalStudents > 0
     ? (scopedStudents.reduce((sum, s) => sum + s.avg, 0) / totalStudents).toFixed(1)
@@ -48,8 +48,8 @@ const DashboardContent = () => {
   const isTeacher = user?.role === "teacher";
 
   const stats = [
-    { label: "ספורטאים", value: String(totalStudents), icon: Users, subtitle: "רשומים במערכת", description: "סה״כ ספורטאים פעילים" },
-    { label: "מדדי מעקב", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "נקודות בקרה אקדמיות" },
+    { label: "ספורטאים", value: String(totalStudents), icon: Users, subtitle: "רשומים במערכת", description: `${totalStudents} ספורטאים פעילים` },
+    { label: "סטטוסים לימודיים", value: String(totalStatuses), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "סטטוס לכל ספורטאי בכל מקצוע" },
     { label: "ממוצע כללי", value: avgScore, icon: TrendingUp, subtitle: "ממוצע משוקלל", description: "ממוצע משוקלל כלל המקצועות" },
     { label: "בסיכון", value: String(redCount), icon: AlertTriangle, subtitle: "דורשים טיפול", description: "ספורטאים עם פערים משמעותיים" },
   ];
