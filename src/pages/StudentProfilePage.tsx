@@ -87,6 +87,17 @@ const getStudentDetails = (id: string) => {
         { title: "מבחן שנתי", status: "in_progress" },
       ]
     },
+    { name: "השכלה כללית", grade: student.status === "red" ? 45 : student.status === "yellow" ? 62 : 84, status: student.status === "red" ? "red" : student.status === "yellow" ? "yellow" : "green", absences: student.status === "red" ? 3 : 0,
+      coveredTopics: ["אזרחות", "תנ״ך"],
+      missingTopics: student.status === "red" ? ["מעורבות חברתית", "פרויקט גמר", "בחינה מסכמת"] : student.status === "yellow" ? ["פרויקט גמר", "בחינה מסכמת"] : [],
+      milestones: [
+        { title: "אזרחות — בחינה", status: "done" },
+        { title: "תנ״ך — בחינה", status: student.status === "green" ? "done" : "in_progress" },
+        { title: "מעורבות חברתית", status: student.status === "red" ? "missing" : student.status === "yellow" ? "missing" : "done" },
+        { title: "פרויקט גמר", status: student.status === "red" ? "missing" : student.status === "yellow" ? "missing" : "in_progress" },
+        { title: "בחינה מסכמת", status: "missing" },
+      ]
+    },
   ];
 
   const absences = [
