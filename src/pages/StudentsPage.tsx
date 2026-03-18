@@ -1,11 +1,20 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
-import InitialsAvatar from "@/components/InitialsAvatar";
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
+import InitialsAvatar from "@/components/InitialsAvatar";
 import { useAuth } from "@/context/AuthContext";
 import type { StatusType } from "@/lib/studentData";
+
+const subjectNames = ["מתמטיקה", "אנגלית", "היסטוריה", "ספרות", "מדעים", "חינ״ג", "כללי"];
+
+const getSubjectStatus = (student: typeof studentsData[0], subject: string): StatusType => {
+  const seed = student.id.charCodeAt(0) + subject.charCodeAt(0);
+  if (student.status === "red") return seed % 3 === 0 ? "red" : seed % 3 === 1 ? "yellow" : "green";
+  if (student.status === "yellow") return seed % 2 === 0 ? "yellow" : "green";
+  return "green";
+};
 
 const branches = ["שחייה", "טניס", "כדורסל", "אתלטיקה", "התעמלות"];
 const grades = ["י׳", "י״א", "י״ב"];
