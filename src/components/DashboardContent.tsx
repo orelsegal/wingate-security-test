@@ -87,13 +87,13 @@ const DashboardContent = () => {
                   <div className="flex items-center gap-4">
                     <span className="text-[13px] font-medium text-foreground w-20">{branch.name}</span>
                     <div className="hidden sm:flex items-center gap-3 text-[12px] text-muted-foreground">
-                      <span>{branch.green} תקין</span>
+                      <span>{branch.green} במסלול</span>
                       <span className="text-border">·</span>
                       <span>{branch.yellow} במעקב</span>
                       {branch.red > 0 && (
                         <>
                           <span className="text-border">·</span>
-                          <span>{branch.red} בסיכון</span>
+                          <span>{branch.red} דורשים התערבות</span>
                         </>
                       )}
                     </div>
