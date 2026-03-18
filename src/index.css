@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 210 33% 97%;
     --foreground: 215 28% 17%;
 
     --card: 0 0% 100%;
@@ -18,17 +18,17 @@
     --primary: 224 65% 33%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96%;
+    --secondary: 210 25% 95%;
     --secondary-foreground: 215 28% 17%;
 
-    --muted: 210 20% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 14% 55%;
 
-    --accent: 210 30% 94%;
+    --accent: 210 25% 95%;
     --accent-foreground: 215 28% 17%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
     --success: 160 60% 40%;
     --success-foreground: 0 0% 100%;
@@ -36,19 +36,22 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
+    --border: 214 18% 93%;
+    --input: 214 18% 93%;
     --ring: 224 65% 33%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
+
+    --shadow-card: 0 1px 3px 0 hsla(215, 28%, 17%, 0.04), 0 1px 2px -1px hsla(215, 28%, 17%, 0.03);
+    --shadow-card-hover: 0 4px 12px -2px hsla(215, 28%, 17%, 0.06), 0 2px 4px -2px hsla(215, 28%, 17%, 0.04);
 
     --sidebar-background: 224 65% 33%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 224 65% 33%;
-    --sidebar-accent: 224 60% 28%;
+    --sidebar-accent: 224 55% 28%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 224 50% 40%;
+    --sidebar-border: 224 45% 40%;
     --sidebar-ring: 210 40% 98%;
     --sidebar-muted: 224 40% 45%;
   }
@@ -60,7 +63,23 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Assistant', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .card-premium {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 150ms ease, border-color 150ms ease;
+  }
+  .card-premium:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: hsl(var(--border));
   }
 }
