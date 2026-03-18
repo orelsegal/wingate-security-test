@@ -44,7 +44,7 @@ export const roleDescriptions: Record<UserRole, string> = {
 export const demoUsers: AppUser[] = [
   { name: "דני כהן", role: "admin", email: "admin@wingate.ac.il" },
   { name: "רונית לוי", role: "teacher", email: "ronit@wingate.ac.il" },
-  { name: "משה אברהם", role: "parent", email: "moshe@parent.com", scopeFilter: ["b0000001-0000-0000-0000-000000000004"] },
+  { name: "משה אברהם", role: "parent", email: "moshe@parent.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
   { name: "יוסי גולן", role: "coach", email: "yossi@wingate.ac.il", scopeFilter: ["כדורסל"] },
 ];
 
