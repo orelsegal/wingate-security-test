@@ -189,7 +189,7 @@ const StudentProfilePage = () => {
           {/* Progress Ring */}
           <div className="flex flex-col items-center gap-2 shrink-0">
             <ProgressRing value={student.overallProgress} />
-            <span className="text-[12px] text-muted-foreground">התקדמות כללית</span>
+            <span className="text-[12px] text-muted-foreground">ציון משוקלל</span>
           </div>
         </div>
       </div>
