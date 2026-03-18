@@ -31,16 +31,32 @@ const recentAlerts = [
 ];
 
 const DashboardContent = () => {
+  const navigate = useNavigate();
+  const redCount = studentsData.filter(s => s.status === "red").length;
+
   return (
     <div className="p-5 md:p-10 lg:p-12 space-y-8 md:space-y-10 max-w-[1400px]">
-      {/* Page Title */}
-      <div className="space-y-1.5">
-        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">
-          מה המצב היום?
-        </h2>
-        <p className="text-muted-foreground text-[13px] md:text-sm">
-          תמונת מצב אקדמית &middot; האקדמיה למצוינות בספורט &middot; סמסטר א׳ תשפ״ה
-        </p>
+      {/* Page Title + Quick Action */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div className="space-y-1.5">
+          <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">
+            מה המצב היום?
+          </h2>
+          <p className="text-muted-foreground text-[13px] md:text-sm">
+            תמונת מצב אקדמית &middot; האקדמיה למצוינות בספורט &middot; סמסטר א׳ תשפ״ה
+          </p>
+        </div>
+
+        {redCount > 0 && (
+          <button
+            onClick={() => navigate("/students?status=red")}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/10 text-destructive text-[13px] font-medium hover:bg-destructive/15 transition-colors duration-150 shrink-0 self-start sm:self-auto"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            <span>הצג ספורטאים שדורשים תשומת לב</span>
+            <span className="px-1.5 py-0.5 rounded-md bg-destructive/15 text-[11px] font-semibold">{redCount}</span>
+          </button>
+        )}
       </div>
 
       {/* Stats Grid */}
