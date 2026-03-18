@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
+import { Bell, Search, Menu, ChevronLeft, ArrowRight } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { studentsData } from "@/lib/studentData";
@@ -43,7 +43,9 @@ const useBreadcrumbs = (): Crumb[] => {
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const crumbs = useBreadcrumbs();
+  const isInnerPage = location.pathname !== "/";
 
   return (
     <header className="h-[56px] bg-card border-b border-border flex items-center justify-between px-5 md:px-8 sticky top-0 z-10">
@@ -85,6 +87,15 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
       </div>
 
       <div className="flex items-center gap-2">
+        {isInnerPage && (
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150 me-1"
+          >
+            <ArrowRight className="h-3.5 w-3.5" />
+            <span>חזרה</span>
+          </button>
+        )}
         {user && (
           <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent text-[12px] font-medium text-muted-foreground me-1">
             {roleLabels[user.role]}
