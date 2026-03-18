@@ -508,7 +508,7 @@ const StudentProfilePage = () => {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.5} />
                   <div>
                     <p className="text-[13px] font-medium text-foreground">{absence.subject}</p>
                     <p className="text-[12px] text-muted-foreground mt-0.5">{absence.date}</p>
