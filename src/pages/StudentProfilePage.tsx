@@ -202,7 +202,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                     <div className="flex items-center gap-3">
                       {subject.absences > 0 && (
                         <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
+                          <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
                           <span>{subject.absences} חיסורים</span>
                         </div>
                       )}
