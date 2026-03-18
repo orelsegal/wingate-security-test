@@ -265,6 +265,7 @@ const StudentsPage = () => {
           {filtered.map((student) => {
             const subjects = subjectNames.map(s => ({ name: s, status: getSubjectStatus(student, s) }));
             const config = statusConfig[student.status];
+            const missing = getMissingTopics(student);
             return (
               <div
                 key={student.id}
@@ -288,13 +289,23 @@ const StudentsPage = () => {
                 </div>
 
                 {/* Middle: Status — traffic light style */}
-                <div className={`mx-5 mb-4 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
+                <div className={`mx-5 mb-3 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
                   <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass} shrink-0`} />
                   <span className={`text-[13px] font-medium ${config.textClass}`}>{config.label}</span>
                   {student.status === "red" && (
                     <AlertTriangle className="h-3.5 w-3.5 ms-auto text-destructive/60" strokeWidth={1.5} />
                   )}
                 </div>
+
+                {/* Missing topics — visible but subtle */}
+                {missing.length > 0 && (
+                  <div className="mx-5 mb-3 px-3.5 py-2 rounded-lg bg-accent/60">
+                    <p className="text-[10px] text-muted-foreground/60 font-medium mb-1">חסרים:</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed truncate">
+                      {missing.join("، ")}
+                    </p>
+                  </div>
+                )}
 
                 {/* Bottom: Subjects overview */}
                 <div className="px-5 pb-4 pt-1 border-t border-border">
