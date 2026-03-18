@@ -35,10 +35,10 @@ const DashboardContent = () => {
       {/* Page Title */}
       <div className="space-y-1.5">
         <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">
-          סקירה כללית
+          מה המצב היום?
         </h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          האקדמיה למצוינות בספורט &middot; מכון וינגייט &middot; סמסטר א׳ תשפ״ה
+          תמונת מצב אקדמית &middot; האקדמיה למצוינות בספורט &middot; סמסטר א׳ תשפ״ה
         </p>
       </div>
 
