@@ -28,14 +28,25 @@ const StudentsPage = () => {
   }, [user]);
 
   const filtered = useMemo(() => {
-    return baseData.filter((s) => {
+    const statusOrder: Record<StatusType, number> = { red: 0, yellow: 1, green: 2 };
+    const list = baseData.filter((s) => {
       if (search && !s.name.includes(search) && !s.branch.includes(search) && !s.grade.includes(search)) return false;
       if (statusFilter && s.status !== statusFilter) return false;
       if (branchFilter && s.branch !== branchFilter) return false;
       if (gradeFilter && s.grade !== gradeFilter) return false;
       return true;
     });
-  }, [baseData, search, statusFilter, branchFilter, gradeFilter]);
+    if (sortBy) {
+      list.sort((a, b) => {
+        let cmp = 0;
+        if (sortBy === "name") cmp = a.name.localeCompare(b.name, "he");
+        else if (sortBy === "avg") cmp = a.avg - b.avg;
+        else if (sortBy === "status") cmp = statusOrder[a.status] - statusOrder[b.status];
+        return sortDir === "desc" ? -cmp : cmp;
+      });
+    }
+    return list;
+  }, [baseData, search, statusFilter, branchFilter, gradeFilter, sortBy, sortDir]);
 
   const hasFilters = search || statusFilter || branchFilter || gradeFilter;
 
