@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
 import { studentsData, statusConfig } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
@@ -11,9 +11,11 @@ const grades = ["י׳", "י״א", "י״ב"];
 
 const StudentsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const initialStatus = searchParams.get("status") as StatusType | null;
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
