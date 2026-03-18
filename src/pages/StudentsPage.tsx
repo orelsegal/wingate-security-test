@@ -9,11 +9,38 @@ import type { StatusType } from "@/lib/studentData";
 
 const subjectNames = ["מתמטיקה", "אנגלית", "היסטוריה", "ספרות", "מדעים", "חינ״ג", "כללי"];
 
+const missingTopicsBySubject: Record<string, string[]> = {
+  "מתמטיקה": ["טריגונומטריה", "הסתברות", "חדו״א"],
+  "אנגלית": ["כתיבה אקדמית", "ספרות אנגלית"],
+  "היסטוריה": ["עת חדשה", "עבודת חקר"],
+  "ספרות": ["עבודת סיכום", "שירה מודרנית"],
+  "מדעים": ["כימיה", "ביולוגיה"],
+  "חינ״ג": ["מבחן שנתי"],
+  "כללי": ["פרויקט גמר", "מעורבות חברתית"],
+};
+
 const getSubjectStatus = (student: typeof studentsData[0], subject: string): StatusType => {
   const seed = student.id.charCodeAt(0) + subject.charCodeAt(0);
   if (student.status === "red") return seed % 3 === 0 ? "red" : seed % 3 === 1 ? "yellow" : "green";
   if (student.status === "yellow") return seed % 2 === 0 ? "yellow" : "green";
   return "green";
+};
+
+/** Get missing topics for a student based on their non-green subjects */
+const getMissingTopics = (student: typeof studentsData[0]): string[] => {
+  const missing: string[] = [];
+  for (const subj of subjectNames) {
+    const status = getSubjectStatus(student, subj);
+    if (status !== "green") {
+      const topics = missingTopicsBySubject[subj];
+      if (topics) {
+        // Pick 1 topic deterministically
+        const idx = (student.id.charCodeAt(0) + subj.charCodeAt(0)) % topics.length;
+        missing.push(topics[idx]);
+      }
+    }
+  }
+  return missing;
 };
 
 const branches = ["שחייה", "טניס", "כדורסל", "אתלטיקה", "התעמלות"];
@@ -238,6 +265,7 @@ const StudentsPage = () => {
           {filtered.map((student) => {
             const subjects = subjectNames.map(s => ({ name: s, status: getSubjectStatus(student, s) }));
             const config = statusConfig[student.status];
+            const missing = getMissingTopics(student);
             return (
               <div
                 key={student.id}
@@ -261,13 +289,23 @@ const StudentsPage = () => {
                 </div>
 
                 {/* Middle: Status — traffic light style */}
-                <div className={`mx-5 mb-4 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
+                <div className={`mx-5 mb-3 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
                   <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass} shrink-0`} />
                   <span className={`text-[13px] font-medium ${config.textClass}`}>{config.label}</span>
                   {student.status === "red" && (
                     <AlertTriangle className="h-3.5 w-3.5 ms-auto text-destructive/60" strokeWidth={1.5} />
                   )}
                 </div>
+
+                {/* Missing topics — visible but subtle */}
+                {missing.length > 0 && (
+                  <div className="mx-5 mb-3 px-3.5 py-2 rounded-lg bg-accent/60">
+                    <p className="text-[10px] text-muted-foreground/60 font-medium mb-1">חסרים:</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed truncate">
+                      {missing.join("، ")}
+                    </p>
+                  </div>
+                )}
 
                 {/* Bottom: Subjects overview */}
                 <div className="px-5 pb-4 pt-1 border-t border-border">
