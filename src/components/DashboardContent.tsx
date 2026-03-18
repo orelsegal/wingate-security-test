@@ -1,61 +1,65 @@
-import { Users, BookOpen, TrendingUp, AlertTriangle, BarChart3, ChevronLeft } from "lucide-react";
+import { Users, TrendingUp, AlertTriangle, BarChart3, ChevronLeft, Loader2 } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useNavigate } from "react-router-dom";
-import { statusConfig, studentsData } from "@/lib/studentData";
+import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
-import type { StatusType } from "@/lib/studentData";
 import { useMemo } from "react";
-
-const branches = [
-  { name: "שחייה", green: 18, yellow: 4, red: 1, overall: "green" as StatusType },
-  { name: "טניס", green: 12, yellow: 6, red: 3, overall: "yellow" as StatusType },
-  { name: "כדורסל", green: 22, yellow: 5, red: 2, overall: "green" as StatusType },
-  { name: "אתלטיקה", green: 15, yellow: 7, red: 1, overall: "yellow" as StatusType },
-  { name: "התעמלות", green: 10, yellow: 3, red: 0, overall: "green" as StatusType },
-];
 
 const DashboardContent = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: students = [], isLoading } = useStudents();
 
-  const scopedStudents = useMemo(() => {
-    if (!user) return studentsData;
-    if (user.role === "parent") return studentsData.filter(s => user.scopeFilter?.includes(s.id));
-    if (user.role === "coach") return studentsData.filter(s => user.scopeFilter?.includes(s.branch));
-    return studentsData;
-  }, [user]);
+  // Derive branch stats from real data
+  const branchStats = useMemo(() => {
+    const map = new Map<string, { green: number; yellow: number; red: number }>();
+    students.forEach((s) => {
+      const b = s.sport;
+      if (!map.has(b)) map.set(b, { green: 0, yellow: 0, red: 0 });
+      const entry = map.get(b)!;
+      if (s.overall_status === "green") entry.green++;
+      else if (s.overall_status === "yellow") entry.yellow++;
+      else entry.red++;
+    });
+    return Array.from(map.entries()).map(([name, counts]) => ({
+      name,
+      ...counts,
+      total: counts.green + counts.yellow + counts.red,
+      overall: (counts.red > 0 ? "red" : counts.yellow > 0 ? "yellow" : "green") as StatusType,
+    }));
+  }, [students]);
 
-  const scopedBranches = useMemo(() => {
-    if (user?.role === "coach") return branches.filter(b => user.scopeFilter?.includes(b.name));
-    return branches;
-  }, [user]);
-
-  const totalStudents = scopedStudents.length;
+  const totalStudents = students.length;
   const totalSubjects = 7;
   const totalStatuses = totalStudents * totalSubjects;
-  const redCount = scopedStudents.filter(s => s.status === "red").length;
-  const yellowCount = scopedStudents.filter(s => s.status === "yellow").length;
-  const greenCount = scopedStudents.filter(s => s.status === "green").length;
+  const redCount = students.filter(s => s.overall_status === "red").length;
+  const yellowCount = students.filter(s => s.overall_status === "yellow").length;
+  const greenCount = students.filter(s => s.overall_status === "green").length;
   const avgScore = totalStudents > 0
-    ? (scopedStudents.reduce((sum, s) => sum + s.avg, 0) / totalStudents).toFixed(1)
+    ? (students.reduce((sum, s) => sum + (s.avg_score || 0), 0) / totalStudents).toFixed(1)
     : "—";
 
-  const recentAlerts = scopedStudents
-    .filter(s => s.status === "red" || s.status === "yellow")
+  const recentAlerts = students
+    .filter(s => s.overall_status === "red" || s.overall_status === "yellow")
     .slice(0, 5)
-    .map(s => ({ name: s.name, sport: s.branch, status: s.status }));
+    .map(s => ({ id: s.id, name: s.full_name, sport: s.sport, status: s.overall_status as StatusType }));
 
   const isTeacher = user?.role === "teacher";
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-5 md:p-10 lg:p-12 max-w-[1400px]">
 
-      {/* ═══════════════════════════════════════════════
-          SECTION 1 — STATUS SUMMARY (top, prominent)
-          ═══════════════════════════════════════════════ */}
+      {/* ═══ SECTION 1 — STATUS SUMMARY ═══ */}
       <section className="mb-10 md:mb-14">
-        {/* Live indicator + date */}
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-6">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
@@ -64,7 +68,6 @@ const DashboardContent = () => {
           <span>{new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}</span>
         </div>
 
-        {/* Title row */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
             <h2 className="text-[22px] md:text-[26px] font-semibold text-foreground tracking-tight leading-tight">
@@ -87,7 +90,6 @@ const DashboardContent = () => {
           )}
         </div>
 
-        {/* Stats — large numbers, minimal chrome */}
         {!isTeacher && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {[
@@ -101,16 +103,13 @@ const DashboardContent = () => {
                   <stat.icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
                   <span className="text-[12px] text-muted-foreground">{stat.label}</span>
                 </div>
-                <p className="text-[30px] md:text-[36px] font-semibold text-foreground leading-none tracking-tight">
-                  {stat.value}
-                </p>
+                <p className="text-[30px] md:text-[36px] font-semibold text-foreground leading-none tracking-tight">{stat.value}</p>
                 <p className="text-[11px] text-muted-foreground/60 mt-2">{stat.sub}</p>
               </div>
             ))}
           </div>
         )}
 
-        {/* Quick status distribution bar */}
         {!isTeacher && totalStudents > 0 && (
           <div className="mt-5 card-premium p-4 md:p-5">
             <div className="flex items-center justify-between mb-3">
@@ -138,9 +137,7 @@ const DashboardContent = () => {
         )}
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          SECTION 2 — SUBJECTS OVERVIEW (middle)
-          ═══════════════════════════════════════════════ */}
+      {/* ═══ SECTION 2 — BRANCH OVERVIEW ═══ */}
       <section className="mb-10 md:mb-14">
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -159,22 +156,18 @@ const DashboardContent = () => {
         </div>
 
         <div className="card-premium divide-y divide-border">
-          {scopedBranches.map((branch) => {
-            const total = branch.green + branch.yellow + branch.red;
-            const greenPct = (branch.green / total) * 100;
-            const yellowPct = (branch.yellow / total) * 100;
-            const redPct = (branch.red / total) * 100;
+          {branchStats.map((branch) => {
+            const greenPct = (branch.green / branch.total) * 100;
+            const yellowPct = (branch.yellow / branch.total) * 100;
+            const redPct = (branch.red / branch.total) * 100;
             return (
               <div key={branch.name} className="flex items-center gap-4 px-5 md:px-6 py-4">
                 <span className="text-[13px] font-medium text-foreground w-20 shrink-0">{branch.name}</span>
-
-                {/* Mini stacked bar */}
                 <div className="flex-1 flex h-1.5 rounded-full overflow-hidden bg-accent gap-px">
                   <div className="bg-success rounded-s-full" style={{ width: `${greenPct}%` }} />
                   <div className="bg-warning" style={{ width: `${yellowPct}%` }} />
                   {redPct > 0 && <div className="bg-destructive rounded-e-full" style={{ width: `${redPct}%` }} />}
                 </div>
-
                 <div className="hidden sm:flex items-center gap-3 text-[11px] text-muted-foreground shrink-0 w-36 justify-end">
                   <span>{branch.green} במסלול</span>
                   <span className="text-border">·</span>
@@ -186,9 +179,8 @@ const DashboardContent = () => {
                     </>
                   )}
                 </div>
-
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <span className="text-[11px] text-muted-foreground/50">{total}</span>
+                  <span className="text-[11px] text-muted-foreground/50">{branch.total}</span>
                   <StatusBadge type={branch.overall} />
                 </div>
               </div>
@@ -197,9 +189,7 @@ const DashboardContent = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          SECTION 3 — DETAILED BREAKDOWN (bottom)
-          ═══════════════════════════════════════════════ */}
+      {/* ═══ SECTION 3 — ALERTS ═══ */}
       <section>
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -221,11 +211,8 @@ const DashboardContent = () => {
           ) : (
             recentAlerts.map((alert) => (
               <div
-                key={alert.name}
-                onClick={() => {
-                  const s = studentsData.find(st => st.name === alert.name);
-                  if (s) navigate(`/students/${s.id}`);
-                }}
+                key={alert.id}
+                onClick={() => navigate(`/students/${alert.id}`)}
                 className="flex items-center justify-between px-5 md:px-6 py-4 cursor-pointer hover:bg-accent/30 transition-colors duration-100"
               >
                 <div className="flex items-center gap-3">

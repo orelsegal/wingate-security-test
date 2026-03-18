@@ -1,7 +1,6 @@
 import { Bell, Search, Menu, ChevronLeft, ArrowRight } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { studentsData } from "@/lib/studentData";
+import { useLocation, useNavigate } from "react-router-dom";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 interface AppHeaderProps {
@@ -22,10 +21,9 @@ const useBreadcrumbs = (): Crumb[] => {
   if (path.startsWith("/students")) {
     crumbs.push({ label: "ספורטאים", path: "/students" });
 
-    const match = path.match(/^\/students\/(\d+)/);
+    const match = path.match(/^\/students\/(.+)/);
     if (match) {
-      const student = studentsData.find(s => s.id === match[1]);
-      crumbs.push({ label: student?.name ?? "פרופיל" });
+      crumbs.push({ label: "פרופיל ספורטאי" });
     }
   } else if (path.startsWith("/courses")) {
     crumbs.push({ label: "מקצועות לימוד" });
@@ -83,7 +81,6 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             );
           })}
         </nav>
-        {/* Mobile: just show current page name */}
         <span className="md:hidden text-[13px] font-medium text-foreground">
           {crumbs[crumbs.length - 1].label}
         </span>

@@ -6,7 +6,7 @@ export interface AppUser {
   name: string;
   role: UserRole;
   email: string;
-  /** For parent: child IDs. For coach: branch name */
+  /** For parent: student IDs. For coach: sport names */
   scopeFilter?: string[];
 }
 
@@ -40,11 +40,11 @@ export const roleDescriptions: Record<UserRole, string> = {
   coach: "מעקב אחר ספורטאי הענף שלי",
 };
 
-/** Demo users for each role */
+/** Demo users for each role — scopeFilter uses DB UUIDs */
 export const demoUsers: AppUser[] = [
   { name: "דני כהן", role: "admin", email: "admin@wingate.ac.il" },
   { name: "רונית לוי", role: "teacher", email: "ronit@wingate.ac.il" },
-  { name: "משה אברהם", role: "parent", email: "moshe@parent.com", scopeFilter: ["4"] },
+  { name: "משה אברהם", role: "parent", email: "moshe@parent.com", scopeFilter: ["b0000001-0000-0000-0000-000000000004"] },
   { name: "יוסי גולן", role: "coach", email: "yossi@wingate.ac.il", scopeFilter: ["כדורסל"] },
 ];
 

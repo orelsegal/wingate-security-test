@@ -1,24 +1,21 @@
 import { useState, useMemo } from "react";
-import { Search, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { studentsData, statusConfig } from "@/lib/studentData";
+import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { useStudents, useAllStudentProgress, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
-import type { StatusType } from "@/lib/studentData";
 
-const subjectNames = ["מתמטיקה", "אנגלית", "היסטוריה", "ספרות", "מדעים", "חינוך גופני", "השכלה כללית"];
 const branches = ["שחייה", "טניס", "כדורסל", "אתלטיקה", "התעמלות"];
 const grades = ["י׳", "י״א", "י״ב"];
 
-/** Derive a per-subject status deterministically from student data */
-const getSubjectStatus = (student: typeof studentsData[0], subject: string): StatusType => {
-  const seed = student.id.charCodeAt(0) + subject.charCodeAt(0);
-  if (student.status === "red") return seed % 3 === 0 ? "red" : seed % 3 === 1 ? "yellow" : "green";
-  if (student.status === "yellow") return seed % 2 === 0 ? "yellow" : "green";
-  return "green";
+const classToGrade = (className: string): string => {
+  if (className.startsWith("י״ב") || className.startsWith("יב")) return "י״ב";
+  if (className.startsWith("י״א") || className.startsWith("יא")) return "י״א";
+  if (className.startsWith("י׳") || className.startsWith("י")) return "י׳";
+  return className;
 };
 
 interface SubjectRow {
-  studentId: string;
+  id: string;
   studentName: string;
   subject: string;
   status: StatusType;
@@ -28,6 +25,8 @@ interface SubjectRow {
 
 const CoursesPage = () => {
   const { user } = useAuth();
+  const { data: students = [], isLoading: studentsLoading } = useStudents();
+  const { data: allProgress = [], isLoading: progressLoading } = useAllStudentProgress();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
@@ -35,33 +34,28 @@ const CoursesPage = () => {
   const [sortBy, setSortBy] = useState<"name" | "subject" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const baseStudents = useMemo(() => {
-    if (!user) return studentsData;
-    if (user.role === "parent") return studentsData.filter(s => user.scopeFilter?.includes(s.id));
-    if (user.role === "coach") return studentsData.filter(s => user.scopeFilter?.includes(s.branch));
-    return studentsData;
-  }, [user]);
-
   const allRows: SubjectRow[] = useMemo(() => {
-    return baseStudents.flatMap(student =>
-      subjectNames.map(subject => ({
-        studentId: student.id,
-        studentName: student.name,
-        subject,
-        status: getSubjectStatus(student, subject),
-        branch: student.branch,
-        grade: student.grade,
-      }))
-    );
-  }, [baseStudents]);
+    // Filter progress by scoped students
+    const studentIds = new Set(students.map(s => s.id));
+    return allProgress
+      .filter(p => studentIds.has(p.student_id))
+      .map(p => ({
+        id: p.id,
+        studentName: (p as any).students?.full_name || "",
+        subject: (p as any).subjects?.subject_name || "",
+        status: p.status as StatusType,
+        branch: (p as any).students?.sport || "",
+        grade: (p as any).students?.class_name || "",
+      }));
+  }, [students, allProgress]);
 
   const filtered = useMemo(() => {
-    const statusOrder: Record<StatusType, number> = { red: 0, yellow: 1, green: 2 };
+    const statusOrder: Record<string, number> = { red: 0, yellow: 1, green: 2 };
     const list = allRows.filter(r => {
       if (search && !r.studentName.includes(search) && !r.subject.includes(search) && !r.branch.includes(search)) return false;
       if (statusFilter && r.status !== statusFilter) return false;
       if (branchFilter && r.branch !== branchFilter) return false;
-      if (gradeFilter && r.grade !== gradeFilter) return false;
+      if (gradeFilter && classToGrade(r.grade) !== gradeFilter) return false;
       return true;
     });
     if (sortBy) {
@@ -69,7 +63,7 @@ const CoursesPage = () => {
         let cmp = 0;
         if (sortBy === "name") cmp = a.studentName.localeCompare(b.studentName, "he");
         else if (sortBy === "subject") cmp = a.subject.localeCompare(b.subject, "he");
-        else if (sortBy === "status") cmp = statusOrder[a.status] - statusOrder[b.status];
+        else if (sortBy === "status") cmp = (statusOrder[a.status] ?? 2) - (statusOrder[b.status] ?? 2);
         return sortDir === "desc" ? -cmp : cmp;
       });
     }
@@ -102,12 +96,22 @@ const CoursesPage = () => {
     setSortDir("asc");
   };
 
+  const isLoading = studentsLoading || progressLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
       <div className="space-y-1.5">
         <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">סטטוס לימודי לפי מקצוע</h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          {allRows.length} רשומות &middot; {baseStudents.length} ספורטאים × {subjectNames.length} מקצועות &middot; מוצגות {filtered.length}
+          {allRows.length} רשומות &middot; {students.length} ספורטאים &middot; מוצגות {filtered.length}
         </p>
       </div>
 
@@ -140,9 +144,7 @@ const CoursesPage = () => {
                   key={type}
                   onClick={() => setStatusFilter(active ? null : type)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
-                    active
-                      ? config.activeBg + " " + config.textClass
-                      : "bg-accent/60 text-muted-foreground hover:bg-accent"
+                    active ? config.activeBg + " " + config.textClass : "bg-accent/60 text-muted-foreground hover:bg-accent"
                   }`}
                 >
                   <span className={`w-[6px] h-[6px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/40"}`} />
@@ -222,7 +224,7 @@ const CoursesPage = () => {
         ) : (
           filtered.slice(0, 100).map((row, i) => (
             <div
-              key={`${row.studentId}-${row.subject}`}
+              key={row.id}
               className={`grid grid-cols-1 md:grid-cols-[1fr_120px_100px_100px] gap-1 md:gap-4 px-5 md:px-6 py-4 md:py-3.5 ${
                 i < Math.min(filtered.length, 100) - 1 ? "border-b border-border" : ""
               } hover:bg-accent/20 transition-colors duration-100`}

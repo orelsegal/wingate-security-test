@@ -1,56 +1,28 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Info } from "lucide-react";
-import { studentsData, statusConfig } from "@/lib/studentData";
+import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Info, Loader2 } from "lucide-react";
+import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
-import type { StatusType } from "@/lib/studentData";
-
-const subjectNames = ["מתמטיקה", "אנגלית", "היסטוריה", "ספרות", "מדעים", "חינ״ג", "כללי"];
-
-const missingTopicsBySubject: Record<string, string[]> = {
-  "מתמטיקה": ["טריגונומטריה", "הסתברות", "חדו״א"],
-  "אנגלית": ["כתיבה אקדמית", "ספרות אנגלית"],
-  "היסטוריה": ["עת חדשה", "עבודת חקר"],
-  "ספרות": ["עבודת סיכום", "שירה מודרנית"],
-  "מדעים": ["כימיה", "ביולוגיה"],
-  "חינ״ג": ["מבחן שנתי"],
-  "כללי": ["פרויקט גמר", "מעורבות חברתית"],
-};
-
-const getSubjectStatus = (student: typeof studentsData[0], subject: string): StatusType => {
-  const seed = student.id.charCodeAt(0) + subject.charCodeAt(0);
-  if (student.status === "red") return seed % 3 === 0 ? "red" : seed % 3 === 1 ? "yellow" : "green";
-  if (student.status === "yellow") return seed % 2 === 0 ? "yellow" : "green";
-  return "green";
-};
-
-/** Get missing topics for a student based on their non-green subjects */
-const getMissingTopics = (student: typeof studentsData[0]): string[] => {
-  const missing: string[] = [];
-  for (const subj of subjectNames) {
-    const status = getSubjectStatus(student, subj);
-    if (status !== "green") {
-      const topics = missingTopicsBySubject[subj];
-      if (topics) {
-        // Pick 1 topic deterministically
-        const idx = (student.id.charCodeAt(0) + subj.charCodeAt(0)) % topics.length;
-        missing.push(topics[idx]);
-      }
-    }
-  }
-  return missing;
-};
 
 const branches = ["שחייה", "טניס", "כדורסל", "אתלטיקה", "התעמלות"];
 const grades = ["י׳", "י״א", "י״ב"];
+
+// Map DB class_name to display grade for filtering
+const classToGrade = (className: string): string => {
+  if (className.startsWith("י״ב") || className.startsWith("יב")) return "י״ב";
+  if (className.startsWith("י״א") || className.startsWith("יא")) return "י״א";
+  if (className.startsWith("י׳") || className.startsWith("י")) return "י׳";
+  return className;
+};
 
 const StudentsPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { data: students = [], isLoading } = useStudents();
   const initialStatus = searchParams.get("status") as StatusType | null;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
@@ -59,34 +31,26 @@ const StudentsPage = () => {
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  // Role-based base data
-  const baseData = useMemo(() => {
-    if (!user) return studentsData;
-    if (user.role === "parent") return studentsData.filter(s => user.scopeFilter?.includes(s.id));
-    if (user.role === "coach") return studentsData.filter(s => user.scopeFilter?.includes(s.branch));
-    return studentsData; // admin, teacher
-  }, [user]);
-
   const filtered = useMemo(() => {
-    const statusOrder: Record<StatusType, number> = { red: 0, yellow: 1, green: 2 };
-    const list = baseData.filter((s) => {
-      if (search && !s.name.includes(search) && !s.branch.includes(search) && !s.grade.includes(search)) return false;
-      if (statusFilter && s.status !== statusFilter) return false;
-      if (branchFilters.length > 0 && !branchFilters.includes(s.branch)) return false;
-      if (gradeFilter && s.grade !== gradeFilter) return false;
+    const statusOrder: Record<string, number> = { red: 0, yellow: 1, green: 2 };
+    const list = students.filter((s) => {
+      if (search && !s.full_name.includes(search) && !s.sport.includes(search) && !s.class_name.includes(search)) return false;
+      if (statusFilter && s.overall_status !== statusFilter) return false;
+      if (branchFilters.length > 0 && !branchFilters.includes(s.sport)) return false;
+      if (gradeFilter && classToGrade(s.class_name) !== gradeFilter) return false;
       return true;
     });
     if (sortBy) {
       list.sort((a, b) => {
         let cmp = 0;
-        if (sortBy === "name") cmp = a.name.localeCompare(b.name, "he");
-        else if (sortBy === "avg") cmp = a.avg - b.avg;
-        else if (sortBy === "status") cmp = statusOrder[a.status] - statusOrder[b.status];
+        if (sortBy === "name") cmp = a.full_name.localeCompare(b.full_name, "he");
+        else if (sortBy === "avg") cmp = (a.avg_score || 0) - (b.avg_score || 0);
+        else if (sortBy === "status") cmp = (statusOrder[a.overall_status] ?? 2) - (statusOrder[b.overall_status] ?? 2);
         return sortDir === "desc" ? -cmp : cmp;
       });
     }
     return list;
-  }, [baseData, search, statusFilter, branchFilters, gradeFilter, sortBy, sortDir]);
+  }, [students, search, statusFilter, branchFilters, gradeFilter, sortBy, sortDir]);
 
   const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || sortBy;
 
@@ -114,17 +78,25 @@ const StudentsPage = () => {
     setSortDir("asc");
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider delayDuration={200}>
     <div className="p-5 md:p-10 lg:p-12 max-w-[1400px]">
 
-      {/* ── SECTION 1: SUMMARY (top, prominent) ── */}
+      {/* ── SECTION 1: SUMMARY ── */}
       <section className="mb-8 md:mb-10">
         <div className="flex items-end justify-between mb-5">
           <div>
             <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">בקרת התקדמות ספורטאים</h2>
             <p className="text-muted-foreground text-[13px] mt-1">
-              {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : ""} &middot; מוצגים {filtered.length}
+              {students.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : ""} &middot; מוצגים {filtered.length}
             </p>
           </div>
           <Tooltip>
@@ -137,9 +109,9 @@ const StudentsPage = () => {
               <p className="text-[12px] font-semibold mb-1">איך הסטטוס מחושב?</p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 הסטטוס נקבע לפי ממוצע הציונים, נוכחות ומפת ההתקדמות בכל המקצועות.
-                <br /><strong className="text-success">במסלול</strong> — ביצועים תקינים בכל המקצועות
-                <br /><strong className="text-warning">פערים</strong> — חוסרים חלקיים הדורשים מעקב
-                <br /><strong className="text-destructive">בסיכון</strong> — פערים משמעותיים, דורש טיפול
+                <br /><strong className="text-success">במסלול</strong> — ביצועים תקינים
+                <br /><strong className="text-warning">פערים</strong> — חוסרים חלקיים
+                <br /><strong className="text-destructive">בסיכון</strong> — פערים משמעותיים
               </p>
             </TooltipContent>
           </Tooltip>
@@ -147,19 +119,16 @@ const StudentsPage = () => {
 
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-3 gap-3 md:gap-4">
-          {([
-            { type: "green" as StatusType, count: baseData.filter(s => s.status === "green").length },
-            { type: "yellow" as StatusType, count: baseData.filter(s => s.status === "yellow").length },
-            { type: "red" as StatusType, count: baseData.filter(s => s.status === "red").length },
-          ]).map((kpi) => {
-            const config = statusConfig[kpi.type];
-            const isActive = statusFilter === kpi.type;
+          {(["green", "yellow", "red"] as StatusType[]).map((type) => {
+            const config = statusConfig[type];
+            const count = students.filter(s => s.overall_status === type).length;
+            const isActive = statusFilter === type;
             return (
               <button
-                key={kpi.type}
-                onClick={() => setStatusFilter(isActive ? null : kpi.type)}
+                key={type}
+                onClick={() => setStatusFilter(isActive ? null : type)}
                 className={`card-premium p-4 md:p-5 text-start transition-all duration-200 cursor-pointer group ${
-                  isActive ? "ring-2 ring-offset-1 " + (kpi.type === "green" ? "ring-success/40" : kpi.type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : "hover:shadow-md"
+                  isActive ? "ring-2 ring-offset-1 " + (type === "green" ? "ring-success/40" : type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : "hover:shadow-md"
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -170,9 +139,7 @@ const StudentsPage = () => {
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>מסונן</span>
                   )}
                 </div>
-                <p className={`text-[28px] md:text-[34px] font-semibold leading-none tracking-tight ${config.textClass}`}>
-                  {kpi.count}
-                </p>
+                <p className={`text-[28px] md:text-[34px] font-semibold leading-none tracking-tight ${config.textClass}`}>{count}</p>
                 <p className="text-[12px] text-muted-foreground mt-1.5">{config.label}</p>
               </button>
             );
@@ -180,7 +147,7 @@ const StudentsPage = () => {
         </div>
       </section>
 
-      {/* ── SECTION 2: FILTERS (middle) ── */}
+      {/* ── SECTION 2: FILTERS ── */}
       <section className="mb-8 md:mb-10">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[14px] font-medium text-foreground">סינון וחיפוש</h3>
@@ -214,9 +181,7 @@ const StudentsPage = () => {
                     key={type}
                     onClick={() => setStatusFilter(active ? null : type)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
-                      active
-                        ? config.activeBg + " " + config.textClass
-                        : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      active ? config.activeBg + " " + config.textClass : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                     }`}
                   >
                     <span className={`w-[6px] h-[6px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/40"}`} />
@@ -233,13 +198,9 @@ const StudentsPage = () => {
                 return (
                   <button
                     key={b}
-                    onClick={() => setBranchFilters(prev =>
-                      active ? prev.filter(x => x !== b) : [...prev, b]
-                    )}
+                    onClick={() => setBranchFilters(prev => active ? prev.filter(x => x !== b) : [...prev, b])}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
-                      active
-                        ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                        : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                     }`}
                   >
                     <span className={`w-3 h-3 rounded border flex items-center justify-center shrink-0 transition-colors duration-150 ${
@@ -252,10 +213,7 @@ const StudentsPage = () => {
                 );
               })}
               {branchFilters.length > 0 && (
-                <button
-                  onClick={() => setBranchFilters([])}
-                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1"
-                >
+                <button onClick={() => setBranchFilters([])} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1">
                   <X className="h-3 w-3" strokeWidth={1.5} />
                 </button>
               )}
@@ -270,9 +228,7 @@ const StudentsPage = () => {
                     key={g}
                     onClick={() => setGradeFilter(active ? null : g)}
                     className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
-                      active
-                        ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                        : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground"
                     }`}
                   >
                     {g}
@@ -284,10 +240,7 @@ const StudentsPage = () => {
 
           {hasFilters && (
             <div className="pt-1">
-              <button
-                onClick={clearAll}
-                className="px-3 py-1.5 rounded-full text-[12px] font-medium text-destructive hover:bg-destructive/10 transition-all duration-150"
-              >
+              <button onClick={clearAll} className="px-3 py-1.5 rounded-full text-[12px] font-medium text-destructive hover:bg-destructive/10 transition-all duration-150">
                 נקה הכל
               </button>
             </div>
@@ -295,23 +248,18 @@ const StudentsPage = () => {
         </div>
       </section>
 
-      {/* ── SECTION 3: STUDENTS (bottom) ── */}
+      {/* ── SECTION 3: STUDENTS ── */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-[14px] font-medium text-foreground">ספורטאים</h3>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent transition-colors">
-                <Info className="h-3.5 w-3.5" strokeWidth={1.5} />
+          <div className="flex items-center gap-2">
+            {(["name", "avg", "status"] as const).map((col) => (
+              <button key={col} onClick={() => toggleSort(col)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-accent transition-colors">
+                {col === "name" ? "שם" : col === "avg" ? "ממוצע" : "סטטוס"}
+                <SortIcon col={col} />
               </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[240px] text-start" dir="rtl">
-              <p className="text-[12px] font-semibold mb-1">מה זה ״חסרים״?</p>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                נושאים לימודיים שטרם הושלמו או שהציון בהם נמוך מהמצופה. הרשימה נגזרת ממפת ההתקדמות של כל ספורטאי.
-              </p>
-            </TooltipContent>
-          </Tooltip>
+            ))}
+          </div>
         </div>
 
         {filtered.length === 0 ? (
@@ -321,67 +269,48 @@ const StudentsPage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {filtered.map((student) => {
-              const subjects = subjectNames.map(s => ({ name: s, status: getSubjectStatus(student, s) }));
-              const config = statusConfig[student.status];
-              const missing = getMissingTopics(student);
+              const status = student.overall_status as StatusType;
+              const config = statusConfig[status];
               return (
                 <div
                   key={student.id}
                   onClick={() => navigate(`/students/${student.id}`)}
                   className="card-premium p-0 overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 group"
                 >
-                  {/* Top: Name + Sport */}
                   <div className="px-5 pt-5 pb-4">
                     <div className="flex items-start gap-3">
-                      <InitialsAvatar name={student.name} size="sm" />
+                      <InitialsAvatar name={student.full_name} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[14px] font-semibold text-foreground leading-tight truncate group-hover:text-primary transition-colors duration-150">
-                          {student.name}
+                          {student.full_name}
                         </p>
                         <p className="text-[12px] text-muted-foreground mt-0.5">
-                          {student.branch} · כיתה {student.grade}
+                          {student.sport} · כיתה {student.class_name}
                         </p>
                       </div>
-                      <span className="text-[18px] font-semibold text-foreground tabular-nums shrink-0">{student.avg}</span>
+                      <span className="text-[18px] font-semibold text-foreground tabular-nums shrink-0">{student.avg_score}</span>
                     </div>
                   </div>
 
-                  {/* Middle: Status */}
                   <div className={`mx-5 mb-3 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
                     <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass} shrink-0`} />
                     <span className={`text-[13px] font-medium ${config.textClass}`}>{config.label}</span>
-                    {student.status === "red" && (
+                    {status === "red" && (
                       <AlertTriangle className="h-3.5 w-3.5 ms-auto text-destructive/60" strokeWidth={1.5} />
                     )}
                   </div>
 
-                  {/* Missing topics */}
-                  {missing.length > 0 && (
-                    <div className="mx-5 mb-3 px-3.5 py-2 rounded-lg bg-accent/60">
-                      <p className="text-[10px] text-muted-foreground/60 font-medium mb-1">חסרים:</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed truncate">
-                        {missing.join("، ")}
-                      </p>
+                  {/* Completion bar */}
+                  <div className="mx-5 mb-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] text-muted-foreground">התקדמות כוללת</span>
+                      <span className="text-[11px] font-medium text-foreground">{student.completion_percent}%</span>
                     </div>
-                  )}
-
-                  {/* Bottom: Subjects overview */}
-                  <div className="px-5 pb-4 pt-1 border-t border-border">
-                    <p className="text-[10px] text-muted-foreground/60 mb-2 mt-3 font-medium tracking-wide">מקצועות</p>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {subjects.map((subj) => {
-                        const sc = statusConfig[subj.status];
-                        return (
-                          <span
-                            key={subj.name}
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${sc.bgClass} ${sc.textClass}`}
-                            title={subj.name}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dotClass}`} />
-                            {subj.name}
-                          </span>
-                        );
-                      })}
+                    <div className="h-1.5 rounded-full bg-accent overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${config.dotClass}`}
+                        style={{ width: `${student.completion_percent}%` }}
+                      />
                     </div>
                   </div>
                 </div>
