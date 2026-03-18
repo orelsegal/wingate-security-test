@@ -16,6 +16,8 @@ const StudentsPage = () => {
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   // Role-based base data
   const baseData = useMemo(() => {
