@@ -115,47 +115,70 @@ const StudentsPage = () => {
   };
 
   return (
-    <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
-      <div className="space-y-1.5">
-        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">בקרת התקדמות ספורטאים</h2>
-        <p className="text-muted-foreground text-[13px] md:text-sm">
-          תמונת מצב עדכנית לפי מקצועות &middot; {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : ""} &middot; מוצגים {filtered.length}
-        </p>
-      </div>
+    <TooltipProvider delayDuration={200}>
+    <div className="p-5 md:p-10 lg:p-12 max-w-[1400px]">
 
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-3 gap-3 md:gap-4">
-        {([
-          { type: "green" as StatusType, icon: "✓", count: baseData.filter(s => s.status === "green").length },
-          { type: "yellow" as StatusType, icon: "!", count: baseData.filter(s => s.status === "yellow").length },
-          { type: "red" as StatusType, icon: "⚠", count: baseData.filter(s => s.status === "red").length },
-        ]).map((kpi) => {
-          const config = statusConfig[kpi.type];
-          const isActive = statusFilter === kpi.type;
-          return (
-            <button
-              key={kpi.type}
-              onClick={() => setStatusFilter(isActive ? null : kpi.type)}
-              className={`card-premium p-4 md:p-5 text-start transition-all duration-200 cursor-pointer group ${
-                isActive ? "ring-2 ring-offset-1 " + (kpi.type === "green" ? "ring-success/40" : kpi.type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : "hover:shadow-md"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-[13px] ${config.bgClass} ${config.textClass}`}>
-                  <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass}`} />
-                </div>
-                {isActive && (
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>מסונן</span>
-                )}
-              </div>
-              <p className={`text-[28px] md:text-[34px] font-semibold leading-none tracking-tight ${config.textClass}`}>
-                {kpi.count}
+      {/* ── SECTION 1: SUMMARY (top, prominent) ── */}
+      <section className="mb-8 md:mb-10">
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">בקרת התקדמות ספורטאים</h2>
+            <p className="text-muted-foreground text-[13px] mt-1">
+              {baseData.length} ספורטאים {user?.role === "coach" ? `בענף ${user.scopeFilter?.[0]}` : ""} &middot; מוצגים {filtered.length}
+            </p>
+          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent transition-colors">
+                <Info className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[260px] text-start" dir="rtl">
+              <p className="text-[12px] font-semibold mb-1">איך הסטטוס מחושב?</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                הסטטוס נקבע לפי ממוצע הציונים, נוכחות ומפת ההתקדמות בכל המקצועות.
+                <br /><strong className="text-success">במסלול</strong> — ביצועים תקינים בכל המקצועות
+                <br /><strong className="text-warning">פערים</strong> — חוסרים חלקיים הדורשים מעקב
+                <br /><strong className="text-destructive">בסיכון</strong> — פערים משמעותיים, דורש טיפול
               </p>
-              <p className="text-[12px] text-muted-foreground mt-1.5">{config.label}</p>
-            </button>
-          );
-        })}
-      </div>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* KPI Summary Cards */}
+        <div className="grid grid-cols-3 gap-3 md:gap-4">
+          {([
+            { type: "green" as StatusType, count: baseData.filter(s => s.status === "green").length },
+            { type: "yellow" as StatusType, count: baseData.filter(s => s.status === "yellow").length },
+            { type: "red" as StatusType, count: baseData.filter(s => s.status === "red").length },
+          ]).map((kpi) => {
+            const config = statusConfig[kpi.type];
+            const isActive = statusFilter === kpi.type;
+            return (
+              <button
+                key={kpi.type}
+                onClick={() => setStatusFilter(isActive ? null : kpi.type)}
+                className={`card-premium p-4 md:p-5 text-start transition-all duration-200 cursor-pointer group ${
+                  isActive ? "ring-2 ring-offset-1 " + (kpi.type === "green" ? "ring-success/40" : kpi.type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : "hover:shadow-md"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center ${config.bgClass}`}>
+                    <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass}`} />
+                  </div>
+                  {isActive && (
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>מסונן</span>
+                  )}
+                </div>
+                <p className={`text-[28px] md:text-[34px] font-semibold leading-none tracking-tight ${config.textClass}`}>
+                  {kpi.count}
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-1.5">{config.label}</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Filters — always visible */}
       <div className="card-premium p-4 md:p-5 space-y-3.5">
