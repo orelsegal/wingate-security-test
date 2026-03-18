@@ -283,9 +283,9 @@ const StudentProfilePage = () => {
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-[220px] p-3 space-y-1.5 text-start" dir="rtl">
                       <p className="text-[12px] font-medium text-popover-foreground">
-                        {subject.status === "green" ? "במסלול — הציון והנוכחות תקינים" :
-                         subject.status === "yellow" ? "במעקב — יש מה לשפר, שווה לעקוב" :
-                         "דורש התערבות — נדרשת תשומת לב מיידית"}
+                        {subject.status === "green" ? "במסלול — ציון ונוכחות תקינים" :
+                         subject.status === "yellow" ? "פערים — נדרש מעקב וחיזוק" :
+                         "בסיכון — נדרשת התערבות מיידית"}
                       </p>
                       {subject.missingTopics && subject.missingTopics.length > 0 && (
                         <p className="text-[11px] text-muted-foreground">

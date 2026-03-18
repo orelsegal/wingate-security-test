@@ -9,10 +9,10 @@ const totalSubjects = 6;
 const totalIndicators = totalStudents * totalSubjects;
 
 const stats = [
-  { label: "ספורטאים פעילים", value: String(totalStudents), icon: Users, subtitle: "רשומים באקדמיה", description: "כל הספורטאים הפעילים בתוכנית" },
-  { label: "נקודות מעקב", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "סה״כ מדדים אקדמיים במעקב" },
-  { label: "ממוצע כללי", value: "82.4", icon: TrendingUp, subtitle: "עלייה של 1.2 מהסמסטר הקודם", description: "ממוצע משוקלל של כל המקצועות" },
-  { label: "דורשים תשומת לב", value: "7", icon: AlertTriangle, subtitle: "ספורטאים שצריך לטפל בהם", description: "מצריכים התערבות של הצוות החינוכי" },
+  { label: "ספורטאים", value: String(totalStudents), icon: Users, subtitle: "רשומים במערכת", description: "סה״כ ספורטאים פעילים" },
+  { label: "מדדי מעקב", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "נקודות בקרה אקדמיות" },
+  { label: "ממוצע כללי", value: "82.4", icon: TrendingUp, subtitle: "+1.2 מהסמסטר הקודם", description: "ממוצע משוקלל כלל המקצועות" },
+  { label: "בסיכון", value: "7", icon: AlertTriangle, subtitle: "דורשים טיפול", description: "ספורטאים עם פערים משמעותיים" },
 ];
 
 const branches = [
@@ -49,10 +49,10 @@ const DashboardContent = () => {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-4">
         <div className="space-y-1.5">
           <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">
-            מה המצב היום?
+            מפת מצב לימודית
           </h2>
           <p className="text-muted-foreground text-[13px] md:text-sm">
-            תמונת מצב אקדמית &middot; האקדמיה למצוינות בספורט &middot; סמסטר א׳ תשפ״ה
+            תמונת מצב עדכנית לפי מקצועות &middot; סמסטר א׳ תשפ״ה
           </p>
         </div>
 
@@ -62,7 +62,7 @@ const DashboardContent = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/10 text-destructive text-[13px] font-medium hover:bg-destructive/15 transition-colors duration-150 shrink-0 self-start sm:self-auto"
           >
             <AlertTriangle className="h-4 w-4" />
-            <span>הצג ספורטאים שדורשים תשומת לב</span>
+            <span>הצג ספורטאים בסיכון</span>
             <span className="px-1.5 py-0.5 rounded-md bg-destructive/15 text-[11px] font-semibold">{redCount}</span>
           </button>
         )}
@@ -93,10 +93,10 @@ const DashboardContent = () => {
         <div className="lg:col-span-3 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              איך הענפים מתקדמים?
+              סטטוס כולל לפי ענף
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              תמונת מצב אקדמית לפי ענף ספורט
+              התפלגות מצב אקדמי בכל ענף
             </p>
           </div>
 
@@ -115,11 +115,11 @@ const DashboardContent = () => {
                     <div className="hidden sm:flex items-center gap-3 text-[12px] text-muted-foreground">
                       <span>{branch.green} במסלול</span>
                       <span className="text-border">·</span>
-                      <span>{branch.yellow} במעקב</span>
+                      <span>{branch.yellow} פערים</span>
                       {branch.red > 0 && (
                         <>
                           <span className="text-border">·</span>
-                          <span>{branch.red} דורשים התערבות</span>
+                          <span>{branch.red} בסיכון</span>
                         </>
                       )}
                     </div>
@@ -148,10 +148,10 @@ const DashboardContent = () => {
         <div className="lg:col-span-2 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              שימו לב אליהם 👀
+              ספורטאים בסיכון
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              ספורטאים שמצריכים מענה מהצוות
+              דורשים טיפול של הצוות החינוכי
             </p>
           </div>
 
