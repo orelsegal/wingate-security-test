@@ -7,67 +7,67 @@
 @layer base {
   :root {
     /* Backgrounds */
-    --background: 210 20% 98%;
-    --foreground: 0 0% 10%;
+    --background: 210 14% 97%;
+    --foreground: 0 0% 12%;
 
     /* Cards & surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 12%;
 
-    /* Primary — Wingate green, used sparingly */
-    --primary: 138 58% 42%;
+    /* Primary — muted Wingate green */
+    --primary: 138 36% 38%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft green accent */
-    --primary-soft: 145 45% 72%;
+    /* Soft green accent — very muted */
+    --primary-soft: 145 25% 68%;
 
     /* Secondary */
-    --secondary: 150 15% 95%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 150 8% 95%;
+    --secondary-foreground: 0 0% 12%;
 
     /* Muted */
-    --muted: 210 15% 95%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 210 10% 95%;
+    --muted-foreground: 220 8% 50%;
 
-    /* Accent — very light green */
-    --accent: 145 30% 93%;
-    --accent-foreground: 0 0% 10%;
+    /* Accent — barely tinted */
+    --accent: 150 12% 94%;
+    --accent-foreground: 0 0% 12%;
 
     /* Status colors — only for indicators */
-    --destructive: 0 72% 51%;
+    --destructive: 0 55% 50%;
     --destructive-foreground: 0 0% 100%;
-    --success: 145 58% 42%;
+    --success: 145 35% 42%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 65% 52%;
     --warning-foreground: 0 0% 100%;
 
     /* Borders & inputs */
-    --border: 210 14% 92%;
-    --input: 210 14% 92%;
-    --ring: 138 58% 42%;
+    --border: 210 12% 91%;
+    --input: 210 12% 91%;
+    --ring: 138 30% 42%;
 
     --radius: 1rem;
 
     /* Card shadows */
-    --shadow-card: 0 1px 3px 0 hsla(0, 0%, 10%, 0.03), 0 1px 2px -1px hsla(0, 0%, 10%, 0.02);
-    --shadow-card-hover: 0 4px 12px -2px hsla(0, 0%, 10%, 0.05), 0 2px 4px -2px hsla(0, 0%, 10%, 0.03);
+    --shadow-card: 0 1px 3px 0 hsla(0, 0%, 10%, 0.02), 0 1px 2px -1px hsla(0, 0%, 10%, 0.015);
+    --shadow-card-hover: 0 4px 12px -2px hsla(0, 0%, 10%, 0.04), 0 2px 4px -2px hsla(0, 0%, 10%, 0.02);
 
-    /* Gradient — very subtle green */
-    --gradient-brand: linear-gradient(135deg, hsl(145, 30%, 96%) 0%, hsl(145, 35%, 93%) 100%);
+    /* Gradient — barely visible green tint */
+    --gradient-brand: linear-gradient(135deg, hsl(150, 15%, 97%) 0%, hsl(150, 18%, 94%) 100%);
 
-    /* Sidebar — light, airy */
+    /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 138 58% 42%;
+    --sidebar-foreground: 0 0% 12%;
+    --sidebar-primary: 138 36% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 145 25% 95%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 210 14% 93%;
-    --sidebar-ring: 138 58% 42%;
-    --sidebar-muted: 220 9% 46%;
+    --sidebar-accent: 150 12% 95%;
+    --sidebar-accent-foreground: 0 0% 12%;
+    --sidebar-border: 210 10% 93%;
+    --sidebar-ring: 138 30% 42%;
+    --sidebar-muted: 220 8% 50%;
   }
 }
 
