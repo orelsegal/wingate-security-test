@@ -47,13 +47,14 @@ const LoginPage = () => {
 
         {/* Role Selection */}
         <div className="space-y-3">
-          {demoUsers.map((demoUser) => {
+          {demoUsers.map((demoUser, i) => {
             const Icon = roleIcons[demoUser.role];
             return (
               <button
                 key={demoUser.role}
                 onClick={() => handleLogin(demoUser)}
-                className="w-full card-premium p-5 flex items-center gap-4 text-start hover:border-primary/25 transition-all duration-150 group cursor-pointer"
+                className="w-full card-premium p-5 flex items-center gap-4 text-start hover:border-primary/25 transition-all duration-150 group cursor-pointer animate-fade-in-up"
+                style={{ animationDelay: `${200 + i * 80}ms` }}
               >
                 <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors duration-150">
                   <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-150" strokeWidth={1.6} />
