@@ -8,10 +8,10 @@ const totalSubjects = 6;
 const totalIndicators = totalStudents * totalSubjects;
 
 const stats = [
-  { label: "ספורטאים", value: String(totalStudents), icon: Users, subtitle: "רשומים במערכת", description: "מספר הספורטאים הפעילים באקדמיה" },
-  { label: "מדדי התקדמות", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "סה״כ נקודות מעקב אקדמיות" },
-  { label: "ממוצע ציונים", value: "82.4", icon: TrendingUp, subtitle: "+1.2 מהסמסטר הקודם", description: "ממוצע משוקלל כלל המקצועות" },
-  { label: "התראות", value: "7", icon: AlertTriangle, subtitle: "ספורטאים בסיכון", description: "דורשים התייחסות מיידית" },
+  { label: "ספורטאים פעילים", value: String(totalStudents), icon: Users, subtitle: "רשומים באקדמיה", description: "כל הספורטאים הפעילים בתוכנית" },
+  { label: "נקודות מעקב", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "סה״כ מדדים אקדמיים במעקב" },
+  { label: "ממוצע כללי", value: "82.4", icon: TrendingUp, subtitle: "עלייה של 1.2 מהסמסטר הקודם", description: "ממוצע משוקלל של כל המקצועות" },
+  { label: "דורשים תשומת לב", value: "7", icon: AlertTriangle, subtitle: "ספורטאים שצריך לטפל בהם", description: "מצריכים התערבות של הצוות החינוכי" },
 ];
 
 const branches = [
