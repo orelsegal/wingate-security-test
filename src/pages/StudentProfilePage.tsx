@@ -396,7 +396,7 @@ const StudentProfilePage = () => {
       <div className="card-premium p-5 md:p-8">
         <div className="flex flex-col sm:flex-row items-start gap-5 md:gap-7">
           {/* Avatar */}
-          <img src={student.avatar} alt={student.name} className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-accent object-cover shrink-0" />
+          <InitialsAvatar name={student.name} size="lg" />
 
           {/* Info */}
           <div className="flex-1 min-w-0 space-y-3">

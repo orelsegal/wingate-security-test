@@ -213,7 +213,7 @@ const StudentsPage = () => {
             >
               <div className="flex items-center justify-between md:contents">
                 <div className="flex items-center gap-3">
-                  <img src={student.avatar} alt={student.name} className="w-8 h-8 rounded-full bg-accent shrink-0" />
+                  <InitialsAvatar name={student.name} size="sm" />
                   <div>
                     <span className="text-[13px] font-medium text-foreground">{student.name}</span>
                     <p className="text-[11px] text-muted-foreground md:hidden">{student.branch}</p>

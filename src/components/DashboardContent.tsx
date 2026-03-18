@@ -229,7 +229,7 @@ const DashboardContent = () => {
                 className="flex items-center justify-between px-5 md:px-6 py-4 cursor-pointer hover:bg-accent/30 transition-colors duration-100"
               >
                 <div className="flex items-center gap-3">
-                  <img src={alert.avatar} alt={alert.name} className="w-8 h-8 rounded-full bg-accent shrink-0" />
+                  <InitialsAvatar name={alert.name} size="sm" />
                   <div>
                     <p className="text-[13px] font-medium text-foreground leading-tight">{alert.name}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{alert.sport}</p>
