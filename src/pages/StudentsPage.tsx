@@ -108,7 +108,7 @@ const StudentsPage = () => {
   const clearAll = () => {
     setSearch("");
     setStatusFilter(null);
-    setBranchFilter(null);
+    setBranchFilters([]);
     setGradeFilter(null);
     setSortBy(null);
     setSortDir("asc");
