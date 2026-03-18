@@ -54,7 +54,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           onClick={onMenuToggle}
           className="p-2 -me-1 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150 md:hidden"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5" strokeWidth={1.5} />
         </button>
         {/* Small logo in header on mobile */}
         <div className="w-7 h-7 rounded-lg overflow-hidden md:hidden shrink-0">
@@ -67,7 +67,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             const isLast = i === crumbs.length - 1;
             return (
               <span key={i} className="flex items-center gap-1.5">
-                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/40 shrink-0" />}
+                {i > 0 && <ChevronLeft className="h-3 w-3 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />}
                 {isLast || !crumb.path ? (
                   <span className={`${isLast ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
                     {crumb.label}
@@ -92,7 +92,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150 me-1"
           >
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} />
             <span>חזרה</span>
           </button>
         )}
@@ -102,10 +102,10 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           </span>
         )}
         <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150">
-          <Search className="h-[18px] w-[18px]" />
+          <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </button>
         <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150 relative">
-          <Bell className="h-[18px] w-[18px]" />
+          <Bell className="h-[18px] w-[18px]" strokeWidth={1.5} />
           <span className="absolute top-2 start-2 w-[7px] h-[7px] bg-primary rounded-full ring-2 ring-card" />
         </button>
       </div>

@@ -63,8 +63,8 @@ const StudentsPage = () => {
   };
 
   const SortIcon = ({ col }: { col: "name" | "avg" | "status" }) => {
-    if (sortBy !== col) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
-    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />;
+    if (sortBy !== col) return <ArrowUpDown className="h-3 w-3 opacity-40" strokeWidth={1.5} />;
+    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 text-primary" strokeWidth={1.5} /> : <ArrowDown className="h-3 w-3 text-primary" strokeWidth={1.5} />;
   };
 
   const clearAll = () => {
@@ -88,7 +88,7 @@ const StudentsPage = () => {
       {/* Filters */}
       <div className="card-premium p-4 md:p-5 space-y-4">
         <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" strokeWidth={1.5} />
           <input
             type="text"
             value={search}
@@ -98,7 +98,7 @@ const StudentsPage = () => {
           />
           {search && (
             <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground">
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
           )}
         </div>

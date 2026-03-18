@@ -188,7 +188,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-3">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <BookOpen className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                     <span className="text-[14px] font-medium text-foreground">{subject.name}</span>
                     {subject.units && (
                       <span className="text-[12px] text-muted-foreground">{subject.units} יח״ל</span>
@@ -202,7 +202,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                     <div className="flex items-center gap-3">
                       {subject.absences > 0 && (
                         <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
+                          <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
                           <span>{subject.absences} חיסורים</span>
                         </div>
                       )}
@@ -221,7 +221,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                 </div>
                 <div className="flex items-center gap-2 ms-4 shrink-0">
                   <StatusBadge type={subject.status} />
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} strokeWidth={1.5} />
                 </div>
               </button>
 
@@ -249,7 +249,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                                     title={ms.status === "done" ? "סמן כלא הושלם" : "סמן כהושלם"}
                                   >
                                     {ms.status === "done" ? (
-                                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-success" strokeWidth={1.5} />
                                     ) : ms.status === "in_progress" ? (
                                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                                     ) : (
@@ -296,7 +296,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                           <div className="flex flex-wrap gap-1.5">
                             {subject.coveredTopics.map((topic) => (
                               <span key={topic} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-success/10 text-[12px] text-success font-medium">
-                                <CheckCircle2 className="h-3 w-3" />
+                                <CheckCircle2 className="h-3 w-3" strokeWidth={1.5} />
                                 {topic}
                               </span>
                             ))}
@@ -306,7 +306,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
                       {subject.missingTopics && subject.missingTopics.length > 0 && (
                         <div>
                           <p className="text-[12px] font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3 text-warning" />
+                            <AlertTriangle className="h-3 w-3 text-warning" strokeWidth={1.5} />
                             נושאים להשלמה
                           </p>
                           <div className="flex flex-wrap gap-1.5">
@@ -370,7 +370,7 @@ const StudentProfilePage = () => {
   if (!hasAccess) {
     return (
       <div className="p-10 text-center space-y-3">
-        <ShieldAlert className="h-10 w-10 text-destructive mx-auto" />
+        <ShieldAlert className="h-10 w-10 text-destructive mx-auto" strokeWidth={1.5} />
         <p className="text-foreground font-medium">אין הרשאת גישה</p>
         <p className="text-muted-foreground text-[13px]">אין לך הרשאה לצפות בפרופיל זה.</p>
         <button onClick={() => navigate("/")} className="text-primary text-[13px] hover:underline mt-2">חזרה לדף הראשי</button>
@@ -387,7 +387,7 @@ const StudentProfilePage = () => {
         onClick={() => navigate("/students")}
         className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-150"
       >
-        <ArrowRight className="h-4 w-4" />
+        <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
         <span>חזרה לרשימת ספורטאים</span>
       </button>
 
@@ -405,7 +405,7 @@ const StudentProfilePage = () => {
             </div>
             <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <Target className="h-3.5 w-3.5" />
+                <Target className="h-3.5 w-3.5" strokeWidth={1.5} />
                 {student.branch}
               </span>
               <span className="text-border">·</span>
@@ -508,7 +508,7 @@ const StudentProfilePage = () => {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.5} />
                   <div>
                     <p className="text-[13px] font-medium text-foreground">{absence.subject}</p>
                     <p className="text-[12px] text-muted-foreground mt-0.5">{absence.date}</p>
@@ -542,7 +542,7 @@ const StudentProfilePage = () => {
                   item.done ? "bg-success/15" : "bg-accent"
                 }`}>
                   {item.done ? (
-                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.5} />
                   ) : (
                     <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
                   )}

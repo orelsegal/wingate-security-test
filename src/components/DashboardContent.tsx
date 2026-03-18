@@ -79,7 +79,7 @@ const DashboardContent = () => {
               onClick={() => navigate("/students?status=red")}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/8 text-destructive text-[13px] font-medium hover:bg-destructive/12 transition-colors duration-150 shrink-0 self-start sm:self-auto"
             >
-              <AlertTriangle className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />
               <span>ספורטאים בסיכון</span>
               <span className="px-1.5 py-0.5 rounded-md bg-destructive/12 text-[11px] font-semibold">{redCount}</span>
             </button>
@@ -153,7 +153,7 @@ const DashboardContent = () => {
             className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>כל המקצועות</span>
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           </button>
         </div>
 
@@ -210,7 +210,7 @@ const DashboardContent = () => {
             className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <span>הצג הכל</span>
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           </button>
         </div>
 
