@@ -72,7 +72,7 @@ const StudentsPage = () => {
     const list = baseData.filter((s) => {
       if (search && !s.name.includes(search) && !s.branch.includes(search) && !s.grade.includes(search)) return false;
       if (statusFilter && s.status !== statusFilter) return false;
-      if (branchFilter && s.branch !== branchFilter) return false;
+      if (branchFilters.length > 0 && !branchFilters.includes(s.branch)) return false;
       if (gradeFilter && s.grade !== gradeFilter) return false;
       return true;
     });
