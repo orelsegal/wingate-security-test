@@ -1,13 +1,15 @@
 import { Bell, Search, Menu } from "lucide-react";
+import { useAuth, roleLabels } from "@/context/AuthContext";
 
 interface AppHeaderProps {
   onMenuToggle?: () => void;
 }
 
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
+  const { user } = useAuth();
+
   return (
     <header className="h-[56px] bg-card border-b border-border flex items-center justify-between px-5 md:px-8 sticky top-0 z-10">
-      {/* Right side: menu + breadcrumb */}
       <div className="flex items-center gap-3 text-sm">
         <button
           onClick={onMenuToggle}
@@ -20,8 +22,12 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         <span className="text-muted-foreground text-[13px] hidden sm:inline">סקירה כללית</span>
       </div>
 
-      {/* Left side: actions */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        {user && (
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent text-[12px] font-medium text-muted-foreground me-2">
+            {roleLabels[user.role]}
+          </span>
+        )}
         <button className="p-2.5 rounded-xl text-muted-foreground hover:bg-accent transition-colors duration-150">
           <Search className="h-[18px] w-[18px]" />
         </button>
