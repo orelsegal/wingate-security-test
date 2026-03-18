@@ -12,19 +12,6 @@ export const statusConfig: Record<StatusType, {
   red: { label: "בסיכון", dotClass: "bg-destructive", bgClass: "bg-destructive/10", textClass: "text-destructive", activeBg: "bg-destructive/15 ring-1 ring-destructive/30" },
 };
 
-export const StatusBadge = ({ type, size = "sm" }: { type: StatusType; size?: "sm" | "md" }) => {
-  const config = statusConfig[type];
-  const sizeClasses = size === "md"
-    ? "px-3 py-1.5 text-[12px] gap-2"
-    : "px-2.5 py-1 text-[11px] gap-1.5";
-  return (
-    <span className={`inline-flex items-center rounded-full ${config.bgClass} ${sizeClasses}`}>
-      <span className={`w-[6px] h-[6px] rounded-full ${config.dotClass}`} />
-      <span className={`font-medium ${config.textClass}`}>{config.label}</span>
-    </span>
-  );
-};
-
 export interface StudentData {
   id: string;
   name: string;
@@ -35,7 +22,7 @@ export interface StudentData {
 }
 
 export const studentsData: StudentData[] = [
-  { id: "1", name: "יעל כהן", branch: "טניס", grade: "י׳", status: "red", avg: 58 },
+  { id: "1", name: "יעל כהן", branch: "טניס", grade: "י׳", status: "green", avg: 58 },
   { id: "2", name: "אורי לוי", branch: "שחייה", grade: "י״א", status: "yellow", avg: 72 },
   { id: "3", name: "נועם ברק", branch: "כדורסל", grade: "י״ב", status: "yellow", avg: 69 },
   { id: "4", name: "מיכל אברהם", branch: "אתלטיקה", grade: "י׳", status: "red", avg: 54 },
