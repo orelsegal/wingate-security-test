@@ -1,22 +1,7 @@
 import { Users, BookOpen, TrendingUp, AlertTriangle } from "lucide-react";
-
-type StatusType = "green" | "yellow" | "red";
-
-const statusConfig: Record<StatusType, { label: string; dotClass: string; bgClass: string; textClass: string }> = {
-  green: { label: "תקין", dotClass: "bg-success", bgClass: "bg-success/10", textClass: "text-success" },
-  yellow: { label: "במעקב", dotClass: "bg-warning", bgClass: "bg-warning/10", textClass: "text-warning" },
-  red: { label: "בסיכון", dotClass: "bg-destructive", bgClass: "bg-destructive/10", textClass: "text-destructive" },
-};
-
-const StatusBadge = ({ type }: { type: StatusType }) => {
-  const config = statusConfig[type];
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${config.bgClass}`}>
-      <span className={`w-[6px] h-[6px] rounded-full ${config.dotClass}`} />
-      <span className={`text-[11px] font-medium ${config.textClass}`}>{config.label}</span>
-    </span>
-  );
-};
+import { statusConfig } from "@/lib/studentData";
+import { StatusBadge } from "@/components/StatusBadge";
+import type { StatusType } from "@/lib/studentData";
 
 const stats = [
   { label: "ספורטאים פעילים", value: "142", icon: Users, subtitle: "+3 החודש" },
