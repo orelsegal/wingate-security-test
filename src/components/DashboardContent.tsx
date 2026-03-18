@@ -1,13 +1,17 @@
-import { Users, BookOpen, TrendingUp, AlertTriangle } from "lucide-react";
-import { statusConfig } from "@/lib/studentData";
+import { Users, BookOpen, TrendingUp, AlertTriangle, BarChart3 } from "lucide-react";
+import { statusConfig, studentsData } from "@/lib/studentData";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { StatusType } from "@/lib/studentData";
 
+const totalStudents = studentsData.length;
+const totalSubjects = 6;
+const totalIndicators = totalStudents * totalSubjects;
+
 const stats = [
-  { label: "ספורטאים פעילים", value: "142", icon: Users, subtitle: "+3 החודש" },
-  { label: "קורסים פעילים", value: "18", icon: BookOpen, subtitle: "סמסטר א׳" },
-  { label: "ממוצע ציונים", value: "82.4", icon: TrendingUp, subtitle: "+1.2 מהסמסטר הקודם" },
-  { label: "התראות", value: "7", icon: AlertTriangle, subtitle: "ספורטאים בסיכון" },
+  { label: "ספורטאים", value: String(totalStudents), icon: Users, subtitle: "רשומים במערכת", description: "מספר הספורטאים הפעילים באקדמיה" },
+  { label: "מדדי התקדמות", value: String(totalIndicators), icon: BarChart3, subtitle: `${totalStudents} ספורטאים × ${totalSubjects} מקצועות`, description: "סה״כ נקודות מעקב אקדמיות" },
+  { label: "ממוצע ציונים", value: "82.4", icon: TrendingUp, subtitle: "+1.2 מהסמסטר הקודם", description: "ממוצע משוקלל כלל המקצועות" },
+  { label: "התראות", value: "7", icon: AlertTriangle, subtitle: "ספורטאים בסיכון", description: "דורשים התייחסות מיידית" },
 ];
 
 const branches = [
@@ -41,7 +45,7 @@ const DashboardContent = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
         {stats.map((stat) => (
-          <div key={stat.label} className="card-premium p-5 md:p-7">
+          <div key={stat.label} className="card-premium p-5 md:p-7" title={stat.description}>
             <div className="flex items-start justify-between mb-4 md:mb-5">
               <div className="p-2.5 bg-accent rounded-xl">
                 <stat.icon className="h-[18px] w-[18px] text-primary" />
@@ -51,7 +55,8 @@ const DashboardContent = () => {
             <p className="text-[28px] md:text-[34px] font-semibold text-foreground mt-1.5 leading-none tracking-tight">
               {stat.value}
             </p>
-            <p className="text-[12px] text-muted-foreground mt-3">{stat.subtitle}</p>
+            <p className="text-[12px] text-muted-foreground mt-2">{stat.subtitle}</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-1 leading-snug">{stat.description}</p>
           </div>
         ))}
       </div>
