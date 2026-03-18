@@ -115,11 +115,11 @@ const DashboardContent = () => {
                     <div className="hidden sm:flex items-center gap-3 text-[12px] text-muted-foreground">
                       <span>{branch.green} במסלול</span>
                       <span className="text-border">·</span>
-                      <span>{branch.yellow} במעקב</span>
+                      <span>{branch.yellow} פערים</span>
                       {branch.red > 0 && (
                         <>
                           <span className="text-border">·</span>
-                          <span>{branch.red} דורשים התערבות</span>
+                          <span>{branch.red} בסיכון</span>
                         </>
                       )}
                     </div>
