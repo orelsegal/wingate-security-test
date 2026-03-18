@@ -150,6 +150,20 @@ const ProgressRing = ({ value }: { value: number }) => {
 
 const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Track milestone overrides: { "מתמטיקה-2": "done" }
+  const [overrides, setOverrides] = useState<Record<string, MilestoneStatus>>({});
+
+  const getMilestoneStatus = (subjectName: string, idx: number, original: MilestoneStatus): MilestoneStatus => {
+    return overrides[`${subjectName}-${idx}`] ?? original;
+  };
+
+  const toggleMilestone = (subjectName: string, idx: number, current: MilestoneStatus) => {
+    const key = `${subjectName}-${idx}`;
+    setOverrides(prev => ({
+      ...prev,
+      [key]: current === "done" ? "missing" : "done",
+    }));
+  };
 
   return (
     <div>
@@ -157,8 +171,12 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {subjects.map((subject) => {
           const isOpen = expanded === subject.name;
-          const doneCount = subject.milestones?.filter(m => m.status === "done").length ?? 0;
-          const totalCount = subject.milestones?.length ?? 0;
+          const resolvedMilestones = subject.milestones?.map((ms, idx) => ({
+            ...ms,
+            status: getMilestoneStatus(subject.name, idx, ms.status),
+          }));
+          const doneCount = resolvedMilestones?.filter(m => m.status === "done").length ?? 0;
+          const totalCount = resolvedMilestones?.length ?? 0;
           const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
           return (
