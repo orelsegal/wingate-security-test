@@ -157,7 +157,7 @@ const StudentProfilePage = () => {
         className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-150"
       >
         <ArrowRight className="h-4 w-4" />
-        <span>חזרה לרשימת ספורטאים</span>
+        <span>חזרה לכל הספורטאים</span>
       </button>
 
       {/* Hero Card - Student Info */}
