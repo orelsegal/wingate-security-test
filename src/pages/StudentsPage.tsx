@@ -88,7 +88,7 @@ const StudentsPage = () => {
     return list;
   }, [baseData, search, statusFilter, branchFilters, gradeFilter, sortBy, sortDir]);
 
-  const hasFilters = search || statusFilter || branchFilter || gradeFilter || sortBy;
+  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || sortBy;
 
   const toggleSort = (col: "name" | "avg" | "status") => {
     if (sortBy === col) {
