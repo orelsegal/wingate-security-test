@@ -188,7 +188,7 @@ const SubjectGrid = ({ subjects }: { subjects: SubjectData[] }) => {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-3">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <BookOpen className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                     <span className="text-[14px] font-medium text-foreground">{subject.name}</span>
                     {subject.units && (
                       <span className="text-[12px] text-muted-foreground">{subject.units} יח״ל</span>
