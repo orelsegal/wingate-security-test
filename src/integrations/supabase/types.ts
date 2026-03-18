@@ -14,7 +14,226 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_users: {
+        Row: {
+          email: string
+          full_name: string
+          id: string
+          linked_sport: string | null
+          linked_student_id: string | null
+          role: string
+        }
+        Insert: {
+          email: string
+          full_name: string
+          id?: string
+          linked_sport?: string | null
+          linked_student_id?: string | null
+          role: string
+        }
+        Update: {
+          email?: string
+          full_name?: string
+          id?: string
+          linked_sport?: string | null
+          linked_student_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_users_linked_student_id_fkey"
+            columns: ["linked_student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_roadmap_progress: {
+        Row: {
+          completed: boolean
+          completion_date: string | null
+          id: string
+          roadmap_item_id: string
+          student_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completion_date?: string | null
+          id?: string
+          roadmap_item_id: string
+          student_id: string
+        }
+        Update: {
+          completed?: boolean
+          completion_date?: string | null
+          id?: string
+          roadmap_item_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_roadmap_progress_roadmap_item_id_fkey"
+            columns: ["roadmap_item_id"]
+            isOneToOne: false
+            referencedRelation: "subject_roadmaps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_roadmap_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_subject_progress: {
+        Row: {
+          absences: number
+          completion_percent: number
+          covered_topics: string[] | null
+          grade: number | null
+          id: string
+          missing_items: string[] | null
+          notes: string | null
+          status: string
+          student_id: string
+          subject_id: string
+        }
+        Insert: {
+          absences?: number
+          completion_percent?: number
+          covered_topics?: string[] | null
+          grade?: number | null
+          id?: string
+          missing_items?: string[] | null
+          notes?: string | null
+          status?: string
+          student_id: string
+          subject_id: string
+        }
+        Update: {
+          absences?: number
+          completion_percent?: number
+          covered_topics?: string[] | null
+          grade?: number | null
+          id?: string
+          missing_items?: string[] | null
+          notes?: string | null
+          status?: string
+          student_id?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_subject_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_subject_progress_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          avg_score: number | null
+          class_name: string
+          coach_sport: string | null
+          completion_percent: number
+          created_at: string
+          full_name: string
+          id: string
+          math_level: number | null
+          overall_status: string
+          parent_user_id: string | null
+          sport: string
+        }
+        Insert: {
+          avg_score?: number | null
+          class_name: string
+          coach_sport?: string | null
+          completion_percent?: number
+          created_at?: string
+          full_name: string
+          id?: string
+          math_level?: number | null
+          overall_status?: string
+          parent_user_id?: string | null
+          sport: string
+        }
+        Update: {
+          avg_score?: number | null
+          class_name?: string
+          coach_sport?: string | null
+          completion_percent?: number
+          created_at?: string
+          full_name?: string
+          id?: string
+          math_level?: number | null
+          overall_status?: string
+          parent_user_id?: string | null
+          sport?: string
+        }
+        Relationships: []
+      }
+      subject_roadmaps: {
+        Row: {
+          id: string
+          level_option: number | null
+          order_index: number
+          required_for_completion: boolean
+          subject_id: string
+          topic_name: string
+        }
+        Insert: {
+          id?: string
+          level_option?: number | null
+          order_index?: number
+          required_for_completion?: boolean
+          subject_id: string
+          topic_name: string
+        }
+        Update: {
+          id?: string
+          level_option?: number | null
+          order_index?: number
+          required_for_completion?: boolean
+          subject_id?: string
+          topic_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_roadmaps_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          id: string
+          subject_name: string
+        }
+        Insert: {
+          id?: string
+          subject_name: string
+        }
+        Update: {
+          id?: string
+          subject_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
