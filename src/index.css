@@ -6,68 +6,72 @@
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --background: 210 14% 97%;
-    --foreground: 0 0% 12%;
+    /* Backgrounds — warm off-white with the faintest green undertone */
+    --background: 160 10% 97%;
+    --foreground: 160 10% 10%;
 
     /* Cards & surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 12%;
+    --card-foreground: 160 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 12%;
+    --popover-foreground: 160 10% 10%;
 
-    /* Primary — muted Wingate green */
-    --primary: 138 36% 38%;
+    /* Primary — deep Wingate green */
+    --primary: 152 42% 28%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft green accent — very muted */
-    --primary-soft: 145 25% 68%;
+    /* Primary glow — for gradients */
+    --primary-glow: 145 38% 36%;
+
+    /* Soft green accent */
+    --primary-soft: 150 22% 62%;
 
     /* Secondary */
-    --secondary: 150 8% 95%;
-    --secondary-foreground: 0 0% 12%;
+    --secondary: 155 8% 95%;
+    --secondary-foreground: 160 10% 10%;
 
     /* Muted */
-    --muted: 210 10% 95%;
-    --muted-foreground: 220 8% 50%;
+    --muted: 155 8% 94%;
+    --muted-foreground: 160 6% 46%;
 
-    /* Accent — barely tinted */
-    --accent: 150 12% 94%;
-    --accent-foreground: 0 0% 12%;
+    /* Accent — green-tinted neutral */
+    --accent: 155 14% 93%;
+    --accent-foreground: 160 10% 10%;
 
-    /* Status colors — only for indicators */
+    /* Status colors */
     --destructive: 0 55% 50%;
     --destructive-foreground: 0 0% 100%;
-    --success: 145 35% 42%;
+    --success: 152 40% 38%;
     --success-foreground: 0 0% 100%;
     --warning: 38 65% 52%;
     --warning-foreground: 0 0% 100%;
 
     /* Borders & inputs */
-    --border: 210 12% 91%;
-    --input: 210 12% 91%;
-    --ring: 138 30% 42%;
+    --border: 155 10% 90%;
+    --input: 155 10% 90%;
+    --ring: 152 42% 28%;
 
     --radius: 1rem;
 
-    /* Card shadows */
-    --shadow-card: 0 1px 3px 0 hsla(0, 0%, 10%, 0.02), 0 1px 2px -1px hsla(0, 0%, 10%, 0.015);
-    --shadow-card-hover: 0 4px 12px -2px hsla(0, 0%, 10%, 0.04), 0 2px 4px -2px hsla(0, 0%, 10%, 0.02);
+    /* Card shadows — green-tinted */
+    --shadow-card: 0 1px 3px 0 hsla(152, 20%, 20%, 0.03), 0 1px 2px -1px hsla(152, 20%, 20%, 0.02);
+    --shadow-card-hover: 0 4px 16px -4px hsla(152, 30%, 20%, 0.06), 0 2px 4px -2px hsla(152, 20%, 20%, 0.03);
 
-    /* Gradient — barely visible green tint */
-    --gradient-brand: linear-gradient(135deg, hsl(150, 15%, 97%) 0%, hsl(150, 18%, 94%) 100%);
+    /* Gradient — subtle deep green */
+    --gradient-brand: linear-gradient(135deg, hsl(155, 12%, 96%) 0%, hsl(152, 16%, 93%) 100%);
+    --gradient-hero: linear-gradient(160deg, hsl(152, 42%, 28%) 0%, hsl(145, 38%, 36%) 50%, hsl(140, 32%, 32%) 100%);
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 12%;
-    --sidebar-primary: 138 36% 38%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 150 12% 95%;
-    --sidebar-accent-foreground: 0 0% 12%;
-    --sidebar-border: 210 10% 93%;
-    --sidebar-ring: 138 30% 42%;
-    --sidebar-muted: 220 8% 50%;
+    /* Sidebar — deep green */
+    --sidebar-background: 152 38% 14%;
+    --sidebar-foreground: 150 15% 90%;
+    --sidebar-primary: 150 50% 65%;
+    --sidebar-primary-foreground: 152 38% 14%;
+    --sidebar-accent: 152 25% 20%;
+    --sidebar-accent-foreground: 150 15% 90%;
+    --sidebar-border: 152 20% 20%;
+    --sidebar-ring: 150 50% 65%;
+    --sidebar-muted: 150 10% 55%;
   }
 }
 
@@ -97,5 +101,18 @@
   }
   .gradient-brand {
     background: var(--gradient-brand);
+  }
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  /* Subtle athletic track pattern */
+  .pattern-track {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 48px,
+      hsla(152, 30%, 50%, 0.03) 48px,
+      hsla(152, 30%, 50%, 0.03) 49px
+    );
   }
 }

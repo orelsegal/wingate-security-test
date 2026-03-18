@@ -22,11 +22,11 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden" dir="rtl">
-      {/* Background layers */}
+      {/* Background — deep green radial + subtle track pattern */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 start-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,hsl(145_30%_90%/0.6)_0%,transparent_70%)]" />
-        <div className="absolute -bottom-40 -end-20 w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,hsl(138_36%_38%/0.04)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "radial-gradient(hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+        <div className="absolute -top-40 start-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,hsl(152_42%_28%/0.07)_0%,transparent_65%)]" />
+        <div className="absolute -bottom-32 -end-24 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,hsl(152_42%_28%/0.04)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 pattern-track" />
       </div>
 
       <div className="w-full max-w-[440px] px-6 relative z-10">
@@ -61,10 +61,10 @@ const LoginPage = () => {
               <button
                 key={demoUser.role}
                 onClick={() => handleLogin(demoUser)}
-                className="w-full group relative bg-card border border-border rounded-2xl p-4 md:p-5 flex items-center gap-4 text-start transition-all duration-200 hover:border-primary/25 hover:shadow-[0_4px_20px_-4px_hsl(138_36%_38%/0.1)] active:scale-[0.995] cursor-pointer animate-fade-in-up"
+                className="w-full group relative bg-card border border-border rounded-2xl p-4 md:p-5 flex items-center gap-4 text-start transition-all duration-200 hover:border-primary/30 hover:shadow-[0_4px_20px_-4px_hsl(152_42%_28%/0.12)] active:scale-[0.995] cursor-pointer animate-fade-in-up"
                 style={{ animationDelay: `${220 + i * 70}ms` }}
               >
-                <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center shrink-0 group-hover:bg-primary/8 transition-colors duration-200">
+                <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors duration-200">
                   <Icon className="h-[20px] w-[20px] text-muted-foreground group-hover:text-primary transition-colors duration-200" strokeWidth={1.6} />
                 </div>
 
@@ -77,7 +77,7 @@ const LoginPage = () => {
                   </p>
                 </div>
 
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-primary/8">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-primary/10">
                   <ArrowLeft className="h-4 w-4 text-primary" />
                 </div>
               </button>
