@@ -199,7 +199,7 @@ const StudentsPage = () => {
 
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-[13px] text-muted-foreground">
-            לא מצאנו ספורטאים שמתאימים לחיפוש — נסו לשנות את הסינון
+            לא נמצאו תוצאות — נסו לשנות את הסינון
           </div>
         ) : (
           filtered.map((student, i) => (

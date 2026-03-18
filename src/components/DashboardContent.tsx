@@ -148,10 +148,10 @@ const DashboardContent = () => {
         <div className="lg:col-span-2 card-premium p-5 md:p-8">
           <div className="mb-7 md:mb-8">
             <h3 className="text-[15px] md:text-base font-semibold text-foreground">
-              שימו לב אליהם 👀
+              ספורטאים בסיכון
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              ספורטאים שמצריכים מענה מהצוות
+              דורשים טיפול של הצוות החינוכי
             </p>
           </div>
 
