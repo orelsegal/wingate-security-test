@@ -86,7 +86,7 @@ const StudentsPage = () => {
       });
     }
     return list;
-  }, [baseData, search, statusFilter, branchFilter, gradeFilter, sortBy, sortDir]);
+  }, [baseData, search, statusFilter, branchFilters, gradeFilter, sortBy, sortDir]);
 
   const hasFilters = search || statusFilter || branchFilter || gradeFilter || sortBy;
 
