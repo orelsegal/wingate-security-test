@@ -540,11 +540,11 @@ const DataEntryPage = () => {
                   <Download className="h-4 w-4" />
                   הורד תבנית Excel
                 </Button>
-                <label className="cursor-pointer">
-                  <Button variant="default" className="gap-2 pointer-events-none" asChild={false}>
+                <label className="cursor-pointer inline-flex">
+                  <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer">
                     <Upload className="h-4 w-4" />
                     העלה קובץ
-                  </Button>
+                  </span>
                   <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} />
                 </label>
               </div>
