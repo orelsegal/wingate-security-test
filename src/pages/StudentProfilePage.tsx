@@ -170,6 +170,63 @@ const StudentProfilePage = () => {
         </div>
       </div>
 
+      {/* Student Details Card */}
+      {((student as any).diagnosis_status || (student as any).bagrut_accommodations || (student as any).english_support || (student as any).book_name || (student as any).exams_completed || (student as any).notes) && (
+        <div className="card-premium p-5 md:p-7">
+          <h3 className="text-[15px] font-semibold text-foreground mb-4 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            פרטים נוספים
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(student as any).diagnosis_status && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Stethoscope className="h-3 w-3" />אבחון / לקות</p>
+                <p className="text-[13px] text-foreground font-medium">{(student as any).diagnosis_status}</p>
+              </div>
+            )}
+            {(student as any).bagrut_accommodations && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">התאמות בגרות</p>
+                <p className="text-[13px] text-foreground font-medium">{(student as any).bagrut_accommodations}</p>
+              </div>
+            )}
+            {(student as any).english_support && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Languages className="h-3 w-3" />תמיכה באנגלית</p>
+                <p className="text-[13px] text-foreground font-medium">{(student as any).english_support}</p>
+              </div>
+            )}
+            {(student as any).book_name && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1"><BookOpen className="h-3 w-3" />ספר</p>
+                <p className="text-[13px] text-foreground font-medium">
+                  {(student as any).book_name}
+                  {(student as any).book_grade != null && <span className="text-muted-foreground mr-1">({(student as any).book_grade})</span>}
+                </p>
+              </div>
+            )}
+            {(student as any).exams_completed && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">בחינות שהושלמו</p>
+                <p className="text-[13px] text-foreground font-medium">{(student as any).exams_completed}</p>
+              </div>
+            )}
+            {(student as any).summative_assessment && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">הערכה מסכמת</p>
+                <p className="text-[13px] text-foreground font-medium">{(student as any).summative_assessment}</p>
+              </div>
+            )}
+            {(student as any).notes && (
+              <div className="space-y-1 sm:col-span-2 lg:col-span-3">
+                <p className="text-[11px] text-muted-foreground">הערות</p>
+                <p className="text-[13px] text-foreground">{(student as any).notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Math Level Selector */}
       <div className="card-premium p-5 md:p-7">
         <div className="flex items-center justify-between mb-4">
