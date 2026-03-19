@@ -1,9 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 
-export type Student = Tables<"students">;
+export type Student = Tables<"students"> & {
+  first_name?: string | null;
+  last_name?: string | null;
+  diagnosis_status?: string | null;
+  bagrut_accommodations?: string | null;
+  english_support?: string | null;
+  book_name?: string | null;
+  book_grade?: number | null;
+  summative_assessment?: string | null;
+  notes?: string | null;
+  exams_completed?: string | null;
+  archived?: boolean | null;
+  last_updated_at?: string | null;
+};
+
 export type StatusType = "green" | "yellow" | "red";
 
 export const statusConfig: Record<StatusType, {
@@ -26,7 +40,6 @@ export const useStudents = () => {
     queryFn: async () => {
       let query = supabase.from("students").select("*").order("full_name");
 
-      // Role-based filtering
       if (user?.role === "parent" && user.scopeFilter?.length) {
         query = query.in("id", user.scopeFilter);
       } else if (user?.role === "coach" && user.scopeFilter?.length) {
@@ -35,7 +48,7 @@ export const useStudents = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Student[];
+      return (data as any[]) as Student[];
     },
     enabled: !!user,
   });
@@ -51,9 +64,66 @@ export const useStudent = (id: string) => {
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return data as Student | null;
+      return (data as any) as Student | null;
     },
     enabled: !!id,
+  });
+};
+
+export const useDeleteStudent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Delete related progress first
+      await supabase.from("student_subject_progress").delete().eq("student_id", id);
+      await supabase.from("student_roadmap_progress").delete().eq("student_id", id);
+      const { error } = await supabase.from("students").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+  });
+};
+
+export const useUpdateStudent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Record<string, any> }) => {
+      const { error } = await supabase.from("students").update({ ...data, last_updated_at: new Date().toISOString() } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["student"] });
+    },
+  });
+};
+
+export const useCreateStudent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const { error } = await supabase.from("students").insert(data as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+  });
+};
+
+export const useSports = () => {
+  return useQuery({
+    queryKey: ["sports"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sports" as any)
+        .select("*")
+        .order("sport_name");
+      if (error) throw error;
+      return data as any[];
+    },
   });
 };
 
@@ -90,14 +160,12 @@ export const useStudentRoadmap = (studentId: string, mathLevel?: number) => {
   return useQuery({
     queryKey: ["student-roadmap", studentId, mathLevel],
     queryFn: async () => {
-      // Get all roadmap items
       const { data: roadmapItems, error: riError } = await supabase
         .from("subject_roadmaps")
         .select("*, subjects(subject_name)")
         .order("order_index");
       if (riError) throw riError;
 
-      // Get student's progress
       const { data: progress, error: pError } = await supabase
         .from("student_roadmap_progress")
         .select("*")
@@ -108,10 +176,8 @@ export const useStudentRoadmap = (studentId: string, mathLevel?: number) => {
         (progress || []).map((p) => [p.roadmap_item_id, p])
       );
 
-      // Filter math items by level
       const filtered = (roadmapItems || []).filter((item) => {
         if (item.subject_id === "a1111111-0000-0000-0000-000000000001") {
-          // Math — filter by level
           return item.level_option === (mathLevel || 3);
         }
         return item.level_option === null;
