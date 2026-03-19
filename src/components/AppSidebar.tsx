@@ -1,17 +1,16 @@
-import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, ClipboardEdit, Medal, LogOut, Database, Home } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 const allMenuItems = [
-  { title: "סקירה כללית", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
+  { title: "הבית שלי", icon: Home, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
   { title: "הבית שלי", icon: Home, path: "/student-home", roles: ["student"] },
+  { title: "סקירה כללית", icon: LayoutDashboard, path: "/dashboard", roles: ["admin", "teacher"] },
   { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
   { title: "סטטוס לימודי", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
   { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
   { title: "ניהול נתונים", icon: Database, path: "/data-management", roles: ["admin"] },
-  { title: "דוחות וניתוח", icon: BarChart3, path: "/reports", roles: ["admin"] },
-  { title: "הגדרות מערכת", icon: Settings, path: "/settings", roles: ["admin"] },
 ];
 
 interface AppSidebarProps {

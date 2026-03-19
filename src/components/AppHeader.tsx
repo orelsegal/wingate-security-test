@@ -13,7 +13,8 @@ interface Crumb {
 }
 
 const pageTitles: Record<string, string> = {
-  "/": "סקירה כללית",
+  "/": "הבית שלי",
+  "/dashboard": "סקירה כללית",
   "/students": "ספורטאים",
   "/courses": "סטטוס לימודי",
   "/data-entry": "הזנת נתונים",
@@ -27,7 +28,11 @@ const useBreadcrumbs = (): { crumbs: Crumb[]; title: string } => {
   const location = useLocation();
   const path = location.pathname;
 
-  if (path === "/" || path === "/student-home") return { crumbs: [], title: pageTitles[path] || "סקירה כללית" };
+  if (path === "/" || path === "/student-home") return { crumbs: [], title: pageTitles[path] || "הבית שלי" };
+
+  if (path === "/dashboard") {
+    return { crumbs: [{ label: "הבית שלי", path: "/" }, { label: "סקירה כללית" }], title: "סקירה כללית" };
+  }
 
   const crumbs: Crumb[] = [{ label: "דשבורד", path: "/" }];
   let title = "";

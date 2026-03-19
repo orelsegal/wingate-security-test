@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import DashboardContent from "@/components/DashboardContent";
+import RoleHomePage from "@/pages/RoleHomePage";
+import StudentHomePage from "@/pages/StudentHomePage";
 
 const Index = () => {
   const { user } = useAuth();
@@ -10,12 +11,8 @@ const Index = () => {
     return <Navigate to="/student-home" replace />;
   }
 
-  // Parent goes directly to child's profile
-  if (user?.role === "parent" && user.scopeFilter?.[0]) {
-    return <Navigate to={`/students/${user.scopeFilter[0]}`} replace />;
-  }
-
-  return <DashboardContent />;
+  // All other roles get their role-based home page
+  return <RoleHomePage />;
 };
 
 export default Index;
