@@ -15,7 +15,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import DataManagementModal from "@/components/DataManagementModal";
 import QuickEditDrawer from "@/components/QuickEditDrawer";
 import * as XLSX from "xlsx";
 
