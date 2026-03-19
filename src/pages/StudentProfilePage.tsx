@@ -86,11 +86,14 @@ const StudentProfilePage = () => {
   const saveField = useCallback(async (field: string, value: any) => {
     if (!student) return;
     try {
+      console.log(`[SaveField] ${field} =`, value);
       await updateStudent.mutateAsync({ id: student.id, data: { [field]: value } });
+      toast.success("נשמר בהצלחה");
       setSavedMsg(true);
       setTimeout(() => setSavedMsg(false), 2500);
     } catch (err: any) {
-      toast.error("שגיאה בשמירה: " + err.message);
+      console.error("[SaveField] Error:", err);
+      toast.error("שמירה נכשלה: " + err.message);
     }
   }, [student, updateStudent]);
 
