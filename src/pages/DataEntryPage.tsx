@@ -18,7 +18,7 @@ import * as XLSX from "xlsx";
 const SPORTS = ["כדורגל", "התעמלות", "שחייה", "אתלטיקה", "ג'ודו", "טניס"];
 const CLASSES = ["ט'1", "ט'2", "ט'3", "ט-1", "י'1", "י'2", "י'3", "י-1", "יא'1", "יא'2", "יא'3", "י\"א-1"];
 
-const DataEntryPage = () => {
+const DataEntryPageInner = () => {
   const { data: students, isLoading: loadingStudents } = useStudents();
   const { data: subjects, isLoading: loadingSubjects } = useSubjects();
   const queryClient = useQueryClient();
