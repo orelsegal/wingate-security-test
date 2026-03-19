@@ -409,7 +409,7 @@ const StudentsPage = () => {
                               <DropdownMenuTrigger asChild>
                                 <Button size="icon" variant="ghost" className="h-7 w-7"><MoreHorizontal className="h-3 w-3" /></Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" dir="rtl">
+                              <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => { setDuplicateStudent(student); setEditStudent(student); setFormOpen(true); }} className="gap-2 text-xs"><Copy className="h-3 w-3" />שכפל</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => setDeleteTarget(student)} className="gap-2 text-xs text-destructive"><Trash2 className="h-3 w-3" />מחק</DropdownMenuItem>
