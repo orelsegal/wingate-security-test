@@ -62,6 +62,7 @@ const StudentsPage = () => {
   const [duplicateStudent, setDuplicateStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [sportsOpen, setSportsOpen] = useState(false);
+  const [quickEditStudent, setQuickEditStudent] = useState<Student | null>(null);
 
   // Selection for bulk actions
   const [selected, setSelected] = useState<Set<string>>(new Set());
