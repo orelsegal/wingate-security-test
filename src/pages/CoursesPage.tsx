@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
 import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
-import { useStudents, useAllStudentProgress, statusConfig, type StatusType } from "@/hooks/useStudents";
+import { useStudents, useAllStudentProgress, useSports, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 
-const branches = ["שחייה", "טניס", "כדורסל", "אתלטיקה", "התעמלות"];
 const grades = ["י׳", "י״א", "י״ב"];
 
 const classToGrade = (className: string): string => {
@@ -27,6 +26,8 @@ const CoursesPage = () => {
   const { user } = useAuth();
   const { data: students = [], isLoading: studentsLoading } = useStudents();
   const { data: allProgress = [], isLoading: progressLoading } = useAllStudentProgress();
+  const { data: sportsData = [] } = useSports();
+  const branches = useMemo(() => (sportsData as any[]).map(s => s.sport_name), [sportsData]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);

@@ -1,13 +1,15 @@
-import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, ClipboardEdit, Medal, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, BarChart3, Settings, ClipboardEdit, Medal, LogOut, Database, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 const allMenuItems = [
   { title: "סקירה כללית", icon: LayoutDashboard, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
-  { title: "הספורטאים שלנו", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
-  { title: "מקצועות לימוד", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
+  { title: "הבית שלי", icon: Home, path: "/student-home", roles: ["student"] },
+  { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
+  { title: "סטטוס לימודי", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
   { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
+  { title: "ניהול נתונים", icon: Database, path: "/data-management", roles: ["admin"] },
   { title: "דוחות וניתוח", icon: BarChart3, path: "/reports", roles: ["admin"] },
   { title: "הגדרות מערכת", icon: Settings, path: "/settings", roles: ["admin"] },
 ];
@@ -31,7 +33,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   return (
     <aside className="w-[256px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-s border-sidebar-border" dir="rtl">
       {/* Logo & Branding */}
-      <button onClick={() => { navigate("/"); onNavigate?.(); }} className="px-6 pt-6 pb-5 w-full text-start group cursor-pointer">
+      <button onClick={() => { navigate(user?.role === "student" ? "/student-home" : "/"); onNavigate?.(); }} className="px-6 pt-6 pb-5 w-full text-start group cursor-pointer">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-card border border-sidebar-border p-1.5 flex items-center justify-center shrink-0 transition-opacity duration-150 group-hover:opacity-75">
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
@@ -50,7 +52,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
         <p className="text-[9.5px] font-semibold text-sidebar-muted/50 tracking-[0.1em] uppercase px-3 mb-3">תפריט</p>
         <div className="space-y-0.5">
           {menuItems.map((item) => {
-            const active = location.pathname === item.path || (item.path !== "/" && location.pathname.startsWith(item.path));
+            const active = location.pathname === item.path || (item.path !== "/" && item.path !== "/student-home" && location.pathname.startsWith(item.path));
             return (
               <button
                 key={item.title}

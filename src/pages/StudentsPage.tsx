@@ -4,7 +4,7 @@ import {
   Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp,
   UserPlus, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, SlidersHorizontal,
 } from "lucide-react";
-import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
+import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSports, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import DataManagementModal from "@/components/DataManagementModal";
 import QuickEditDrawer from "@/components/QuickEditDrawer";
 import * as XLSX from "xlsx";
 
@@ -59,7 +58,7 @@ const StudentsPage = () => {
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [duplicateStudent, setDuplicateStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [dataManagementOpen, setDataManagementOpen] = useState(false);
+  const [dataManagementOpen, setDataManagementOpen] = useState(false); // unused, kept for compat
   const [quickEditStudent, setQuickEditStudent] = useState<Student | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -178,7 +177,7 @@ const StudentsPage = () => {
             </Button>
           )}
           {isAdmin && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setDataManagementOpen(true)}>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/data-management")}>
               <Settings2 className="h-3.5 w-3.5" />
               ניהול נתונים
             </Button>
@@ -483,7 +482,7 @@ const StudentsPage = () => {
         destructive
         loading={deleteStudent.isPending}
       />
-      <DataManagementModal open={dataManagementOpen} onClose={() => setDataManagementOpen(false)} />
+      
       <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
     </div>
   );

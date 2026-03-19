@@ -14,18 +14,20 @@ interface Crumb {
 
 const pageTitles: Record<string, string> = {
   "/": "סקירה כללית",
-  "/students": "הספורטאים שלנו",
-  "/courses": "מקצועות לימוד",
+  "/students": "ספורטאים",
+  "/courses": "סטטוס לימודי",
   "/data-entry": "הזנת נתונים",
+  "/data-management": "ניהול נתונים",
   "/reports": "דוחות וניתוח",
   "/settings": "הגדרות מערכת",
+  "/student-home": "הבית שלי",
 };
 
 const useBreadcrumbs = (): { crumbs: Crumb[]; title: string } => {
   const location = useLocation();
   const path = location.pathname;
 
-  if (path === "/") return { crumbs: [], title: "סקירה כללית" };
+  if (path === "/" || path === "/student-home") return { crumbs: [], title: pageTitles[path] || "סקירה כללית" };
 
   const crumbs: Crumb[] = [{ label: "דשבורד", path: "/" }];
   let title = "";
@@ -39,11 +41,14 @@ const useBreadcrumbs = (): { crumbs: Crumb[]; title: string } => {
       title = "פרופיל ספורטאי";
     }
   } else if (path.startsWith("/courses")) {
-    crumbs.push({ label: "מקצועות לימוד" });
-    title = "מקצועות לימוד";
+    crumbs.push({ label: "סטטוס לימודי" });
+    title = "סטטוס לימודי";
   } else if (path.startsWith("/data-entry")) {
     crumbs.push({ label: "הזנת נתונים" });
     title = "הזנת נתונים";
+  } else if (path.startsWith("/data-management")) {
+    crumbs.push({ label: "ניהול נתונים" });
+    title = "ניהול נתונים";
   } else if (path.startsWith("/reports")) {
     crumbs.push({ label: "דוחות וניתוח" });
     title = "דוחות וניתוח";
@@ -60,7 +65,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { crumbs, title } = useBreadcrumbs();
-  const isHome = location.pathname === "/";
+  const isHome = location.pathname === "/" || location.pathname === "/student-home";
 
   return (
     <header className="h-auto bg-card border-b border-border sticky top-0 z-10" dir="rtl">
@@ -68,7 +73,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         {/* RIGHT: Logo + Menu */}
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate(user?.role === "student" ? "/student-home" : "/")}
             className="flex items-center gap-2 group"
           >
             <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-border p-1 transition-all group-hover:border-primary/30">
@@ -89,7 +94,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         {/* CENTER: Page title */}
         <div className="absolute left-1/2 -translate-x-1/2 text-center">
           <h1 className="text-[14px] md:text-[15px] font-bold text-foreground tracking-tight leading-tight">
-            {isHome ? "סקירה כללית" : title}
+            {isHome ? (pageTitles[location.pathname] || "סקירה כללית") : title}
           </h1>
         </div>
 

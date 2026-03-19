@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
-export type UserRole = "admin" | "teacher" | "parent" | "coach";
+export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student";
 
 export interface AppUser {
   name: string;
   role: UserRole;
   email: string;
-  /** For parent: student IDs. For coach: sport names */
+  /** For parent: student IDs. For coach: sport names. For student: own student ID */
   scopeFilter?: string[];
 }
 
@@ -31,6 +31,7 @@ export const roleLabels: Record<UserRole, string> = {
   teacher: "מורה",
   parent: "הורה",
   coach: "מאמן",
+  student: "תלמיד",
 };
 
 export const roleDescriptions: Record<UserRole, string> = {
@@ -38,6 +39,7 @@ export const roleDescriptions: Record<UserRole, string> = {
   teacher: "מעקב אחר כל הספורטאים והמקצועות",
   parent: "צפייה בהתקדמות הילד/ה שלי",
   coach: "מעקב אחר ספורטאי הענף שלי",
+  student: "צפייה בלוח זמנים, מפת דרכים ולמידה",
 };
 
 /** Demo users for each role — scopeFilter uses DB UUIDs */
@@ -46,6 +48,7 @@ export const demoUsers: AppUser[] = [
   { name: "רונית לוי", role: "teacher", email: "ronit@wingate.ac.il" },
   { name: "משה אברהם", role: "parent", email: "moshe@parent.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
   { name: "יוסי גולן", role: "coach", email: "yossi@wingate.ac.il", scopeFilter: ["כדורסל"] },
+  { name: "נועם שטיינר", role: "student", email: "noam@student.wingate.ac.il", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
 ];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
