@@ -41,11 +41,7 @@ const LoginPage = () => {
     setExiting(true);
     setTimeout(() => {
       login(user);
-      if (user.role === "student") {
-        navigate("/student-home");
-      } else {
-        navigate("/");
-      }
+      navigate(user.role === "student" ? "/student-home" : "/");
     }, 500);
   };
 
