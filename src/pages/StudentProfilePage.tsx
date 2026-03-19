@@ -148,14 +148,23 @@ const StudentProfilePage = () => {
   }
 
   const handleToggleRoadmapItem = async (itemId: string, currentCompleted: boolean) => {
-    if (currentCompleted) {
-      await supabase.from("student_roadmap_progress").delete().eq("student_id", student.id).eq("roadmap_item_id", itemId);
-    } else {
-      await supabase.from("student_roadmap_progress").upsert({
-        student_id: student.id, roadmap_item_id: itemId, completed: true, completion_date: new Date().toISOString(),
-      }, { onConflict: "student_id,roadmap_item_id" });
+    try {
+      console.log(`[RoadmapToggle] itemId: ${itemId}, currently: ${currentCompleted}`);
+      if (currentCompleted) {
+        const { error } = await supabase.from("student_roadmap_progress").delete().eq("student_id", student.id).eq("roadmap_item_id", itemId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("student_roadmap_progress").upsert({
+          student_id: student.id, roadmap_item_id: itemId, completed: true, completion_date: new Date().toISOString(),
+        }, { onConflict: "student_id,roadmap_item_id" });
+        if (error) throw error;
+      }
+      queryClient.invalidateQueries({ queryKey: ["student-roadmap", student.id] });
+      toast.success("נשמר בהצלחה");
+    } catch (err: any) {
+      console.error("[RoadmapToggle] Error:", err);
+      toast.error("שמירה נכשלה: " + err.message);
     }
-    queryClient.invalidateQueries({ queryKey: ["student-roadmap", student.id] });
   };
 
   const handleMathLevelChange = async (level: number) => {
