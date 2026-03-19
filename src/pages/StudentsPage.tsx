@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Info, Loader2, BookOpen, ChevronLeft, TrendingUp,
   UserPlus, Upload, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, RefreshCw, CheckSquare,
+  SlidersHorizontal,
 } from "lucide-react";
-import { useStudents, useAllStudentProgress, useDeleteStudent, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
+import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import ManageSportsModal from "@/components/ManageSportsModal";
+import QuickEditDrawer from "@/components/QuickEditDrawer";
 import * as XLSX from "xlsx";
 
 const branches = ["שחייה", "טניס", "כדורגל", "אתלטיקה", "התעמלות", "ג'ודו"];
@@ -43,6 +45,7 @@ const StudentsPage = () => {
   const { data: students = [], isLoading } = useStudents();
   const { data: allProgress = [] } = useAllStudentProgress();
   const deleteStudent = useDeleteStudent();
+  const updateStudent = useUpdateStudent();
 
   const initialStatus = searchParams.get("status") as StatusType | null;
   const [search, setSearch] = useState("");
@@ -59,6 +62,7 @@ const StudentsPage = () => {
   const [duplicateStudent, setDuplicateStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [sportsOpen, setSportsOpen] = useState(false);
+  const [quickEditStudent, setQuickEditStudent] = useState<Student | null>(null);
 
   // Selection for bulk actions
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -402,6 +406,9 @@ const StudentsPage = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/students/${student.id}`)}>
                               <Eye className="h-3 w-3" />
                             </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setQuickEditStudent(student)}>
+                              <SlidersHorizontal className="h-3 w-3" />
+                            </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditStudent(student); setDuplicateStudent(null); setFormOpen(true); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
@@ -411,6 +418,10 @@ const StudentsPage = () => {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => { setDuplicateStudent(student); setEditStudent(student); setFormOpen(true); }} className="gap-2 text-xs"><Copy className="h-3 w-3" />שכפל</DropdownMenuItem>
+                                <DropdownMenuItem onClick={async () => {
+                                  await updateStudent.mutateAsync({ id: student.id, data: { archived: true } });
+                                  toast.success(`"${student.full_name}" הועבר לארכיון`);
+                                }} className="gap-2 text-xs"><Archive className="h-3 w-3" />ארכיון</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => setDeleteTarget(student)} className="gap-2 text-xs text-destructive"><Trash2 className="h-3 w-3" />מחק</DropdownMenuItem>
                               </DropdownMenuContent>
@@ -441,6 +452,9 @@ const StudentsPage = () => {
                   <div className="px-4 pt-3 flex items-center justify-between">
                     <Checkbox checked={selected.has(student.id)} onCheckedChange={() => toggleSelect(student.id)} />
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setQuickEditStudent(student); }}>
+                        <SlidersHorizontal className="h-3 w-3" />
+                      </Button>
                       <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setEditStudent(student); setDuplicateStudent(null); setFormOpen(true); }}>
                         <Pencil className="h-3 w-3" />
                       </Button>
@@ -524,6 +538,7 @@ const StudentsPage = () => {
         loading={deleteStudent.isPending}
       />
       <ManageSportsModal open={sportsOpen} onClose={() => setSportsOpen(false)} />
+      <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
     </div>
     </TooltipProvider>
   );
