@@ -538,6 +538,7 @@ const StudentsPage = () => {
         loading={deleteStudent.isPending}
       />
       <ManageSportsModal open={sportsOpen} onClose={() => setSportsOpen(false)} />
+      <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
     </div>
     </TooltipProvider>
   );
