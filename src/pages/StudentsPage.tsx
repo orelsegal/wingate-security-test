@@ -452,6 +452,9 @@ const StudentsPage = () => {
                   <div className="px-4 pt-3 flex items-center justify-between">
                     <Checkbox checked={selected.has(student.id)} onCheckedChange={() => toggleSelect(student.id)} />
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setQuickEditStudent(student); }}>
+                        <SlidersHorizontal className="h-3 w-3" />
+                      </Button>
                       <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setEditStudent(student); setDuplicateStudent(null); setFormOpen(true); }}>
                         <Pencil className="h-3 w-3" />
                       </Button>
