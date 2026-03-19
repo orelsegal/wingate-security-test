@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
 import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
-import { useStudents, useAllStudentProgress, statusConfig, type StatusType } from "@/hooks/useStudents";
+import { useStudents, useAllStudentProgress, useSports, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 
-const branches = ["שחייה", "טניס", "כדורסל", "אתלטיקה", "התעמלות"];
 const grades = ["י׳", "י״א", "י״ב"];
 
 const classToGrade = (className: string): string => {
