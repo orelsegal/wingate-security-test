@@ -4,7 +4,7 @@ import {
   Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp,
   UserPlus, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, SlidersHorizontal,
 } from "lucide-react";
-import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
+import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSports, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
