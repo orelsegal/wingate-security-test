@@ -58,7 +58,7 @@ const StudentsPage = () => {
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [duplicateStudent, setDuplicateStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [dataManagementOpen, setDataManagementOpen] = useState(false);
+  const [dataManagementOpen, setDataManagementOpen] = useState(false); // unused, kept for compat
   const [quickEditStudent, setQuickEditStudent] = useState<Student | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
