@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useStudents, useSubjects, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
+import { useStudents, useSubjects, useStudentProgress, useStudentRoadmap, useSports } from "@/hooks/useStudents";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
