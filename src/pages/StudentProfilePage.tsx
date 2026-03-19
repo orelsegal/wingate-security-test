@@ -174,13 +174,16 @@ const StudentProfilePage = () => {
 
   const handleSubjectFieldSave = async (progressId: string, field: string, value: any) => {
     try {
+      console.log(`[SubjectFieldSave] ${field} =`, value, "progressId:", progressId);
       const { error } = await supabase.from("student_subject_progress").update({ [field]: value } as any).eq("id", progressId);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["student-progress", student.id] });
+      toast.success("נשמר בהצלחה");
       setSavedMsg(true);
       setTimeout(() => setSavedMsg(false), 2500);
     } catch (err: any) {
-      toast.error("שגיאה: " + err.message);
+      console.error("[SubjectFieldSave] Error:", err);
+      toast.error("שמירה נכשלה: " + err.message);
     }
   };
 
