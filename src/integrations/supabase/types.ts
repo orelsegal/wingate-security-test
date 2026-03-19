@@ -49,6 +49,30 @@ export type Database = {
           },
         ]
       }
+      sports: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          sport_name: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          sport_name: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          sport_name?: string
+        }
+        Relationships: []
+      }
       student_roadmap_progress: {
         Row: {
           completed: boolean
@@ -144,43 +168,79 @@ export type Database = {
       }
       students: {
         Row: {
+          archived: boolean | null
           avg_score: number | null
+          bagrut_accommodations: string | null
+          book_grade: number | null
+          book_name: string | null
           class_name: string
           coach_sport: string | null
           completion_percent: number
           created_at: string
+          diagnosis_status: string | null
+          english_support: string | null
+          exams_completed: string | null
+          first_name: string | null
           full_name: string
           id: string
+          last_name: string | null
+          last_updated_at: string | null
           math_level: number | null
+          notes: string | null
           overall_status: string
           parent_user_id: string | null
           sport: string
+          summative_assessment: string | null
         }
         Insert: {
+          archived?: boolean | null
           avg_score?: number | null
+          bagrut_accommodations?: string | null
+          book_grade?: number | null
+          book_name?: string | null
           class_name: string
           coach_sport?: string | null
           completion_percent?: number
           created_at?: string
+          diagnosis_status?: string | null
+          english_support?: string | null
+          exams_completed?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
+          last_name?: string | null
+          last_updated_at?: string | null
           math_level?: number | null
+          notes?: string | null
           overall_status?: string
           parent_user_id?: string | null
           sport: string
+          summative_assessment?: string | null
         }
         Update: {
+          archived?: boolean | null
           avg_score?: number | null
+          bagrut_accommodations?: string | null
+          book_grade?: number | null
+          book_name?: string | null
           class_name?: string
           coach_sport?: string | null
           completion_percent?: number
           created_at?: string
+          diagnosis_status?: string | null
+          english_support?: string | null
+          exams_completed?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
+          last_name?: string | null
+          last_updated_at?: string | null
           math_level?: number | null
+          notes?: string | null
           overall_status?: string
           parent_user_id?: string | null
           sport?: string
+          summative_assessment?: string | null
         }
         Relationships: []
       }
