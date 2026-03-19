@@ -666,4 +666,4 @@ const DataEntryPageInner = () => {
   );
 };
 
-export default DataEntryPage;
+export default DataEntryPageInner;
