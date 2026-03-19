@@ -390,7 +390,7 @@ const DataEntryPage = () => {
                   שמור ספורטאי
                 </Button>
                 {athleteSuccess && (
-                  <span className="flex items-center gap-1.5 text-sm text-success animate-fade-in">
+                  <span className="flex items-center gap-1.5 text-sm text-success animate-fade-in-up">
                     <CheckCircle2 className="h-4 w-4" /> נשמר בהצלחה!
                   </span>
                 )}
