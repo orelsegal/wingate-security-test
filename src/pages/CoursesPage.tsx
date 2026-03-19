@@ -26,6 +26,8 @@ const CoursesPage = () => {
   const { user } = useAuth();
   const { data: students = [], isLoading: studentsLoading } = useStudents();
   const { data: allProgress = [], isLoading: progressLoading } = useAllStudentProgress();
+  const { data: sportsData = [] } = useSports();
+  const branches = useMemo(() => (sportsData as any[]).map(s => s.sport_name), [sportsData]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
   const [branchFilter, setBranchFilter] = useState<string | null>(null);
