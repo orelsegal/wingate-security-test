@@ -15,12 +15,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Save, UserPlus, BookOpen, ClipboardEdit, Route, Loader2, CheckCircle2, Upload, History, FileSpreadsheet, Download, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 
-const SPORTS = ["כדורגל", "התעמלות", "שחייה", "אתלטיקה", "ג'ודו", "טניס"];
 const CLASSES = ["ט'1", "ט'2", "ט'3", "ט-1", "י'1", "י'2", "י'3", "י-1", "יא'1", "יא'2", "יא'3", "י\"א-1"];
 
 const DataEntryPageInner = () => {
   const { data: students, isLoading: loadingStudents } = useStudents();
   const { data: subjects, isLoading: loadingSubjects } = useSubjects();
+  const { data: sportsData = [] } = useSports();
+  const SPORTS = useMemo(() => (sportsData as any[]).filter(s => s.active !== false).map(s => s.sport_name), [sportsData]);
   const queryClient = useQueryClient();
 
   // === Add Athlete State ===
