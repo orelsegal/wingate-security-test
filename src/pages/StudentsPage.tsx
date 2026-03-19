@@ -482,7 +482,7 @@ const StudentsPage = () => {
         destructive
         loading={deleteStudent.isPending}
       />
-      <DataManagementModal open={dataManagementOpen} onClose={() => setDataManagementOpen(false)} />
+      
       <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
     </div>
   );
