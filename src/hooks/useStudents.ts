@@ -118,11 +118,11 @@ export const useSports = () => {
     queryKey: ["sports"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("sports" as any)
+        .from("sports")
         .select("*")
         .order("sport_name");
       if (error) throw error;
-      return data as any[];
+      return data;
     },
   });
 };
