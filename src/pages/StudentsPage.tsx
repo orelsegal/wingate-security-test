@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Info, Loader2, BookOpen, ChevronLeft, TrendingUp,
   UserPlus, Upload, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, RefreshCw, CheckSquare,
+  SlidersHorizontal,
 } from "lucide-react";
-import { useStudents, useAllStudentProgress, useDeleteStudent, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
+import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import ManageSportsModal from "@/components/ManageSportsModal";
+import QuickEditDrawer from "@/components/QuickEditDrawer";
 import * as XLSX from "xlsx";
 
 const branches = ["שחייה", "טניס", "כדורגל", "אתלטיקה", "התעמלות", "ג'ודו"];
