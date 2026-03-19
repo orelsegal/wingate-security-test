@@ -1,10 +1,9 @@
 import { useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert, ChevronDown, Loader2, Pencil, FileText, Stethoscope, Languages, Save, Check } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert, ChevronDown, Loader2, FileText, Stethoscope, Languages, Check, GraduationCap, Hash, ClipboardList, PenLine } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useStudent, useStudentProgress, useStudentRoadmap, useUpdateStudent, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,7 +12,6 @@ import { InlineEdit, InlineSelect, ChipEditor } from "@/components/InlineEdit";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  LineChart, Line,
 } from "recharts";
 
 const ProgressRing = ({ value }: { value: number }) => {
@@ -50,6 +48,23 @@ const MATH_LEVEL_OPTIONS = [
 
 const CLASS_OPTIONS = ["ט'1", "ט'2", "ט'3", "י'1", "י'2", "י'3", "יא'1", "יא'2", "יא'3"].map(c => ({ value: c, label: c }));
 
+const ENGLISH_OPTIONS = [
+  { value: "", label: "לא מוגדר" },
+  { value: "שיעור פרטי", label: "שיעור פרטי" },
+  { value: "תגבור קבוצתי", label: "תגבור קבוצתי" },
+  { value: "פטור", label: "פטור" },
+  { value: "רגיל", label: "רגיל" },
+];
+
+const ASSESSMENT_OPTIONS = [
+  { value: "", label: "לא הוגדר" },
+  { value: "מצוין", label: "מצוין" },
+  { value: "טוב מאוד", label: "טוב מאוד" },
+  { value: "טוב", label: "טוב" },
+  { value: "מספיק", label: "מספיק" },
+  { value: "לא מספיק", label: "לא מספיק" },
+];
+
 const StudentProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -68,19 +83,17 @@ const StudentProfilePage = () => {
 
   const isEditable = user?.role === "admin" || user?.role === "teacher";
 
-  // Inline save helper
   const saveField = useCallback(async (field: string, value: any) => {
     if (!student) return;
     try {
       await updateStudent.mutateAsync({ id: student.id, data: { [field]: value } });
       setSavedMsg(true);
-      setTimeout(() => setSavedMsg(false), 2000);
+      setTimeout(() => setSavedMsg(false), 2500);
     } catch (err: any) {
       toast.error("שגיאה בשמירה: " + err.message);
     }
   }, [student, updateStudent]);
 
-  // Group roadmap items by subject
   const roadmapBySubject = useMemo(() => {
     const map = new Map<string, typeof roadmapItems>();
     roadmapItems.forEach((item) => {
@@ -153,36 +166,37 @@ const StudentProfilePage = () => {
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["student-progress", student.id] });
       setSavedMsg(true);
-      setTimeout(() => setSavedMsg(false), 2000);
+      setTimeout(() => setSavedMsg(false), 2500);
     } catch (err: any) {
       toast.error("שגיאה: " + err.message);
     }
   };
 
   return (
-    <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
-      {/* Saved indicator */}
+    <div className="p-4 md:p-8 lg:p-10 space-y-5 md:space-y-6 max-w-[1200px] pb-24">
+      {/* Saved toast */}
       {savedMsg && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-success text-success-foreground px-4 py-2 rounded-xl shadow-lg flex items-center gap-2 text-[13px] font-medium animate-in slide-in-from-top-2 duration-200">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-success text-success-foreground px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-[13px] font-medium animate-in slide-in-from-top-2 duration-200">
           <Check className="h-4 w-4" />
           השינויים נשמרו
         </div>
       )}
 
-      {/* Back button */}
+      {/* Back */}
       <button
         onClick={() => navigate("/students")}
-        className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-150"
+        className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
-        <span>חזרה לרשימת ספורטאים</span>
+        <span>חזרה לרשימה</span>
       </button>
 
-      {/* Hero Card - Editable */}
-      <div className="card-premium p-5 md:p-8">
-        <div className="flex flex-col sm:flex-row items-start gap-5 md:gap-7">
+      {/* ═══ HERO CARD ═══ */}
+      <div className="card-premium p-5 md:p-7">
+        <div className="flex flex-col sm:flex-row items-start gap-5">
           <InitialsAvatar name={student.full_name} size="lg" />
-          <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex-1 min-w-0 space-y-4">
+            {/* Name & Status */}
             <div className="flex flex-wrap items-center gap-3">
               <InlineEdit
                 value={student.full_name}
@@ -193,106 +207,65 @@ const StudentProfilePage = () => {
                   saveField("last_name", parts.slice(1).join(" ") || "");
                 }}
                 editable={isEditable}
-                displayClassName="text-xl md:text-2xl font-semibold text-foreground tracking-tight"
-              />
-              <InlineSelect
-                value={student.overall_status}
-                options={STATUS_OPTIONS}
-                onSave={(v) => saveField("overall_status", v)}
-                editable={isEditable}
+                displayClassName="text-xl md:text-2xl font-semibold text-foreground tracking-tight !h-auto !border-0 !bg-transparent !px-0 hover:!bg-primary/[0.03]"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Target className="h-3.5 w-3.5" strokeWidth={1.5} />
+            {/* Core fields in grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground font-medium">סטטוס</p>
+                <InlineSelect
+                  value={student.overall_status}
+                  options={STATUS_OPTIONS}
+                  onSave={(v) => saveField("overall_status", v)}
+                  editable={isEditable}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground font-medium">ענף ספורט</p>
                 <InlineEdit
                   value={student.sport}
                   onSave={(v) => saveField("sport", v)}
                   editable={isEditable}
                   placeholder="ענף ספורט"
                 />
-              </span>
-              <span className="text-border">·</span>
-              <span className="flex items-center gap-1">
-                כיתה
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground font-medium">כיתה</p>
                 <InlineSelect
                   value={student.class_name}
                   options={CLASS_OPTIONS}
                   onSave={(v) => saveField("class_name", v)}
                   editable={isEditable}
                 />
-              </span>
-              <span className="text-border">·</span>
-              <span>ממוצע {student.avg_score}</span>
-              <span className="text-border">·</span>
-              <span className="flex items-center gap-1">
-                מתמטיקה
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground font-medium">מתמטיקה</p>
                 <InlineSelect
                   value={String(effectiveMathLevel)}
                   options={MATH_LEVEL_OPTIONS}
                   onSave={(v) => handleMathLevelChange(parseInt(v))}
                   editable={isEditable}
                 />
-              </span>
+              </div>
             </div>
           </div>
+          {/* Score Ring */}
           <div className="flex flex-col items-center gap-2 shrink-0">
             <ProgressRing value={overallProgress} />
-            <span className="text-[12px] text-muted-foreground">ציון משוקלל</span>
+            <span className="text-[11px] text-muted-foreground">ציון משוקלל</span>
           </div>
         </div>
       </div>
 
-      {/* Student Details - Editable */}
-      <div className="card-premium p-5 md:p-7">
-        <h3 className="text-[15px] font-semibold text-foreground mb-4 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-primary" strokeWidth={1.5} />
-          פרטים נוספים
-          {isEditable && <span className="text-[10px] text-muted-foreground font-normal bg-accent px-2 py-0.5 rounded-full">לחצו על שדה לעריכה</span>}
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Stethoscope className="h-3 w-3" />אבחון / לקות</p>
-            <InlineEdit value={student.diagnosis_status || ""} onSave={(v) => saveField("diagnosis_status", v)} editable={isEditable} placeholder="לא הוזן" />
+      {/* ═══ MATH LEVEL SELECTOR ═══ */}
+      <div className="card-premium p-5 md:p-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Hash className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            <h3 className="text-[14px] font-semibold text-foreground">רמת מתמטיקה</h3>
           </div>
-          <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground">התאמות בגרות</p>
-            <InlineEdit value={student.bagrut_accommodations || ""} onSave={(v) => saveField("bagrut_accommodations", v)} editable={isEditable} placeholder="לא הוזן" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Languages className="h-3 w-3" />תמיכה באנגלית</p>
-            <InlineEdit value={student.english_support || ""} onSave={(v) => saveField("english_support", v)} editable={isEditable} placeholder="לא הוזן" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1"><BookOpen className="h-3 w-3" />ספר</p>
-            <InlineEdit value={student.book_name || ""} onSave={(v) => saveField("book_name", v)} editable={isEditable} placeholder="שם הספר" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground">ציון ספר</p>
-            <InlineEdit value={student.book_grade != null ? String(student.book_grade) : ""} onSave={(v) => saveField("book_grade", v ? parseFloat(v) : null)} editable={isEditable} type="number" min={0} max={100} placeholder="0-100" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground">בחינות שהושלמו</p>
-            <InlineEdit value={student.exams_completed || ""} onSave={(v) => saveField("exams_completed", v)} editable={isEditable} placeholder="למשל: 3 מתוך 7" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground">הערכה מסכמת</p>
-            <InlineEdit value={student.summative_assessment || ""} onSave={(v) => saveField("summative_assessment", v)} editable={isEditable} placeholder="הערכה מסכמת" />
-          </div>
-          <div className="space-y-1 sm:col-span-2 lg:col-span-2">
-            <p className="text-[11px] text-muted-foreground">הערות</p>
-            <InlineEdit value={student.notes || ""} onSave={(v) => saveField("notes", v)} editable={isEditable} type="textarea" placeholder="הערות נוספות..." />
-          </div>
-        </div>
-      </div>
-
-      {/* Math Level Selector */}
-      <div className="card-premium p-5 md:p-7">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-[15px] font-semibold text-foreground">רמת מתמטיקה</h3>
-            <p className="text-[13px] text-muted-foreground mt-1">בחירת מספר יחידות לימוד משנה את דרישות ההשלמה</p>
-          </div>
+          <span className="text-[11px] text-muted-foreground">בחירת רמה מעדכנת את דרישות ההשלמה</span>
         </div>
         <div className="flex gap-2">
           {[3, 4, 5].map((level) => (
@@ -300,46 +273,110 @@ const StudentProfilePage = () => {
               key={level}
               onClick={() => isEditable && handleMathLevelChange(level)}
               disabled={!isEditable}
-              className={`px-5 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${
+              className={`flex-1 px-4 py-3 rounded-xl text-[13px] font-medium transition-all duration-150 border ${
                 effectiveMathLevel === level
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-accent text-muted-foreground hover:bg-accent/80 hover:text-foreground"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
               } ${!isEditable ? "cursor-default" : "cursor-pointer"}`}
             >
-              {level} יח״ל
+              {level} יחידות לימוד
             </button>
           ))}
         </div>
       </div>
 
-      {/* Charts */}
+      {/* ═══ EXTRA DETAILS — REAL FORM ═══ */}
+      <div className="card-premium p-5 md:p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <FileText className="h-4 w-4 text-primary" strokeWidth={1.5} />
+          <h3 className="text-[14px] font-semibold text-foreground">פרטים נוספים</h3>
+          {isEditable && <span className="text-[10px] text-primary/60 font-medium bg-primary/5 px-2 py-0.5 rounded-full mr-2">עריכה ישירה</span>}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <Stethoscope className="h-3 w-3" />
+              אבחון / לקות
+            </label>
+            <InlineEdit value={student.diagnosis_status || ""} onSave={(v) => saveField("diagnosis_status", v)} editable={isEditable} placeholder="הפרעת קשב, דיסלקציה..." />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] text-muted-foreground font-medium">התאמות בגרות</label>
+            <InlineEdit value={student.bagrut_accommodations || ""} onSave={(v) => saveField("bagrut_accommodations", v)} editable={isEditable} placeholder="הארכת זמן, הקראה..." />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <Languages className="h-3 w-3" />
+              תמיכה באנגלית
+            </label>
+            <InlineSelect
+              value={student.english_support || ""}
+              options={ENGLISH_OPTIONS}
+              onSave={(v) => saveField("english_support", v)}
+              editable={isEditable}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <BookOpen className="h-3 w-3" />
+              ספר
+            </label>
+            <InlineEdit value={student.book_name || ""} onSave={(v) => saveField("book_name", v)} editable={isEditable} placeholder="שם הספר" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] text-muted-foreground font-medium">ציון ספר</label>
+            <InlineEdit value={student.book_grade != null ? String(student.book_grade) : ""} onSave={(v) => saveField("book_grade", v ? parseFloat(v) : null)} editable={isEditable} type="number" min={0} max={100} placeholder="0–100" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <ClipboardList className="h-3 w-3" />
+              בחינות שהושלמו
+            </label>
+            <InlineEdit value={student.exams_completed || ""} onSave={(v) => saveField("exams_completed", v)} editable={isEditable} placeholder="למשל: 3 מתוך 7" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <GraduationCap className="h-3 w-3" />
+              הערכה מסכמת
+            </label>
+            <InlineSelect
+              value={student.summative_assessment || ""}
+              options={ASSESSMENT_OPTIONS}
+              onSave={(v) => saveField("summative_assessment", v)}
+              editable={isEditable}
+            />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <PenLine className="h-3 w-3" />
+              הערות
+            </label>
+            <InlineEdit value={student.notes || ""} onSave={(v) => saveField("notes", v)} editable={isEditable} type="textarea" placeholder="הערות נוספות..." />
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ CHARTS ═══ */}
       {subjectProgress.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
-          <div className="card-premium p-5 md:p-7">
-            <div className="mb-6">
-              <h3 className="text-[15px] font-semibold text-foreground">ציונים לפי מקצוע</h3>
-              <p className="text-[13px] text-muted-foreground mt-1">השוואת ציונים בין המקצועות</p>
-            </div>
-            <ResponsiveContainer width="100%" height={220}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="card-premium p-5 md:p-6">
+            <h3 className="text-[14px] font-semibold text-foreground mb-4">ציונים לפי מקצוע</h3>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={subjectProgress.map(sp => ({ name: (sp as any).subjects?.subject_name || "", ציון: sp.grade || 0 }))} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} />
                 <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, direction: "rtl" }} cursor={{ fill: "hsl(var(--accent))", radius: 8 }} />
-                <Bar dataKey="ציון" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={18} />
+                <Bar dataKey="ציון" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          <div className="card-premium p-5 md:p-7">
-            <div className="mb-6">
-              <h3 className="text-[15px] font-semibold text-foreground">פרופיל אקדמי</h3>
-              <p className="text-[13px] text-muted-foreground mt-1">מיפוי רמות לפי מקצוע</p>
-            </div>
-            <ResponsiveContainer width="100%" height={220}>
+          <div className="card-premium p-5 md:p-6">
+            <h3 className="text-[14px] font-semibold text-foreground mb-4">פרופיל אקדמי</h3>
+            <ResponsiveContainer width="100%" height={200}>
               <RadarChart data={subjectProgress.map(sp => ({ subject: (sp as any).subjects?.subject_name || "", ציון: sp.grade || 0, fullMark: 100 }))}>
                 <PolarGrid stroke="hsl(var(--border))" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                 <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                 <Radar dataKey="ציון" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
               </RadarChart>
@@ -348,34 +385,14 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* Trend Chart */}
-      <div className="card-premium p-5 md:p-7">
-        <div className="mb-6">
-          <h3 className="text-[15px] font-semibold text-foreground">מגמת ממוצע</h3>
-          <p className="text-[13px] text-muted-foreground mt-1">התפתחות הציון הממוצע &middot; סמסטר א׳ תשפ״ה</p>
-        </div>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={(() => {
-            const base = overallProgress;
-            const months = ["ספט׳", "אוק׳", "נוב׳", "דצמ׳", "ינו׳", "פבר׳"];
-            return months.map((m, i) => ({
-              month: m,
-              ממוצע: Math.max(40, Math.min(100, Math.round(base - 15 + i * 3 + (Math.sin(i * 1.5) * 4)))),
-            }));
-          })()} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-            <YAxis domain={[40, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30} />
-            <RechartsTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, direction: "rtl" }} />
-            <Line type="monotone" dataKey="ממוצע" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--card))", stroke: "hsl(var(--primary))", strokeWidth: 2 }} activeDot={{ r: 6 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Subject Progress Detail - Editable */}
+      {/* ═══ SUBJECT PROGRESS — EXPANDABLE ═══ */}
       <div>
-        <h3 className="text-[15px] font-semibold text-foreground mb-4">פירוט לפי מקצוע</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
+          <h3 className="text-[14px] font-semibold text-foreground">מקצועות לימוד</h3>
+          <span className="text-[11px] text-muted-foreground/50 bg-accent/50 px-2 py-0.5 rounded-full">{subjectProgress.length}</span>
+        </div>
+        <div className="space-y-3">
           {subjectProgress.map((sp) => {
             const subjName = (sp as any).subjects?.subject_name || "";
             const isOpen = expanded === subjName;
@@ -386,88 +403,100 @@ const StudentProfilePage = () => {
             const isMath = sp.subject_id === MATH_SUBJECT_ID;
 
             return (
-              <div key={sp.id} className={`card-premium transition-all duration-200 ${isOpen ? "sm:col-span-2 lg:col-span-3" : ""}`}>
+              <div key={sp.id} className="card-premium overflow-hidden">
+                {/* Header — always visible */}
                 <button
                   onClick={() => setExpanded(isOpen ? null : subjName)}
-                  className="w-full p-5 flex items-start justify-between text-start group"
+                  className="w-full p-4 md:p-5 flex items-center justify-between text-start group"
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <BookOpen className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                      <span className="text-[14px] font-medium text-foreground">{subjName}</span>
-                      {isMath && <span className="text-[12px] text-muted-foreground">{effectiveMathLevel} יח״ל</span>}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${statusConfig[status].bgClass}`}>
+                      <BookOpen className="h-3.5 w-3.5" style={{ color: `hsl(var(--${status === "green" ? "success" : status === "yellow" ? "warning" : "destructive"}))` }} strokeWidth={1.5} />
                     </div>
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <p className="text-[12px] text-muted-foreground">ציון</p>
-                        <p className="text-[28px] font-semibold text-foreground leading-none mt-1">{sp.grade}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {sp.absences > 0 && (
-                          <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                            <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
-                            <span>{sp.absences} חיסורים</span>
-                          </div>
-                        )}
-                        {totalCount > 0 && (
-                          <span className="text-[11px] text-muted-foreground">{doneCount}/{totalCount} שלבים</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-4 h-1.5 rounded-full bg-accent overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-500 ${statusConfig[status].dotClass}`} style={{ width: `${sp.grade || 0}%` }} />
+                    <div className="min-w-0">
+                      <span className="text-[13px] font-semibold text-foreground block">{subjName}</span>
+                      {isMath && <span className="text-[11px] text-muted-foreground">{effectiveMathLevel} יח״ל</span>}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 ms-4 shrink-0">
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className="text-end hidden sm:block">
+                      <span className="text-[20px] font-bold text-foreground tabular-nums">{sp.grade || 0}</span>
+                      <span className="text-[11px] text-muted-foreground block">ציון</span>
+                    </div>
+                    <div className="text-end hidden sm:block">
+                      <span className="text-[14px] font-semibold text-foreground tabular-nums">{sp.completion_percent}%</span>
+                      <span className="text-[11px] text-muted-foreground block">השלמה</span>
+                    </div>
+                    {sp.absences > 0 && (
+                      <div className="text-end hidden md:block">
+                        <span className={`text-[14px] font-semibold tabular-nums ${sp.absences > 3 ? "text-destructive" : "text-foreground"}`}>{sp.absences}</span>
+                        <span className="text-[11px] text-muted-foreground block">חיסורים</span>
+                      </div>
+                    )}
                     <StatusBadge type={status} />
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} strokeWidth={1.5} />
                   </div>
                 </button>
 
-                {isOpen && (
-                  <div className="px-5 pb-5 border-t border-border animate-fade-in-up" style={{ animationDuration: "200ms" }}>
-                    {/* Editable subject controls */}
-                    {isEditable && (
-                      <div className="pt-4 pb-3 mb-3 border-b border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-muted-foreground font-medium">סטטוס מקצוע</p>
-                          <InlineSelect
-                            value={sp.status}
-                            options={STATUS_OPTIONS}
-                            onSave={(v) => handleSubjectFieldSave(sp.id, "status", v)}
-                            editable={isEditable}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-muted-foreground font-medium">ציון</p>
-                          <InlineEdit
-                            value={String(sp.grade || 0)}
-                            onSave={(v) => handleSubjectFieldSave(sp.id, "grade", parseFloat(v) || 0)}
-                            editable={isEditable}
-                            type="number"
-                            min={0}
-                            max={100}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-muted-foreground font-medium">אחוז השלמה</p>
-                          <InlineEdit
-                            value={String(sp.completion_percent)}
-                            onSave={(v) => handleSubjectFieldSave(sp.id, "completion_percent", parseInt(v) || 0)}
-                            editable={isEditable}
-                            type="number"
-                            min={0}
-                            max={100}
-                          />
-                        </div>
-                      </div>
-                    )}
+                {/* Progress bar */}
+                <div className="mx-5 -mt-2 mb-3 h-1 rounded-full bg-accent overflow-hidden">
+                  <div className={`h-full rounded-full transition-all duration-500 ${statusConfig[status].dotClass}`} style={{ width: `${sp.completion_percent || 0}%` }} />
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                {/* Expanded — full edit panel */}
+                {isOpen && (
+                  <div className="px-5 pb-5 border-t border-border/50 animate-in slide-in-from-top-1 duration-200">
+                    {/* Editable fields grid */}
+                    <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] text-muted-foreground font-medium">סטטוס</label>
+                        <InlineSelect
+                          value={sp.status}
+                          options={STATUS_OPTIONS}
+                          onSave={(v) => handleSubjectFieldSave(sp.id, "status", v)}
+                          editable={isEditable}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] text-muted-foreground font-medium">ציון</label>
+                        <InlineEdit
+                          value={String(sp.grade || 0)}
+                          onSave={(v) => handleSubjectFieldSave(sp.id, "grade", parseFloat(v) || 0)}
+                          editable={isEditable}
+                          type="number"
+                          min={0}
+                          max={100}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] text-muted-foreground font-medium">אחוז השלמה</label>
+                        <InlineEdit
+                          value={String(sp.completion_percent)}
+                          onSave={(v) => handleSubjectFieldSave(sp.id, "completion_percent", parseInt(v) || 0)}
+                          editable={isEditable}
+                          type="number"
+                          min={0}
+                          max={100}
+                          suffix="%"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] text-muted-foreground font-medium">חיסורים</label>
+                        <InlineEdit
+                          value={String(sp.absences)}
+                          onSave={(v) => handleSubjectFieldSave(sp.id, "absences", parseInt(v) || 0)}
+                          editable={isEditable}
+                          type="number"
+                          min={0}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       {/* Roadmap */}
                       {subjectRoadmap.length > 0 && (
                         <div>
-                          <p className="text-[12px] font-medium text-muted-foreground mb-3">שלבי התקדמות</p>
+                          <p className="text-[12px] font-semibold text-foreground mb-3">שלבי התקדמות</p>
                           <div className="space-y-0">
                             {subjectRoadmap.map((item, idx) => {
                               const isLast = idx === subjectRoadmap.length - 1;
@@ -491,8 +520,8 @@ const StudentProfilePage = () => {
                                   </div>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleToggleRoadmapItem(item.id, item.completed); }}
-                                    className={`text-[13px] pt-1 text-start transition-colors duration-150 cursor-pointer hover:text-foreground ${
-                                      item.completed ? "text-muted-foreground line-through decoration-success/40" : "text-muted-foreground/60"
+                                    className={`text-[12px] pt-1 text-start transition-colors duration-150 cursor-pointer hover:text-foreground ${
+                                      item.completed ? "text-muted-foreground line-through decoration-success/40" : "text-muted-foreground/70"
                                     }`}
                                   >
                                     {item.topic_name}
@@ -501,8 +530,8 @@ const StudentProfilePage = () => {
                               );
                             })}
                           </div>
-                          <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
-                            <span className="text-[11px] text-muted-foreground">הושלמו {doneCount} מתוך {totalCount}</span>
+                          <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
+                            <span className="text-[11px] text-muted-foreground">{doneCount} מתוך {totalCount}</span>
                             <div className="w-20 h-1.5 rounded-full bg-accent overflow-hidden">
                               <div className="h-full rounded-full bg-success transition-all duration-500" style={{ width: `${totalCount > 0 ? (doneCount / totalCount) * 100 : 0}%` }} />
                             </div>
@@ -510,25 +539,23 @@ const StudentProfilePage = () => {
                         </div>
                       )}
 
-                      {/* Topics - Editable */}
-                      <div>
-                        {(sp.covered_topics && sp.covered_topics.length > 0 || isEditable) && (
-                          <div className="mb-4">
-                            <p className="text-[12px] font-medium text-muted-foreground mb-2">נושאים שנלמדו</p>
-                            <ChipEditor
-                              items={sp.covered_topics || []}
-                              onSave={(items) => handleSubjectFieldSave(sp.id, "covered_topics", items)}
-                              editable={isEditable}
-                              chipColor="bg-success/10 text-success"
-                              placeholder="הוסף נושא..."
-                            />
-                          </div>
-                        )}
+                      {/* Topics & Missing */}
+                      <div className="space-y-4">
                         <div>
-                          <p className="text-[12px] font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                          <label className="text-[12px] font-semibold text-foreground mb-2 block">נושאים שנלמדו</label>
+                          <ChipEditor
+                            items={sp.covered_topics || []}
+                            onSave={(items) => handleSubjectFieldSave(sp.id, "covered_topics", items)}
+                            editable={isEditable}
+                            chipColor="bg-success/10 text-success"
+                            placeholder="הוסף נושא..."
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[12px] font-semibold text-foreground mb-2 flex items-center gap-1">
                             <AlertTriangle className="h-3 w-3 text-warning" strokeWidth={1.5} />
                             נושאים להשלמה
-                          </p>
+                          </label>
                           <ChipEditor
                             items={sp.missing_items || []}
                             onSave={(items) => handleSubjectFieldSave(sp.id, "missing_items", items)}
@@ -537,32 +564,18 @@ const StudentProfilePage = () => {
                             placeholder="הוסף חוסר..."
                           />
                         </div>
-                        <div className="mt-4">
-                          <p className="text-[11px] text-muted-foreground mb-1 font-medium">הערות מקצוע</p>
-                          <InlineEdit
-                            value={sp.notes || ""}
-                            onSave={(v) => handleSubjectFieldSave(sp.id, "notes", v)}
-                            editable={isEditable}
-                            type="textarea"
-                            placeholder="הוסף הערה..."
-                          />
-                        </div>
                       </div>
 
-                      {/* Stats */}
-                      <div className="space-y-4">
-                        <div className="card-premium p-4 bg-accent/30 border-border/50">
-                          <p className="text-[11px] text-muted-foreground mb-1">ציון נוכחי</p>
-                          <p className="text-[32px] font-bold text-foreground leading-none">{sp.grade}</p>
-                        </div>
-                        <div className="card-premium p-4 bg-accent/30 border-border/50">
-                          <p className="text-[11px] text-muted-foreground mb-1">היעדרויות</p>
-                          <p className={`text-[24px] font-bold leading-none ${sp.absences > 3 ? "text-destructive" : "text-foreground"}`}>{sp.absences}</p>
-                        </div>
-                        <div className="card-premium p-4 bg-accent/30 border-border/50">
-                          <p className="text-[11px] text-muted-foreground mb-1">התקדמות</p>
-                          <p className="text-[24px] font-bold text-foreground leading-none">{sp.completion_percent}%</p>
-                        </div>
+                      {/* Notes */}
+                      <div>
+                        <label className="text-[12px] font-semibold text-foreground mb-2 block">הערות מקצוע</label>
+                        <InlineEdit
+                          value={sp.notes || ""}
+                          onSave={(v) => handleSubjectFieldSave(sp.id, "notes", v)}
+                          editable={isEditable}
+                          type="textarea"
+                          placeholder="הוסף הערה למקצוע..."
+                        />
                       </div>
                     </div>
                   </div>
