@@ -182,14 +182,7 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* Back */}
-      <button
-        onClick={() => navigate("/students")}
-        className="flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
-        <span>חזרה לרשימה</span>
-      </button>
+      {/* Back button removed — breadcrumbs handle navigation */}
 
       {/* ═══ HERO CARD ═══ */}
       <div className="card-premium p-5 md:p-7">
