@@ -13,7 +13,8 @@ interface Crumb {
 }
 
 const pageTitles: Record<string, string> = {
-  "/": "סקירה כללית",
+  "/": "הבית שלי",
+  "/dashboard": "סקירה כללית",
   "/students": "ספורטאים",
   "/courses": "סטטוס לימודי",
   "/data-entry": "הזנת נתונים",
