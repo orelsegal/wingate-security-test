@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, X, Pencil } from "lucide-react";
+import { Check, X, Plus, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InlineEditProps {
@@ -12,9 +12,11 @@ interface InlineEditProps {
   min?: number;
   max?: number;
   editable?: boolean;
+  label?: string;
+  suffix?: string;
 }
 
-export function InlineEdit({ value, onSave, type = "text", placeholder = "—", className, displayClassName, min, max, editable = true }: InlineEditProps) {
+export function InlineEdit({ value, onSave, type = "text", placeholder = "—", className, displayClassName, min, max, editable = true, label, suffix }: InlineEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
@@ -39,51 +41,62 @@ export function InlineEdit({ value, onSave, type = "text", placeholder = "—", 
   };
 
   if (!editable) {
-    return <span className={cn("text-[13px] text-foreground", displayClassName)}>{value || <span className="text-muted-foreground/50">{placeholder}</span>}</span>;
-  }
-
-  if (!editing) {
     return (
-      <button
-        onClick={() => setEditing(true)}
-        className={cn(
-          "group inline-flex items-center gap-1.5 text-[13px] text-foreground hover:text-primary transition-colors rounded-lg px-2 py-1 -mx-2 -my-1 hover:bg-primary/5 min-w-0 text-start",
-          displayClassName
-        )}
-      >
-        <span className="truncate">{value || <span className="text-muted-foreground/50">{placeholder}</span>}</span>
-        <Pencil className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary/60 shrink-0 transition-colors" strokeWidth={1.5} />
-      </button>
+      <div className={cn("text-[13px] text-foreground", displayClassName)}>
+        {value || <span className="text-muted-foreground/50">{placeholder}</span>}
+        {suffix && value && <span className="text-muted-foreground/60 mr-1">{suffix}</span>}
+      </div>
     );
   }
 
+  if (editing) {
+    return (
+      <div className={cn("flex items-center gap-1.5", className)}>
+        {type === "textarea" ? (
+          <textarea
+            ref={inputRef as any}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full min-h-[72px] px-3 py-2 text-[13px] rounded-lg border border-primary/40 bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+            placeholder={placeholder}
+          />
+        ) : (
+          <input
+            ref={inputRef as any}
+            type={type}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            min={min}
+            max={max}
+            className="w-full h-9 px-3 text-[13px] rounded-lg border border-primary/40 bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder={placeholder}
+          />
+        )}
+        <button onClick={handleSave} className="p-1.5 rounded-lg hover:bg-success/10 text-success transition-colors shrink-0"><Check className="h-4 w-4" /></button>
+        <button onClick={handleCancel} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground transition-colors shrink-0"><X className="h-4 w-4" /></button>
+      </div>
+    );
+  }
+
+  // Display mode — looks like a real input
   return (
-    <div className={cn("inline-flex items-center gap-1", className)}>
-      {type === "textarea" ? (
-        <textarea
-          ref={inputRef as any}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full min-h-[60px] px-2.5 py-1.5 text-[13px] rounded-lg border border-primary/30 bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-          placeholder={placeholder}
-        />
-      ) : (
-        <input
-          ref={inputRef as any}
-          type={type}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          min={min}
-          max={max}
-          className="w-full px-2.5 py-1 text-[13px] rounded-lg border border-primary/30 bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
-          placeholder={placeholder}
-        />
+    <button
+      onClick={() => setEditing(true)}
+      className={cn(
+        "w-full text-start h-9 px-3 rounded-lg border border-border bg-card text-[13px] text-foreground",
+        "hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-150 cursor-text",
+        "flex items-center justify-between gap-2",
+        type === "textarea" && "h-auto min-h-[72px] py-2 items-start",
+        displayClassName
       )}
-      <button onClick={handleSave} className="p-1 rounded-md hover:bg-success/10 text-success transition-colors"><Check className="h-3.5 w-3.5" /></button>
-      <button onClick={handleCancel} className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground transition-colors"><X className="h-3.5 w-3.5" /></button>
-    </div>
+    >
+      <span className={cn("truncate", !value && "text-muted-foreground/50")}>
+        {value || placeholder}
+        {suffix && value && <span className="text-muted-foreground/60 mr-1">{suffix}</span>}
+      </span>
+    </button>
   );
 }
 
@@ -122,16 +135,17 @@ export function InlineSelect({ value, options, onSave, editable = true, displayC
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "group inline-flex items-center gap-1.5 text-[13px] text-foreground hover:text-primary transition-colors rounded-lg px-2 py-1 -mx-2 -my-1 hover:bg-primary/5",
+          "inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-border bg-card text-[13px] text-foreground",
+          "hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-150",
           displayClassName
         )}
       >
         {current?.color && <span className={`w-2 h-2 rounded-full ${current.color}`} />}
         <span>{current?.label || value || "—"}</span>
-        <Pencil className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary/60 shrink-0 transition-colors" strokeWidth={1.5} />
+        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" strokeWidth={1.5} />
       </button>
       {open && (
-        <div className="absolute z-50 top-full mt-1 start-0 min-w-[140px] bg-card border border-border rounded-xl shadow-lg p-1 animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="absolute z-50 top-full mt-1 start-0 min-w-[160px] bg-card border border-border rounded-xl shadow-lg p-1 animate-in fade-in-0 zoom-in-95 duration-150">
           {options.map(opt => (
             <button
               key={opt.value}
@@ -180,7 +194,10 @@ export function ChipEditor({ items, onSave, editable = true, chipColor = "bg-war
   };
 
   return (
-    <div className="flex flex-wrap gap-1.5 items-center">
+    <div className="flex flex-wrap gap-1.5 items-center min-h-[36px] px-3 py-2 rounded-lg border border-border bg-card">
+      {items.length === 0 && !adding && !editable && (
+        <span className="text-[12px] text-muted-foreground/40">אין פריטים</span>
+      )}
       {items.map(item => (
         <span key={item} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-medium ${chipColor}`}>
           {item}
@@ -192,9 +209,10 @@ export function ChipEditor({ items, onSave, editable = true, chipColor = "bg-war
       {editable && !adding && (
         <button
           onClick={() => setAdding(true)}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-primary/60 hover:text-primary hover:bg-primary/5 transition-all"
         >
-          + הוסף
+          <Plus className="h-3 w-3" />
+          הוסף
         </button>
       )}
       {adding && (
@@ -204,13 +222,46 @@ export function ChipEditor({ items, onSave, editable = true, chipColor = "bg-war
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") { setAdding(false); setDraft(""); } }}
-            className="w-24 px-2 py-1 text-[12px] rounded-lg border border-primary/30 bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-28 px-2 py-1 text-[12px] rounded-lg border border-primary/30 bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder={placeholder}
           />
-          <button onClick={handleAdd} className="p-0.5 rounded text-success hover:bg-success/10"><Check className="h-3 w-3" /></button>
-          <button onClick={() => { setAdding(false); setDraft(""); }} className="p-0.5 rounded text-muted-foreground hover:bg-accent"><X className="h-3 w-3" /></button>
+          <button onClick={handleAdd} className="p-1 rounded-lg text-success hover:bg-success/10"><Check className="h-3.5 w-3.5" /></button>
+          <button onClick={() => { setAdding(false); setDraft(""); }} className="p-1 rounded-lg text-muted-foreground hover:bg-accent"><X className="h-3.5 w-3.5" /></button>
         </div>
       )}
+    </div>
+  );
+}
+
+interface ToggleFieldProps {
+  value: boolean;
+  onSave: (value: boolean) => void;
+  editable?: boolean;
+  labelTrue?: string;
+  labelFalse?: string;
+}
+
+export function ToggleField({ value, onSave, editable = true, labelTrue = "כן", labelFalse = "לא" }: ToggleFieldProps) {
+  if (!editable) {
+    return <span className="text-[13px] text-foreground">{value ? labelTrue : labelFalse}</span>;
+  }
+
+  return (
+    <div className="flex gap-1.5">
+      {[true, false].map(v => (
+        <button
+          key={String(v)}
+          onClick={() => onSave(v)}
+          className={cn(
+            "flex-1 px-3 py-2 rounded-lg text-[12px] font-medium transition-all border",
+            value === v
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-border bg-card text-muted-foreground hover:bg-accent"
+          )}
+        >
+          {v ? labelTrue : labelFalse}
+        </button>
+      ))}
     </div>
   );
 }
