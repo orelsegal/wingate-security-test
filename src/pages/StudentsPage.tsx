@@ -1,13 +1,11 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Info, Loader2, BookOpen, ChevronLeft, TrendingUp,
-  UserPlus, Upload, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, RefreshCw, CheckSquare,
-  SlidersHorizontal,
+  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp,
+  UserPlus, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, SlidersHorizontal,
 } from "lucide-react";
 import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -17,11 +15,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import ManageSportsModal from "@/components/ManageSportsModal";
+import DataManagementModal from "@/components/DataManagementModal";
 import QuickEditDrawer from "@/components/QuickEditDrawer";
 import * as XLSX from "xlsx";
 
-const branches = ["שחייה", "טניס", "כדורגל", "אתלטיקה", "התעמלות", "ג'ודו"];
 const grades = ["ט׳", "י׳", "י״א", "י״ב"];
 
 const classToGrade = (className: string): string => {
@@ -55,29 +52,30 @@ const StudentsPage = () => {
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [showFilters, setShowFilters] = useState(false);
 
   // CRUD modals
   const [formOpen, setFormOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [duplicateStudent, setDuplicateStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [sportsOpen, setSportsOpen] = useState(false);
+  const [dataManagementOpen, setDataManagementOpen] = useState(false);
   const [quickEditStudent, setQuickEditStudent] = useState<Student | null>(null);
 
-  // Selection for bulk actions
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // Get unique branches from actual data
+  const branches = useMemo(() => {
+    const unique = new Set(students.map(s => s.sport));
+    return Array.from(unique).sort();
+  }, [students]);
 
   const progressByStudent = useMemo(() => {
     const map = new Map<string, Array<{ subjectName: string; grade: number | null; status: string; missingItems: string[] | null }>>();
     allProgress.forEach((p: any) => {
       const sid = p.student_id;
       if (!map.has(sid)) map.set(sid, []);
-      map.get(sid)!.push({
-        subjectName: p.subjects?.subject_name || "",
-        grade: p.grade,
-        status: p.status,
-        missingItems: p.missing_items,
-      });
+      map.get(sid)!.push({ subjectName: p.subjects?.subject_name || "", grade: p.grade, status: p.status, missingItems: p.missing_items });
     });
     return map;
   }, [allProgress]);
@@ -151,82 +149,66 @@ const StudentsPage = () => {
 
   const handleExport = useCallback(() => {
     const data = (selected.size > 0 ? filtered.filter(s => selected.has(s.id)) : filtered).map(s => ({
-      "שם מלא": s.full_name,
-      "ענף": s.sport,
-      "כיתה": s.class_name,
-      "ממוצע": s.avg_score || 0,
-      "סטטוס": statusConfig[s.overall_status as StatusType]?.label || s.overall_status,
-      "השלמה": `${s.completion_percent}%`,
-      "אבחון": (s as any).diagnosis_status || "",
-      "התאמות": (s as any).bagrut_accommodations || "",
-      "אנגלית": (s as any).english_support || "",
-      "ספר": (s as any).book_name || "",
-      "ציון ספר": (s as any).book_grade || "",
-      "הערות": (s as any).notes || "",
+      "שם מלא": s.full_name, "ענף": s.sport, "כיתה": s.class_name,
+      "ממוצע": s.avg_score || 0, "סטטוס": statusConfig[s.overall_status as StatusType]?.label || s.overall_status,
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "ספורטאים");
     XLSX.writeFile(wb, "ספורטאים_ייצוא.xlsx");
-    toast.success(`${data.length} ספורטאים יוצאו בהצלחה`);
+    toast.success(`${data.length} ספורטאים יוצאו`);
   }, [filtered, selected]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
+  const isAdmin = user?.role === "admin" || user?.role === "teacher";
+
   return (
-    <TooltipProvider delayDuration={200}>
-    <div className="p-5 md:p-10 lg:p-12 max-w-[1400px]">
+    <div className="p-4 md:p-8 lg:p-10 max-w-[1400px]">
 
-      {/* ── HEADER ── */}
-      <section className="mb-7 md:mb-9">
-        <div className="flex items-start justify-between mb-1.5">
-          <div>
-            <h2 className="text-[20px] md:text-[24px] font-semibold text-foreground tracking-tight leading-tight">סטטוס לימודי — ספורטאים</h2>
-            <p className="text-muted-foreground text-[13px] mt-1">
-              תמונת מצב עדכנית &middot; {total} ספורטאים
-              {user?.role === "coach" ? ` · ענף ${user.scopeFilter?.[0]}` : ""}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── ADMIN TOOLBAR ── */}
-      {(user?.role === "admin" || user?.role === "teacher") && (
-        <section className="mb-5">
-          <div className="card-premium p-3 flex flex-wrap items-center gap-2">
+      {/* ── ACTION BAR ── */}
+      <section className="mb-6">
+        <div className="flex flex-wrap items-center gap-2">
+          {isAdmin && (
             <Button onClick={() => { setEditStudent(null); setDuplicateStudent(null); setFormOpen(true); }} className="gap-1.5" size="sm">
               <UserPlus className="h-3.5 w-3.5" />
               הוסף ספורטאי
             </Button>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/data-entry")}>
-              <Upload className="h-3.5 w-3.5" />
-              ייבוא נתונים
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}>
-              <Download className="h-3.5 w-3.5" />
-              ייצוא{selected.size > 0 ? ` (${selected.size})` : ""}
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setSportsOpen(true)}>
+          )}
+          {isAdmin && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setDataManagementOpen(true)}>
               <Settings2 className="h-3.5 w-3.5" />
-              ניהול ענפים
+              ניהול נתונים
             </Button>
-            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => queryClient.invalidateQueries({ queryKey: ["students"] })}>
-              <RefreshCw className="h-3.5 w-3.5" />
-              רענן
-            </Button>
-            <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5">
-              <button onClick={() => setViewMode("cards")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>כרטיסים</button>
-              <button onClick={() => setViewMode("table")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>טבלה</button>
-            </div>
+          )}
+          <Button
+            variant={showFilters ? "secondary" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Search className="h-3.5 w-3.5" />
+            סינון
+            {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}>
+            <Download className="h-3.5 w-3.5" />
+            ייצוא
+          </Button>
+
+          {/* View toggle */}
+          <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5">
+            <button onClick={() => setViewMode("cards")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>כרטיסים</button>
+            <button onClick={() => setViewMode("table")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>טבלה</button>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* ── KPI CARDS ── */}
-      <section className="mb-7 md:mb-9">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+      <section className="mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {(["green", "yellow", "red"] as StatusType[]).map((type) => {
             const config = statusConfig[type];
             const count = type === "green" ? greenCount : type === "yellow" ? yellowCount : redCount;
@@ -234,117 +216,100 @@ const StudentsPage = () => {
             const isActive = statusFilter === type;
             return (
               <button key={type} onClick={() => setStatusFilter(isActive ? null : type)}
-                className={`card-premium p-4 md:p-5 text-start transition-all duration-200 cursor-pointer group relative overflow-hidden ${isActive ? "ring-2 ring-offset-1 " + (type === "green" ? "ring-success/40" : type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : ""}`}>
-                <div className={`absolute inset-0 opacity-[0.03] ${config.dotClass}`} />
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${config.bgClass}`}>
-                      <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                    </div>
-                    {isActive && <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>פעיל</span>}
+                className={`card-premium p-4 text-start transition-all duration-200 cursor-pointer group relative overflow-hidden ${isActive ? "ring-2 ring-offset-1 " + (type === "green" ? "ring-success/40" : type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : ""}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${config.bgClass}`}>
+                    <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
                   </div>
-                  <p className={`text-[28px] md:text-[32px] font-bold leading-none tracking-tight ${config.textClass}`}>{count}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-[11.5px] text-muted-foreground font-medium">{config.label}</p>
-                    <span className="text-[10px] text-muted-foreground/50">{pct}%</span>
-                  </div>
+                  {isActive && <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>פעיל</span>}
+                </div>
+                <p className={`text-[24px] font-bold leading-none tracking-tight ${config.textClass}`}>{count}</p>
+                <div className="flex items-center justify-between mt-1.5">
+                  <p className="text-[11px] text-muted-foreground font-medium">{config.label}</p>
+                  <span className="text-[10px] text-muted-foreground/50">{pct}%</span>
                 </div>
               </button>
             );
           })}
-          <div className="card-premium p-4 md:p-5 text-start">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-primary/8">
+          <div className="card-premium p-4 text-start">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-primary/8">
                 <TrendingUp className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
               </div>
             </div>
-            <p className="text-[28px] md:text-[32px] font-bold leading-none tracking-tight text-foreground">{avgAll}</p>
-            <p className="text-[11.5px] text-muted-foreground font-medium mt-2">ממוצע כללי</p>
+            <p className="text-[24px] font-bold leading-none tracking-tight text-foreground">{avgAll}</p>
+            <p className="text-[11px] text-muted-foreground font-medium mt-1.5">ממוצע כללי</p>
           </div>
         </div>
-
-        {total > 0 && (
-          <div className="mt-3 card-premium p-3.5 md:p-4">
-            <div className="flex h-2 rounded-full overflow-hidden bg-accent/60 gap-0.5">
-              <div className="bg-success rounded-s-full transition-all duration-700" style={{ width: `${(greenCount / total) * 100}%` }} />
-              <div className="bg-warning transition-all duration-700" style={{ width: `${(yellowCount / total) * 100}%` }} />
-              <div className="bg-destructive rounded-e-full transition-all duration-700" style={{ width: `${(redCount / total) * 100}%` }} />
-            </div>
-            <div className="flex items-center gap-5 mt-2.5">
-              {[{ label: "במסלול", count: greenCount, type: "green" as StatusType }, { label: "פערים", count: yellowCount, type: "yellow" as StatusType }, { label: "בסיכון", count: redCount, type: "red" as StatusType }].map(s => (
-                <div key={s.type} className="flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${statusConfig[s.type].dotClass}`} />
-                  <span className="text-[10.5px] text-muted-foreground">{s.count} {s.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </section>
 
-      {/* ── FILTERS ── */}
-      <section className="mb-7 md:mb-9">
-        <div className="card-premium p-4 md:p-5 space-y-3">
-          <div className="relative">
-            <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="חיפוש לפי שם, ענף או כיתה..."
-              className="w-full h-10 ps-10 pe-4 bg-background border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/25 transition-all duration-150" />
-            {search && <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" strokeWidth={1.5} /></button>}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {(["green", "yellow", "red"] as StatusType[]).map((type) => {
-              const config = statusConfig[type];
-              const active = statusFilter === type;
-              return (
-                <button key={type} onClick={() => setStatusFilter(active ? null : type)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-medium transition-all duration-150 ${active ? config.activeBg + " " + config.textClass : "bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
-                  <span className={`w-[5px] h-[5px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/30"}`} />
-                  {config.label}
-                </button>
-              );
-            })}
-            <span className="w-px h-4 bg-border mx-1" />
-            {branches.map((b) => {
-              const active = branchFilters.includes(b);
-              return (
-                <button key={b} onClick={() => setBranchFilters(prev => active ? prev.filter(x => x !== b) : [...prev, b])}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-medium transition-all duration-150 ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
-                  {active && <span className="text-[8px]">✓</span>}
-                  {b}
-                </button>
-              );
-            })}
-            <span className="w-px h-4 bg-border mx-1" />
-            {grades.map((g) => {
-              const active = gradeFilter === g;
-              return (
-                <button key={g} onClick={() => setGradeFilter(active ? null : g)}
-                  className={`px-3 py-1.5 rounded-full text-[11.5px] font-medium transition-all duration-150 ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
-                  {g}
-                </button>
-              );
-            })}
-          </div>
-          {hasFilters && (
-            <div className="flex items-center justify-between pt-0.5">
-              <span className="text-[11px] text-muted-foreground">{filtered.length} מתוך {total} ספורטאים</span>
-              <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors">נקה הכל</button>
+      {/* ── FILTERS (collapsible) ── */}
+      {showFilters && (
+        <section className="mb-6 animate-in slide-in-from-top-2 duration-200">
+          <div className="card-premium p-4 space-y-3">
+            <div className="relative">
+              <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="חיפוש לפי שם, ענף או כיתה..."
+                className="w-full h-9 ps-10 pe-4 bg-background border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/25 transition-all" />
+              {search && <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" strokeWidth={1.5} /></button>}
             </div>
-          )}
-        </div>
-      </section>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] text-muted-foreground font-medium ml-1">סטטוס:</span>
+              {(["green", "yellow", "red"] as StatusType[]).map((type) => {
+                const config = statusConfig[type];
+                const active = statusFilter === type;
+                return (
+                  <button key={type} onClick={() => setStatusFilter(active ? null : type)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? config.activeBg + " " + config.textClass : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
+                    <span className={`w-[5px] h-[5px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/30"}`} />
+                    {config.label}
+                  </button>
+                );
+              })}
+              <span className="w-px h-3 bg-border mx-1" />
+              <span className="text-[10px] text-muted-foreground font-medium ml-1">ענף:</span>
+              {branches.map((b) => {
+                const active = branchFilters.includes(b);
+                return (
+                  <button key={b} onClick={() => setBranchFilters(prev => active ? prev.filter(x => x !== b) : [...prev, b])}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
+                    {active && <span className="text-[8px]">✓</span>}
+                    {b}
+                  </button>
+                );
+              })}
+              <span className="w-px h-3 bg-border mx-1" />
+              <span className="text-[10px] text-muted-foreground font-medium ml-1">שכבה:</span>
+              {grades.map((g) => {
+                const active = gradeFilter === g;
+                return (
+                  <button key={g} onClick={() => setGradeFilter(active ? null : g)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+            {hasFilters && (
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-[11px] text-muted-foreground">{filtered.length} מתוך {total} ספורטאים</span>
+                <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors">נקה הכל</button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── STUDENTS ── */}
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-[14px] font-semibold text-foreground">ספורטאים</h3>
-            <span className="text-[11px] text-muted-foreground/50 bg-accent/50 px-2 py-0.5 rounded-full">{filtered.length}</span>
+            <span className="text-[13px] font-semibold text-foreground">{filtered.length} ספורטאים</span>
             {selected.size > 0 && <span className="text-[11px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">{selected.size} נבחרו</span>}
           </div>
           <div className="flex items-center gap-1">
             {(["name", "avg", "status"] as const).map((col) => (
-              <button key={col} onClick={() => toggleSort(col)} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] text-muted-foreground hover:bg-accent transition-colors">
+              <button key={col} onClick={() => toggleSort(col)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-accent transition-colors">
                 {col === "name" ? "שם" : col === "avg" ? "ממוצע" : "סטטוס"}
                 <SortIcon col={col} />
               </button>
@@ -353,12 +318,11 @@ const StudentsPage = () => {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="card-premium py-20 text-center">
-            <Search className="h-8 w-8 text-muted-foreground/20 mx-auto mb-3" strokeWidth={1.5} />
-            <p className="text-[13px] text-muted-foreground">לא נמצאו תוצאות — נסו לשנות את הסינון</p>
+          <div className="card-premium py-16 text-center">
+            <Search className="h-7 w-7 text-muted-foreground/20 mx-auto mb-3" strokeWidth={1.5} />
+            <p className="text-[13px] text-muted-foreground">לא נמצאו תוצאות</p>
           </div>
         ) : viewMode === "table" ? (
-          /* TABLE VIEW */
           <div className="card-premium overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
@@ -370,8 +334,6 @@ const StudentsPage = () => {
                     <TableHead className="text-right">כיתה</TableHead>
                     <TableHead className="text-right">ממוצע</TableHead>
                     <TableHead className="text-right">סטטוס</TableHead>
-                    <TableHead className="text-right">אבחון</TableHead>
-                    <TableHead className="text-right">אנגלית</TableHead>
                     <TableHead className="text-right">פעולות</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -399,33 +361,27 @@ const StudentsPage = () => {
                             {config.label}
                           </span>
                         </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground">{(student as any).diagnosis_status || "—"}</TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground">{(student as any).english_support || "—"}</TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-1">
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/students/${student.id}`)}>
                               <Eye className="h-3 w-3" />
                             </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setQuickEditStudent(student)}>
-                              <SlidersHorizontal className="h-3 w-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditStudent(student); setDuplicateStudent(null); setFormOpen(true); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-7 w-7"><MoreHorizontal className="h-3 w-3" /></Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => { setDuplicateStudent(student); setEditStudent(student); setFormOpen(true); }} className="gap-2 text-xs"><Copy className="h-3 w-3" />שכפל</DropdownMenuItem>
-                                <DropdownMenuItem onClick={async () => {
-                                  await updateStudent.mutateAsync({ id: student.id, data: { archived: true } });
-                                  toast.success(`"${student.full_name}" הועבר לארכיון`);
-                                }} className="gap-2 text-xs"><Archive className="h-3 w-3" />ארכיון</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => setDeleteTarget(student)} className="gap-2 text-xs text-destructive"><Trash2 className="h-3 w-3" />מחק</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            {isAdmin && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button size="icon" variant="ghost" className="h-7 w-7"><MoreHorizontal className="h-3 w-3" /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => { setDuplicateStudent(student); setEditStudent(student); setFormOpen(true); }} className="gap-2 text-xs"><Copy className="h-3 w-3" />שכפל</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={async () => { await updateStudent.mutateAsync({ id: student.id, data: { archived: true } }); toast.success(`"${student.full_name}" הועבר לארכיון`); }} className="gap-2 text-xs"><Archive className="h-3 w-3" />ארכיון</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => setDeleteTarget(student)} className="gap-2 text-xs text-destructive"><Trash2 className="h-3 w-3" />מחק</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -437,7 +393,7 @@ const StudentsPage = () => {
           </div>
         ) : (
           /* CARD VIEW */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 md:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((student) => {
               const status = student.overall_status as StatusType;
               const config = statusConfig[status];
@@ -446,72 +402,62 @@ const StudentsPage = () => {
               const missingCount = subjects.reduce((acc, s) => acc + (s.missingItems?.length || 0), 0);
 
               return (
-                <div key={student.id} className={`card-premium p-0 overflow-hidden group hover:translate-y-[-2px] transition-all duration-300 ${selected.has(student.id) ? "ring-2 ring-primary/30" : ""}`}>
+                <div key={student.id} className={`card-premium overflow-hidden group ${selected.has(student.id) ? "ring-2 ring-primary/30" : ""}`}>
                   <div className={`h-[3px] ${config.dotClass} opacity-60`} />
-                  {/* Selection & actions */}
-                  <div className="px-4 pt-3 flex items-center justify-between">
-                    <Checkbox checked={selected.has(student.id)} onCheckedChange={() => toggleSelect(student.id)} />
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setQuickEditStudent(student); }}>
-                        <SlidersHorizontal className="h-3 w-3" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setEditStudent(student); setDuplicateStudent(null); setFormOpen(true); }}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget(student); }}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="px-5 pb-3 cursor-pointer" onClick={() => navigate(`/students/${student.id}`)}>
-                    <div className="flex items-start gap-3">
+                  <div className="p-4">
+                    {/* Top row: avatar, name, score */}
+                    <div className="flex items-start gap-3 mb-3">
                       <InitialsAvatar name={student.full_name} size="sm" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13.5px] font-semibold text-foreground leading-tight truncate group-hover:text-primary transition-colors duration-200">{student.full_name}</p>
-                        <p className="text-[11.5px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
+                        <p className="text-[13px] font-semibold text-foreground leading-tight truncate">{student.full_name}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
                       </div>
-                      <span className="text-[18px] font-bold text-foreground tabular-nums shrink-0 leading-none mt-0.5">{student.avg_score || "—"}</span>
+                      <span className="text-[18px] font-bold text-foreground tabular-nums shrink-0">{student.avg_score || "—"}</span>
                     </div>
-                  </div>
 
-                  <div className={`mx-4 flex items-center justify-between px-3.5 py-2.5 rounded-xl ${config.bgClass}`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${config.dotClass} shrink-0`} />
-                      <span className={`text-[12.5px] font-semibold ${config.textClass}`}>{config.label}</span>
+                    {/* Status bar */}
+                    <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${config.bgClass} mb-2.5`}>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
+                        <span className={`text-[12px] font-semibold ${config.textClass}`}>{config.label}</span>
+                      </div>
+                      <span className={`text-[11px] font-medium ${config.textClass} opacity-70`}>{student.completion_percent}%</span>
                     </div>
-                    <span className={`text-[11px] font-medium ${config.textClass} opacity-70`}>השלמה: {student.completion_percent}%</span>
-                  </div>
 
-                  <div className="mx-4 mt-2.5"><div className="h-1 rounded-full bg-accent overflow-hidden"><div className={`h-full rounded-full transition-all duration-700 ease-out ${config.dotClass}`} style={{ width: `${student.completion_percent}%` }} /></div></div>
-
-                  {topSubjects.length > 0 ? (
-                    <div className="px-4 mt-3 pb-4">
-                      <div className="flex flex-wrap gap-1.5">
+                    {/* Subject chips */}
+                    {topSubjects.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2.5">
                         {topSubjects.map((subj, i) => {
                           const subjConfig = statusConfig[(subj.status as StatusType)] || statusConfig.green;
                           return (
                             <span key={i} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${subjConfig.bgClass} ${subjConfig.textClass}`}>
                               <span className={`w-1 h-1 rounded-full ${subjConfig.dotClass}`} />
                               {subj.subjectName}
-                              {subj.grade != null && <span className="opacity-60">{subj.grade}</span>}
                             </span>
                           );
                         })}
-                        {subjects.length > 3 && <span className="text-[10px] text-muted-foreground/50 px-1.5 py-0.5">+{subjects.length - 3}</span>}
+                        {subjects.length > 3 && <span className="text-[10px] text-muted-foreground/50 px-1 py-0.5">+{subjects.length - 3}</span>}
                       </div>
-                      {missingCount > 0 && (
-                        <p className="text-[10px] text-destructive/70 mt-1.5 flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5" strokeWidth={1.5} />חוסרים: {missingCount} פריטים</p>
+                    )}
+                    {missingCount > 0 && (
+                      <p className="text-[10px] text-destructive/70 mb-2 flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5" strokeWidth={1.5} />חוסרים: {missingCount}</p>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5 pt-2 border-t border-border/50">
+                      <Button size="sm" variant="outline" className="flex-1 h-7 text-[11px] gap-1" onClick={() => navigate(`/students/${student.id}`)}>
+                        <Eye className="h-3 w-3" />
+                        כניסה לפרופיל
+                      </Button>
+                      <Button size="icon" variant="outline" className="h-7 w-7 shrink-0" onClick={() => setQuickEditStudent(student)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      {isAdmin && (
+                        <Button size="icon" variant="outline" className="h-7 w-7 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20" onClick={() => setDeleteTarget(student)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       )}
                     </div>
-                  ) : (
-                    <div className="px-4 mt-2 pb-4">
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/40"><BookOpen className="h-3 w-3" strokeWidth={1.5} /><span>אין נתוני מקצועות</span></div>
-                    </div>
-                  )}
-
-                  <div className="h-0 overflow-hidden group-hover:h-8 transition-all duration-200 bg-accent/30 flex items-center justify-center cursor-pointer" onClick={() => navigate(`/students/${student.id}`)}>
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">צפייה בפרופיל<ChevronLeft className="h-3 w-3" strokeWidth={1.5} /></span>
                   </div>
                 </div>
               );
@@ -532,15 +478,14 @@ const StudentsPage = () => {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         title="מחיקת ספורטאי"
-        description={`האם למחוק את "${deleteTarget?.full_name}"? כל נתוני ההתקדמות והציונים שלו/ה יימחקו לצמיתות.`}
+        description={`האם למחוק את "${deleteTarget?.full_name}"? כל הנתונים יימחקו לצמיתות.`}
         confirmLabel="מחק"
         destructive
         loading={deleteStudent.isPending}
       />
-      <ManageSportsModal open={sportsOpen} onClose={() => setSportsOpen(false)} />
+      <DataManagementModal open={dataManagementOpen} onClose={() => setDataManagementOpen(false)} />
       <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
     </div>
-    </TooltipProvider>
   );
 };
 
