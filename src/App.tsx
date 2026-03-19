@@ -11,6 +11,8 @@ import StudentProfilePage from "./pages/StudentProfilePage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
+import DataManagementPage from "./pages/DataManagementPage.tsx";
+import StudentHomePage from "./pages/StudentHomePage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
               <Route path="/students/:id" element={<StudentProfilePage />} />
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/data-entry" element={<DataEntryPage />} />
+              <Route path="/data-management" element={<DataManagementPage />} />
+              <Route path="/student-home" element={<StudentHomePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
