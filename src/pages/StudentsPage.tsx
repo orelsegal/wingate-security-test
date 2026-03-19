@@ -406,6 +406,9 @@ const StudentsPage = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/students/${student.id}`)}>
                               <Eye className="h-3 w-3" />
                             </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setQuickEditStudent(student)}>
+                              <SlidersHorizontal className="h-3 w-3" />
+                            </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditStudent(student); setDuplicateStudent(null); setFormOpen(true); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
@@ -415,6 +418,10 @@ const StudentsPage = () => {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => { setDuplicateStudent(student); setEditStudent(student); setFormOpen(true); }} className="gap-2 text-xs"><Copy className="h-3 w-3" />שכפל</DropdownMenuItem>
+                                <DropdownMenuItem onClick={async () => {
+                                  await updateStudent.mutateAsync({ id: student.id, data: { archived: true } });
+                                  toast.success(`"${student.full_name}" הועבר לארכיון`);
+                                }} className="gap-2 text-xs"><Archive className="h-3 w-3" />ארכיון</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => setDeleteTarget(student)} className="gap-2 text-xs text-destructive"><Trash2 className="h-3 w-3" />מחק</DropdownMenuItem>
                               </DropdownMenuContent>
