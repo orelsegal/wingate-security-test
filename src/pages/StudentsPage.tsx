@@ -45,6 +45,7 @@ const StudentsPage = () => {
   const { data: students = [], isLoading } = useStudents();
   const { data: allProgress = [] } = useAllStudentProgress();
   const deleteStudent = useDeleteStudent();
+  const updateStudent = useUpdateStudent();
 
   const initialStatus = searchParams.get("status") as StatusType | null;
   const [search, setSearch] = useState("");
