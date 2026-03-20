@@ -8,7 +8,6 @@ import {
   Route, Calendar, Heart, AlertTriangle, Target, TrendingUp, MessageSquare,
   Dumbbell, ChevronLeft,
 } from "lucide-react";
-import wingateLogoSrc from "@/assets/wingate-logo.png";
 import WingateBadge from "@/components/WingateBadge";
 
 /* ═══ Role Titles ═══ */
@@ -234,15 +233,15 @@ const RoleHomePage = () => {
         <div className="flex items-center gap-4 mb-6">
           <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
           <div>
-            <h1 className="text-[18px] md:text-[22px] font-semibold text-foreground tracking-tight leading-tight">
+            <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
               שלום, {user?.name}
             </h1>
-            <p className="text-[11.5px] text-muted-foreground mt-1.5 font-medium">
+            <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
               {user ? roleLabels[user.role] : ""} · סמסטר א׳ תשפ״ה
             </p>
             <div
-              className="mt-3 h-px w-[80px]"
-              style={{ background: "linear-gradient(to left, transparent, hsl(var(--primary-soft) / 0.45))" }}
+              className="mt-3 h-[1.5px] w-[72px] rounded-full"
+              style={{ background: "linear-gradient(to left, transparent, hsl(var(--primary-soft) / 0.5), transparent)" }}
             />
           </div>
         </div>
@@ -250,18 +249,15 @@ const RoleHomePage = () => {
 
       {/* Section heading */}
       <section>
-        <h2 className="text-[12.5px] font-semibold text-primary/70 mb-5 tracking-tight">{title}</h2>
+        <h2 className="text-[11.5px] font-medium text-primary/60 mb-5 tracking-tight">{title}</h2>
         {user && roleContent[user.role]}
       </section>
 
       {/* Branding */}
-      <div className="mt-14 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/[0.04] border border-primary/[0.08]">
-          <div className="w-4 h-4 rounded-full overflow-hidden">
-            <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
-          </div>
-          <span className="text-[10.5px] text-primary/70 font-medium">האקדמיה למצוינות · מכון וינגייט</span>
-        </div>
+      <div className="mt-16 text-center">
+        <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
+          האקדמיה למצוינות · מכון וינגייט
+        </span>
       </div>
     </div>
   );
