@@ -44,6 +44,7 @@ const App = () => (
               <Route path="/data-entry" element={<DataEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
               <Route path="/student-home" element={<StudentHomePage />} />
+              <Route path="/external" element={<ExternalWrapperPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
