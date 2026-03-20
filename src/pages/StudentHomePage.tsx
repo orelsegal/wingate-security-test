@@ -70,7 +70,7 @@ const StudentHomePage = () => {
       icon: BookOpen,
       color: "bg-[hsl(35,35%,93%)]",
       iconColor: "text-[hsl(35,45%,42%)]",
-      action: () => navigate(`/external?type=learning&url=${encodeURIComponent("https://ancient-journeys.lovable.app")}`),
+      action: () => navigate("/subjects"),
     },
   ];
 

@@ -16,6 +16,7 @@ import StudentHomePage from "./pages/StudentHomePage.tsx";
 import RoleHomePage from "./pages/RoleHomePage.tsx";
 import DashboardContent from "./components/DashboardContent.tsx";
 import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
+import SubjectSelectionPage from "./pages/SubjectSelectionPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
