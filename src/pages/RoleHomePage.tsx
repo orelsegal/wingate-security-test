@@ -42,7 +42,7 @@ const CardGrid = ({ cards, navigate }: { cards: ActionCard[]; navigate: (p: stri
         key={card.id}
         onClick={() => {
           if (card.comingSoon) return;
-          if (card.external) window.open(card.external, "_blank");
+          if (card.external) navigate(`/external?type=${card.id}&url=${encodeURIComponent(card.external)}`);
           else if (card.path) navigate(card.path);
         }}
         disabled={card.comingSoon}
