@@ -2,7 +2,7 @@ import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import wingateLogoSrc from "@/assets/wingate-logo.png";
+import WingateBadge from "@/components/WingateBadge";
 
 interface AppHeaderProps {
   onMenuToggle?: () => void;
@@ -21,15 +21,6 @@ const roleTitles: Record<UserRole, string> = {
   coach: "מרכז המאמן",
 };
 
-const pageTitles: Record<string, string> = {
-  "/dashboard": "דשבורד ניהולי",
-  "/students": "ניהול ספורטאים",
-  "/courses": "מעקב לימודי",
-  "/data-entry": "הזנת נתונים",
-  "/data-management": "ניהול מערכת",
-  "/reports": "דוחות וניתוח",
-};
-
 const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => {
   const location = useLocation();
   const path = location.pathname;
@@ -43,8 +34,7 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
   if (path.startsWith("/students")) {
     crumbs.push({ label: "ניהול ספורטאים", path: "/students" });
     title = "ניהול ספורטאים";
-    const match = path.match(/^\/students\/(.+)/);
-    if (match) {
+    if (path.match(/^\/students\/.+/)) {
       crumbs.push({ label: "פרופיל ספורטאי" });
       title = "פרופיל ספורטאי";
     }
@@ -65,7 +55,7 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
     title = "דוחות וניתוח";
   }
 
-  return { crumbs, title: title || pageTitles[path] || "" };
+  return { crumbs, title };
 };
 
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
@@ -82,14 +72,9 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(user?.role === "student" ? "/student-home" : "/")}
-            className="flex items-center gap-2.5 group"
+            className="group"
           >
-            <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-border p-1 transition-all group-hover:border-primary/30 bg-card">
-              <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
-            </div>
-            <span className="hidden md:inline text-[12px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              וינגייט
-            </span>
+            <WingateBadge size="sm" className="transition-all group-hover:border-primary/30 group-hover:shadow-[var(--shadow-card-hover)]" />
           </button>
           <button
             onClick={onMenuToggle}

@@ -6,9 +6,9 @@ import { useMemo } from "react";
 import {
   LayoutDashboard, Users, Database, BarChart3, BookOpen, ClipboardEdit,
   Route, Calendar, Heart, AlertTriangle, Target, TrendingUp, MessageSquare,
-  Dumbbell, ChevronLeft
+  Dumbbell, ChevronLeft,
 } from "lucide-react";
-import wingateLogoSrc from "@/assets/wingate-logo.png";
+import WingateBadge from "@/components/WingateBadge";
 
 /* ═══ Role Titles ═══ */
 const roleTitles: Record<UserRole, string> = {
@@ -35,7 +35,7 @@ interface ActionCard {
 
 /* ═══ Card Grid ═══ */
 const CardGrid = ({ cards, navigate }: { cards: ActionCard[]; navigate: (p: string) => void }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
     {cards.map((card, i) => (
       <button
         key={card.id}
@@ -45,12 +45,12 @@ const CardGrid = ({ cards, navigate }: { cards: ActionCard[]; navigate: (p: stri
           else if (card.path) navigate(card.path);
         }}
         disabled={card.comingSoon}
-        className={`group relative bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 ${
+        className={`group relative bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 animate-fade-in-up ${
           card.comingSoon
             ? "opacity-45 cursor-not-allowed"
             : "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
         }`}
-        style={{ animationDelay: `${i * 60}ms` }}
+        style={{ animationDelay: `${80 + i * 50}ms` }}
       >
         <div className="flex items-start gap-4">
           <div
@@ -96,12 +96,16 @@ const InsightStrip = ({
 }) => (
   <div className="grid gap-3 mb-7" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
     {items.map((item, i) => (
-      <div key={i} className="bg-card rounded-xl border border-border p-4 text-center shadow-[var(--shadow-card)]">
-        <div className="flex items-center justify-center mb-2">
+      <div
+        key={i}
+        className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+        style={{ animationDelay: `${i * 40}ms` }}
+      >
+        <div className="flex items-center justify-center mb-1.5">
           <item.icon className={`h-4 w-4 ${item.color}`} strokeWidth={1.5} />
         </div>
-        <p className="text-[20px] font-semibold text-foreground">{item.value}</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{item.label}</p>
+        <p className="text-[18px] font-semibold text-foreground leading-none">{item.value}</p>
+        <p className="text-[10px] text-muted-foreground mt-1 font-medium">{item.label}</p>
       </div>
     ))}
   </div>
@@ -226,17 +230,22 @@ const RoleHomePage = () => {
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
       {/* Welcome */}
       <section className="mb-8">
-        <h1 className="text-[20px] md:text-[24px] font-semibold text-foreground tracking-tight">
-          שלום, {user?.name}
-        </h1>
-        <p className="text-[12px] text-muted-foreground mt-1.5 font-medium">
-          {user ? roleLabels[user.role] : ""} · סמסטר א׳ תשפ״ה
-        </p>
+        <div className="flex items-center gap-4 mb-1">
+          <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
+          <div>
+            <h1 className="text-[18px] md:text-[22px] font-semibold text-foreground tracking-tight leading-tight">
+              שלום, {user?.name}
+            </h1>
+            <p className="text-[11.5px] text-muted-foreground mt-1 font-medium">
+              {user ? roleLabels[user.role] : ""} · סמסטר א׳ תשפ״ה
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Section heading */}
       <section>
-        <h2 className="text-[13px] font-semibold text-primary/80 mb-5 tracking-tight">{title}</h2>
+        <h2 className="text-[12.5px] font-semibold text-primary/70 mb-5 tracking-tight">{title}</h2>
         {user && roleContent[user.role]}
       </section>
 
