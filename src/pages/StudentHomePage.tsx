@@ -87,9 +87,13 @@ const StudentHomePage = () => {
             <h1 className="text-[18px] md:text-[22px] font-semibold text-foreground tracking-tight leading-tight">
               שלום, {student?.full_name || user?.name}
             </h1>
-            <p className="text-[11.5px] text-muted-foreground mt-1 font-medium">
+            <p className="text-[11.5px] text-muted-foreground mt-1.5 font-medium">
               {student?.sport} · {student?.class_name} · סמסטר א׳ תשפ״ה
             </p>
+            <div
+              className="mt-3 h-px w-[80px]"
+              style={{ background: "linear-gradient(to left, transparent, hsl(var(--primary-soft) / 0.45))" }}
+            />
           </div>
         </div>
 
