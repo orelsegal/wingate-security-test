@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
-import { useAuth, demoUsers, roleLabels, roleDescriptions } from "@/context/AuthContext";
+import { useAuth, demoUsers, roleLabels } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
 import WingateBadge from "@/components/WingateBadge";
 
@@ -23,10 +23,10 @@ const roleCircleColors: Record<UserRole, string> = {
 
 const roleIconColors: Record<UserRole, string> = {
   admin: "text-primary",
-  teacher: "text-[hsl(35,40%,45%)]",
-  parent: "text-[hsl(350,35%,52%)]",
-  coach: "text-[hsl(25,45%,48%)]",
-  student: "text-[hsl(210,40%,50%)]",
+  teacher: "text-[hsl(35,45%,40%)]",
+  parent: "text-[hsl(350,38%,48%)]",
+  coach: "text-[hsl(25,48%,44%)]",
+  student: "text-[hsl(210,45%,45%)]",
 };
 
 const shortDescriptions: Record<UserRole, string> = {
@@ -35,6 +35,16 @@ const shortDescriptions: Record<UserRole, string> = {
   parent: "צפייה בהתקדמות הילד/ה",
   coach: "ספורטאי הענף שלי",
   student: "המרחב האישי שלי",
+};
+
+const microCta: Partial<Record<UserRole, string>> = {
+  student: "למרחב האישי",
+  teacher: "למערכת ההוראה",
+};
+
+const primaryCardTint: Partial<Record<UserRole, string>> = {
+  student: "bg-[hsl(210,25%,97.5%)]",
+  teacher: "bg-[hsl(35,25%,97%)]",
 };
 
 const topRowRoles: UserRole[] = ["parent", "admin", "coach"];
@@ -58,46 +68,61 @@ const LoginPage = () => {
 
   const findUser = (role: UserRole) => demoUsers.find((u) => u.role === role)!;
 
+  const isPrimary = (role: UserRole) => role === "student" || role === "teacher";
+
   const RoleCard = ({ role, delay }: { role: UserRole; delay: number }) => {
     const demoUser = findUser(role);
     const Icon = roleIcons[role];
     const isSelected = selectedRole === role;
     const isHovered = hoveredRole === role;
     const isActive = isSelected || isHovered;
+    const primary = isPrimary(role);
+    const bgTint = primaryCardTint[role] || "bg-card";
 
     return (
       <button
         onClick={() => handleLogin(demoUser)}
         onMouseEnter={() => setHoveredRole(role)}
         onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative bg-card rounded-2xl p-4 flex flex-col items-center gap-2 text-center transition-all duration-300 cursor-pointer animate-fade-in-up border ${
+        className={`group relative ${bgTint} rounded-2xl flex flex-col items-center gap-2.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out ${
+          primary ? "p-[18px]" : "p-4"
+        } ${
           isSelected
             ? "shadow-[var(--shadow-card-hover)] scale-[0.97] border-primary/20"
-            : `shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 ${isActive ? "border-primary/12" : "border-border"}`
+            : `hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 active:scale-[0.98] active:shadow-[var(--shadow-card)] ${
+                primary
+                  ? "shadow-[0_2px_12px_-3px_hsla(150,20%,20%,0.08)] border-border"
+                  : "shadow-[var(--shadow-card)] border-border/80"
+              } ${isActive ? "border-primary/12" : ""}`
         }`}
         style={{ animationDelay: `${delay}ms` }}
       >
         <div
-          className={`w-10 h-10 rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-300 ${
+          className={`${primary ? "w-11 h-11" : "w-10 h-10"} rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
             isActive ? "scale-110" : ""
           }`}
         >
-          <Icon className={`h-[16px] w-[16px] ${roleIconColors[role]}`} strokeWidth={1.5} />
+          <Icon className={`${primary ? "h-[17px] w-[17px]" : "h-[15px] w-[15px]"} ${roleIconColors[role]}`} strokeWidth={1.5} />
         </div>
         <div>
           <p
-            className={`text-[12px] font-medium leading-tight transition-colors duration-200 ${
-              isActive ? "text-primary" : "text-foreground/75"
+            className={`${primary ? "text-[12.5px]" : "text-[11.5px]"} font-medium leading-tight transition-colors duration-200 ${
+              isActive ? "text-primary" : "text-foreground/80"
             }`}
           >
             {roleLabels[role]}
           </p>
-          <p className="text-[9px] text-muted-foreground/50 mt-0.5 leading-snug line-clamp-1">
+          <p className="text-[9px] text-muted-foreground/45 mt-0.5 leading-snug line-clamp-1">
             {shortDescriptions[role]}
           </p>
+          {microCta[role] && (
+            <p className={`text-[8px] font-medium mt-1.5 transition-colors duration-200 ${isActive ? "text-primary/70" : "text-primary/40"}`}>
+              {microCta[role]} ←
+            </p>
+          )}
         </div>
         <div
-          className={`absolute top-2.5 start-2.5 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-300 ${
+          className={`absolute top-2.5 start-2.5 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-200 ${
             isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
           }`}
         />
@@ -112,53 +137,64 @@ const LoginPage = () => {
       }`}
       dir="rtl"
     >
-      {/* Decorative background */}
+      {/* Decorative background — subtle radial depth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[120px] -left-[80px] w-[380px] h-[380px] rounded-full bg-primary/[0.025]" />
-        <div className="absolute -bottom-[60px] -right-[100px] w-[280px] h-[280px] rounded-full bg-[hsl(35,30%,93%)]/40" />
+        <div
+          className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(152,34%,34%,0.03) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-[10%] right-[10%] w-[300px] h-[300px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(35,30%,80%,0.06) 0%, transparent 70%)" }}
+        />
       </div>
 
       <div className="w-full max-w-[460px] px-6 relative z-10">
         {/* Logo Badge */}
-        <div className="flex justify-center mb-8 animate-fade-in-up">
-          <WingateBadge size="lg" className="shadow-[var(--shadow-card-hover)]" />
+        <div className="flex justify-center mb-10 animate-fade-in-up">
+          <WingateBadge
+            size="lg"
+            className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.1)]"
+          />
         </div>
 
         {/* Title */}
-        <div className="text-center mb-10 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+        <div className="text-center mb-12 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
           <h1 className="text-[18px] font-semibold text-primary tracking-tight leading-snug">
             האקדמיה למצוינות בספורט
           </h1>
-          {/* Signature underline */}
-          <div className="flex justify-center mt-3">
+
+          {/* Signature underline — clean stroke */}
+          <div className="flex justify-center mt-4">
             <div
-              className="h-[1.5px] w-[72px] rounded-full"
-              style={{ background: "linear-gradient(to left, transparent, hsl(var(--primary-soft) / 0.5), transparent)" }}
+              className="h-[2px] w-[56px] rounded-full"
+              style={{ background: "hsl(152, 34%, 38%)" }}
             />
           </div>
-          <p className="text-[11px] text-muted-foreground/60 leading-relaxed mt-3.5 font-normal tracking-wide">
-            ניהול ולמידה מותאמים לספורטאים
+
+          <p className="text-[10.5px] font-light leading-relaxed mt-4 tracking-wide" style={{ color: "hsl(160, 5%, 48%)" }}>
+            למידה וניהול מותאמים לספורטאי על
           </p>
         </div>
 
-        {/* Role Cards — Top Row (3) */}
-        <div className="grid grid-cols-3 gap-3.5 mb-3.5">
+        {/* Role Cards — Top Row (3) — secondary */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
           {topRowRoles.map((role, i) => (
             <RoleCard key={role} role={role} delay={120 + i * 60} />
           ))}
         </div>
 
-        {/* Role Cards — Bottom Row (2) */}
-        <div className="grid grid-cols-2 gap-3.5 mb-8">
+        {/* Role Cards — Bottom Row (2) — primary */}
+        <div className="grid grid-cols-2 gap-4 mb-10">
           {bottomRowRoles.map((role, i) => (
             <RoleCard key={role} role={role} delay={300 + i * 60} />
           ))}
         </div>
 
-        {/* Branding */}
+        {/* Branding — minimal */}
         <div className="text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
-          <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
-            מכון וינגייט · סמסטר א׳ תשפ״ה
+          <span className="text-[8px] font-light tracking-widest" style={{ color: "hsl(150, 5%, 78%)" }}>
+            מכון וינגייט
           </span>
         </div>
       </div>
