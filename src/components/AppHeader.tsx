@@ -1,5 +1,6 @@
 import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
+import type { UserRole } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
@@ -12,54 +13,56 @@ interface Crumb {
   path?: string;
 }
 
-const pageTitles: Record<string, string> = {
-  "/": "הבית שלי",
-  "/dashboard": "סקירה כללית",
-  "/students": "ספורטאים",
-  "/courses": "סטטוס לימודי",
-  "/data-entry": "הזנת נתונים",
-  "/data-management": "ניהול נתונים",
-  "/reports": "דוחות וניתוח",
-  "/settings": "הגדרות מערכת",
-  "/student-home": "הבית שלי",
+const roleTitles: Record<UserRole, string> = {
+  admin: "מרכז ניהול",
+  teacher: "מרכז עבודה",
+  student: "המרחב שלי",
+  parent: "התקדמות הילד/ה",
+  coach: "מרכז המאמן",
 };
 
-const useBreadcrumbs = (): { crumbs: Crumb[]; title: string } => {
+const pageTitles: Record<string, string> = {
+  "/dashboard": "דשבורד ניהולי",
+  "/students": "ניהול ספורטאים",
+  "/courses": "מעקב לימודי",
+  "/data-entry": "הזנת נתונים",
+  "/data-management": "ניהול מערכת",
+  "/reports": "דוחות וניתוח",
+};
+
+const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => {
   const location = useLocation();
   const path = location.pathname;
+  const homeLabel = role ? roleTitles[role] : "עמוד הבית";
 
-  if (path === "/" || path === "/student-home") return { crumbs: [], title: pageTitles[path] || "הבית שלי" };
+  if (path === "/" || path === "/student-home") return { crumbs: [], title: homeLabel };
 
-  if (path === "/dashboard") {
-    return { crumbs: [{ label: "הבית שלי", path: "/" }, { label: "סקירה כללית" }], title: "סקירה כללית" };
-  }
-
-  const crumbs: Crumb[] = [{ label: "דשבורד", path: "/" }];
+  const crumbs: Crumb[] = [{ label: homeLabel, path: role === "student" ? "/student-home" : "/" }];
   let title = "";
 
   if (path.startsWith("/students")) {
-    crumbs.push({ label: "ספורטאים", path: "/students" });
-    title = "ספורטאים";
+    crumbs.push({ label: "ניהול ספורטאים", path: "/students" });
+    title = "ניהול ספורטאים";
     const match = path.match(/^\/students\/(.+)/);
     if (match) {
       crumbs.push({ label: "פרופיל ספורטאי" });
       title = "פרופיל ספורטאי";
     }
   } else if (path.startsWith("/courses")) {
-    crumbs.push({ label: "סטטוס לימודי" });
-    title = "סטטוס לימודי";
+    crumbs.push({ label: "מעקב לימודי" });
+    title = "מעקב לימודי";
   } else if (path.startsWith("/data-entry")) {
     crumbs.push({ label: "הזנת נתונים" });
     title = "הזנת נתונים";
   } else if (path.startsWith("/data-management")) {
-    crumbs.push({ label: "ניהול נתונים" });
-    title = "ניהול נתונים";
+    crumbs.push({ label: "ניהול מערכת" });
+    title = "ניהול מערכת";
+  } else if (path.startsWith("/dashboard")) {
+    crumbs.push({ label: "דשבורד ניהולי" });
+    title = "דשבורד ניהולי";
   } else if (path.startsWith("/reports")) {
     crumbs.push({ label: "דוחות וניתוח" });
     title = "דוחות וניתוח";
-  } else if (path.startsWith("/settings")) {
-    crumbs.push({ label: "הגדרות מערכת" });
-    title = "הגדרות מערכת";
   }
 
   return { crumbs, title: title || pageTitles[path] || "" };
@@ -69,22 +72,22 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { crumbs, title } = useBreadcrumbs();
+  const { crumbs, title } = useBreadcrumbs(user?.role);
   const isHome = location.pathname === "/" || location.pathname === "/student-home";
 
   return (
     <header className="h-auto bg-card border-b border-border sticky top-0 z-10" dir="rtl">
-      <div className="h-[52px] flex items-center justify-between px-4 md:px-7">
+      <div className="h-[56px] flex items-center justify-between px-4 md:px-7">
         {/* RIGHT: Logo + Menu */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(user?.role === "student" ? "/student-home" : "/")}
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-2.5 group"
           >
-            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-border p-1 transition-all group-hover:border-primary/30">
+            <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-border p-1 transition-all group-hover:border-primary/30 bg-card">
               <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
             </div>
-            <span className="hidden md:inline text-[12px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+            <span className="hidden md:inline text-[12px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">
               וינגייט
             </span>
           </button>
@@ -98,8 +101,8 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
 
         {/* CENTER: Page title */}
         <div className="absolute left-1/2 -translate-x-1/2 text-center">
-          <h1 className="text-[14px] md:text-[15px] font-bold text-foreground tracking-tight leading-tight">
-            {isHome ? (pageTitles[location.pathname] || "סקירה כללית") : title}
+          <h1 className="text-[14px] md:text-[15px] font-semibold text-foreground tracking-tight leading-tight">
+            {isHome ? (user ? roleTitles[user.role] : "עמוד הבית") : title}
           </h1>
         </div>
 
@@ -122,13 +125,13 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
 
       {/* Breadcrumbs row */}
       {crumbs.length > 0 && (
-        <div className="h-[28px] flex items-center px-4 md:px-7 border-t border-border/50 bg-accent/20">
+        <div className="h-[28px] flex items-center px-4 md:px-7 border-t border-border/40 bg-accent/15">
           <nav className="flex items-center gap-1 text-[11px]">
             {crumbs.map((crumb, i) => {
               const isLast = i === crumbs.length - 1;
               return (
                 <span key={i} className="flex items-center gap-1">
-                  {i > 0 && <ChevronLeft className="h-2.5 w-2.5 text-muted-foreground/30 shrink-0" strokeWidth={1.5} />}
+                  {i > 0 && <ChevronLeft className="h-2.5 w-2.5 text-muted-foreground/25 shrink-0" strokeWidth={1.5} />}
                   {isLast || !crumb.path ? (
                     <span className={isLast ? "text-foreground font-medium" : "text-muted-foreground"}>
                       {crumb.label}
