@@ -29,6 +29,10 @@ const roleIconColors: Record<UserRole, string> = {
   student: "text-[hsl(210,45%,48%)]",
 };
 
+/* Card order: admin, teacher, parent → top row; student, coach → bottom row */
+const topRowRoles: UserRole[] = ["admin", "teacher", "parent"];
+const bottomRowRoles: UserRole[] = ["student", "coach"];
+
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -45,6 +49,55 @@ const LoginPage = () => {
     }, 400);
   };
 
+  const findUser = (role: UserRole) => demoUsers.find((u) => u.role === role)!;
+
+  const RoleCard = ({ role, delay }: { role: UserRole; delay: number }) => {
+    const demoUser = findUser(role);
+    const Icon = roleIcons[role];
+    const isSelected = selectedRole === role;
+    const isHovered = hoveredRole === role;
+    const isActive = isSelected || isHovered;
+
+    return (
+      <button
+        onClick={() => handleLogin(demoUser)}
+        onMouseEnter={() => setHoveredRole(role)}
+        onMouseLeave={() => setHoveredRole(null)}
+        className={`group relative bg-card rounded-2xl p-4 flex flex-col items-center gap-2.5 text-center transition-all duration-300 cursor-pointer animate-fade-in-up border ${
+          isSelected
+            ? "shadow-[var(--shadow-card-hover)] scale-[0.97] border-primary/20"
+            : `shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 ${isActive ? "border-primary/15" : "border-border"}`
+        }`}
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        <div
+          className={`w-11 h-11 rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-300 ${
+            isActive ? "scale-110" : ""
+          }`}
+        >
+          <Icon className={`h-[18px] w-[18px] ${roleIconColors[role]}`} strokeWidth={1.5} />
+        </div>
+        <div>
+          <p
+            className={`text-[12.5px] font-semibold leading-tight transition-colors duration-200 ${
+              isActive ? "text-primary" : "text-foreground/80"
+            }`}
+          >
+            {roleLabels[role]}
+          </p>
+          <p className="text-[9.5px] text-muted-foreground/60 mt-1 leading-snug line-clamp-2">
+            {roleDescriptions[role]}
+          </p>
+        </div>
+        <div
+          className={`absolute top-2.5 start-2.5 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-300 ${
+            isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
+          }`}
+        />
+      </button>
+    );
+  };
+
   return (
     <div
       className={`min-h-screen bg-background flex items-center justify-center relative overflow-hidden transition-all duration-500 ${
@@ -59,111 +112,36 @@ const LoginPage = () => {
         <div className="absolute top-[18%] right-[10%] w-[60px] h-[60px] rounded-full bg-primary/[0.04]" />
       </div>
 
-      <div className="w-full max-w-[440px] px-6 relative z-10">
-
-        {/* Logo */}
-        <div className="flex justify-center mb-6 animate-fade-in-up">
-          <div className="w-[72px] h-[72px] rounded-2xl bg-card border border-border flex items-center justify-center shadow-[var(--shadow-card)]">
-            <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-10 h-10 object-contain" />
+      <div className="w-full max-w-[460px] px-6 relative z-10">
+        {/* Logo Badge */}
+        <div className="flex justify-center mb-7 animate-fade-in-up">
+          <div className="w-[80px] h-[80px] rounded-2xl bg-card border border-border flex items-center justify-center shadow-[var(--shadow-card-hover)]">
+            <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-11 h-11 object-contain" />
           </div>
         </div>
 
         {/* Title */}
-        <div className="text-center mb-8 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <h1 className="text-[20px] font-semibold text-primary tracking-tight leading-snug">
+        <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+          <h1 className="text-[19px] font-semibold text-primary tracking-tight leading-snug">
             האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[12px] text-muted-foreground leading-relaxed mt-2 max-w-[280px] mx-auto font-medium">
+          <p className="text-[11.5px] text-muted-foreground leading-relaxed mt-2.5 max-w-[280px] mx-auto font-medium">
             מערכת חכמה לניהול ובקרת התקדמות לימודית
           </p>
         </div>
 
-        {/* Role Cards - 3 column top */}
-        <div className="grid grid-cols-3 gap-2.5 mb-2.5">
-          {demoUsers.slice(0, 3).map((demoUser, i) => {
-            const Icon = roleIcons[demoUser.role];
-            const isSelected = selectedRole === demoUser.role;
-            const isHovered = hoveredRole === demoUser.role;
-            const isActive = isSelected || isHovered;
-
-            return (
-              <button
-                key={demoUser.role}
-                onClick={() => handleLogin(demoUser)}
-                onMouseEnter={() => setHoveredRole(demoUser.role)}
-                onMouseLeave={() => setHoveredRole(null)}
-                className={`group relative bg-card rounded-2xl p-3.5 flex flex-col items-center gap-2 text-center transition-all duration-300 cursor-pointer animate-fade-in-up border ${
-                  isSelected
-                    ? "shadow-[var(--shadow-card-hover)] scale-[0.97] border-primary/20"
-                    : `shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 ${isActive ? "border-primary/15" : "border-border"}`
-                }`}
-                style={{ animationDelay: `${120 + i * 60}ms` }}
-              >
-                <div className={`w-10 h-10 rounded-xl ${roleCircleColors[demoUser.role]} flex items-center justify-center transition-transform duration-300 ${
-                  isActive ? "scale-110" : ""
-                }`}>
-                  <Icon className={`h-[17px] w-[17px] ${roleIconColors[demoUser.role]}`} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className={`text-[12px] font-semibold leading-tight transition-colors duration-200 ${
-                    isActive ? "text-primary" : "text-foreground/80"
-                  }`}>
-                    {roleLabels[demoUser.role]}
-                  </p>
-                  <p className="text-[9px] text-muted-foreground/60 mt-0.5 leading-snug line-clamp-2">
-                    {roleDescriptions[demoUser.role]}
-                  </p>
-                </div>
-                <div className={`absolute top-2 start-2 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-300 ${
-                  isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
-                }`} />
-              </button>
-            );
-          })}
+        {/* Role Cards — Top Row (3) */}
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          {topRowRoles.map((role, i) => (
+            <RoleCard key={role} role={role} delay={120 + i * 60} />
+          ))}
         </div>
 
-        {/* Role Cards - 2 column bottom */}
-        <div className="grid grid-cols-2 gap-2.5 mb-6">
-          {demoUsers.slice(3).map((demoUser, i) => {
-            const Icon = roleIcons[demoUser.role];
-            const isSelected = selectedRole === demoUser.role;
-            const isHovered = hoveredRole === demoUser.role;
-            const isActive = isSelected || isHovered;
-
-            return (
-              <button
-                key={demoUser.role}
-                onClick={() => handleLogin(demoUser)}
-                onMouseEnter={() => setHoveredRole(demoUser.role)}
-                onMouseLeave={() => setHoveredRole(null)}
-                className={`group relative bg-card rounded-2xl p-3.5 flex flex-col items-center gap-2 text-center transition-all duration-300 cursor-pointer animate-fade-in-up border ${
-                  isSelected
-                    ? "shadow-[var(--shadow-card-hover)] scale-[0.97] border-primary/20"
-                    : `shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 ${isActive ? "border-primary/15" : "border-border"}`
-                }`}
-                style={{ animationDelay: `${300 + i * 60}ms` }}
-              >
-                <div className={`w-10 h-10 rounded-xl ${roleCircleColors[demoUser.role]} flex items-center justify-center transition-transform duration-300 ${
-                  isActive ? "scale-110" : ""
-                }`}>
-                  <Icon className={`h-[17px] w-[17px] ${roleIconColors[demoUser.role]}`} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className={`text-[12px] font-semibold leading-tight transition-colors duration-200 ${
-                    isActive ? "text-primary" : "text-foreground/80"
-                  }`}>
-                    {roleLabels[demoUser.role]}
-                  </p>
-                  <p className="text-[9px] text-muted-foreground/60 mt-0.5 leading-snug line-clamp-2">
-                    {roleDescriptions[demoUser.role]}
-                  </p>
-                </div>
-                <div className={`absolute top-2 start-2 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-300 ${
-                  isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
-                }`} />
-              </button>
-            );
-          })}
+        {/* Role Cards — Bottom Row (2) */}
+        <div className="grid grid-cols-2 gap-3 mb-7">
+          {bottomRowRoles.map((role, i) => (
+            <RoleCard key={role} role={role} delay={300 + i * 60} />
+          ))}
         </div>
 
         {/* System hint */}
@@ -177,7 +155,7 @@ const LoginPage = () => {
         </div>
 
         {/* Branding */}
-        <div className="mt-2 text-center animate-fade-in-up" style={{ animationDelay: "500ms" }}>
+        <div className="mt-3 text-center animate-fade-in-up" style={{ animationDelay: "500ms" }}>
           <div className="inline-flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full overflow-hidden opacity-25">
               <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
