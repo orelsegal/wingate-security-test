@@ -231,15 +231,19 @@ const RoleHomePage = () => {
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
       {/* Welcome */}
       <section className="mb-8">
-        <div className="flex items-center gap-4 mb-1">
+        <div className="flex items-center gap-4 mb-6">
           <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
           <div>
             <h1 className="text-[18px] md:text-[22px] font-semibold text-foreground tracking-tight leading-tight">
               שלום, {user?.name}
             </h1>
-            <p className="text-[11.5px] text-muted-foreground mt-1 font-medium">
+            <p className="text-[11.5px] text-muted-foreground mt-1.5 font-medium">
               {user ? roleLabels[user.role] : ""} · סמסטר א׳ תשפ״ה
             </p>
+            <div
+              className="mt-3 h-px w-[80px]"
+              style={{ background: "linear-gradient(to left, transparent, hsl(var(--primary-soft) / 0.45))" }}
+            />
           </div>
         </div>
       </section>
