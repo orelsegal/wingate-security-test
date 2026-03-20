@@ -118,7 +118,7 @@ const StudentHomePage = () => {
 
       {/* Action Cards */}
       <section>
-        <h2 className="text-[12.5px] font-semibold text-primary/70 mb-5 tracking-tight">המרחב שלי</h2>
+        <h2 className="text-[11.5px] font-medium text-primary/60 mb-5 tracking-tight">המרחב שלי</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {cards.map((card, i) => (
             <button
