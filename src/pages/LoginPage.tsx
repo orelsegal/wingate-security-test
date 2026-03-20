@@ -67,7 +67,6 @@ const LoginPage = () => {
   };
 
   const findUser = (role: UserRole) => demoUsers.find((u) => u.role === role)!;
-
   const isPrimary = (role: UserRole) => role === "student" || role === "teacher";
 
   const RoleCard = ({ role, delay }: { role: UserRole; delay: number }) => {
@@ -84,7 +83,7 @@ const LoginPage = () => {
         onClick={() => handleLogin(demoUser)}
         onMouseEnter={() => setHoveredRole(role)}
         onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative ${bgTint} rounded-2xl flex flex-col items-center gap-2.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out ${
+        className={`group relative ${bgTint} rounded-2xl flex flex-col items-center gap-1.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out ${
           primary ? "p-[18px]" : "p-4"
         } ${
           isSelected
@@ -98,25 +97,25 @@ const LoginPage = () => {
         style={{ animationDelay: `${delay}ms` }}
       >
         <div
-          className={`${primary ? "w-11 h-11" : "w-10 h-10"} rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
+          className={`${primary ? "w-12 h-12" : "w-11 h-11"} rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
             isActive ? "scale-110" : ""
           }`}
         >
-          <Icon className={`${primary ? "h-[17px] w-[17px]" : "h-[15px] w-[15px]"} ${roleIconColors[role]}`} strokeWidth={1.5} />
+          <Icon className={`${primary ? "h-[19px] w-[19px]" : "h-[17px] w-[17px]"} ${roleIconColors[role]}`} strokeWidth={1.6} />
         </div>
-        <div>
+        <div className="mt-0.5">
           <p
-            className={`${primary ? "text-[12.5px]" : "text-[11.5px]"} font-medium leading-tight transition-colors duration-200 ${
+            className={`${primary ? "text-[13.5px]" : "text-[12.5px]"} font-medium leading-tight transition-colors duration-200 ${
               isActive ? "text-primary" : "text-foreground/80"
             }`}
           >
             {roleLabels[role]}
           </p>
-          <p className="text-[9px] text-muted-foreground/45 mt-0.5 leading-snug line-clamp-1">
+          <p className={`${primary ? "text-[10px]" : "text-[9.5px]"} text-muted-foreground/50 mt-0.5 leading-snug line-clamp-1`}>
             {shortDescriptions[role]}
           </p>
           {microCta[role] && (
-            <p className={`text-[8px] font-medium mt-1.5 transition-colors duration-200 ${isActive ? "text-primary/70" : "text-primary/40"}`}>
+            <p className={`text-[8.5px] font-medium mt-1 transition-colors duration-200 ${isActive ? "text-primary/70" : "text-primary/40"}`}>
               {microCta[role]} ←
             </p>
           )}
@@ -137,7 +136,7 @@ const LoginPage = () => {
       }`}
       dir="rtl"
     >
-      {/* Decorative background — subtle radial depth */}
+      {/* Decorative background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-[15%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full"
@@ -151,41 +150,29 @@ const LoginPage = () => {
 
       <div className="w-full max-w-[460px] px-6 relative z-10">
         {/* Logo Badge */}
-        <div className="flex justify-center mb-10 animate-fade-in-up">
-          <WingateBadge
-            size="lg"
-            className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.1)]"
-          />
+        <div className="flex justify-center mb-8 animate-fade-in-up">
+          <WingateBadge size="lg" className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.1)]" />
         </div>
 
-        {/* Title */}
-        <div className="text-center mb-12 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+        {/* Title — clean, no underline */}
+        <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
           <h1 className="text-[18px] font-semibold text-primary tracking-tight leading-snug">
             האקדמיה למצוינות בספורט
           </h1>
-
-          {/* Signature underline — clean stroke */}
-          <div className="flex justify-center mt-4">
-            <div
-              className="h-[2px] w-[56px] rounded-full"
-              style={{ background: "hsl(152, 34%, 38%)" }}
-            />
-          </div>
-
-          <p className="text-[10.5px] font-light leading-relaxed mt-4 tracking-wide" style={{ color: "hsl(160, 5%, 48%)" }}>
+          <p className="text-[10.5px] font-light leading-relaxed mt-2.5 tracking-wide" style={{ color: "hsl(160, 5%, 48%)" }}>
             למידה וניהול מותאמים לספורטאי על
           </p>
         </div>
 
-        {/* Role Cards — Top Row (3) — secondary */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        {/* Role Cards — Top Row (3) */}
+        <div className="grid grid-cols-3 gap-3.5 mb-3.5">
           {topRowRoles.map((role, i) => (
             <RoleCard key={role} role={role} delay={120 + i * 60} />
           ))}
         </div>
 
-        {/* Role Cards — Bottom Row (2) — primary */}
-        <div className="grid grid-cols-2 gap-4 mb-10">
+        {/* Role Cards — Bottom Row (2) */}
+        <div className="grid grid-cols-2 gap-3.5 mb-10">
           {bottomRowRoles.map((role, i) => (
             <RoleCard key={role} role={role} delay={300 + i * 60} />
           ))}
