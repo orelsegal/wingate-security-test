@@ -250,7 +250,7 @@ const RoleHomePage = () => {
 
       {/* Section heading */}
       <section>
-        <h2 className="text-[12.5px] font-semibold text-primary/70 mb-5 tracking-tight">{title}</h2>
+        <h2 className="text-[11.5px] font-medium text-primary/60 mb-5 tracking-tight">{title}</h2>
         {user && roleContent[user.role]}
       </section>
 
