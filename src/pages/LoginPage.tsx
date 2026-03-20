@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
+import { Settings, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
 import { useAuth, demoUsers, roleLabels } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
 import WingateBadge from "@/components/WingateBadge";
 
-const roleIcons: Record<UserRole, typeof Shield> = {
-  admin: Shield,
+const roleIcons: Record<UserRole, typeof Settings> = {
+  admin: Settings,
   teacher: BookOpen,
   parent: Heart,
   coach: Dumbbell,
@@ -70,10 +70,10 @@ const LoginPage = () => {
         onClick={() => handleLogin(demoUser)}
         onMouseEnter={() => setHoveredRole(role)}
         onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out p-4 ${
+        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out py-5 px-3 ${
           isSelected
             ? "shadow-md scale-[0.97] border-primary/20"
-            : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-sm border-border/60 ${
+            : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-[var(--shadow-card)] border-border/50 ${
                 isActive ? "border-primary/15" : ""
               }`
         }`}
@@ -81,24 +81,24 @@ const LoginPage = () => {
       >
         {/* Circular icon background */}
         <div
-          className={`w-12 h-12 rounded-full ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
+          className={`w-[52px] h-[52px] rounded-full ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
             isActive ? "scale-110" : ""
           }`}
         >
           <Icon
-            className={`h-5 w-5 ${roleIconColors[role]}`}
-            strokeWidth={1.6}
+            className={`h-[22px] w-[22px] ${roleIconColors[role]}`}
+            strokeWidth={1.5}
           />
         </div>
         <div className="flex flex-col items-center gap-0.5">
           <p
-            className={`text-[13.5px] font-medium leading-tight transition-colors duration-200 ${
+            className={`text-[14px] font-medium leading-tight transition-colors duration-200 ${
               isActive ? "text-primary" : "text-foreground/85"
             }`}
           >
             {roleLabels[role]}
           </p>
-          <p className="text-[10px] text-muted-foreground/50 leading-tight">
+          <p className="text-[10.5px] text-muted-foreground/55 leading-tight">
             {roleDescriptions[role]}
           </p>
         </div>
@@ -118,39 +118,52 @@ const LoginPage = () => {
       }`}
       dir="rtl"
     >
-      {/* Decorative background */}
+      {/* Decorative background circles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute top-[8%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(152,34%,34%,0.045) 0%, transparent 65%)" }}
+          className="absolute top-[5%] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(152,34%,34%,0.05) 0%, transparent 60%)" }}
         />
         <div
-          className="absolute bottom-[-5%] right-[-5%] w-[450px] h-[450px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(35,30%,80%,0.07) 0%, transparent 65%)" }}
+          className="absolute bottom-[-8%] right-[-8%] w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(35,30%,80%,0.08) 0%, transparent 60%)" }}
         />
         <div
-          className="absolute top-[60%] left-[-10%] w-[350px] h-[350px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(152,30%,50%,0.03) 0%, transparent 65%)" }}
+          className="absolute top-[55%] left-[-12%] w-[400px] h-[400px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(152,30%,50%,0.04) 0%, transparent 60%)" }}
         />
         <div
-          className="absolute top-[-8%] right-[15%] w-[250px] h-[250px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(210,20%,70%,0.04) 0%, transparent 65%)" }}
+          className="absolute top-[-10%] right-[10%] w-[300px] h-[300px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(210,20%,70%,0.05) 0%, transparent 60%)" }}
+        />
+        <div
+          className="absolute bottom-[20%] left-[60%] w-[250px] h-[250px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(150,25%,60%,0.03) 0%, transparent 60%)" }}
         />
       </div>
 
       <div className="w-full max-w-[400px] px-6 relative z-10">
-        {/* Logo — slightly reduced */}
-        <div className="flex justify-center mb-6 animate-fade-in-up">
-          <WingateBadge size="md" className="shadow-[0_4px_20px_-6px_hsla(150,20%,20%,0.08)]" />
+        {/* Logo with soft halo */}
+        <div className="flex justify-center mb-7 animate-fade-in-up">
+          <div className="relative">
+            <div
+              className="absolute inset-0 rounded-full scale-[1.8]"
+              style={{ background: "radial-gradient(circle, hsla(152,30%,50%,0.06) 0%, transparent 70%)" }}
+            />
+            <WingateBadge size="lg" className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.07)] relative" />
+          </div>
         </div>
 
-        {/* Title */}
-        <div className="text-center mb-8 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <h1 className="text-[17px] font-semibold text-primary tracking-tight leading-snug">
+        {/* Welcome + Title + Subtitle */}
+        <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+          <p className="text-[11px] font-light text-muted-foreground/50 tracking-wide mb-2">
+            ברוכים הבאים
+          </p>
+          <h1 className="text-[18px] font-semibold text-primary tracking-tight leading-snug mb-2.5">
             האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[10px] font-light leading-relaxed mt-1.5 tracking-wide text-muted-foreground/50">
-            למידה וניהול מותאמים לספורטאי על
+          <p className="text-[10.5px] font-light leading-relaxed tracking-wide text-muted-foreground/45">
+            למידה וניהול מותאמים לספורטאים מצטיינים
           </p>
         </div>
 
@@ -162,7 +175,7 @@ const LoginPage = () => {
         </div>
 
         {/* Bottom Row — 2 cards, centered */}
-        <div className="flex justify-center gap-3 mb-9">
+        <div className="flex justify-center gap-3 mb-10">
           {bottomRowRoles.map((role, i) => (
             <div key={role} className="w-[calc((100%-0.75rem)/3)]">
               <RoleCard role={role} delay={300 + i * 60} />
@@ -170,10 +183,10 @@ const LoginPage = () => {
           ))}
         </div>
 
-        {/* Branding */}
+        {/* Footer branding */}
         <div className="text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
-          <p className="text-[8.5px] font-normal tracking-[0.18em] text-muted-foreground/35">
-            WINGATE INSTITUTE · מכון וינגייט
+          <p className="text-[9px] font-normal tracking-[0.15em] text-primary-soft/50">
+            מכון וינגייט • WINGATE INSTITUTE
           </p>
         </div>
       </div>
