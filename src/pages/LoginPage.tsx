@@ -175,7 +175,7 @@ const LoginPage = () => {
         </div>
 
         {/* Bottom Row — 2 wider cards, centered */}
-        <div className="grid grid-cols-2 gap-3 mx-auto max-w-[290px] mb-10">
+        <div className="grid grid-cols-2 gap-3 mb-10">
           {bottomRowRoles.map((role, i) => (
             <div key={role}>
               <RoleCard role={role} delay={300 + i * 60} />
