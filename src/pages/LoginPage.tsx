@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
+import { Shield, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
 import { useAuth, demoUsers, roleLabels } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
 import WingateBadge from "@/components/WingateBadge";
 
-const roleIcons: Record<UserRole, typeof Settings> = {
-  admin: Settings,
+const roleIcons: Record<UserRole, typeof Shield> = {
+  admin: Shield,
   teacher: BookOpen,
   parent: Heart,
   coach: Dumbbell,
@@ -15,18 +15,18 @@ const roleIcons: Record<UserRole, typeof Settings> = {
 
 const roleCircleColors: Record<UserRole, string> = {
   admin: "bg-primary/10",
-  teacher: "bg-[hsl(35,30%,94%)]",
-  parent: "bg-[hsl(350,20%,95%)]",
-  coach: "bg-[hsl(25,30%,93%)]",
-  student: "bg-[hsl(210,30%,94%)]",
+  teacher: "bg-[hsl(35,30%,92%)]",
+  parent: "bg-[hsl(350,25%,93%)]",
+  coach: "bg-[hsl(25,30%,92%)]",
+  student: "bg-[hsl(210,30%,92%)]",
 };
 
 const roleIconColors: Record<UserRole, string> = {
   admin: "text-primary",
-  teacher: "text-[hsl(35,45%,40%)]",
-  parent: "text-[hsl(350,38%,48%)]",
-  coach: "text-[hsl(25,48%,44%)]",
-  student: "text-[hsl(210,45%,45%)]",
+  teacher: "text-[hsl(35,45%,38%)]",
+  parent: "text-[hsl(350,38%,45%)]",
+  coach: "text-[hsl(25,48%,42%)]",
+  student: "text-[hsl(210,45%,42%)]",
 };
 
 const roleDescriptions: Record<UserRole, string> = {
@@ -37,8 +37,8 @@ const roleDescriptions: Record<UserRole, string> = {
   student: "המרחב האישי",
 };
 
-const topRowRoles: UserRole[] = ["parent", "admin", "coach"];
-const bottomRowRoles: UserRole[] = ["teacher", "student"];
+const topRowRoles: UserRole[] = ["coach", "admin", "parent"];
+const bottomRowRoles: UserRole[] = ["student", "teacher"];
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -70,35 +70,38 @@ const LoginPage = () => {
         onClick={() => handleLogin(demoUser)}
         onMouseEnter={() => setHoveredRole(role)}
         onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out py-5 px-3 ${
+        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out p-4 ${
           isSelected
             ? "shadow-md scale-[0.97] border-primary/20"
-            : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-sm border-border/80 ${
-                isActive ? "border-primary/12" : ""
+            : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-sm border-border/60 ${
+                isActive ? "border-primary/15" : ""
               }`
         }`}
         style={{ animationDelay: `${delay}ms` }}
       >
+        {/* Circular icon background */}
         <div
-          className={`w-10 h-10 rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
+          className={`w-12 h-12 rounded-full ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
             isActive ? "scale-110" : ""
           }`}
         >
           <Icon
-            className={`h-[18px] w-[18px] ${roleIconColors[role]}`}
+            className={`h-5 w-5 ${roleIconColors[role]}`}
             strokeWidth={1.6}
           />
         </div>
-        <p
-          className={`text-[13px] font-medium leading-tight transition-colors duration-200 ${
-            isActive ? "text-primary" : "text-foreground/80"
-          }`}
-        >
-          {roleLabels[role]}
-        </p>
-        <p className="text-[10px] text-muted-foreground/60 leading-tight">
-          {roleDescriptions[role]}
-        </p>
+        <div className="flex flex-col items-center gap-0.5">
+          <p
+            className={`text-[13.5px] font-medium leading-tight transition-colors duration-200 ${
+              isActive ? "text-primary" : "text-foreground/85"
+            }`}
+          >
+            {roleLabels[role]}
+          </p>
+          <p className="text-[10px] text-muted-foreground/50 leading-tight">
+            {roleDescriptions[role]}
+          </p>
+        </div>
         <div
           className={`absolute top-2 start-2 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-200 ${
             isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
@@ -136,13 +139,13 @@ const LoginPage = () => {
       </div>
 
       <div className="w-full max-w-[400px] px-6 relative z-10">
-        {/* Logo */}
+        {/* Logo — slightly reduced */}
         <div className="flex justify-center mb-6 animate-fade-in-up">
-          <WingateBadge size="lg" className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.1)]" />
+          <WingateBadge size="md" className="shadow-[0_4px_20px_-6px_hsla(150,20%,20%,0.08)]" />
         </div>
 
         {/* Title */}
-        <div className="text-center mb-7 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+        <div className="text-center mb-8 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
           <h1 className="text-[17px] font-semibold text-primary tracking-tight leading-snug">
             האקדמיה למצוינות בספורט
           </h1>
@@ -151,21 +154,20 @@ const LoginPage = () => {
           </p>
         </div>
 
-        {/* Top Row – 3 cards */}
+        {/* Top Row — 3 cards */}
         <div className="grid grid-cols-3 gap-3 mb-3">
           {topRowRoles.map((role, i) => (
             <RoleCard key={role} role={role} delay={120 + i * 60} />
           ))}
         </div>
 
-        {/* Bottom Row – 2 cards, centered to match top card width */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="col-start-1">
-            <RoleCard role={bottomRowRoles[0]} delay={300} />
-          </div>
-          <div className="col-start-2">
-            <RoleCard role={bottomRowRoles[1]} delay={360} />
-          </div>
+        {/* Bottom Row — 2 cards, centered */}
+        <div className="flex justify-center gap-3 mb-9">
+          {bottomRowRoles.map((role, i) => (
+            <div key={role} className="w-[calc((100%-0.75rem)/3)]">
+              <RoleCard role={role} delay={300 + i * 60} />
+            </div>
+          ))}
         </div>
 
         {/* Branding */}
