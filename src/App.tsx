@@ -15,6 +15,7 @@ import DataManagementPage from "./pages/DataManagementPage.tsx";
 import StudentHomePage from "./pages/StudentHomePage.tsx";
 import RoleHomePage from "./pages/RoleHomePage.tsx";
 import DashboardContent from "./components/DashboardContent.tsx";
+import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/data-entry" element={<DataEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
               <Route path="/student-home" element={<StudentHomePage />} />
+              <Route path="/external" element={<ExternalWrapperPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

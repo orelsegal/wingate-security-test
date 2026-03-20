@@ -29,9 +29,9 @@ const roleIconColors: Record<UserRole, string> = {
   student: "text-[hsl(210,45%,48%)]",
 };
 
-/* Card order: admin, teacher, parent → top row; student, coach → bottom row */
-const topRowRoles: UserRole[] = ["admin", "teacher", "parent"];
-const bottomRowRoles: UserRole[] = ["student", "coach"];
+/* Card order: Row 1 (RTL): הורה | מנהל | מאמן — Row 2 (RTL): מורה | תלמיד */
+const topRowRoles: UserRole[] = ["parent", "admin", "coach"];
+const bottomRowRoles: UserRole[] = ["teacher", "student"];
 
 const LoginPage = () => {
   const { login } = useAuth();

@@ -41,8 +41,7 @@ const StudentHomePage = () => {
       icon: Calendar,
       color: "bg-[hsl(210,40%,93%)]",
       iconColor: "text-[hsl(210,45%,48%)]",
-      action: () => window.open("https://tailor-my-tutor.lovable.app", "_blank"),
-      external: true,
+      action: () => navigate(`/external?type=schedule&url=${encodeURIComponent("https://tailor-my-tutor.lovable.app")}`),
     },
     {
       id: "smartbase",
@@ -51,9 +50,8 @@ const StudentHomePage = () => {
       icon: Brain,
       color: "bg-[hsl(270,25%,93%)]",
       iconColor: "text-[hsl(270,35%,50%)]",
-      action: SMARTBASE_URL ? () => window.open(SMARTBASE_URL, "_blank") : () => {},
+      action: SMARTBASE_URL ? () => navigate(`/external?type=smartbase&url=${encodeURIComponent(SMARTBASE_URL)}`) : () => {},
       comingSoon: !SMARTBASE_URL,
-      external: !!SMARTBASE_URL,
     },
     {
       id: "roadmap",
@@ -66,14 +64,13 @@ const StudentHomePage = () => {
       badge: progressPct > 0 ? `${progressPct}%` : undefined,
     },
     {
-      id: "learn",
+      id: "learning",
       title: "התחל למידה",
       description: "גישה לקורסים ומשאבי למידה",
       icon: BookOpen,
       color: "bg-[hsl(35,35%,93%)]",
       iconColor: "text-[hsl(35,45%,42%)]",
-      action: () => window.open("https://ancient-journeys.lovable.app", "_blank"),
-      external: true,
+      action: () => navigate(`/external?type=learning&url=${encodeURIComponent("https://ancient-journeys.lovable.app")}`),
     },
   ];
 

@@ -53,6 +53,13 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
   } else if (path.startsWith("/reports")) {
     crumbs.push({ label: "דוחות וניתוח" });
     title = "דוחות וניתוח";
+  } else if (path.startsWith("/external")) {
+    const params = new URLSearchParams(location.search);
+    const type = params.get("type") || "schedule";
+    const labels: Record<string, string> = { schedule: "מערכת שעות", smartbase: "סמארטבייס", learning: "התחל למידה" };
+    const label = labels[type] || "תוכן חיצוני";
+    crumbs.push({ label });
+    title = label;
   }
 
   return { crumbs, title };
