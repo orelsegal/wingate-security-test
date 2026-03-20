@@ -4,7 +4,6 @@ import { Calendar, Brain, Route, BookOpen, Loader2, ChevronLeft, CheckCircle2, C
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import WingateBadge from "@/components/WingateBadge";
-import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 const SMARTBASE_URL = ""; // Replace with actual URL when ready
 
