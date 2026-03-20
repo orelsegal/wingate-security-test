@@ -255,13 +255,10 @@ const RoleHomePage = () => {
       </section>
 
       {/* Branding */}
-      <div className="mt-14 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/[0.04] border border-primary/[0.08]">
-          <div className="w-4 h-4 rounded-full overflow-hidden">
-            <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
-          </div>
-          <span className="text-[10.5px] text-primary/70 font-medium">האקדמיה למצוינות · מכון וינגייט</span>
-        </div>
+      <div className="mt-16 text-center">
+        <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
+          האקדמיה למצוינות · מכון וינגייט
+        </span>
       </div>
     </div>
   );
