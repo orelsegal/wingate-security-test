@@ -29,6 +29,14 @@ const roleIconColors: Record<UserRole, string> = {
   student: "text-[hsl(210,45%,45%)]",
 };
 
+const roleDescriptions: Record<UserRole, string> = {
+  admin: "ניהול המערכת",
+  teacher: "מערכת הוראה",
+  parent: "מעקב הורים",
+  coach: "ניהול אימונים",
+  student: "המרחב האישי",
+};
+
 const topRowRoles: UserRole[] = ["parent", "admin", "coach"];
 const bottomRowRoles: UserRole[] = ["teacher", "student"];
 
@@ -56,30 +64,29 @@ const LoginPage = () => {
     const isSelected = selectedRole === role;
     const isHovered = hoveredRole === role;
     const isActive = isSelected || isHovered;
-    const isAdmin = role === "admin";
 
     return (
       <button
         onClick={() => handleLogin(demoUser)}
         onMouseEnter={() => setHoveredRole(role)}
         onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out p-4 aspect-square ${
+        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out py-5 px-3 ${
           isSelected
-            ? "shadow-[var(--shadow-card-hover)] scale-[0.97] border-primary/20"
-            : `hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 active:scale-[0.98] shadow-[var(--shadow-card)] border-border/80 ${
+            ? "shadow-md scale-[0.97] border-primary/20"
+            : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-sm border-border/80 ${
                 isActive ? "border-primary/12" : ""
               }`
         }`}
         style={{ animationDelay: `${delay}ms` }}
       >
         <div
-          className={`w-11 h-11 rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
+          className={`w-10 h-10 rounded-xl ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
             isActive ? "scale-110" : ""
           }`}
         >
           <Icon
-            className={`${isAdmin ? "h-[20px] w-[20px]" : "h-[18px] w-[18px]"} ${roleIconColors[role]}`}
-            strokeWidth={1.5}
+            className={`h-[18px] w-[18px] ${roleIconColors[role]}`}
+            strokeWidth={1.6}
           />
         </div>
         <p
@@ -89,8 +96,11 @@ const LoginPage = () => {
         >
           {roleLabels[role]}
         </p>
+        <p className="text-[10px] text-muted-foreground/60 leading-tight">
+          {roleDescriptions[role]}
+        </p>
         <div
-          className={`absolute top-2.5 start-2.5 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-200 ${
+          className={`absolute top-2 start-2 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-200 ${
             isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
           }`}
         />
@@ -105,7 +115,7 @@ const LoginPage = () => {
       }`}
       dir="rtl"
     >
-      {/* Decorative background circles */}
+      {/* Decorative background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-[8%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full"
@@ -125,40 +135,43 @@ const LoginPage = () => {
         />
       </div>
 
-      <div className="w-full max-w-[440px] px-6 relative z-10">
-        {/* Logo Badge */}
-        <div className="flex justify-center mb-7 animate-fade-in-up">
+      <div className="w-full max-w-[400px] px-6 relative z-10">
+        {/* Logo */}
+        <div className="flex justify-center mb-6 animate-fade-in-up">
           <WingateBadge size="lg" className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.1)]" />
         </div>
 
         {/* Title */}
-        <div className="text-center mb-8 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <h1 className="text-[18px] font-semibold text-primary tracking-tight leading-snug">
+        <div className="text-center mb-7 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+          <h1 className="text-[17px] font-semibold text-primary tracking-tight leading-snug">
             האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[10.5px] font-light leading-relaxed mt-2 tracking-wide text-muted-foreground/60">
+          <p className="text-[10px] font-light leading-relaxed mt-1.5 tracking-wide text-muted-foreground/50">
             למידה וניהול מותאמים לספורטאי על
           </p>
         </div>
 
-        {/* Role Cards — Top Row (3) */}
+        {/* Top Row – 3 cards */}
         <div className="grid grid-cols-3 gap-3 mb-3">
           {topRowRoles.map((role, i) => (
             <RoleCard key={role} role={role} delay={120 + i * 60} />
           ))}
         </div>
 
-        {/* Role Cards — Bottom Row (2) */}
-        <div className="grid grid-cols-2 gap-3 mb-10">
-          {bottomRowRoles.map((role, i) => (
-            <RoleCard key={role} role={role} delay={300 + i * 60} />
-          ))}
+        {/* Bottom Row – 2 cards, centered to match top card width */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="col-start-1">
+            <RoleCard role={bottomRowRoles[0]} delay={300} />
+          </div>
+          <div className="col-start-2">
+            <RoleCard role={bottomRowRoles[1]} delay={360} />
+          </div>
         </div>
 
         {/* Branding */}
         <div className="text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
-          <p className="text-[9px] font-normal tracking-[0.15em] text-muted-foreground/40">
-            THE WINGATE INSTITUTE
+          <p className="text-[8.5px] font-normal tracking-[0.18em] text-muted-foreground/35">
+            WINGATE INSTITUTE · מכון וינגייט
           </p>
         </div>
       </div>
