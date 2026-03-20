@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, BookOpen, Heart, Dumbbell, Sparkles, GraduationCap } from "lucide-react";
+import { Shield, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
 import { useAuth, demoUsers, roleLabels, roleDescriptions } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
@@ -144,26 +144,11 @@ const LoginPage = () => {
           ))}
         </div>
 
-        {/* System hint */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "440ms" }}>
-          <div className="flex items-center justify-center gap-2 py-2">
-            <Sparkles className="h-3 w-3 text-primary/25 shrink-0" strokeWidth={1.5} />
-            <span className="text-[9.5px] text-muted-foreground/35 font-medium">
-              מעקב חכם · מקצועות · חוסרים · מפות דרכים
-            </span>
-          </div>
-        </div>
-
         {/* Branding */}
-        <div className="mt-3 text-center animate-fade-in-up" style={{ animationDelay: "500ms" }}>
-          <div className="inline-flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full overflow-hidden opacity-25">
-              <img src={wingateLogoSrc} alt="" className="w-full h-full object-contain" />
-            </div>
-            <span className="text-[9px] text-muted-foreground/20 font-medium">
-              מכון וינגייט · סמסטר א׳ תשפ״ה
-            </span>
-          </div>
+        <div className="mt-5 text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
+          <span className="text-[9px] text-muted-foreground/25 font-medium tracking-wide">
+            מכון וינגייט · סמסטר א׳ תשפ״ה
+          </span>
         </div>
       </div>
     </div>
