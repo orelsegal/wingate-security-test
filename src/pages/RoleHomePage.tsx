@@ -8,6 +8,7 @@ import {
   Route, Calendar, Heart, AlertTriangle, Target, TrendingUp, MessageSquare,
   Dumbbell, ChevronLeft,
 } from "lucide-react";
+import wingateLogoSrc from "@/assets/wingate-logo.png";
 import WingateBadge from "@/components/WingateBadge";
 
 /* ═══ Role Titles ═══ */
