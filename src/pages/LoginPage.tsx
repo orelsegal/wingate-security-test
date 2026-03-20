@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, BookOpen, Heart, Dumbbell, Sparkles, GraduationCap } from "lucide-react";
+import { Shield, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
 import { useAuth, demoUsers, roleLabels, roleDescriptions } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
