@@ -151,6 +151,7 @@ const TeacherHome = () => {
     { id: "students", title: "הספורטאים שלי", description: "צפייה בכל הספורטאים וסטטוס לימודי", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
     { id: "courses", title: "מפת מצב לימודית", description: "סקירת מקצועות והתקדמות כללית", icon: BookOpen, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/courses" },
     { id: "data-entry", title: "עדכון ציונים והערות", description: "הזנה ועדכון נתוני ספורטאים", icon: ClipboardEdit, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/data-entry" },
+    { id: "subject-editor", title: "ניהול מבנה למידה", description: "עריכת רובריקות ויחידות לימוד", icon: Route, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/teacher-subjects" },
     { id: "overview", title: "סקירה כללית", description: "דשבורד עם מבט על מצב כללי", icon: LayoutDashboard, color: "bg-primary/10", iconColor: "text-primary", path: "/dashboard" },
   ];
 

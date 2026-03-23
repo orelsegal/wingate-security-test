@@ -5,11 +5,11 @@ import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
 
 const subjectMeta: Record<string, { icon: any; color: string; iconColor: string; subtitle: string }> = {
-  "היסטוריה": { icon: Scroll, color: "bg-[hsl(35,30%,94%)]", iconColor: "text-[hsl(35,40%,45%)]", subtitle: "בגרות 30% + 70%" },
-  "אזרחות": { icon: Scale, color: "bg-[hsl(180,20%,93%)]", iconColor: "text-[hsl(180,30%,42%)]", subtitle: "בגרות 30% + 70%" },
+  "היסטוריה": { icon: Scroll, color: "bg-[hsl(35,30%,94%)]", iconColor: "text-[hsl(35,40%,45%)]", subtitle: "רובריקת 30% + רובריקת 70%" },
+  "אזרחות": { icon: Scale, color: "bg-[hsl(180,20%,93%)]", iconColor: "text-[hsl(180,30%,42%)]", subtitle: "רובריקת 30% + רובריקת 70%" },
   "אנגלית": { icon: Globe, color: "bg-[hsl(210,30%,94%)]", iconColor: "text-[hsl(210,40%,50%)]", subtitle: "Module E · F · G" },
-  "לשון": { icon: Languages, color: "bg-primary/8", iconColor: "text-primary", subtitle: "בגרות 20% + 80%" },
-  "מתמטיקה": { icon: Calculator, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", subtitle: "לפי רמה" },
+  "לשון": { icon: Languages, color: "bg-primary/8", iconColor: "text-primary", subtitle: "רובריקת 20% + רובריקת 80%" },
+  "מתמטיקה": { icon: Calculator, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", subtitle: "לפי רמת יחידות לימוד" },
 };
 
 const subjectOrder = ["היסטוריה", "אזרחות", "אנגלית", "לשון", "מתמטיקה"];
@@ -59,6 +59,7 @@ const SubjectSelectionPage = () => {
           const prog = progressBySubject.get(name);
           const pct = prog?.completion_percent ?? 0;
           const status = prog?.status as string | undefined;
+          const grade = prog?.grade;
           const Icon = meta.icon;
 
           const statusDot = status === "green"
@@ -84,6 +85,9 @@ const SubjectSelectionPage = () => {
                   <div className="flex items-center gap-2 mb-0.5">
                     <h3 className="text-[13.5px] font-semibold text-foreground leading-tight">{name}</h3>
                     <div className={`w-2 h-2 rounded-full ${statusDot}`} />
+                    {grade != null && (
+                      <span className="text-[9.5px] font-semibold text-muted-foreground mr-auto tabular-nums">ציון: {grade}</span>
+                    )}
                   </div>
                   <p className="text-[10.5px] text-muted-foreground font-normal mb-2">{meta.subtitle}</p>
                   <div className="flex items-center gap-2.5">
