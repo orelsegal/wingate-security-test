@@ -265,7 +265,7 @@ const ParentHome = () => {
     { id: "child", title: "הילד/ה שלי", description: "פרופיל, ציונים ומצב לימודי עדכני", icon: Heart, color: "bg-[hsl(350,25%,93%)]", iconColor: "text-[hsl(350,40%,50%)]", path: childId ? `/students/${childId}` : "/students" },
     { id: "roadmap", title: "מפת הדרך לבגרות", description: "התקדמות, חוסרים ושלבים הבאים", icon: Route, color: "bg-primary/10", iconColor: "text-primary", path: childId ? `/students/${childId}` : "/students" },
     { id: "status", title: "מצב לימודי", description: "ציונים, נוכחות וסטטוס לפי מקצוע", icon: TrendingUp, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: childId ? `/students/${childId}` : "/students" },
-    { id: "schedule", title: "מערכת שעות", description: "תצוגה שבועית בתוך סביבת וינגייט", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", external: "https://tailor-my-tutor.lovable.app" },
+    { id: "calendar", title: "לוח שנה", description: "משימות, מבחנים ומפגשים קרובים", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", path: "/calendar" },
     { id: "messages", title: "הודעות והערות", description: "הערות מצוות החינוך", icon: MessageSquare, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", comingSoon: true },
   ];
 
