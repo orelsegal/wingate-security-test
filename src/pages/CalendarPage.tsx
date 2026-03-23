@@ -112,7 +112,7 @@ const CalendarPage = () => {
   const handleSaveEvent = () => {
     if (!formTitle.trim() || !formDate) return;
     if (editingEvent) {
-      setEvents(prev => prev.map(e => e.id === editingEvent.id ? { ...e, title: formTitle.trim(), subject: formSubject.trim(), type: formType, date: new Date(formDate) } : e));
+      setEvents(prev => prev.map(e => e.id === editingEvent.id ? { ...e, title: formTitle.trim(), subject: formSubject.trim(), type: formType, date: new Date(formDate), notes: formNotes.trim() } : e));
     } else {
       const newEvent: CalendarEvent = {
         id: crypto.randomUUID(),
@@ -120,6 +120,7 @@ const CalendarPage = () => {
         subject: formSubject.trim(),
         date: new Date(formDate),
         type: formType,
+        notes: formNotes.trim(),
       };
       setEvents(prev => [...prev, newEvent]);
     }
