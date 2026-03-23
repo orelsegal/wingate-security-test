@@ -37,8 +37,8 @@ const roleDescriptions: Record<UserRole, string> = {
   student: "המרחב האישי",
 };
 
-const topRowRoles: UserRole[] = ["coach", "admin", "parent"];
-const bottomRowRoles: UserRole[] = ["student", "teacher"];
+const topRowRoles: UserRole[] = ["parent", "admin", "coach"];
+const bottomRowRoles: UserRole[] = ["teacher", "student"];
 
 const LoginPage = () => {
   const { login } = useAuth();
