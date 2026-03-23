@@ -83,12 +83,20 @@ const GroupsPage = () => {
           </p>
         </div>
         {selectedGroup && (
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-lg transition-colors duration-150 ${showFilters ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"}`}
-          >
-            <Filter className="h-4 w-4" strokeWidth={1.5} />
-          </button>
+          <div className="flex items-center gap-2">
+            {canEdit && (
+              <DataExportTools
+                students={selectedStudents}
+                label={`כיתה ${selectedGroup}`}
+              />
+            )}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-2 rounded-lg transition-colors duration-150 ${showFilters ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"}`}
+            >
+              <Filter className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          </div>
         )}
       </div>
 

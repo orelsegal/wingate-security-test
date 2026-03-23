@@ -74,7 +74,7 @@ const SubjectSelectionPage = () => {
           return (
             <button
               key={name}
-              onClick={() => navigate(`/subjects/${encodeURIComponent(name)}`)}
+              onClick={() => name === "מבוא למדעים" ? navigate("/science-intro") : navigate(`/subjects/${encodeURIComponent(name)}`)}
               className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
               style={{ animationDelay: `${60 + i * 40}ms` }}
             >
