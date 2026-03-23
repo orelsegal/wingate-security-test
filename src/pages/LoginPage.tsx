@@ -119,27 +119,31 @@ const LoginPage = () => {
       }`}
       dir="rtl"
     >
-      {/* Decorative background circles */}
+      {/* Decorative pastel background circles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-[5%] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(152,34%,34%,0.05) 0%, transparent 60%)" }}
+          style={{ background: "radial-gradient(circle, hsla(152,40%,60%,0.08) 0%, transparent 55%)" }}
         />
         <div
           className="absolute bottom-[-8%] right-[-8%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(35,30%,80%,0.08) 0%, transparent 60%)" }}
+          style={{ background: "radial-gradient(circle, hsla(35,50%,78%,0.12) 0%, transparent 55%)" }}
         />
         <div
-          className="absolute top-[55%] left-[-12%] w-[400px] h-[400px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(152,30%,50%,0.04) 0%, transparent 60%)" }}
+          className="absolute top-[55%] left-[-12%] w-[450px] h-[450px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(210,40%,75%,0.09) 0%, transparent 55%)" }}
         />
         <div
-          className="absolute top-[-10%] right-[10%] w-[300px] h-[300px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(210,20%,70%,0.05) 0%, transparent 60%)" }}
+          className="absolute top-[-10%] right-[10%] w-[350px] h-[350px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(350,35%,80%,0.07) 0%, transparent 55%)" }}
         />
         <div
-          className="absolute bottom-[20%] left-[60%] w-[250px] h-[250px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(150,25%,60%,0.03) 0%, transparent 60%)" }}
+          className="absolute bottom-[20%] left-[60%] w-[300px] h-[300px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(270,30%,78%,0.06) 0%, transparent 55%)" }}
+        />
+        <div
+          className="absolute top-[30%] right-[55%] w-[250px] h-[250px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(150,35%,70%,0.07) 0%, transparent 55%)" }}
         />
       </div>
 
@@ -155,15 +159,13 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Welcome + Title + Subtitle */}
+        {/* Title + Subtitle */}
         <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <p className="text-[11px] font-light text-muted-foreground/50 tracking-wide mb-2">
-            ברוכים הבאים
-          </p>
-          <h1 className="text-[18px] font-semibold text-primary tracking-tight leading-snug mb-2.5">
+          <h1 className="text-[22px] font-bold text-primary tracking-tight leading-snug mb-2.5">
             האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[10.5px] font-light leading-relaxed tracking-wide text-muted-foreground/45">
+          <div className="w-10 h-[2px] rounded-full bg-primary/25 mx-auto mb-2.5" />
+          <p className="text-[11px] font-light leading-relaxed tracking-wide text-muted-foreground/50">
             למידה וניהול מותאמים לספורטאים מצטיינים
           </p>
         </div>
@@ -186,8 +188,12 @@ const LoginPage = () => {
 
         {/* Footer branding */}
         <div className="text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
-          <p className="text-[9px] font-normal tracking-[0.15em] text-primary-soft/50">
-            מכון וינגייט • WINGATE INSTITUTE
+          <div className="w-12 h-[1px] rounded-full bg-primary/15 mx-auto mb-3" />
+          <p className="text-[10px] font-medium tracking-[0.18em] text-primary/45">
+            WINGATE INSTITUTE
+          </p>
+          <p className="text-[9px] font-normal tracking-[0.12em] text-primary/30 mt-1">
+            מכון וינגייט
           </p>
         </div>
       </div>
