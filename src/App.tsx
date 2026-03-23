@@ -20,6 +20,7 @@ import DashboardContent from "./components/DashboardContent.tsx";
 import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
 import SubjectSelectionPage from "./pages/SubjectSelectionPage.tsx";
 import SubjectDetailPage from "./pages/SubjectDetailPage.tsx";
+import TeacherSubjectEditorPage from "./pages/TeacherSubjectEditorPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
               <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
+              <Route path="/teacher-subjects" element={<TeacherSubjectEditorPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
