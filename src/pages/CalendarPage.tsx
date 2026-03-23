@@ -63,8 +63,9 @@ const CalendarPage = () => {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [formTitle, setFormTitle] = useState("");
   const [formSubject, setFormSubject] = useState("");
-  const [formType, setFormType] = useState<"assignment" | "test" | "lesson">("assignment");
+  const [formType, setFormType] = useState<"assignment" | "test" | "lesson" | "event">("assignment");
   const [formDate, setFormDate] = useState("");
+  const [formNotes, setFormNotes] = useState("");
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<CalendarEvent | null>(null);
