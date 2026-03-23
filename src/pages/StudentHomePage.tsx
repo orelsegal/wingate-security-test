@@ -1,11 +1,9 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
-import { Calendar, Brain, Route, BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target, TrafficCone, Map } from "lucide-react";
+import { BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target, CalendarDays, Brain, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import WingateBadge from "@/components/WingateBadge";
-
-const SMARTBASE_URL = ""; // Replace with actual URL when ready
 
 const StudentHomePage = () => {
   const { user } = useAuth();
@@ -34,60 +32,41 @@ const StudentHomePage = () => {
 
   const cards = [
     {
-      id: "learning-traffic",
-      title: "רמזור למידה",
-      description: "מצב לימודי לפי מקצוע — ציונים, השלמות וסטטוס",
-      icon: TrafficCone,
-      color: "bg-[hsl(var(--success))]/10",
-      iconColor: "text-[hsl(var(--success))]",
-      action: () => navigate("/student-learning"),
+      id: "subjects",
+      title: "מקצועות",
+      description: "צפייה במקצועות, יחידות לימוד והתקדמות",
+      icon: BookOpen,
+      color: "bg-[hsl(270,25%,94%)]",
+      iconColor: "text-[hsl(270,35%,50%)]",
+      action: () => navigate("/subjects"),
     },
     {
-      id: "roadmap-traffic",
-      title: "רמזור מפת דרכים",
-      description: `${completedRoadmapCount} מתוך ${totalRoadmapCount} שלבים הושלמו`,
-      icon: Map,
+      id: "profile",
+      title: "הפרופיל שלי",
+      description: "ציונים, התקדמות ומצב לימודי מלא",
+      icon: GraduationCap,
       color: "bg-primary/10",
       iconColor: "text-primary",
-      action: () => navigate("/student-roadmap"),
-      badge: progressPct > 0 ? `${progressPct}%` : undefined,
+      action: () => navigate(`/students/${studentId}`),
     },
     {
-      id: "schedule",
-      title: "מערכת שעות",
-      description: "תצוגה שבועית בתוך סביבת וינגייט",
-      icon: Calendar,
+      id: "calendar",
+      title: "לוח שנה",
+      description: "משימות, מבחנים ומפגשים קרובים",
+      icon: CalendarDays,
       color: "bg-secondary",
       iconColor: "text-foreground/80",
-      action: () => navigate(`/external?type=schedule&url=${encodeURIComponent("https://tailor-my-tutor.lovable.app")}`),
+      action: () => navigate("/calendar"),
     },
     {
       id: "smartbase",
       title: "וינגייט חכם",
       description: "ליווי לימודי חכם ותכנון שבועי",
       icon: Brain,
-      color: "bg-primary/10",
-      iconColor: "text-primary",
-      action: SMARTBASE_URL ? () => navigate(`/external?type=smartbase&url=${encodeURIComponent(SMARTBASE_URL)}`) : () => {},
-      comingSoon: !SMARTBASE_URL,
-    },
-    {
-      id: "roadmap",
-      title: "מפת הדרך לבגרות",
-      description: `צפייה בפרופיל האישי והתקדמות מלאה`,
-      icon: Route,
-      color: "bg-[hsl(35,30%,94%)]",
-      iconColor: "text-[hsl(35,40%,45%)]",
-      action: () => navigate(`/students/${studentId}`),
-    },
-    {
-      id: "learning",
-      title: "התחל למידה",
-      description: "גישה לקורסים ומשאבי למידה",
-      icon: BookOpen,
       color: "bg-[hsl(35,35%,93%)]",
       iconColor: "text-[hsl(35,45%,42%)]",
-      action: () => navigate("/subjects"),
+      action: () => {},
+      comingSoon: true,
     },
   ];
 
@@ -114,7 +93,7 @@ const StudentHomePage = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: Target, color: "text-primary", value: `${progressPct}%`, label: "השלמת מפת דרכים" },
+            { icon: Target, color: "text-primary", value: `${progressPct}%`, label: "התקדמות כללית" },
             { icon: CheckCircle2, color: "text-[hsl(var(--success))]", value: progress.length, label: "מקצועות פעילים" },
             { icon: Clock, color: "text-[hsl(var(--warning))]", value: subjectsAtRisk, label: "דורשים תשומת לב" },
           ].map((stat, i) => (
@@ -163,11 +142,6 @@ const StudentHomePage = () => {
                     {card.comingSoon && (
                       <span className="text-[9px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-medium">
                         בקרוב
-                      </span>
-                    )}
-                    {card.badge && (
-                      <span className="text-[9.5px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
-                        {card.badge}
                       </span>
                     )}
                   </div>

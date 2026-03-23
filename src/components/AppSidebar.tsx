@@ -20,6 +20,7 @@ const allMenuItems = [
   { title: "קבוצות", icon: Layers, path: "/groups", roles: ["admin", "teacher", "coach"] },
   { title: "מעקב לימודי", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
   { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
+  { title: "לוח שנה", icon: CalendarDays, path: "/calendar", roles: ["admin", "teacher", "coach", "student"] },
   { title: "ניהול מערכת", icon: Database, path: "/data-management", roles: ["admin"] },
 ];
 
