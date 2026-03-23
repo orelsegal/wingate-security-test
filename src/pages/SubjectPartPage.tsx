@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { saveLastVisited } from "@/pages/RoleHomePage";
 import { useEffect } from "react";
+import DataExportTools from "@/components/DataExportTools";
 
 /* ── Part definitions per subject ── */
 interface TopicDef { name: string; }
