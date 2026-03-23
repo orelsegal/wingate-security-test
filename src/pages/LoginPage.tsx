@@ -119,27 +119,31 @@ const LoginPage = () => {
       }`}
       dir="rtl"
     >
-      {/* Decorative background circles */}
+      {/* Decorative pastel background circles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-[5%] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(152,34%,34%,0.05) 0%, transparent 60%)" }}
+          style={{ background: "radial-gradient(circle, hsla(152,40%,60%,0.08) 0%, transparent 55%)" }}
         />
         <div
           className="absolute bottom-[-8%] right-[-8%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(35,30%,80%,0.08) 0%, transparent 60%)" }}
+          style={{ background: "radial-gradient(circle, hsla(35,50%,78%,0.12) 0%, transparent 55%)" }}
         />
         <div
-          className="absolute top-[55%] left-[-12%] w-[400px] h-[400px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(152,30%,50%,0.04) 0%, transparent 60%)" }}
+          className="absolute top-[55%] left-[-12%] w-[450px] h-[450px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(210,40%,75%,0.09) 0%, transparent 55%)" }}
         />
         <div
-          className="absolute top-[-10%] right-[10%] w-[300px] h-[300px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(210,20%,70%,0.05) 0%, transparent 60%)" }}
+          className="absolute top-[-10%] right-[10%] w-[350px] h-[350px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(350,35%,80%,0.07) 0%, transparent 55%)" }}
         />
         <div
-          className="absolute bottom-[20%] left-[60%] w-[250px] h-[250px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsla(150,25%,60%,0.03) 0%, transparent 60%)" }}
+          className="absolute bottom-[20%] left-[60%] w-[300px] h-[300px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(270,30%,78%,0.06) 0%, transparent 55%)" }}
+        />
+        <div
+          className="absolute top-[30%] right-[55%] w-[250px] h-[250px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsla(150,35%,70%,0.07) 0%, transparent 55%)" }}
         />
       </div>
 
