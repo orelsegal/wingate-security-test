@@ -8,6 +8,7 @@ import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
 import { useMemo, useEffect } from "react";
 import { saveLastVisited } from "@/pages/RoleHomePage";
+import DataExportTools from "@/components/DataExportTools";
 
 /* ── Part definitions ── */
 interface PartDef {
