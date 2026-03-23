@@ -24,7 +24,7 @@ const subjectRubrics: Record<string, RubricDef[]> = {
     {
       id: "hist-70", title: "70%", weight: "70%",
       topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"],
-      courseUrl: "https://grade-compass-coach.lovable.app/",
+      courseUrl: "/history-course",
       courseLabel: "כניסה לקורס היסטוריה"
     },
   ],
