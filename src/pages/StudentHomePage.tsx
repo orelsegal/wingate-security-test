@@ -1,25 +1,67 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
-import { BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target, CalendarDays, Brain, GraduationCap } from "lucide-react";
+import {
+  BookOpen,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  Target,
+  CalendarDays,
+  GraduationCap,
+  TrendingUp,
+  Play,
+  ChevronLeft,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import WingateBadge from "@/components/WingateBadge";
+
+const LAST_VISITED_KEY = "wingate_last_visited";
+
+interface LastVisited {
+  path: string;
+  label: string;
+  timestamp: number;
+}
+
+const getLastVisited = (): LastVisited | null => {
+  try {
+    const raw = localStorage.getItem(LAST_VISITED_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
 const StudentHomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const studentId = user?.scopeFilter?.[0] || "";
+
   const { data: student, isLoading } = useStudent(studentId);
   const { data: progress = [] } = useStudentProgress(studentId);
   const { data: roadmap = [] } = useStudentRoadmap(studentId, student?.math_level ?? 3);
 
-  const completedRoadmapCount = useMemo(() => roadmap.filter((r: any) => r.completed).length, [roadmap]);
+  const [last, setLast] = useState<LastVisited | null>(null);
+
+  useEffect(() => {
+    setLast(getLastVisited());
+  }, []);
+
+  const completedRoadmapCount = useMemo(
+    () => roadmap.filter((r: any) => r.completed).length,
+    [roadmap]
+  );
+
   const totalRoadmapCount = roadmap.length;
-  const progressPct = totalRoadmapCount > 0 ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100) : 0;
+  const progressPct =
+    totalRoadmapCount > 0
+      ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100)
+      : 0;
 
   const subjectsAtRisk = useMemo(
     () => progress.filter((p: any) => p.status === "red" || p.status === "yellow").length,
-    [progress],
+    [progress]
   );
 
   if (isLoading) {
@@ -34,132 +76,148 @@ const StudentHomePage = () => {
     {
       id: "subjects",
       title: "מקצועות",
-      description: "צפייה במקצועות, יחידות לימוד והתקדמות",
+      description: "כניסה למקצועות, חלקי בגרות וקורסים",
       icon: BookOpen,
-      color: "bg-[hsl(270,25%,94%)]",
+      color: "bg-[hsl(270,25%,93%)]",
       iconColor: "text-[hsl(270,35%,50%)]",
-      action: () => navigate("/subjects"),
+      path: "/courses",
     },
     {
-      id: "profile",
-      title: "הפרופיל שלי",
-      description: "ציונים, התקדמות ומצב לימודי מלא",
+      id: "progress",
+      title: "ההתקדמות שלי",
+      description: "התקדמות, משימות וסטטוס לימודי",
+      icon: TrendingUp,
+      color: "bg-[hsl(210,40%,93%)]",
+      iconColor: "text-[hsl(210,45%,48%)]",
+      path: "/courses",
+    },
+    {
+      id: "grades",
+      title: "ציונים",
+      description: "מבחנים, עבודות והישגים",
       icon: GraduationCap,
-      color: "bg-primary/10",
-      iconColor: "text-primary",
-      action: () => navigate(`/students/${studentId}`),
+      color: "bg-[hsl(35,35%,93%)]",
+      iconColor: "text-[hsl(35,45%,42%)]",
+      path: "/courses",
     },
     {
       id: "calendar",
       title: "לוח שנה",
-      description: "משימות, מבחנים ומפגשים קרובים",
+      description: "משימות, מבחנים, שיעורים ואירועים",
       icon: CalendarDays,
-      color: "bg-secondary",
-      iconColor: "text-foreground/80",
-      action: () => navigate("/calendar"),
-    },
-    {
-      id: "smartbase",
-      title: "וינגייט חכם",
-      description: "ליווי לימודי חכם ותכנון שבועי",
-      icon: Brain,
-      color: "bg-[hsl(35,35%,93%)]",
-      iconColor: "text-[hsl(35,45%,42%)]",
-      action: () => {},
-      comingSoon: true,
+      color: "bg-[hsl(150,25%,93%)]",
+      iconColor: "text-[hsl(150,35%,42%)]",
+      path: "/calendar",
     },
   ];
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
-      {/* Welcome */}
       <section className="mb-8">
         <div className="flex items-center gap-4 mb-6">
           <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
           <div>
             <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
-              שלום, {student?.full_name || user?.name}
+              שלום, {user?.name}
             </h1>
             <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
-              {student?.sport} · {student?.class_name} · סמסטר א׳ תשפ״ה
+              תלמיד/ה · סמסטר א׳ תשפ״ה
             </p>
-            <div
-              className="mt-3 h-[1.5px] w-[72px] rounded-full"
-              style={{ background: "linear-gradient(to left, transparent, hsl(var(--primary-soft) / 0.5), transparent)" }}
-            />
           </div>
         </div>
+      </section>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { icon: Target, color: "text-primary", value: `${progressPct}%`, label: "התקדמות כללית" },
-            { icon: CheckCircle2, color: "text-[hsl(var(--success))]", value: progress.length, label: "מקצועות פעילים" },
-            { icon: Clock, color: "text-[hsl(var(--warning))]", value: subjectsAtRisk, label: "דורשים תשומת לב" },
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
-              style={{ animationDelay: `${i * 40}ms` }}
-            >
-              <div className="flex items-center justify-center mb-1.5">
-                <stat.icon className={`h-4 w-4 ${stat.color}`} strokeWidth={1.5} />
+      {last && (
+        <div className="mb-6 animate-fade-in-up">
+          <p className="text-[10.5px] font-medium text-primary/50 mb-2.5 tracking-tight">
+            המשך מהפעם האחרונה
+          </p>
+          <button
+            onClick={() => navigate(last.path)}
+            className="w-full group bg-primary/5 rounded-2xl border border-primary/10 p-4 text-start transition-all duration-300 hover:bg-primary/8 cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Play className="h-4 w-4 text-primary" strokeWidth={1.5} />
               </div>
-              <p className="text-[18px] font-semibold text-foreground leading-none">{stat.value}</p>
-              <p className="text-[10px] text-muted-foreground mt-1 font-medium">{stat.label}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12.5px] font-semibold text-foreground leading-tight">
+                  {last.label}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  חזור למקום שעצרת
+                </p>
+              </div>
+              <ChevronLeft
+                className="h-4 w-4 text-primary/30 group-hover:text-primary/60 transition-colors"
+                strokeWidth={1.5}
+              />
             </div>
-          ))}
+          </button>
         </div>
-      </section>
+      )}
 
-      {/* Action Cards */}
-      <section>
-        <h2 className="text-[11.5px] font-medium text-primary/60 mb-5 tracking-tight">המרחב שלי</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {cards.map((card, i) => (
-            <button
-              key={card.id}
-              onClick={card.action}
-              disabled={card.comingSoon}
-              className={`group relative bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 animate-fade-in-up ${
-                card.comingSoon
-                  ? "opacity-45 cursor-not-allowed"
-                  : "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
-              }`}
-              style={{ animationDelay: `${80 + i * 50}ms` }}
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className={`w-11 h-11 rounded-xl ${card.color} flex items-center justify-center shrink-0 transition-transform duration-300 ${
-                    !card.comingSoon ? "group-hover:scale-105" : ""
-                  }`}
-                >
-                  <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} strokeWidth={1.5} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-[13.5px] font-semibold text-foreground leading-tight">{card.title}</h3>
-                    {card.comingSoon && (
-                      <span className="text-[9px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                        בקרוב
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11.5px] text-muted-foreground mt-1.5 leading-relaxed">{card.description}</p>
-                </div>
-                {!card.comingSoon && (
-                  <ChevronLeft
-                    className="h-4 w-4 text-border shrink-0 mt-0.5 group-hover:text-primary/50 transition-colors duration-200"
-                    strokeWidth={1.5}
-                  />
-                )}
+      <div className="grid gap-3 mb-7 grid-cols-3">
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-center mb-1.5">
+            <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
+          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">{progressPct}%</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">התקדמות כללית</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-center mb-1.5">
+            <Clock className="h-4 w-4 text-[hsl(var(--warning))]" strokeWidth={1.5} />
+          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">{progress.length}</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">מקצועות פעילים</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-center mb-1.5">
+            <Target className="h-4 w-4 text-destructive" strokeWidth={1.5} />
+          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">{subjectsAtRisk}</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">דורשים חיזוק</p>
+        </div>
+      </div>
+
+      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים מרכזיים</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {cards.map((card, i) => (
+          <button
+            key={card.id}
+            onClick={() => navigate(card.path)}
+            className="group relative bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 animate-fade-in-up shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
+            style={{ animationDelay: `${80 + i * 50}ms` }}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className={`w-11 h-11 rounded-xl ${card.color} flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105`}
+              >
+                <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} strokeWidth={1.5} />
               </div>
-            </button>
-          ))}
-        </div>
-      </section>
 
-      {/* Branding */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[13.5px] font-semibold text-foreground leading-tight">
+                  {card.title}
+                </h3>
+                <p className="text-[11.5px] text-muted-foreground mt-1.5 leading-relaxed">
+                  {card.description}
+                </p>
+              </div>
+
+              <ChevronLeft
+                className="h-4 w-4 text-border shrink-0 mt-0.5 group-hover:text-primary/50 transition-colors duration-200"
+                strokeWidth={1.5}
+              />
+            </div>
+          </button>
+        ))}
+      </div>
+
       <div className="mt-16 text-center">
         <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
           האקדמיה למצוינות · מכון וינגייט
