@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2, ClipboardList, GraduationCap, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2, ClipboardList, GraduationCap, AlertTriangle, Sparkles, Play } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
@@ -11,12 +11,15 @@ interface RubricDef {
   title: string;
   weight: string;
   topics: string[];
+  /** Optional: link to an embedded course page */
+  courseUrl?: string;
+  courseLabel?: string;
 }
 
 const subjectRubrics: Record<string, RubricDef[]> = {
   "היסטוריה": [
     { id: "hist-30", title: "רובריקת 30%", weight: "30%", topics: ["הלאומיות באירופה", "מלחמת העולם הראשונה", "התקופה שבין המלחמות"] },
-    { id: "hist-70", title: "רובריקת 70%", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"] },
+    { id: "hist-70", title: "רובריקת 70%", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"], courseUrl: "https://grade-compass-coach.lovable.app/", courseLabel: "כניסה לקורס היסטוריה" },
   ],
   "אזרחות": [
     { id: "civ-30", title: "רובריקת 30%", weight: "30%", topics: ["עקרונות הדמוקרטיה", "זכויות האדם", "הכרזת העצמאות"] },
