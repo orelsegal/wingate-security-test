@@ -184,8 +184,12 @@ const LoginPage = () => {
 
         {/* Footer branding */}
         <div className="text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
-          <p className="text-[9px] font-normal tracking-[0.15em] text-primary-soft/50">
-            מכון וינגייט • WINGATE INSTITUTE
+          <div className="w-12 h-[1px] rounded-full bg-primary/15 mx-auto mb-3" />
+          <p className="text-[10px] font-medium tracking-[0.18em] text-primary/45">
+            WINGATE INSTITUTE
+          </p>
+          <p className="text-[9px] font-normal tracking-[0.12em] text-primary/30 mt-1">
+            מכון וינגייט
           </p>
         </div>
       </div>
