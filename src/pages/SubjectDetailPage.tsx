@@ -24,7 +24,7 @@ const subjectRubrics: Record<string, RubricDef[]> = {
     {
       id: "hist-70", title: "70%", weight: "70%",
       topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"],
-      courseUrl: "https://grade-compass-coach.lovable.app/",
+      courseUrl: "/history-course",
       courseLabel: "כניסה לקורס היסטוריה"
     },
   ],
@@ -214,7 +214,7 @@ const SubjectDetailPage = () => {
                 {/* Course entry point */}
                 {rubric.courseUrl && (
                   <button
-                    onClick={() => navigate(`/external?type=learning&url=${encodeURIComponent(rubric.courseUrl!)}`)}
+                    onClick={() => navigate(rubric.courseUrl!)}
                     className="w-full flex items-center gap-2.5 mb-3 p-2.5 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors duration-150"
                   >
                     <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
