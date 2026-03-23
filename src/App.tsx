@@ -19,6 +19,7 @@ import RoleHomePage from "./pages/RoleHomePage.tsx";
 import DashboardContent from "./components/DashboardContent.tsx";
 import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
 import SubjectSelectionPage from "./pages/SubjectSelectionPage.tsx";
+import SubjectDetailPage from "./pages/SubjectDetailPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
+              <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
