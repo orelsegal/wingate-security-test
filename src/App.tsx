@@ -56,6 +56,7 @@ const App = () => (
               <Route path="/subjects" element={<SubjectSelectionPage />} />
               <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
               <Route path="/teacher-subjects" element={<TeacherSubjectEditorPage />} />
+              <Route path="/history-course" element={<HistoryCoursePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
