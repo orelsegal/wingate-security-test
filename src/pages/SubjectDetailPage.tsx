@@ -57,6 +57,10 @@ const SubjectDetailPage = () => {
   const { data: progress = [], isLoading } = useStudentProgress(studentId);
   const decoded = decodeURIComponent(subjectName || "");
 
+  useEffect(() => {
+    if (decoded) saveLastVisited(`/subjects/${encodeURIComponent(decoded)}`, decoded);
+  }, [decoded]);
+
   const subjectProgress = useMemo(
     () => progress.find((p: any) => p.subjects?.subject_name === decoded),
     [progress, decoded]
