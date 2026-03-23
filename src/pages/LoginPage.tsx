@@ -58,7 +58,7 @@ const LoginPage = () => {
 
   const findUser = (role: UserRole) => demoUsers.find((u) => u.role === role)!;
 
-  const RoleCard = ({ role, delay }: { role: UserRole; delay: number }) => {
+  const RoleCard = ({ role, delay, wide }: { role: UserRole; delay: number; wide?: boolean }) => {
     const demoUser = findUser(role);
     const Icon = roleIcons[role];
     const isSelected = selectedRole === role;
@@ -70,7 +70,9 @@ const LoginPage = () => {
         onClick={() => handleLogin(demoUser)}
         onMouseEnter={() => setHoveredRole(role)}
         onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out py-5 px-3 ${
+        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out w-full ${
+          wide ? "py-6 px-4" : "py-5 px-3"
+        } ${
           isSelected
             ? "shadow-md scale-[0.97] border-primary/20"
             : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-[var(--shadow-card)] border-border/50 ${
@@ -79,26 +81,25 @@ const LoginPage = () => {
         }`}
         style={{ animationDelay: `${delay}ms` }}
       >
-        {/* Circular icon background */}
         <div
-          className={`w-[52px] h-[52px] rounded-full ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
+          className={`${wide ? "w-[58px] h-[58px]" : "w-[52px] h-[52px]"} rounded-full ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
             isActive ? "scale-110" : ""
           }`}
         >
           <Icon
-            className={`h-[22px] w-[22px] ${roleIconColors[role]}`}
+            className={`${wide ? "h-[24px] w-[24px]" : "h-[22px] w-[22px]"} ${roleIconColors[role]}`}
             strokeWidth={1.5}
           />
         </div>
         <div className="flex flex-col items-center gap-0.5">
           <p
-            className={`text-[14px] font-medium leading-tight transition-colors duration-200 ${
+            className={`${wide ? "text-[15px]" : "text-[14px]"} font-medium leading-tight transition-colors duration-200 ${
               isActive ? "text-primary" : "text-foreground/85"
             }`}
           >
             {roleLabels[role]}
           </p>
-          <p className="text-[10.5px] text-muted-foreground/55 leading-tight">
+          <p className={`${wide ? "text-[11px]" : "text-[10.5px]"} text-muted-foreground/55 leading-tight`}>
             {roleDescriptions[role]}
           </p>
         </div>
