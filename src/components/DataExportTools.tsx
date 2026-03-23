@@ -15,9 +15,30 @@ interface Student {
   notes?: string | null;
 }
 
+interface SubjectProgress {
+  subjectName: string;
+  grade?: number | null;
+  status?: string;
+  completionPercent?: number;
+  absences?: number;
+  notes?: string | null;
+  missingItems?: string[];
+  coveredTopics?: string[];
+}
+
 interface DataExportToolsProps {
-  students: Student[];
+  students?: Student[];
+  /** For single-student export */
+  student?: Student;
+  /** Subject progress for the student or group */
+  subjectProgress?: SubjectProgress[];
   label?: string;
+  /** Context info for WhatsApp message header */
+  contextLabel?: string;
+  /** Show import button */
+  showImport?: boolean;
+  /** Compact mode - fewer buttons */
+  compact?: boolean;
 }
 
 const statusLabels: Record<string, string> = {
@@ -26,34 +47,106 @@ const statusLabels: Record<string, string> = {
   red: "בסיכון",
 };
 
-export default function DataExportTools({ students, label = "ספורטאים" }: DataExportToolsProps) {
+const statusEmoji: Record<string, string> = {
+  green: "🟢",
+  yellow: "🟡",
+  red: "🔴",
+};
+
+export default function DataExportTools({
+  students,
+  student,
+  subjectProgress,
+  label = "ספורטאים",
+  contextLabel,
+  showImport = false,
+  compact = false,
+}: DataExportToolsProps) {
   const [importOpen, setImportOpen] = useState(false);
 
+  const effectiveStudents = students || (student ? [student] : []);
+  const header = contextLabel || label;
+
   const handleExcelExport = () => {
-    const data = students.map(s => ({
-      "שם מלא": s.full_name,
-      "ענף": s.sport,
-      "כיתה": s.class_name,
-      "ממוצע": s.avg_score || 0,
-      "סטטוס": statusLabels[s.overall_status] || s.overall_status,
-      "אחוז השלמה": s.completion_percent || 0,
-      "הערות": s.notes || "",
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, label);
-    XLSX.writeFile(wb, `${label}_ייצוא.xlsx`);
-    toast.success(`${data.length} ${label} יוצאו לאקסל`);
+    if (subjectProgress && subjectProgress.length > 0) {
+      // Export subject progress data
+      const data = subjectProgress.map(sp => ({
+        "מקצוע": sp.subjectName,
+        "ציון": sp.grade ?? "—",
+        "סטטוס": statusLabels[sp.status || ""] || sp.status || "—",
+        "אחוז השלמה": sp.completionPercent ?? 0,
+        "חיסורים": sp.absences ?? 0,
+        "נושאים שנלמדו": (sp.coveredTopics || []).join(", "),
+        "חוסרים": (sp.missingItems || []).join(", "),
+        "הערות": sp.notes || "",
+      }));
+
+      // If single student, add student info sheet
+      const wb = XLSX.utils.book_new();
+      if (student) {
+        const studentData = [{
+          "שם מלא": student.full_name,
+          "ענף": student.sport,
+          "כיתה": student.class_name,
+          "ממוצע": student.avg_score || 0,
+          "סטטוס": statusLabels[student.overall_status] || student.overall_status,
+          "אחוז השלמה": student.completion_percent || 0,
+          "הערות": student.notes || "",
+        }];
+        const ws1 = XLSX.utils.json_to_sheet(studentData);
+        XLSX.utils.book_append_sheet(wb, ws1, "פרטי תלמיד");
+      }
+      const ws2 = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws2, "מקצועות");
+      XLSX.writeFile(wb, `${header}_ייצוא.xlsx`);
+      toast.success(`נתוני ${header} יוצאו לאקסל`);
+    } else {
+      // Export students list
+      const data = effectiveStudents.map(s => ({
+        "שם מלא": s.full_name,
+        "ענף": s.sport,
+        "כיתה": s.class_name,
+        "ממוצע": s.avg_score || 0,
+        "סטטוס": statusLabels[s.overall_status] || s.overall_status,
+        "אחוז השלמה": s.completion_percent || 0,
+        "הערות": s.notes || "",
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, label);
+      XLSX.writeFile(wb, `${label}_ייצוא.xlsx`);
+      toast.success(`${data.length} ${label} יוצאו לאקסל`);
+    }
   };
 
   const handleWhatsAppExport = () => {
-    const lines = students.map(s => {
-      const status = statusLabels[s.overall_status] || s.overall_status;
-      const emoji = s.overall_status === "green" ? "🟢" : s.overall_status === "yellow" ? "🟡" : "🔴";
-      return `${emoji} ${s.full_name} | ${s.sport} | ${s.class_name} | ממוצע: ${s.avg_score || "—"} | ${status}${s.notes ? ` | הערה: ${s.notes}` : ""}`;
-    });
+    let text = `📊 דוח ${header} – האקדמיה למצוינות\n${"─".repeat(30)}\n`;
 
-    const text = `📊 דוח ${label} – האקדמיה למצוינות\n${"─".repeat(30)}\n${lines.join("\n")}\n${"─".repeat(30)}\nסה״כ: ${students.length} ${label}`;
+    if (subjectProgress && subjectProgress.length > 0 && student) {
+      // Single student with subjects
+      text += `👤 ${student.full_name} | ${student.sport} | ${student.class_name}\n`;
+      text += `${statusEmoji[student.overall_status] || "⚪"} סטטוס: ${statusLabels[student.overall_status] || student.overall_status} | ממוצע: ${student.avg_score || "—"}\n`;
+      text += `${"─".repeat(30)}\n📚 מקצועות:\n`;
+      subjectProgress.forEach(sp => {
+        const emoji = statusEmoji[sp.status || ""] || "⚪";
+        text += `${emoji} ${sp.subjectName}: ציון ${sp.grade ?? "—"} | ${sp.completionPercent ?? 0}%`;
+        if (sp.missingItems && sp.missingItems.length > 0) {
+          text += ` | חוסרים: ${sp.missingItems.join(", ")}`;
+        }
+        if (sp.notes) text += ` | ${sp.notes}`;
+        text += "\n";
+      });
+    } else {
+      // Multiple students
+      effectiveStudents.forEach(s => {
+        const emoji = statusEmoji[s.overall_status] || "⚪";
+        text += `${emoji} ${s.full_name} | ${s.sport} | ${s.class_name} | ממוצע: ${s.avg_score || "—"} | ${statusLabels[s.overall_status] || s.overall_status}`;
+        if (s.notes) text += ` | הערה: ${s.notes}`;
+        text += "\n";
+      });
+    }
+
+    text += `${"─".repeat(30)}\nסה״כ: ${subjectProgress ? `${subjectProgress.length} מקצועות` : `${effectiveStudents.length} ${label}`}`;
 
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
@@ -84,16 +177,18 @@ export default function DataExportTools({ students, label = "ספורטאים" }
       <div className="flex items-center gap-1.5 flex-wrap">
         <Button variant="outline" size="sm" className="gap-1.5 text-[11px]" onClick={handleExcelExport}>
           <FileSpreadsheet className="h-3.5 w-3.5" />
-          ייצא לאקסל
+          {compact ? "אקסל" : "ייצא לאקסל"}
         </Button>
         <Button variant="outline" size="sm" className="gap-1.5 text-[11px]" onClick={handleWhatsAppExport}>
           <MessageCircle className="h-3.5 w-3.5" />
-          שלח לוואטסאפ
+          {compact ? "וואטסאפ" : "שלח לוואטסאפ"}
         </Button>
-        <Button variant="outline" size="sm" className="gap-1.5 text-[11px]" onClick={() => setImportOpen(true)}>
-          <Upload className="h-3.5 w-3.5" />
-          ייבא מאקסל
-        </Button>
+        {showImport && (
+          <Button variant="outline" size="sm" className="gap-1.5 text-[11px]" onClick={() => setImportOpen(true)}>
+            <Upload className="h-3.5 w-3.5" />
+            ייבא מאקסל
+          </Button>
+        )}
       </div>
 
       <Dialog open={importOpen} onOpenChange={setImportOpen}>
