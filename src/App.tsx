@@ -13,6 +13,8 @@ import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
 import DataManagementPage from "./pages/DataManagementPage.tsx";
 import StudentHomePage from "./pages/StudentHomePage.tsx";
+import StudentLearningTrafficLight from "./pages/StudentLearningTrafficLight.tsx";
+import StudentRoadmapTrafficLight from "./pages/StudentRoadmapTrafficLight.tsx";
 import RoleHomePage from "./pages/RoleHomePage.tsx";
 import DashboardContent from "./components/DashboardContent.tsx";
 import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
