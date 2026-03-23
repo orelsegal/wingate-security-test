@@ -123,18 +123,23 @@ const LoginPage = () => {
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Upper-right — large soft green */}
         <div
-          className="absolute -top-[15%] -right-[10%] w-[620px] h-[620px] rounded-full blur-3xl"
-          style={{ background: "radial-gradient(circle, hsla(150,35%,72%,0.10) 0%, transparent 65%)" }}
+          className="absolute -top-[12%] -right-[8%] w-[620px] h-[620px] rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, hsla(150,38%,70%,0.14) 0%, transparent 60%)" }}
         />
-        {/* Middle-right — subtle warm beige */}
+        {/* Middle-right — warm beige */}
         <div
-          className="absolute top-[40%] -right-[5%] w-[400px] h-[400px] rounded-full blur-2xl"
-          style={{ background: "radial-gradient(circle, hsla(38,40%,82%,0.09) 0%, transparent 60%)" }}
+          className="absolute top-[38%] -right-[3%] w-[420px] h-[420px] rounded-full blur-2xl"
+          style={{ background: "radial-gradient(circle, hsla(38,42%,78%,0.12) 0%, transparent 58%)" }}
         />
         {/* Lower-left — large soft warm gray-green */}
         <div
-          className="absolute -bottom-[12%] -left-[15%] w-[580px] h-[580px] rounded-full blur-3xl"
-          style={{ background: "radial-gradient(circle, hsla(155,25%,68%,0.08) 0%, transparent 65%)" }}
+          className="absolute -bottom-[10%] -left-[12%] w-[580px] h-[580px] rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, hsla(155,28%,65%,0.11) 0%, transparent 60%)" }}
+        />
+        {/* Hero area — very subtle green halo */}
+        <div
+          className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[480px] h-[480px] rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, hsla(148,30%,68%,0.08) 0%, transparent 55%)" }}
         />
       </div>
 
