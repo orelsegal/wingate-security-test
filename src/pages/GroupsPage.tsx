@@ -27,6 +27,8 @@ const statusOptions = [
 const GroupsPage = () => {
   const navigate = useNavigate();
   const { data: students = [], isLoading } = useStudents();
+  const { user } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "teacher" || user?.role === "coach";
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
