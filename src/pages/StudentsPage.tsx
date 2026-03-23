@@ -192,10 +192,7 @@ const StudentsPage = () => {
             סינון
             {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}>
-            <Download className="h-3.5 w-3.5" />
-            ייצוא
-          </Button>
+          <DataExportTools students={filtered} label="ספורטאים" />
 
           {/* View toggle */}
           <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5">
