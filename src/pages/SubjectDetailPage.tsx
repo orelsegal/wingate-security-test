@@ -171,6 +171,19 @@ const SubjectDetailPage = () => {
                 </div>
                 <Progress value={rubricPct} className="h-1.5 bg-muted/50 mb-3" />
 
+                {/* Course entry point if defined */}
+                {rubric.courseUrl && (
+                  <button
+                    onClick={() => navigate(`/external?type=learning&url=${encodeURIComponent(rubric.courseUrl!)}`)}
+                    className="w-full flex items-center gap-2.5 mb-3 p-2.5 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors duration-150"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Play className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                    </div>
+                    <span className="text-[11px] font-semibold text-primary">{rubric.courseLabel}</span>
+                  </button>
+                )}
+
                 <div className="flex flex-col gap-1.5">
                   {rubric.topics.map((topic, ti) => {
                     const done = coveredTopics.includes(topic);

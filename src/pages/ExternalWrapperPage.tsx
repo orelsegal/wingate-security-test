@@ -2,10 +2,10 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowRight, Calendar, Brain, BookOpen, Loader2 } from "lucide-react";
 import { useState } from "react";
 
-const titles: Record<string, { title: string; subtitle: string; icon: typeof Calendar; iconColor: string; iconBg: string }> = {
-  schedule: { title: "מערכת שעות", subtitle: "צפייה בלוח הזמנים השבועי", icon: Calendar, iconColor: "text-[hsl(210,40%,50%)]", iconBg: "bg-[hsl(210,30%,94%)]" },
-  smartbase: { title: "וינגייט חכם", subtitle: "כלים חכמים ומשאבי למידה", icon: Brain, iconColor: "text-[hsl(270,35%,50%)]", iconBg: "bg-[hsl(270,25%,94%)]" },
-  learning: { title: "התחל למידה", subtitle: "גישה לקורסים ומשאבי למידה", icon: BookOpen, iconColor: "text-[hsl(35,40%,45%)]", iconBg: "bg-[hsl(35,30%,94%)]" },
+const titles: Record<string, { title: string; subtitle: string; icon: typeof Calendar }> = {
+  schedule: { title: "מערכת שעות", subtitle: "צפייה בלוח הזמנים השבועי", icon: Calendar },
+  smartbase: { title: "וינגייט חכם", subtitle: "כלים חכמים ומשאבי למידה", icon: Brain },
+  learning: { title: "התחל למידה", subtitle: "גישה לקורסים ומשאבי למידה", icon: BookOpen },
 };
 
 const ExternalWrapperPage = () => {
@@ -19,19 +19,19 @@ const ExternalWrapperPage = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-56px)]" dir="rtl">
-      {/* Sub-header */}
-      <div className="flex items-center gap-3.5 px-4 md:px-7 py-3 bg-card border-b border-border">
+      {/* Sub-header — Wingate-native styling */}
+      <div className="flex items-center gap-3 px-5 md:px-7 py-3.5 bg-card border-b border-border shadow-[var(--shadow-card)]">
         <button
           onClick={() => navigate(-1)}
           className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150"
         >
           <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
         </button>
-        <div className={`w-9 h-9 rounded-xl ${meta.iconBg} flex items-center justify-center shrink-0`}>
-          <Icon className={`h-[15px] w-[15px] ${meta.iconColor}`} strokeWidth={1.5} />
+        <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+          <Icon className="h-[15px] w-[15px] text-primary" strokeWidth={1.5} />
         </div>
-        <div>
-          <h2 className="text-[13px] font-medium text-foreground leading-tight">{meta.title}</h2>
+        <div className="flex-1">
+          <h2 className="text-[13px] font-semibold text-foreground leading-tight">{meta.title}</h2>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5 font-normal">{meta.subtitle}</p>
         </div>
       </div>
