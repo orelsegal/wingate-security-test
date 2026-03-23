@@ -6,7 +6,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { saveLastVisited } from "@/pages/RoleHomePage";
 
 /* ── rubric / module definitions ── */
 interface RubricDef {
@@ -55,6 +56,10 @@ const SubjectDetailPage = () => {
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: progress = [], isLoading } = useStudentProgress(studentId);
   const decoded = decodeURIComponent(subjectName || "");
+
+  useEffect(() => {
+    if (decoded) saveLastVisited(`/subjects/${encodeURIComponent(decoded)}`, decoded);
+  }, [decoded]);
 
   const subjectProgress = useMemo(
     () => progress.find((p: any) => p.subjects?.subject_name === decoded),
