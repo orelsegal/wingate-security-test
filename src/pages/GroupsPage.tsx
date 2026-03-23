@@ -2,7 +2,9 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Users, ChevronLeft, Loader2, Search, Filter, BookOpen } from "lucide-react";
 import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
+import { useAuth } from "@/context/AuthContext";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import DataExportTools from "@/components/DataExportTools";
 
 const classOrder = ["י״ב", "י״א", "י׳", "ט׳"];
 
