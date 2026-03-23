@@ -265,13 +265,16 @@ const CalendarPage = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] font-medium text-foreground">{ev.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className={`text-[10px] font-medium ${typeConfig[ev.type].textClass}`}>
-                        {typeConfig[ev.type].label}
-                      </p>
-                      {ev.subject && (
-                        <span className="text-[10px] text-muted-foreground">· {ev.subject}</span>
-                      )}
+                       <p className={`text-[10px] font-medium ${typeConfig[ev.type]?.textClass || "text-muted-foreground"}`}>
+                         {typeConfig[ev.type]?.label || ev.type}
+                       </p>
+                       {ev.subject && (
+                         <span className="text-[10px] text-muted-foreground">· {ev.subject}</span>
+                       )}
                     </div>
+                    {ev.notes && (
+                      <p className="text-[9.5px] text-muted-foreground/70 mt-0.5">{ev.notes}</p>
+                    )}
                   </div>
                   {canEdit && (
                     <div className="flex items-center gap-1 shrink-0">
