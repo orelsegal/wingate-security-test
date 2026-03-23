@@ -1,10 +1,11 @@
-import { Users, TrendingUp, AlertTriangle, BarChart3, ChevronLeft, Loader2 } from "lucide-react";
+import { Users, TrendingUp, AlertTriangle, BarChart3, ChevronLeft, Loader2, Download } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useNavigate } from "react-router-dom";
 import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { useMemo } from "react";
+import DataExportTools from "@/components/DataExportTools";
 
 const DashboardContent = () => {
   const navigate = useNavigate();
