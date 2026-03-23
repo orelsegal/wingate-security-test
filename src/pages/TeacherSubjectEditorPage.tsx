@@ -1,40 +1,57 @@
-import { useState, useMemo } from "react";
-import { ArrowRight, Plus, Trash2, GripVertical, Save, Loader2, BookOpen, Globe, Calculator, Languages, Scroll, Scale } from "lucide-react";
+import { useState } from "react";
+import {
+  ArrowRight, Plus, Trash2, GripVertical, Save, BookOpen, Globe,
+  Calculator, Languages, Scroll, Scale, FileText, ClipboardList, Pencil
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 
-/* ── Static rubric definitions (editable in-memory for now) ── */
+/* ── Types ── */
+interface TopicItem {
+  name: string;
+}
+
+interface AssignmentItem {
+  id: string;
+  title: string;
+  grade?: number;
+  note?: string;
+}
+
 interface RubricItem {
   id: string;
   title: string;
   weight: string;
-  topics: string[];
+  topics: TopicItem[];
+  assignments: AssignmentItem[];
+  notes: string;
 }
 
 const initialRubrics: Record<string, RubricItem[]> = {
   "היסטוריה": [
-    { id: "hist-30", title: "רובריקת 30%", weight: "30%", topics: ["הלאומיות באירופה", "מלחמת העולם הראשונה", "התקופה שבין המלחמות"] },
-    { id: "hist-70", title: "רובריקת 70%", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"] },
+    { id: "hist-30", title: "30%", weight: "30%", topics: [{ name: "הלאומיות באירופה" }, { name: "מלחמת העולם הראשונה" }, { name: "התקופה שבין המלחמות" }], assignments: [], notes: "" },
+    { id: "hist-70", title: "70%", weight: "70%", topics: [{ name: "מלחמת העולם השנייה" }, { name: "השואה" }, { name: "הקמת המדינה" }, { name: "סכסוך ערבי-ישראלי" }], assignments: [], notes: "" },
   ],
   "אזרחות": [
-    { id: "civ-30", title: "רובריקת 30%", weight: "30%", topics: ["עקרונות הדמוקרטיה", "זכויות האדם", "הכרזת העצמאות"] },
-    { id: "civ-70", title: "רובריקת 70%", weight: "70%", topics: ["מוסדות השלטון", "חוקה ומשפט", "אזרחות פעילה", "מיעוטים בישראל"] },
+    { id: "civ-30", title: "30%", weight: "30%", topics: [{ name: "עקרונות הדמוקרטיה" }, { name: "זכויות האדם" }, { name: "הכרזת העצמאות" }], assignments: [], notes: "" },
+    { id: "civ-70", title: "70%", weight: "70%", topics: [{ name: "מוסדות השלטון" }, { name: "חוקה ומשפט" }, { name: "אזרחות פעילה" }, { name: "מיעוטים בישראל" }], assignments: [], notes: "" },
   ],
   "לשון": [
-    { id: "heb-20", title: "רובריקת 20%", weight: "20%", topics: ["תחביר בסיסי", "חלקי דיבר", "פיסוק"] },
-    { id: "heb-80", title: "רובריקת 80%", weight: "80%", topics: ["הבנת הנקרא", "כתיבה אקדמית", "לשון פורמלית", "מבנה טקסט"] },
+    { id: "heb-20", title: "20%", weight: "20%", topics: [{ name: "תחביר בסיסי" }, { name: "חלקי דיבר" }, { name: "פיסוק" }], assignments: [], notes: "" },
+    { id: "heb-80", title: "80%", weight: "80%", topics: [{ name: "הבנת הנקרא" }, { name: "כתיבה אקדמית" }, { name: "לשון פורמלית" }, { name: "מבנה טקסט" }], assignments: [], notes: "" },
   ],
   "מתמטיקה": [
-    { id: "math-1", title: "אלגברה ופונקציות", weight: "~35%", topics: ["משוואות", "פונקציה ליניארית", "פונקציה ריבועית"] },
-    { id: "math-2", title: "גיאומטריה וטריגונומטריה", weight: "~35%", topics: ["משולשים", "מעגל", "טריגונומטריה"] },
-    { id: "math-3", title: "הסתברות וסטטיסטיקה", weight: "~30%", topics: ["הסתברות", "התפלגויות", "סטטיסטיקה תיאורית"] },
+    { id: "math-1", title: "אלגברה ופונקציות", weight: "~35%", topics: [{ name: "משוואות" }, { name: "פונקציה ליניארית" }, { name: "פונקציה ריבועית" }], assignments: [], notes: "" },
+    { id: "math-2", title: "גיאומטריה וטריגונומטריה", weight: "~35%", topics: [{ name: "משולשים" }, { name: "מעגל" }, { name: "טריגונומטריה" }], assignments: [], notes: "" },
+    { id: "math-3", title: "הסתברות וסטטיסטיקה", weight: "~30%", topics: [{ name: "הסתברות" }, { name: "התפלגויות" }, { name: "סטטיסטיקה תיאורית" }], assignments: [], notes: "" },
   ],
   "אנגלית": [
-    { id: "eng-e", title: "Module E", weight: "Literature", topics: ["Unseen passages", "Literature – Play", "Literature – Poem"] },
-    { id: "eng-f", title: "Module F", weight: "Writing", topics: ["Essay writing", "Formal letter", "Report"] },
-    { id: "eng-g", title: "Module G", weight: "Oral", topics: ["Oral presentation", "Listening comprehension"] },
+    { id: "eng-e", title: "Module E", weight: "Literature", topics: [{ name: "Unseen passages" }, { name: "Literature – Play" }, { name: "Literature – Poem" }], assignments: [], notes: "" },
+    { id: "eng-f", title: "Module F", weight: "Writing", topics: [{ name: "Essay writing" }, { name: "Formal letter" }, { name: "Report" }], assignments: [], notes: "" },
+    { id: "eng-g", title: "Module G", weight: "Oral", topics: [{ name: "Oral presentation" }, { name: "Listening comprehension" }], assignments: [], notes: "" },
   ],
 };
 
@@ -53,11 +70,12 @@ const TeacherSubjectEditorPage = () => {
 
   const subjects = Object.keys(rubrics);
 
+  /* ── Rubric CRUD ── */
   const handleAddRubric = (subject: string) => {
     const newId = `${subject}-${Date.now()}`;
     setRubrics(prev => ({
       ...prev,
-      [subject]: [...(prev[subject] || []), { id: newId, title: "רובריקה חדשה", weight: "", topics: [] }],
+      [subject]: [...(prev[subject] || []), { id: newId, title: "יחידה חדשה", weight: "", topics: [], assignments: [], notes: "" }],
     }));
   };
 
@@ -68,43 +86,73 @@ const TeacherSubjectEditorPage = () => {
     }));
   };
 
-  const handleUpdateRubric = (subject: string, rubricId: string, field: "title" | "weight", value: string) => {
+  const handleUpdateRubric = (subject: string, rubricId: string, field: keyof RubricItem, value: any) => {
     setRubrics(prev => ({
       ...prev,
       [subject]: prev[subject].map(r => r.id === rubricId ? { ...r, [field]: value } : r),
     }));
   };
 
+  /* ── Topics ── */
   const handleAddTopic = (subject: string, rubricId: string) => {
     setRubrics(prev => ({
       ...prev,
-      [subject]: prev[subject].map(r => r.id === rubricId ? { ...r, topics: [...r.topics, ""] } : r),
+      [subject]: prev[subject].map(r => r.id === rubricId ? { ...r, topics: [...r.topics, { name: "" }] } : r),
     }));
   };
 
-  const handleUpdateTopic = (subject: string, rubricId: string, topicIndex: number, value: string) => {
+  const handleUpdateTopic = (subject: string, rubricId: string, idx: number, value: string) => {
     setRubrics(prev => ({
       ...prev,
       [subject]: prev[subject].map(r =>
-        r.id === rubricId ? { ...r, topics: r.topics.map((t, i) => i === topicIndex ? value : t) } : r
+        r.id === rubricId ? { ...r, topics: r.topics.map((t, i) => i === idx ? { name: value } : t) } : r
       ),
     }));
   };
 
-  const handleDeleteTopic = (subject: string, rubricId: string, topicIndex: number) => {
+  const handleDeleteTopic = (subject: string, rubricId: string, idx: number) => {
     setRubrics(prev => ({
       ...prev,
       [subject]: prev[subject].map(r =>
-        r.id === rubricId ? { ...r, topics: r.topics.filter((_, i) => i !== topicIndex) } : r
+        r.id === rubricId ? { ...r, topics: r.topics.filter((_, i) => i !== idx) } : r
+      ),
+    }));
+  };
+
+  /* ── Assignments ── */
+  const handleAddAssignment = (subject: string, rubricId: string) => {
+    const newA: AssignmentItem = { id: `a-${Date.now()}`, title: "" };
+    setRubrics(prev => ({
+      ...prev,
+      [subject]: prev[subject].map(r => r.id === rubricId ? { ...r, assignments: [...r.assignments, newA] } : r),
+    }));
+  };
+
+  const handleUpdateAssignment = (subject: string, rubricId: string, aId: string, field: keyof AssignmentItem, value: any) => {
+    setRubrics(prev => ({
+      ...prev,
+      [subject]: prev[subject].map(r =>
+        r.id === rubricId
+          ? { ...r, assignments: r.assignments.map(a => a.id === aId ? { ...a, [field]: value } : a) }
+          : r
+      ),
+    }));
+  };
+
+  const handleDeleteAssignment = (subject: string, rubricId: string, aId: string) => {
+    setRubrics(prev => ({
+      ...prev,
+      [subject]: prev[subject].map(r =>
+        r.id === rubricId ? { ...r, assignments: r.assignments.filter(a => a.id !== aId) } : r
       ),
     }));
   };
 
   const handleSave = () => {
-    // In a full implementation this would persist to DB
     toast({ title: "נשמר בהצלחה", description: "מבנה הלמידה עודכן" });
   };
 
+  /* ── Subject list ── */
   if (!selectedSubject) {
     return (
       <div className="p-5 md:p-10 lg:p-14 max-w-[720px] mx-auto" dir="rtl">
@@ -114,7 +162,7 @@ const TeacherSubjectEditorPage = () => {
           </button>
           <div>
             <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-tight">ניהול מבנה למידה</h1>
-            <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">עריכת רובריקות ויחידות לימוד לפי מקצוע</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">עריכת יחידות לימוד, מטלות והערות לפי מקצוע</p>
           </div>
         </div>
 
@@ -134,7 +182,7 @@ const TeacherSubjectEditorPage = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-[13.5px] font-semibold text-foreground leading-tight">{name}</h3>
-                    <p className="text-[10.5px] text-muted-foreground font-normal mt-0.5">{rubrics[name]?.length || 0} רובריקות</p>
+                    <p className="text-[10.5px] text-muted-foreground font-normal mt-0.5">{rubrics[name]?.length || 0} יחידות</p>
                   </div>
                 </div>
               </button>
@@ -145,6 +193,7 @@ const TeacherSubjectEditorPage = () => {
     );
   }
 
+  /* ── Subject editor ── */
   const currentRubrics = rubrics[selectedSubject] || [];
 
   return (
@@ -156,7 +205,7 @@ const TeacherSubjectEditorPage = () => {
         </button>
         <div className="flex-1">
           <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-tight">עריכת {selectedSubject}</h1>
-          <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">ניהול רובריקות, נושאים ומבנה למידה</p>
+          <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">ניהול יחידות, נושאים, מטלות והערות</p>
         </div>
         <Button size="sm" onClick={handleSave} className="gap-1.5 text-[11px] h-8 rounded-xl">
           <Save className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -165,16 +214,17 @@ const TeacherSubjectEditorPage = () => {
       </div>
 
       {/* Rubrics */}
-      <div className="flex flex-col gap-4 mb-6">
+      <div className="flex flex-col gap-5 mb-6">
         {currentRubrics.map((rubric, ri) => (
           <div key={rubric.id} className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)] animate-fade-in-up" style={{ animationDelay: `${ri * 50}ms` }}>
-            <div className="flex items-center gap-2 mb-3">
-              <GripVertical className="h-4 w-4 text-muted-foreground/30 shrink-0" strokeWidth={1.5} />
+            {/* Rubric header */}
+            <div className="flex items-center gap-2 mb-4">
+              <GripVertical className="h-4 w-4 text-muted-foreground/30 shrink-0 cursor-grab" strokeWidth={1.5} />
               <Input
                 value={rubric.title}
                 onChange={e => handleUpdateRubric(selectedSubject, rubric.id, "title", e.target.value)}
                 className="text-[12.5px] font-semibold h-8 border-0 bg-transparent p-0 focus-visible:ring-0 shadow-none"
-                placeholder="שם הרובריקה"
+                placeholder="שם היחידה"
               />
               <Input
                 value={rubric.weight}
@@ -187,28 +237,86 @@ const TeacherSubjectEditorPage = () => {
               </button>
             </div>
 
-            <div className="flex flex-col gap-1.5 mr-6">
-              {rubric.topics.map((topic, ti) => (
-                <div key={ti} className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary/30 shrink-0" />
-                  <Input
-                    value={topic}
-                    onChange={e => handleUpdateTopic(selectedSubject, rubric.id, ti, e.target.value)}
-                    className="text-[11px] h-7 border-0 bg-transparent p-0 focus-visible:ring-0 shadow-none"
-                    placeholder="שם הנושא"
-                  />
-                  <button onClick={() => handleDeleteTopic(selectedSubject, rubric.id, ti)} className="p-1 rounded text-muted-foreground/30 hover:text-destructive transition-colors">
-                    <Trash2 className="h-3 w-3" strokeWidth={1.5} />
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => handleAddTopic(selectedSubject, rubric.id)}
-                className="flex items-center gap-1.5 text-[10px] text-primary/60 hover:text-primary mt-1 transition-colors"
-              >
-                <Plus className="h-3 w-3" strokeWidth={1.5} />
-                הוסף נושא
-              </button>
+            {/* Topics */}
+            <div className="mb-4">
+              <p className="text-[10px] font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <BookOpen className="h-3 w-3" strokeWidth={1.5} />
+                נושאים
+              </p>
+              <div className="flex flex-col gap-1.5 mr-4">
+                {rubric.topics.map((topic, ti) => (
+                  <div key={ti} className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 shrink-0" />
+                    <Input
+                      value={topic.name}
+                      onChange={e => handleUpdateTopic(selectedSubject, rubric.id, ti, e.target.value)}
+                      className="text-[11px] h-7 border-0 bg-transparent p-0 focus-visible:ring-0 shadow-none"
+                      placeholder="שם הנושא"
+                    />
+                    <button onClick={() => handleDeleteTopic(selectedSubject, rubric.id, ti)} className="p-1 rounded text-muted-foreground/30 hover:text-destructive transition-colors">
+                      <Trash2 className="h-3 w-3" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => handleAddTopic(selectedSubject, rubric.id)}
+                  className="flex items-center gap-1.5 text-[10px] text-primary/60 hover:text-primary mt-1 transition-colors"
+                >
+                  <Plus className="h-3 w-3" strokeWidth={1.5} />
+                  הוסף נושא
+                </button>
+              </div>
+            </div>
+
+            {/* Assignments */}
+            <div className="mb-4">
+              <p className="text-[10px] font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <ClipboardList className="h-3 w-3" strokeWidth={1.5} />
+                מטלות
+              </p>
+              <div className="flex flex-col gap-2 mr-4">
+                {rubric.assignments.map(a => (
+                  <div key={a.id} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
+                    <Input
+                      value={a.title}
+                      onChange={e => handleUpdateAssignment(selectedSubject, rubric.id, a.id, "title", e.target.value)}
+                      className="text-[10.5px] h-6 flex-1 border-0 bg-transparent p-0 focus-visible:ring-0 shadow-none"
+                      placeholder="שם המטלה"
+                    />
+                    <Input
+                      value={a.grade ?? ""}
+                      onChange={e => handleUpdateAssignment(selectedSubject, rubric.id, a.id, "grade", e.target.value ? Number(e.target.value) : undefined)}
+                      className="text-[10px] w-14 h-6 text-center rounded-md bg-card border-border focus-visible:ring-1"
+                      placeholder="ציון"
+                      type="number"
+                    />
+                    <button onClick={() => handleDeleteAssignment(selectedSubject, rubric.id, a.id)} className="p-1 rounded text-muted-foreground/30 hover:text-destructive transition-colors">
+                      <Trash2 className="h-3 w-3" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => handleAddAssignment(selectedSubject, rubric.id)}
+                  className="flex items-center gap-1.5 text-[10px] text-primary/60 hover:text-primary mt-1 transition-colors"
+                >
+                  <Plus className="h-3 w-3" strokeWidth={1.5} />
+                  הוסף מטלה
+                </button>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <p className="text-[10px] font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <FileText className="h-3 w-3" strokeWidth={1.5} />
+                הערות
+              </p>
+              <Textarea
+                value={rubric.notes}
+                onChange={e => handleUpdateRubric(selectedSubject, rubric.id, "notes", e.target.value)}
+                className="text-[11px] min-h-[60px] rounded-xl bg-muted/20 border-border/50 focus-visible:ring-1 resize-none mr-4"
+                placeholder="הוסף הערה..."
+              />
             </div>
           </div>
         ))}
@@ -217,11 +325,11 @@ const TeacherSubjectEditorPage = () => {
       {/* Add rubric */}
       <button
         onClick={() => handleAddRubric(selectedSubject)}
-        className="w-full bg-card rounded-2xl border border-dashed border-primary/20 p-4 text-center hover:border-primary/40 hover:bg-primary/3 transition-all duration-200 cursor-pointer"
+        className="w-full bg-card rounded-2xl border border-dashed border-primary/20 p-4 text-center hover:border-primary/40 hover:bg-primary/[0.03] transition-all duration-200 cursor-pointer"
       >
         <div className="flex items-center justify-center gap-2 text-primary/50">
           <Plus className="h-4 w-4" strokeWidth={1.5} />
-          <span className="text-[11.5px] font-medium">הוסף רובריקה</span>
+          <span className="text-[11.5px] font-medium">הוסף יחידה</span>
         </div>
       </button>
     </div>
