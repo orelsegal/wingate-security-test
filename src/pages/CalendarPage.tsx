@@ -51,6 +51,7 @@ const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 const CalendarPage = () => {
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "teacher" || user?.role === "coach";
+  // parent + student = view only (already handled by canEdit being false)
 
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [currentMonth, setCurrentMonth] = useState(new Date());
