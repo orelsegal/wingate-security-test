@@ -68,6 +68,10 @@ const ExternalWrapperPage = () => {
   const meta = titles[type] || titles.schedule;
   const Icon = meta.icon;
 
+  useEffect(() => {
+    setLoading(true);
+  }, [url]);
+
   return (
     <div className="h-[calc(100vh-56px)] overflow-y-auto bg-background" dir="rtl">
       <div className="max-w-[980px] mx-auto p-4 md:p-6 lg:p-8">
