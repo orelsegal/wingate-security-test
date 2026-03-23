@@ -1,5 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2, ClipboardList, GraduationCap, AlertTriangle, Sparkles, Play } from "lucide-react";
+import {
+  ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2,
+  ClipboardList, GraduationCap, AlertTriangle, Sparkles, Play, TrafficCone, Map
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
@@ -11,23 +14,27 @@ interface RubricDef {
   title: string;
   weight: string;
   topics: string[];
-  /** Optional: link to an embedded course page */
   courseUrl?: string;
   courseLabel?: string;
 }
 
 const subjectRubrics: Record<string, RubricDef[]> = {
   "היסטוריה": [
-    { id: "hist-30", title: "רובריקת 30%", weight: "30%", topics: ["הלאומיות באירופה", "מלחמת העולם הראשונה", "התקופה שבין המלחמות"] },
-    { id: "hist-70", title: "רובריקת 70%", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"], courseUrl: "https://grade-compass-coach.lovable.app/", courseLabel: "כניסה לקורס היסטוריה" },
+    { id: "hist-30", title: "30%", weight: "30%", topics: ["הלאומיות באירופה", "מלחמת העולם הראשונה", "התקופה שבין המלחמות"] },
+    {
+      id: "hist-70", title: "70%", weight: "70%",
+      topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"],
+      courseUrl: "https://grade-compass-coach.lovable.app/",
+      courseLabel: "כניסה לקורס היסטוריה"
+    },
   ],
   "אזרחות": [
-    { id: "civ-30", title: "רובריקת 30%", weight: "30%", topics: ["עקרונות הדמוקרטיה", "זכויות האדם", "הכרזת העצמאות"] },
-    { id: "civ-70", title: "רובריקת 70%", weight: "70%", topics: ["מוסדות השלטון", "חוקה ומשפט", "אזרחות פעילה", "מיעוטים בישראל"] },
+    { id: "civ-30", title: "30%", weight: "30%", topics: ["עקרונות הדמוקרטיה", "זכויות האדם", "הכרזת העצמאות"] },
+    { id: "civ-70", title: "70%", weight: "70%", topics: ["מוסדות השלטון", "חוקה ומשפט", "אזרחות פעילה", "מיעוטים בישראל"] },
   ],
   "לשון": [
-    { id: "heb-20", title: "רובריקת 20%", weight: "20%", topics: ["תחביר בסיסי", "חלקי דיבר", "פיסוק"] },
-    { id: "heb-80", title: "רובריקת 80%", weight: "80%", topics: ["הבנת הנקרא", "כתיבה אקדמית", "לשון פורמלית", "מבנה טקסט"] },
+    { id: "heb-20", title: "20%", weight: "20%", topics: ["תחביר בסיסי", "חלקי דיבר", "פיסוק"] },
+    { id: "heb-80", title: "80%", weight: "80%", topics: ["הבנת הנקרא", "כתיבה אקדמית", "לשון פורמלית", "מבנה טקסט"] },
   ],
   "מתמטיקה": [
     { id: "math-1", title: "אלגברה ופונקציות", weight: "~35%", topics: ["משוואות", "פונקציה ליניארית", "פונקציה ריבועית"] },
@@ -71,7 +78,6 @@ const SubjectDetailPage = () => {
     : status === "red" ? "bg-destructive/15 text-destructive"
     : "bg-muted text-muted-foreground";
 
-  // Figure out "next step"
   const allTopics = rubrics.flatMap(r => r.topics);
   const nextTopic = allTopics.find(t => !coveredTopics.includes(t));
   const nextRubric = rubrics.find(r => r.topics.some(t => !coveredTopics.includes(t)));
@@ -121,9 +127,43 @@ const SubjectDetailPage = () => {
         <Progress value={pct} className="h-2 bg-muted/50" />
       </div>
 
+      {/* Quick Links — Traffic Lights */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <button
+          onClick={() => navigate("/student-learning")}
+          className="group bg-card rounded-2xl border border-border p-3.5 text-start shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up"
+          style={{ animationDelay: "60ms" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[hsl(var(--success))]/10 flex items-center justify-center shrink-0">
+              <TrafficCone className="h-4 w-4 text-[hsl(var(--success))]" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-[11.5px] font-semibold text-foreground leading-tight">רמזור למידה</p>
+              <p className="text-[9.5px] text-muted-foreground font-normal mt-0.5">מצב לימודי</p>
+            </div>
+          </div>
+        </button>
+        <button
+          onClick={() => navigate("/student-roadmap")}
+          className="group bg-card rounded-2xl border border-border p-3.5 text-start shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up"
+          style={{ animationDelay: "100ms" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Map className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-[11.5px] font-semibold text-foreground leading-tight">מפת דרכים</p>
+              <p className="text-[9.5px] text-muted-foreground font-normal mt-0.5">נתיב בגרות</p>
+            </div>
+          </div>
+        </button>
+      </div>
+
       {/* Next Step Card */}
       {nextTopic && nextRubric && (
-        <div className="bg-primary/5 rounded-2xl border border-primary/10 p-4 mb-6 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
+        <div className="bg-primary/5 rounded-2xl border border-primary/10 p-4 mb-6 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -153,7 +193,7 @@ const SubjectDetailPage = () => {
               <div
                 key={rubric.id}
                 className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)] animate-fade-in-up"
-                style={{ animationDelay: `${100 + ri * 50}ms` }}
+                style={{ animationDelay: `${140 + ri * 50}ms` }}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isComplete ? "bg-[hsl(var(--success))]/12" : "bg-primary/8"}`}>
@@ -171,7 +211,7 @@ const SubjectDetailPage = () => {
                 </div>
                 <Progress value={rubricPct} className="h-1.5 bg-muted/50 mb-3" />
 
-                {/* Course entry point if defined */}
+                {/* Course entry point */}
                 {rubric.courseUrl && (
                   <button
                     onClick={() => navigate(`/external?type=learning&url=${encodeURIComponent(rubric.courseUrl!)}`)}
@@ -216,7 +256,7 @@ const SubjectDetailPage = () => {
           <ClipboardList className="h-3.5 w-3.5" strokeWidth={1.5} />
           מטלות ומבחנים
         </h2>
-        <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)] animate-fade-in-up" style={{ animationDelay: "250ms" }}>
+        <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)] animate-fade-in-up" style={{ animationDelay: "280ms" }}>
           {grade != null ? (
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
@@ -242,7 +282,7 @@ const SubjectDetailPage = () => {
 
       {/* Missing items */}
       {missingItems.length > 0 && (
-        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "320ms" }}>
           <h2 className="text-[12px] font-semibold text-destructive/60 mb-3 tracking-tight flex items-center gap-1.5">
             <AlertTriangle className="h-3.5 w-3.5" strokeWidth={1.5} />
             דורש השלמה
@@ -262,7 +302,7 @@ const SubjectDetailPage = () => {
 
       {/* Teacher notes */}
       {notes && (
-        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "350ms" }}>
+        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "360ms" }}>
           <h2 className="text-[12px] font-semibold text-primary/60 mb-3 tracking-tight flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" strokeWidth={1.5} />
             הערות מורה
