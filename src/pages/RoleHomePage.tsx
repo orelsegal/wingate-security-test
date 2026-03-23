@@ -170,6 +170,7 @@ const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
     { id: "subjects", title: "מקצועות", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/subjects" },
     { id: "students", title: "תלמידים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
     { id: "groups", title: "קבוצות", icon: Layers, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/groups" },
+    { id: "progress", title: "התקדמות", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", path: "/courses" },
   ];
 
   return (
