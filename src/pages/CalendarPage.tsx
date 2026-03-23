@@ -19,16 +19,18 @@ interface CalendarEvent {
   notes?: string;
 }
 
-const typeConfig = {
+const typeConfig: Record<string, { label: string; dotClass: string; textClass: string }> = {
   assignment: { label: "משימה", dotClass: "bg-primary", textClass: "text-primary" },
   test: { label: "מבחן", dotClass: "bg-destructive", textClass: "text-destructive" },
   lesson: { label: "שיעור", dotClass: "bg-[hsl(var(--success))]", textClass: "text-[hsl(var(--success))]" },
+  event: { label: "אירוע", dotClass: "bg-[hsl(var(--warning))]", textClass: "text-[hsl(var(--warning))]" },
 };
 
 const typeOptions = [
   { value: "assignment", label: "משימה" },
   { value: "test", label: "מבחן" },
   { value: "lesson", label: "שיעור / מפגש" },
+  { value: "event", label: "אירוע" },
 ];
 
 /* ═══ Demo Data ═══ */
