@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2, ClipboardList, GraduationCap, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2, ClipboardList, GraduationCap, AlertTriangle, Sparkles, Play } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
@@ -11,12 +11,15 @@ interface RubricDef {
   title: string;
   weight: string;
   topics: string[];
+  /** Optional: link to an embedded course page */
+  courseUrl?: string;
+  courseLabel?: string;
 }
 
 const subjectRubrics: Record<string, RubricDef[]> = {
   "היסטוריה": [
     { id: "hist-30", title: "רובריקת 30%", weight: "30%", topics: ["הלאומיות באירופה", "מלחמת העולם הראשונה", "התקופה שבין המלחמות"] },
-    { id: "hist-70", title: "רובריקת 70%", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"] },
+    { id: "hist-70", title: "רובריקת 70%", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"], courseUrl: "https://grade-compass-coach.lovable.app/", courseLabel: "כניסה לקורס היסטוריה" },
   ],
   "אזרחות": [
     { id: "civ-30", title: "רובריקת 30%", weight: "30%", topics: ["עקרונות הדמוקרטיה", "זכויות האדם", "הכרזת העצמאות"] },
@@ -167,6 +170,19 @@ const SubjectDetailPage = () => {
                   <span className={`text-[10px] font-semibold tabular-nums ${isComplete ? "text-[hsl(var(--success))]" : "text-muted-foreground"}`}>{rubricPct}%</span>
                 </div>
                 <Progress value={rubricPct} className="h-1.5 bg-muted/50 mb-3" />
+
+                {/* Course entry point if defined */}
+                {rubric.courseUrl && (
+                  <button
+                    onClick={() => navigate(`/external?type=learning&url=${encodeURIComponent(rubric.courseUrl!)}`)}
+                    className="w-full flex items-center gap-2.5 mb-3 p-2.5 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors duration-150"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Play className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                    </div>
+                    <span className="text-[11px] font-semibold text-primary">{rubric.courseLabel}</span>
+                  </button>
+                )}
 
                 <div className="flex flex-col gap-1.5">
                   {rubric.topics.map((topic, ti) => {
