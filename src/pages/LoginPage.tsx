@@ -155,15 +155,13 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Welcome + Title + Subtitle */}
+        {/* Title + Subtitle */}
         <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <p className="text-[11px] font-light text-muted-foreground/50 tracking-wide mb-2">
-            ברוכים הבאים
-          </p>
-          <h1 className="text-[18px] font-semibold text-primary tracking-tight leading-snug mb-2.5">
+          <h1 className="text-[22px] font-bold text-primary tracking-tight leading-snug mb-2.5">
             האקדמיה למצוינות בספורט
           </h1>
-          <p className="text-[10.5px] font-light leading-relaxed tracking-wide text-muted-foreground/45">
+          <div className="w-10 h-[2px] rounded-full bg-primary/25 mx-auto mb-2.5" />
+          <p className="text-[11px] font-light leading-relaxed tracking-wide text-muted-foreground/50">
             למידה וניהול מותאמים לספורטאים מצטיינים
           </p>
         </div>
