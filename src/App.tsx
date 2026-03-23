@@ -13,6 +13,8 @@ import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
 import DataManagementPage from "./pages/DataManagementPage.tsx";
 import StudentHomePage from "./pages/StudentHomePage.tsx";
+import StudentLearningTrafficLight from "./pages/StudentLearningTrafficLight.tsx";
+import StudentRoadmapTrafficLight from "./pages/StudentRoadmapTrafficLight.tsx";
 import RoleHomePage from "./pages/RoleHomePage.tsx";
 import DashboardContent from "./components/DashboardContent.tsx";
 import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
@@ -45,6 +47,8 @@ const App = () => (
               <Route path="/data-entry" element={<DataEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
               <Route path="/student-home" element={<StudentHomePage />} />
+              <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
+              <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
             </Route>

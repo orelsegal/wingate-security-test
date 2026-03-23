@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
-import { Calendar, Brain, Route, BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target } from "lucide-react";
+import { Calendar, Brain, Route, BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target, TrafficCone, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import WingateBadge from "@/components/WingateBadge";
@@ -34,6 +34,25 @@ const StudentHomePage = () => {
 
   const cards = [
     {
+      id: "learning-traffic",
+      title: "רמזור למידה",
+      description: "מצב לימודי לפי מקצוע — ציונים, השלמות וסטטוס",
+      icon: TrafficCone,
+      color: "bg-[hsl(var(--success))]/10",
+      iconColor: "text-[hsl(var(--success))]",
+      action: () => navigate("/student-learning"),
+    },
+    {
+      id: "roadmap-traffic",
+      title: "רמזור מפת דרכים",
+      description: `${completedRoadmapCount} מתוך ${totalRoadmapCount} שלבים הושלמו`,
+      icon: Map,
+      color: "bg-primary/10",
+      iconColor: "text-primary",
+      action: () => navigate("/student-roadmap"),
+      badge: progressPct > 0 ? `${progressPct}%` : undefined,
+    },
+    {
       id: "schedule",
       title: "מערכת שעות",
       description: "צפייה בלוח הזמנים השבועי",
@@ -55,12 +74,11 @@ const StudentHomePage = () => {
     {
       id: "roadmap",
       title: "מפת הדרך לבגרות",
-      description: `${completedRoadmapCount} מתוך ${totalRoadmapCount} שלבים הושלמו`,
+      description: `צפייה בפרופיל האישי והתקדמות מלאה`,
       icon: Route,
-      color: "bg-primary/10",
-      iconColor: "text-primary",
+      color: "bg-[hsl(35,30%,94%)]",
+      iconColor: "text-[hsl(35,40%,45%)]",
       action: () => navigate(`/students/${studentId}`),
-      badge: progressPct > 0 ? `${progressPct}%` : undefined,
     },
     {
       id: "learning",
