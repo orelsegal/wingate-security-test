@@ -325,6 +325,10 @@ const CalendarPage = () => {
               <label className="text-[11px] text-muted-foreground font-medium">תאריך</label>
               <Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="text-[13px]" />
             </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] text-muted-foreground font-medium">הערות</label>
+              <Input value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="הערות נוספות..." className="text-[13px]" />
+            </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSaveEvent} className="flex-1 text-[12px]" disabled={!formTitle.trim() || !formDate}>
                 {editingEvent ? "שמור שינויים" : "הוסף אירוע"}
