@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Users, ChevronLeft, Loader2, Search } from "lucide-react";
+import { ArrowRight, Users, ChevronLeft, Loader2, Search, Filter, BookOpen } from "lucide-react";
 import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
 
@@ -14,11 +14,24 @@ const classToGrade = (className: string): string => {
   return className;
 };
 
+const subjectOptions = ["היסטוריה", "אזרחות", "אנגלית", "לשון", "מתמטיקה"];
+const statusOptions = [
+  { value: "", label: "הכל" },
+  { value: "green", label: "טוב" },
+  { value: "yellow", label: "בינוני" },
+  { value: "red", label: "צריך חיזוק" },
+];
+
 const GroupsPage = () => {
   const navigate = useNavigate();
   const { data: students = [], isLoading } = useStudents();
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sportFilter, setSportFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const sports = useMemo(() => [...new Set(students.map(s => s.sport))].sort(), [students]);
 
   const groups = useMemo(() => {
     const map = new Map<string, typeof students>();
@@ -36,9 +49,12 @@ const GroupsPage = () => {
     if (!selectedGroup) return [];
     const group = groups.find(g => g.name === selectedGroup);
     if (!group) return [];
-    if (!search) return group.students;
-    return group.students.filter(s => s.full_name.includes(search));
-  }, [selectedGroup, groups, search]);
+    let list = group.students;
+    if (search) list = list.filter(s => s.full_name.includes(search));
+    if (statusFilter) list = list.filter(s => s.overall_status === statusFilter);
+    if (sportFilter) list = list.filter(s => s.sport === sportFilter);
+    return list;
+  }, [selectedGroup, groups, search, statusFilter, sportFilter]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
@@ -49,12 +65,12 @@ const GroupsPage = () => {
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
-          onClick={() => selectedGroup ? setSelectedGroup(null) : navigate(-1)}
+          onClick={() => selectedGroup ? (setSelectedGroup(null), setSearch(""), setStatusFilter(""), setSportFilter("")) : navigate(-1)}
           className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150"
         >
           <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
         </button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-tight">
             {selectedGroup ? `כיתה ${selectedGroup}` : "קבוצות"}
           </h1>
@@ -62,6 +78,14 @@ const GroupsPage = () => {
             {selectedGroup ? `${selectedStudents.length} תלמידים` : "תצוגה לפי כיתות ושכבות"}
           </p>
         </div>
+        {selectedGroup && (
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2 rounded-lg transition-colors duration-150 ${showFilters ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"}`}
+          >
+            <Filter className="h-4 w-4" strokeWidth={1.5} />
+          </button>
+        )}
       </div>
 
       {!selectedGroup ? (
@@ -110,10 +134,10 @@ const GroupsPage = () => {
           })}
         </div>
       ) : (
-        /* ── Student List ── */
+        /* ── Student List with Filters ── */
         <>
           {/* Search */}
-          <div className="relative mb-4">
+          <div className="relative mb-3">
             <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
             <input
               type="text"
@@ -123,6 +147,39 @@ const GroupsPage = () => {
               className="w-full h-9 ps-10 pe-4 bg-background border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/25 transition-all"
             />
           </div>
+
+          {/* Filters */}
+          {showFilters && (
+            <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up">
+              {/* Status filter */}
+              <div className="flex gap-1.5">
+                {statusOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setStatusFilter(statusFilter === opt.value ? "" : opt.value)}
+                    className={`text-[10px] px-2.5 py-1 rounded-full border transition-colors ${
+                      statusFilter === opt.value
+                        ? "bg-primary/10 border-primary/20 text-primary font-semibold"
+                        : "border-border text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {/* Sport filter */}
+              {sports.length > 0 && (
+                <select
+                  value={sportFilter}
+                  onChange={e => setSportFilter(e.target.value)}
+                  className="text-[10px] h-7 px-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
+                >
+                  <option value="">כל הענפים</option>
+                  {sports.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             {selectedStudents.map((student, i) => {
