@@ -6,7 +6,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { saveLastVisited } from "@/pages/RoleHomePage";
 
 /* ── rubric / module definitions ── */
 interface RubricDef {
