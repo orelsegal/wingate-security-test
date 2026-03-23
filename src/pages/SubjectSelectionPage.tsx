@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, Globe, Calculator, Languages, Scroll, Scale, Loader2 } from "lucide-react";
+import { ArrowRight, BookOpen, Globe, Calculator, Languages, Scroll, Scale, Loader2, Lightbulb } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
@@ -10,9 +10,10 @@ const subjectMeta: Record<string, { icon: any; color: string; iconColor: string;
   "אנגלית": { icon: Globe, color: "bg-[hsl(210,30%,94%)]", iconColor: "text-[hsl(210,40%,50%)]", subtitle: "Module E · F · G" },
   "לשון": { icon: Languages, color: "bg-primary/8", iconColor: "text-primary", subtitle: "20% + 80%" },
   "מתמטיקה": { icon: Calculator, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", subtitle: "לפי רמת יחידות לימוד" },
+  "מבוא למדעים": { icon: Lightbulb, color: "bg-[hsl(45,35%,93%)]", iconColor: "text-[hsl(45,45%,42%)]", subtitle: "קורס מפת דרכים אינטראקטיבי" },
 };
 
-const subjectOrder = ["היסטוריה", "אזרחות", "אנגלית", "לשון", "מתמטיקה"];
+const subjectOrder = ["היסטוריה", "אזרחות", "אנגלית", "לשון", "מתמטיקה", "מבוא למדעים"];
 
 const SubjectSelectionPage = () => {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ const SubjectSelectionPage = () => {
           return (
             <button
               key={name}
-              onClick={() => navigate(`/subjects/${encodeURIComponent(name)}`)}
+              onClick={() => name === "מבוא למדעים" ? navigate("/science-intro") : navigate(`/subjects/${encodeURIComponent(name)}`)}
               className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
               style={{ animationDelay: `${60 + i * 40}ms` }}
             >

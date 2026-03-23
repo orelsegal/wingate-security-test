@@ -2,7 +2,9 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Users, ChevronLeft, Loader2, Search, Filter, BookOpen } from "lucide-react";
 import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
+import { useAuth } from "@/context/AuthContext";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import DataExportTools from "@/components/DataExportTools";
 
 const classOrder = ["י״ב", "י״א", "י׳", "ט׳"];
 
@@ -25,6 +27,8 @@ const statusOptions = [
 const GroupsPage = () => {
   const navigate = useNavigate();
   const { data: students = [], isLoading } = useStudents();
+  const { user } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "teacher" || user?.role === "coach";
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -79,12 +83,20 @@ const GroupsPage = () => {
           </p>
         </div>
         {selectedGroup && (
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-lg transition-colors duration-150 ${showFilters ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"}`}
-          >
-            <Filter className="h-4 w-4" strokeWidth={1.5} />
-          </button>
+          <div className="flex items-center gap-2">
+            {canEdit && (
+              <DataExportTools
+                students={selectedStudents}
+                label={`כיתה ${selectedGroup}`}
+              />
+            )}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-2 rounded-lg transition-colors duration-150 ${showFilters ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"}`}
+            >
+              <Filter className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          </div>
         )}
       </div>
 

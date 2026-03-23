@@ -15,19 +15,22 @@ interface CalendarEvent {
   title: string;
   subject: string;
   date: Date;
-  type: "assignment" | "test" | "lesson";
+  type: "assignment" | "test" | "lesson" | "event";
+  notes?: string;
 }
 
-const typeConfig = {
+const typeConfig: Record<string, { label: string; dotClass: string; textClass: string }> = {
   assignment: { label: "משימה", dotClass: "bg-primary", textClass: "text-primary" },
   test: { label: "מבחן", dotClass: "bg-destructive", textClass: "text-destructive" },
   lesson: { label: "שיעור", dotClass: "bg-[hsl(var(--success))]", textClass: "text-[hsl(var(--success))]" },
+  event: { label: "אירוע", dotClass: "bg-[hsl(var(--warning))]", textClass: "text-[hsl(var(--warning))]" },
 };
 
 const typeOptions = [
   { value: "assignment", label: "משימה" },
   { value: "test", label: "מבחן" },
   { value: "lesson", label: "שיעור / מפגש" },
+  { value: "event", label: "אירוע" },
 ];
 
 /* ═══ Demo Data ═══ */
@@ -48,6 +51,7 @@ const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 const CalendarPage = () => {
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "teacher" || user?.role === "coach";
+  // parent + student = view only (already handled by canEdit being false)
 
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -59,8 +63,9 @@ const CalendarPage = () => {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [formTitle, setFormTitle] = useState("");
   const [formSubject, setFormSubject] = useState("");
-  const [formType, setFormType] = useState<"assignment" | "test" | "lesson">("assignment");
+  const [formType, setFormType] = useState<"assignment" | "test" | "lesson" | "event">("assignment");
   const [formDate, setFormDate] = useState("");
+  const [formNotes, setFormNotes] = useState("");
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<CalendarEvent | null>(null);
@@ -90,6 +95,7 @@ const CalendarPage = () => {
     setFormSubject("");
     setFormType("assignment");
     setFormDate(selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"));
+    setFormNotes("");
     setFormOpen(true);
   };
 
@@ -99,13 +105,14 @@ const CalendarPage = () => {
     setFormSubject(ev.subject);
     setFormType(ev.type);
     setFormDate(format(ev.date, "yyyy-MM-dd"));
+    setFormNotes(ev.notes || "");
     setFormOpen(true);
   };
 
   const handleSaveEvent = () => {
     if (!formTitle.trim() || !formDate) return;
     if (editingEvent) {
-      setEvents(prev => prev.map(e => e.id === editingEvent.id ? { ...e, title: formTitle.trim(), subject: formSubject.trim(), type: formType, date: new Date(formDate) } : e));
+      setEvents(prev => prev.map(e => e.id === editingEvent.id ? { ...e, title: formTitle.trim(), subject: formSubject.trim(), type: formType, date: new Date(formDate), notes: formNotes.trim() } : e));
     } else {
       const newEvent: CalendarEvent = {
         id: crypto.randomUUID(),
@@ -113,6 +120,7 @@ const CalendarPage = () => {
         subject: formSubject.trim(),
         date: new Date(formDate),
         type: formType,
+        notes: formNotes.trim(),
       };
       setEvents(prev => [...prev, newEvent]);
     }
@@ -257,13 +265,16 @@ const CalendarPage = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] font-medium text-foreground">{ev.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className={`text-[10px] font-medium ${typeConfig[ev.type].textClass}`}>
-                        {typeConfig[ev.type].label}
-                      </p>
-                      {ev.subject && (
-                        <span className="text-[10px] text-muted-foreground">· {ev.subject}</span>
-                      )}
+                       <p className={`text-[10px] font-medium ${typeConfig[ev.type]?.textClass || "text-muted-foreground"}`}>
+                         {typeConfig[ev.type]?.label || ev.type}
+                       </p>
+                       {ev.subject && (
+                         <span className="text-[10px] text-muted-foreground">· {ev.subject}</span>
+                       )}
                     </div>
+                    {ev.notes && (
+                      <p className="text-[9.5px] text-muted-foreground/70 mt-0.5">{ev.notes}</p>
+                    )}
                   </div>
                   {canEdit && (
                     <div className="flex items-center gap-1 shrink-0">
@@ -316,6 +327,10 @@ const CalendarPage = () => {
             <div className="space-y-1.5">
               <label className="text-[11px] text-muted-foreground font-medium">תאריך</label>
               <Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="text-[13px]" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] text-muted-foreground font-medium">הערות</label>
+              <Input value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="הערות נוספות..." className="text-[13px]" />
             </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSaveEvent} className="flex-1 text-[12px]" disabled={!formTitle.trim() || !formDate}>

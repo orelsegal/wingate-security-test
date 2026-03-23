@@ -25,6 +25,7 @@ import SubjectPartPage from "./pages/SubjectPartPage.tsx";
 import HistoryCoursePage from "./pages/HistoryCoursePage.tsx";
 import GroupsPage from "./pages/GroupsPage.tsx";
 import CalendarPage from "./pages/CalendarPage.tsx";
+import ScienceIntroPage from "./pages/ScienceIntroPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/history-course" element={<HistoryCoursePage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/science-intro" element={<ScienceIntroPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
