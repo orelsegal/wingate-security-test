@@ -52,6 +52,7 @@ const App = () => (
               <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
+              <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
