@@ -168,7 +168,7 @@ const LoginPage = () => {
           </p>
         </div>
 
-        {/* Top Row — 3 cards */}
+        {/* Top Row — 3 equal cards */}
         <div className="grid grid-cols-3 gap-3 mb-3">
           {topRowRoles.map((role, i) => (
             <RoleCard key={role} role={role} delay={120 + i * 60} />
@@ -176,10 +176,10 @@ const LoginPage = () => {
         </div>
 
         {/* Bottom Row — 2 wider cards, centered */}
-        <div className="grid grid-cols-2 gap-3 mb-10">
+        <div className="flex justify-center gap-3 mb-10">
           {bottomRowRoles.map((role, i) => (
-            <div key={role}>
-              <RoleCard role={role} delay={300 + i * 60} />
+            <div key={role} className="flex-1">
+              <RoleCard role={role} delay={300 + i * 60} wide />
             </div>
           ))}
         </div>
