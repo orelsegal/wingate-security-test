@@ -1,10 +1,11 @@
-import { Users, TrendingUp, AlertTriangle, BarChart3, ChevronLeft, Loader2 } from "lucide-react";
+import { Users, TrendingUp, AlertTriangle, BarChart3, ChevronLeft, Loader2, Download } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useNavigate } from "react-router-dom";
 import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { useMemo } from "react";
+import DataExportTools from "@/components/DataExportTools";
 
 const DashboardContent = () => {
   const navigate = useNavigate();
@@ -78,16 +79,26 @@ const DashboardContent = () => {
               {user?.role === "coach" && ` · ענף ${user.scopeFilter?.[0]}`}
             </p>
           </div>
-          {redCount > 0 && (
-            <button
-              onClick={() => navigate("/students?status=red")}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/8 text-destructive text-[13px] font-medium hover:bg-destructive/12 transition-colors duration-150 shrink-0 self-start sm:self-auto"
-            >
-              <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />
-              <span>ספורטאים בסיכון</span>
-              <span className="px-1.5 py-0.5 rounded-md bg-destructive/12 text-[11px] font-semibold">{redCount}</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2 flex-wrap shrink-0 self-start sm:self-auto">
+            {redCount > 0 && (
+              <button
+                onClick={() => navigate("/students?status=red")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/8 text-destructive text-[13px] font-medium hover:bg-destructive/12 transition-colors duration-150"
+              >
+                <AlertTriangle className="h-4 w-4" strokeWidth={1.5} />
+                <span>ספורטאים בסיכון</span>
+                <span className="px-1.5 py-0.5 rounded-md bg-destructive/12 text-[11px] font-semibold">{redCount}</span>
+              </button>
+            )}
+            {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
+              <DataExportTools
+                students={students}
+                label="כל הספורטאים"
+                contextLabel="כל המערכת"
+                showImport
+              />
+            )}
+          </div>
         </div>
 
         {!isTeacher && (

@@ -193,7 +193,7 @@ const StudentsPage = () => {
             סינון
             {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
           </Button>
-          <DataExportTools students={filtered} label="ספורטאים" />
+          <DataExportTools students={filtered} label="ספורטאים" showImport />
 
           {/* View toggle */}
           <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5">
