@@ -175,7 +175,7 @@ const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
 
   return (
     <div className="mb-7">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {entries.map((entry, i) => (
           <button
             key={entry.id}

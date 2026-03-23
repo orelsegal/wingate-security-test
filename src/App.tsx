@@ -57,6 +57,7 @@ const App = () => (
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
               <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
+              <Route path="/subjects/:subjectName/:partId" element={<SubjectPartPage />} />
               <Route path="/teacher-subjects" element={<TeacherSubjectEditorPage />} />
               <Route path="/history-course" element={<HistoryCoursePage />} />
               <Route path="/groups" element={<GroupsPage />} />
