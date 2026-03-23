@@ -15,7 +15,8 @@ interface CalendarEvent {
   title: string;
   subject: string;
   date: Date;
-  type: "assignment" | "test" | "lesson";
+  type: "assignment" | "test" | "lesson" | "event";
+  notes?: string;
 }
 
 const typeConfig = {
