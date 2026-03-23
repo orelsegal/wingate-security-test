@@ -1,19 +1,19 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2 } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Lock, Clock, FileText, Loader2, ClipboardList, GraduationCap, AlertTriangle, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
 import { useMemo } from "react";
 
-/* ── rubric definitions per subject ── */
-interface Rubric {
+/* ── rubric / module definitions ── */
+interface RubricDef {
   id: string;
   title: string;
   weight: string;
   topics: string[];
 }
 
-const subjectRubrics: Record<string, Rubric[]> = {
+const subjectRubrics: Record<string, RubricDef[]> = {
   "היסטוריה": [
     { id: "hist-30", title: "רובריקת 30%", weight: "30%", topics: ["הלאומיות באירופה", "מלחמת העולם הראשונה", "התקופה שבין המלחמות"] },
     { id: "hist-70", title: "רובריקת 70%", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"] },
@@ -54,9 +54,10 @@ const SubjectDetailPage = () => {
   const rubrics = subjectRubrics[decoded] || [];
   const pct = subjectProgress?.completion_percent ?? 0;
   const grade = subjectProgress?.grade;
+  const absences = subjectProgress?.absences ?? 0;
   const status = (subjectProgress?.status as string) || "gray";
-  const coveredTopics = subjectProgress?.covered_topics || [];
-  const missingItems = subjectProgress?.missing_items || [];
+  const coveredTopics: string[] = subjectProgress?.covered_topics || [];
+  const missingItems: string[] = subjectProgress?.missing_items || [];
   const notes = subjectProgress?.notes;
 
   const statusLabel =
@@ -66,6 +67,11 @@ const SubjectDetailPage = () => {
     : status === "yellow" ? "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
     : status === "red" ? "bg-destructive/15 text-destructive"
     : "bg-muted text-muted-foreground";
+
+  // Figure out "next step"
+  const allTopics = rubrics.flatMap(r => r.topics);
+  const nextTopic = allTopics.find(t => !coveredTopics.includes(t));
+  const nextRubric = rubrics.find(r => r.topics.some(t => !coveredTopics.includes(t)));
 
   if (isLoading) {
     return (
@@ -89,12 +95,12 @@ const SubjectDetailPage = () => {
         <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
       </div>
 
-      {/* Overview KPIs */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      {/* KPI Row */}
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { label: "התקדמות", value: `${pct}%` },
           { label: "ציון", value: grade != null ? `${grade}` : "—" },
-          { label: "חיסורים", value: `${subjectProgress?.absences ?? 0}` },
+          { label: "חיסורים", value: `${absences}` },
         ].map((kpi, i) => (
           <div key={i} className="bg-card rounded-xl border border-border p-3 text-center shadow-[var(--shadow-card)] animate-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
             <p className="text-[16px] font-semibold text-foreground leading-none">{kpi.value}</p>
@@ -103,8 +109,8 @@ const SubjectDetailPage = () => {
         ))}
       </div>
 
-      {/* Progress bar */}
-      <div className="mb-8">
+      {/* Overall progress */}
+      <div className="mb-6">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[10.5px] text-muted-foreground font-medium">התקדמות כללית</span>
           <span className="text-[10.5px] font-semibold text-foreground tabular-nums">{pct}%</span>
@@ -112,12 +118,30 @@ const SubjectDetailPage = () => {
         <Progress value={pct} className="h-2 bg-muted/50" />
       </div>
 
-      {/* Rubrics */}
-      <section className="mb-8">
-        <h2 className="text-[12px] font-semibold text-primary/60 mb-4 tracking-tight">מבנה המקצוע</h2>
+      {/* Next Step Card */}
+      {nextTopic && nextRubric && (
+        <div className="bg-primary/5 rounded-2xl border border-primary/10 p-4 mb-6 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-primary/60 font-medium mb-0.5">הצעד הבא</p>
+              <p className="text-[12px] font-semibold text-foreground leading-tight">{nextTopic}</p>
+              <p className="text-[9.5px] text-muted-foreground font-normal">{nextRubric.title}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rubrics / Modules */}
+      <section className="mb-6">
+        <h2 className="text-[12px] font-semibold text-primary/60 mb-3 tracking-tight flex items-center gap-1.5">
+          <GraduationCap className="h-3.5 w-3.5" strokeWidth={1.5} />
+          יחידות לימוד
+        </h2>
         <div className="flex flex-col gap-3">
           {rubrics.map((rubric, ri) => {
-            // Simulate rubric-level completion from covered topics
             const topicsDone = rubric.topics.filter(t => coveredTopics.includes(t)).length;
             const rubricPct = rubric.topics.length > 0 ? Math.round((topicsDone / rubric.topics.length) * 100) : 0;
             const isComplete = rubricPct === 100;
@@ -140,17 +164,16 @@ const SubjectDetailPage = () => {
                     <h3 className="text-[12.5px] font-semibold text-foreground leading-tight">{rubric.title}</h3>
                     <p className="text-[9.5px] text-muted-foreground font-normal">{rubric.weight}</p>
                   </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">{rubricPct}%</span>
+                  <span className={`text-[10px] font-semibold tabular-nums ${isComplete ? "text-[hsl(var(--success))]" : "text-muted-foreground"}`}>{rubricPct}%</span>
                 </div>
                 <Progress value={rubricPct} className="h-1.5 bg-muted/50 mb-3" />
 
-                {/* Topic list */}
                 <div className="flex flex-col gap-1.5">
                   {rubric.topics.map((topic, ti) => {
                     const done = coveredTopics.includes(topic);
                     const missing = missingItems.includes(topic);
                     return (
-                      <div key={ti} className="flex items-center gap-2 py-1">
+                      <div key={ti} className="flex items-center gap-2 py-0.5">
                         {done ? (
                           <CheckCircle2 className="h-3.5 w-3.5 text-[hsl(var(--success))] shrink-0" strokeWidth={1.5} />
                         ) : missing ? (
@@ -171,23 +194,43 @@ const SubjectDetailPage = () => {
         </div>
       </section>
 
-      {/* Teacher notes */}
-      {notes && (
-        <section className="mb-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-          <h2 className="text-[12px] font-semibold text-primary/60 mb-3 tracking-tight">הערות מורה</h2>
-          <div className="bg-card rounded-xl border border-border p-4 shadow-[var(--shadow-card)]">
-            <div className="flex items-start gap-2.5">
-              <FileText className="h-4 w-4 text-muted-foreground/50 shrink-0 mt-0.5" strokeWidth={1.5} />
-              <p className="text-[11.5px] text-muted-foreground leading-relaxed">{notes}</p>
+      {/* Assignments & Exams */}
+      <section className="mb-6">
+        <h2 className="text-[12px] font-semibold text-primary/60 mb-3 tracking-tight flex items-center gap-1.5">
+          <ClipboardList className="h-3.5 w-3.5" strokeWidth={1.5} />
+          מטלות ומבחנים
+        </h2>
+        <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)] animate-fade-in-up" style={{ animationDelay: "250ms" }}>
+          {grade != null ? (
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-foreground font-medium">ציון אחרון</span>
+                <span className="text-[13px] font-semibold text-foreground tabular-nums">{grade}</span>
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-foreground font-medium">חיסורים</span>
+                <span className={`text-[13px] font-semibold tabular-nums ${absences > 3 ? "text-destructive" : "text-foreground"}`}>{absences}</span>
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-foreground font-medium">השלמה</span>
+                <span className="text-[13px] font-semibold text-foreground tabular-nums">{pct}%</span>
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <p className="text-[11px] text-muted-foreground/60 text-center py-2">אין נתונים עדיין</p>
+          )}
+        </div>
+      </section>
 
-      {/* Missing items summary */}
+      {/* Missing items */}
       {missingItems.length > 0 && (
-        <section className="mb-8 animate-fade-in-up" style={{ animationDelay: "350ms" }}>
-          <h2 className="text-[12px] font-semibold text-destructive/60 mb-3 tracking-tight">דורש השלמה</h2>
+        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+          <h2 className="text-[12px] font-semibold text-destructive/60 mb-3 tracking-tight flex items-center gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5" strokeWidth={1.5} />
+            דורש השלמה
+          </h2>
           <div className="bg-destructive/5 rounded-xl border border-destructive/10 p-4">
             <div className="flex flex-col gap-1.5">
               {missingItems.map((item, i) => (
@@ -197,6 +240,19 @@ const SubjectDetailPage = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Teacher notes */}
+      {notes && (
+        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "350ms" }}>
+          <h2 className="text-[12px] font-semibold text-primary/60 mb-3 tracking-tight flex items-center gap-1.5">
+            <FileText className="h-3.5 w-3.5" strokeWidth={1.5} />
+            הערות מורה
+          </h2>
+          <div className="bg-card rounded-xl border border-border p-4 shadow-[var(--shadow-card)]">
+            <p className="text-[11.5px] text-muted-foreground leading-relaxed">{notes}</p>
           </div>
         </section>
       )}
