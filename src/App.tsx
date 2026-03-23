@@ -24,6 +24,7 @@ import TeacherSubjectEditorPage from "./pages/TeacherSubjectEditorPage.tsx";
 import SubjectPartPage from "./pages/SubjectPartPage.tsx";
 import HistoryCoursePage from "./pages/HistoryCoursePage.tsx";
 import GroupsPage from "./pages/GroupsPage.tsx";
+import CalendarPage from "./pages/CalendarPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
