@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
-import { Calendar, Brain, Route, BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target } from "lucide-react";
+import { Calendar, Brain, Route, BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target, TrafficCone, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import WingateBadge from "@/components/WingateBadge";
