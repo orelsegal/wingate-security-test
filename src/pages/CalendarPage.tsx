@@ -95,6 +95,7 @@ const CalendarPage = () => {
     setFormSubject("");
     setFormType("assignment");
     setFormDate(selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"));
+    setFormNotes("");
     setFormOpen(true);
   };
 
@@ -104,6 +105,7 @@ const CalendarPage = () => {
     setFormSubject(ev.subject);
     setFormType(ev.type);
     setFormDate(format(ev.date, "yyyy-MM-dd"));
+    setFormNotes(ev.notes || "");
     setFormOpen(true);
   };
 
