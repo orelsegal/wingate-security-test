@@ -156,10 +156,24 @@ const SubjectPartPage = () => {
           <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">{part.weight}</p>
         </div>
         {isTeacher && (
-          <Button size="sm" onClick={handleSave} className="gap-1.5 text-[11px] h-8 rounded-xl">
-            <Save className="h-3.5 w-3.5" strokeWidth={1.5} />
-            שמירה
-          </Button>
+          <div className="flex items-center gap-2">
+            <DataExportTools
+              subjectProgress={[{
+                subjectName: `${decoded} — ${part.title}`,
+                grade: grade ?? undefined,
+                status: subjectProgress?.status,
+                completionPercent: partPct,
+                coveredTopics: coveredTopics,
+              }]}
+              label={`${decoded} ${part.title}`}
+              contextLabel={`${decoded} — ${part.title}`}
+              compact
+            />
+            <Button size="sm" onClick={handleSave} className="gap-1.5 text-[11px] h-8 rounded-xl">
+              <Save className="h-3.5 w-3.5" strokeWidth={1.5} />
+              שמירה
+            </Button>
+          </div>
         )}
       </div>
 

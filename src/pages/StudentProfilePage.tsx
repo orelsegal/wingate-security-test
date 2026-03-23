@@ -259,10 +259,28 @@ const StudentProfilePage = () => {
               </div>
             </div>
           </div>
-          {/* Score Ring */}
+          {/* Score Ring + Export */}
           <div className="flex flex-col items-center gap-2 shrink-0">
             <ProgressRing value={overallProgress} />
             <span className="text-[11px] text-muted-foreground">ציון משוקלל</span>
+            {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
+              <DataExportTools
+                student={student}
+                subjectProgress={subjectProgress.map(sp => ({
+                  subjectName: (sp as any).subjects?.subject_name || "",
+                  grade: sp.grade,
+                  status: sp.status,
+                  completionPercent: sp.completion_percent,
+                  absences: sp.absences,
+                  notes: sp.notes,
+                  missingItems: sp.missing_items || [],
+                  coveredTopics: sp.covered_topics || [],
+                }))}
+                label={student.full_name}
+                contextLabel={student.full_name}
+                compact
+              />
+            )}
           </div>
         </div>
       </div>

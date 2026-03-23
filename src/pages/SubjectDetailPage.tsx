@@ -93,6 +93,25 @@ const SubjectDetailPage = () => {
         <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
       </div>
 
+      {/* Export tools for staff */}
+      {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
+        <div className="mb-5">
+          <DataExportTools
+            subjectProgress={[{
+              subjectName: decoded,
+              grade: grade ?? undefined,
+              status: status,
+              completionPercent: pct,
+              missingItems: missingItems,
+              coveredTopics: coveredTopics,
+            }]}
+            label={decoded}
+            contextLabel={decoded}
+            compact
+          />
+        </div>
+      )}
+
       {/* KPI Row */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
