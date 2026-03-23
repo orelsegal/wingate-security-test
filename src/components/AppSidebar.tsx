@@ -17,6 +17,7 @@ const allMenuItems = [
   { title: "עמוד הבית", icon: Home, path: "/student-home", roles: ["student"] },
   { title: "דשבורד ניהולי", icon: LayoutDashboard, path: "/dashboard", roles: ["admin", "teacher"] },
   { title: "ניהול ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
+  { title: "קבוצות", icon: Layers, path: "/groups", roles: ["admin", "teacher", "coach"] },
   { title: "מעקב לימודי", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
   { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
   { title: "ניהול מערכת", icon: Database, path: "/data-management", roles: ["admin"] },
