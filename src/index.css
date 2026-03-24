@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -80,58 +80,11 @@
     @apply border-border;
   }
 
-  html {
-    direction: rtl;
-  }
-
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Heebo', sans-serif;
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-family: 'Assistant', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: 'Heebo', sans-serif;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-
-  p,
-  span,
-  button,
-  input,
-  textarea,
-  select,
-  label {
-    font-family: 'Heebo', sans-serif;
-  }
-}
-
-@layer components {
-  .page-title {
-    @apply text-[21px] md:text-[24px] font-medium tracking-tight text-foreground;
-  }
-
-  .page-subtitle {
-    @apply text-[13px] text-muted-foreground/75 leading-relaxed;
-  }
-
-  .card-soft {
-    @apply bg-white rounded-[24px] border border-black/5 shadow-sm;
-  }
-
-  .icon-soft {
-    @apply w-12 h-12 rounded-[18px] flex items-center justify-center;
   }
 }
 
@@ -141,22 +94,18 @@
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
-    transition: box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease;
+    transition: box-shadow 200ms ease, border-color 200ms ease;
   }
-
   .card-premium:hover {
     box-shadow: var(--shadow-card-hover);
     border-color: hsl(150 10% 87%);
   }
-
   .gradient-brand {
     background: var(--gradient-brand);
   }
-
   .gradient-hero {
     background: var(--gradient-hero);
   }
-
   .pattern-track {
     background-image: repeating-linear-gradient(
       90deg,
@@ -165,13 +114,5 @@
       hsla(152, 30%, 50%, 0.03) 48px,
       hsla(152, 30%, 50%, 0.03) 49px
     );
-  }
-
-  .text-soft {
-    color: hsl(var(--muted-foreground) / 0.78);
-  }
-
-  .shadow-soft {
-    box-shadow: 0 3px 14px rgba(15, 23, 42, 0.05);
   }
 }

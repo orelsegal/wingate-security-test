@@ -1,67 +1,169 @@
+import { useAuth } from "@/context/AuthContext";
+import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
+import { BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target, CalendarDays, Brain, GraduationCap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import WingateBadge from "@/components/WingateBadge";
+
 const StudentHomePage = () => {
-  const items = [
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const studentId = user?.scopeFilter?.[0] || "";
+  const { data: student, isLoading } = useStudent(studentId);
+  const { data: progress = [] } = useStudentProgress(studentId);
+  const { data: roadmap = [] } = useStudentRoadmap(studentId, student?.math_level ?? 3);
+
+  const completedRoadmapCount = useMemo(() => roadmap.filter((r: any) => r.completed).length, [roadmap]);
+  const totalRoadmapCount = roadmap.length;
+  const progressPct = totalRoadmapCount > 0 ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100) : 0;
+
+  const subjectsAtRisk = useMemo(
+    () => progress.filter((p: any) => p.status === "red" || p.status === "yellow").length,
+    [progress],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const cards = [
     {
-      title: "התחל למידה",
-      subtitle: "גישה לקורסים וחומרי לימוד",
-      icon: "📘",
-      path: "/courses",
+      id: "subjects",
+      title: "מקצועות",
+      description: "צפייה במקצועות, יחידות לימוד והתקדמות",
+      icon: BookOpen,
+      color: "bg-[hsl(270,25%,94%)]",
+      iconColor: "text-[hsl(270,35%,50%)]",
+      action: () => navigate("/subjects"),
     },
     {
-      title: "מפת הדרכים שלי",
-      subtitle: "התקדמות אישית וציונים",
-      icon: "📈",
-      path: "/roadmap",
+      id: "profile",
+      title: "הפרופיל שלי",
+      description: "ציונים, התקדמות ומצב לימודי מלא",
+      icon: GraduationCap,
+      color: "bg-primary/10",
+      iconColor: "text-primary",
+      action: () => navigate(`/students/${studentId}`),
     },
     {
-      title: "ציונים",
-      subtitle: "כל הציונים במקום אחד",
-      icon: "🎓",
-      path: "/grades",
-    },
-    {
+      id: "calendar",
       title: "לוח שנה",
-      subtitle: "משימות, מבחנים ואירועים",
-      icon: "📅",
-      path: "/calendar",
+      description: "משימות, מבחנים ומפגשים קרובים",
+      icon: CalendarDays,
+      color: "bg-secondary",
+      iconColor: "text-foreground/80",
+      action: () => navigate("/calendar"),
     },
     {
-      title: "ארגז כלים",
-      subtitle: "מחברת, קישורים ומשאבים",
-      icon: "🛠️",
-      path: "/tools",
+      id: "smartbase",
+      title: "וינגייט חכם",
+      description: "ליווי לימודי חכם ותכנון שבועי",
+      icon: Brain,
+      color: "bg-[hsl(35,35%,93%)]",
+      iconColor: "text-[hsl(35,45%,42%)]",
+      action: () => {},
+      comingSoon: true,
     },
   ];
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      {/* כותרת */}
-      <h1 className="text-xl font-medium text-center mb-6">
-        המרחב שלי
-      </h1>
+    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
+      {/* Welcome */}
+      <section className="mb-8">
+        <div className="flex items-center gap-4 mb-6">
+          <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
+          <div>
+            <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
+              שלום, {student?.full_name || user?.name}
+            </h1>
+            <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
+              {student?.sport} · {student?.class_name} · סמסטר א׳ תשפ״ה
+            </p>
+            <div
+              className="mt-3 h-[1.5px] w-[72px] rounded-full"
+              style={{ background: "linear-gradient(to left, transparent, hsl(var(--primary-soft) / 0.5), transparent)" }}
+            />
+          </div>
+        </div>
 
-      {/* רשימה */}
-      <div className="space-y-3">
-        {items.map((item, index) => (
-          <a
-            key={index}
-            href={item.path}
-            className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-gray-100"
-          >
-            {/* אייקון קטן */}
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 text-lg">
-              {item.icon}
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { icon: Target, color: "text-primary", value: `${progressPct}%`, label: "התקדמות כללית" },
+            { icon: CheckCircle2, color: "text-[hsl(var(--success))]", value: progress.length, label: "מקצועות פעילים" },
+            { icon: Clock, color: "text-[hsl(var(--warning))]", value: subjectsAtRisk, label: "דורשים תשומת לב" },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              <div className="flex items-center justify-center mb-1.5">
+                <stat.icon className={`h-4 w-4 ${stat.color}`} strokeWidth={1.5} />
+              </div>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{stat.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-1 font-medium">{stat.label}</p>
             </div>
+          ))}
+        </div>
+      </section>
 
-            {/* טקסט */}
-            <div className="flex-1 text-right">
-              <div className="text-sm font-medium">{item.title}</div>
-              <div className="text-xs text-gray-500">{item.subtitle}</div>
-            </div>
+      {/* Action Cards */}
+      <section>
+        <h2 className="text-[11.5px] font-medium text-primary/60 mb-5 tracking-tight">המרחב שלי</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {cards.map((card, i) => (
+            <button
+              key={card.id}
+              onClick={card.action}
+              disabled={card.comingSoon}
+              className={`group relative bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 animate-fade-in-up ${
+                card.comingSoon
+                  ? "opacity-45 cursor-not-allowed"
+                  : "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
+              }`}
+              style={{ animationDelay: `${80 + i * 50}ms` }}
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`w-11 h-11 rounded-xl ${card.color} flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                    !card.comingSoon ? "group-hover:scale-105" : ""
+                  }`}
+                >
+                  <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} strokeWidth={1.5} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[13.5px] font-semibold text-foreground leading-tight">{card.title}</h3>
+                    {card.comingSoon && (
+                      <span className="text-[9px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                        בקרוב
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11.5px] text-muted-foreground mt-1.5 leading-relaxed">{card.description}</p>
+                </div>
+                {!card.comingSoon && (
+                  <ChevronLeft
+                    className="h-4 w-4 text-border shrink-0 mt-0.5 group-hover:text-primary/50 transition-colors duration-200"
+                    strokeWidth={1.5}
+                  />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
 
-            {/* חץ */}
-            <div className="text-gray-400 text-sm">›</div>
-          </a>
-        ))}
+      {/* Branding */}
+      <div className="mt-16 text-center">
+        <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
+          האקדמיה למצוינות · מכון וינגייט
+        </span>
       </div>
     </div>
   );

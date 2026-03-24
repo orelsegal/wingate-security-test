@@ -1,174 +1,257 @@
-import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  ChevronLeft,
-  Lock,
-  CheckCircle2,
-  FlaskConical,
-  BookOpen,
-  Globe,
-  Calculator,
-} from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { useStudents, useAllStudentProgress, useSports, statusConfig, type StatusType } from "@/hooks/useStudents";
+import { StatusBadge } from "@/components/StatusBadge";
+import { useAuth } from "@/context/AuthContext";
+
+const grades = ["י׳", "י״א", "י״ב"];
+
+const classToGrade = (className: string): string => {
+  if (className.startsWith("י״ב") || className.startsWith("יב")) return "י״ב";
+  if (className.startsWith("י״א") || className.startsWith("יא")) return "י״א";
+  if (className.startsWith("י׳") || className.startsWith("י")) return "י׳";
+  return className;
+};
+
+interface SubjectRow {
+  id: string;
+  studentName: string;
+  subject: string;
+  status: StatusType;
+  branch: string;
+  grade: string;
+}
 
 const CoursesPage = () => {
-  const { courseId } = useParams();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: students = [], isLoading: studentsLoading } = useStudents();
+  const { data: allProgress = [], isLoading: progressLoading } = useAllStudentProgress();
+  const { data: sportsData = [] } = useSports();
+  const branches = useMemo(() => (sportsData as any[]).map(s => s.sport_name), [sportsData]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusType | null>(null);
+  const [branchFilter, setBranchFilter] = useState<string | null>(null);
+  const [gradeFilter, setGradeFilter] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"name" | "subject" | "status" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const course = useMemo(() => {
-    const coursesMap: Record<
-      string,
-      {
-        title: string;
-        subtitle: string;
-        icon: JSX.Element;
-        color: string;
-        progress: number;
-        units: { id: number; title: string; description: string; locked?: boolean }[];
-      }
-    > = {
-      "history-30": {
-        title: "היסטוריה",
-        subtitle: "30% לבגרות",
-        icon: <BookOpen className="h-5 w-5 text-[hsl(270,28%,56%)]" strokeWidth={1.7} />,
-        color: "bg-[hsl(270,24%,93%)]",
-        progress: 60,
-        units: [
-          { id: 1, title: "מבוא לקורס", description: "פתיחה, מבנה הקורס והיכרות עם הנושאים" },
-          { id: 2, title: "מדמוקרטיה לנאציזם", description: "תעמולה, חקיקה וטרור" },
-          { id: 3, title: "נוער היטלר", description: "מקור היסטורי וניתוח שאלות" },
-          { id: 4, title: "משימה מסכמת", description: "העלאה והגשה מסודרת", locked: true },
-        ],
-      },
-      english: {
-        title: "אנגלית",
-        subtitle: "Module E",
-        icon: <Globe className="h-5 w-5 text-[hsl(210,32%,58%)]" strokeWidth={1.7} />,
-        color: "bg-[hsl(210,26%,93%)]",
-        progress: 40,
-        units: [
-          { id: 1, title: "Main Idea", description: "זיהוי רעיון מרכזי בטקסט" },
-          { id: 2, title: "Supporting Details", description: "איתור פרטים תומכים" },
-          { id: 3, title: "Text Types", description: "סוגי טקסטים בבגרות" },
-          { id: 4, title: "Practice Quiz", description: "מבדק קצר לסיכום", locked: true },
-        ],
-      },
-      math: {
-        title: "מתמטיקה",
-        subtitle: "4/5 יחידות",
-        icon: <Calculator className="h-5 w-5 text-[hsl(145,24%,46%)]" strokeWidth={1.7} />,
-        color: "bg-[hsl(145,18%,92%)]",
-        progress: 30,
-        units: [
-          { id: 1, title: "חזרה על יסודות", description: "חיזוק מיומנויות בסיס" },
-          { id: 2, title: "פתרון משוואות", description: "תרגול מודרך" },
-          { id: 3, title: "בעיות מילוליות", description: "יישום וחשיבה" },
-          { id: 4, title: "מבדק מסכם", description: "בדיקת התקדמות", locked: true },
-        ],
-      },
-      "science-intro": {
-        title: "מבוא למדעים",
-        subtitle: "יחידות פתיחה",
-        icon: <FlaskConical className="h-5 w-5 text-[hsl(210,32%,58%)]" strokeWidth={1.7} />,
-        color: "bg-[hsl(210,26%,93%)]",
-        progress: 20,
-        units: [
-          { id: 1, title: "מהו מדע?", description: "מושגי יסוד והיכרות עם התחום" },
-          { id: 2, title: "שיטה מדעית", description: "שאלת חקר, השערה ומסקנה" },
-          { id: 3, title: "ניסוי ותצפית", description: "סוגי בדיקה וניתוח תוצאות" },
-          { id: 4, title: "משימת קלאסרום", description: "העלאה והגשה", locked: true },
-        ],
-      },
-    };
+  const allRows: SubjectRow[] = useMemo(() => {
+    // Filter progress by scoped students
+    const studentIds = new Set(students.map(s => s.id));
+    return allProgress
+      .filter(p => studentIds.has(p.student_id))
+      .map(p => ({
+        id: p.id,
+        studentName: (p as any).students?.full_name || "",
+        subject: (p as any).subjects?.subject_name || "",
+        status: p.status as StatusType,
+        branch: (p as any).students?.sport || "",
+        grade: (p as any).students?.class_name || "",
+      }));
+  }, [students, allProgress]);
 
-    return coursesMap[courseId || ""] || null;
-  }, [courseId]);
+  const filtered = useMemo(() => {
+    const statusOrder: Record<string, number> = { red: 0, yellow: 1, green: 2 };
+    const list = allRows.filter(r => {
+      if (search && !r.studentName.includes(search) && !r.subject.includes(search) && !r.branch.includes(search)) return false;
+      if (statusFilter && r.status !== statusFilter) return false;
+      if (branchFilter && r.branch !== branchFilter) return false;
+      if (gradeFilter && classToGrade(r.grade) !== gradeFilter) return false;
+      return true;
+    });
+    if (sortBy) {
+      list.sort((a, b) => {
+        let cmp = 0;
+        if (sortBy === "name") cmp = a.studentName.localeCompare(b.studentName, "he");
+        else if (sortBy === "subject") cmp = a.subject.localeCompare(b.subject, "he");
+        else if (sortBy === "status") cmp = (statusOrder[a.status] ?? 2) - (statusOrder[b.status] ?? 2);
+        return sortDir === "desc" ? -cmp : cmp;
+      });
+    }
+    return list;
+  }, [allRows, search, statusFilter, branchFilter, gradeFilter, sortBy, sortDir]);
 
-  if (!course) {
+  const hasFilters = search || statusFilter || branchFilter || gradeFilter || sortBy;
+
+  const toggleSort = (col: "name" | "subject" | "status") => {
+    if (sortBy === col) {
+      if (sortDir === "asc") setSortDir("desc");
+      else { setSortBy(null); setSortDir("asc"); }
+    } else {
+      setSortBy(col);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: "name" | "subject" | "status" }) => {
+    if (sortBy !== col) return <ArrowUpDown className="h-3 w-3 opacity-40" strokeWidth={1.5} />;
+    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 text-primary" strokeWidth={1.5} /> : <ArrowDown className="h-3 w-3 text-primary" strokeWidth={1.5} />;
+  };
+
+  const clearAll = () => {
+    setSearch("");
+    setStatusFilter(null);
+    setBranchFilter(null);
+    setGradeFilter(null);
+    setSortBy(null);
+    setSortDir("asc");
+  };
+
+  const isLoading = studentsLoading || progressLoading;
+
+  if (isLoading) {
     return (
-      <div className="p-5 md:p-8 max-w-[700px] mx-auto" dir="rtl">
-        <div className="bg-white rounded-[24px] border border-[hsl(220,18%,93%)] shadow-[0_2px_10px_rgba(15,23,42,0.04)] p-6 text-right">
-          <h1 className="text-[20px] font-medium tracking-tight text-foreground">
-            הקורס לא נמצא
-          </h1>
-          <p className="text-[13px] text-muted-foreground/75 mt-2">
-            חזרי לרשימת הקורסים ונסי שוב.
-          </p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="p-5 md:p-8 max-w-[700px] mx-auto" dir="rtl">
-      <button
-        onClick={() => navigate("/courses")}
-        className="mb-5 inline-flex items-center gap-2 text-[13px] text-muted-foreground/75 hover:text-foreground transition"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        חזרה לקורסים
-      </button>
+    <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
+      <div className="space-y-1.5">
+        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">סטטוס לימודי לפי מקצוע</h2>
+        <p className="text-muted-foreground text-[13px] md:text-sm">
+          {allRows.length} רשומות &middot; {students.length} ספורטאים &middot; מוצגות {filtered.length}
+        </p>
+      </div>
 
-      <div className="bg-white rounded-[24px] border border-[hsl(220,18%,93%)] shadow-[0_2px_10px_rgba(15,23,42,0.04)] px-5 py-5 mb-5">
-        <div className="flex items-center justify-between gap-4">
-          <div className={`w-[56px] h-[56px] rounded-[18px] ${course.color} flex items-center justify-center shrink-0`}>
-            {course.icon}
+      {/* Filters */}
+      <div className="card-premium p-4 md:p-5 space-y-4">
+        <div className="relative">
+          <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" strokeWidth={1.5} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="חיפוש ספורטאי או מקצוע..."
+            className="w-full h-10 ps-10 pe-4 bg-accent/50 border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-150"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground">
+              <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2 md:gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[12px] text-muted-foreground ms-1 me-1">סטטוס:</span>
+            {(["green", "yellow", "red"] as StatusType[]).map((type) => {
+              const config = statusConfig[type];
+              const active = statusFilter === type;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setStatusFilter(active ? null : type)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                    active ? config.activeBg + " " + config.textClass : "bg-accent/60 text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  <span className={`w-[6px] h-[6px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/40"}`} />
+                  {config.label}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex-1 text-right">
-            <h1 className="text-[21px] md:text-[24px] font-medium tracking-tight text-foreground leading-tight">
-              {course.title}
-            </h1>
-            <p className="text-[12.5px] text-muted-foreground/75 mt-1">
-              {course.subtitle}
-            </p>
+          <div className="hidden md:block w-px h-7 bg-border self-center" />
 
-            <div className="mt-3 w-full bg-[hsl(220,16%,92%)] rounded-full h-[6px] overflow-hidden">
-              <div
-                className="bg-[hsl(140,55%,47%)] h-[6px] rounded-full transition-all"
-                style={{ width: `${course.progress}%` }}
-              />
-            </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[12px] text-muted-foreground ms-1 me-1">ענף:</span>
+            {branches.map((b) => {
+              const active = branchFilter === b;
+              return (
+                <button
+                  key={b}
+                  onClick={() => setBranchFilter(active ? null : b)}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                    active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/60 text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {b}
+                </button>
+              );
+            })}
           </div>
+
+          <div className="hidden md:block w-px h-7 bg-border self-center" />
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-[12px] text-muted-foreground ms-1 me-1">כיתה:</span>
+            {grades.map((g) => {
+              const active = gradeFilter === g;
+              return (
+                <button
+                  key={g}
+                  onClick={() => setGradeFilter(active ? null : g)}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-150 ${
+                    active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/60 text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {g}
+                </button>
+              );
+            })}
+          </div>
+
+          {hasFilters && (
+            <button onClick={clearAll} className="px-3 py-1.5 rounded-full text-[12px] font-medium text-destructive hover:bg-destructive/10 transition-all duration-150">
+              נקה הכל
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="space-y-3.5">
-        {course.units.map((unit) => (
-          <button
-            key={unit.id}
-            disabled={!!unit.locked}
-            className={`w-full rounded-[24px] border border-[hsl(220,18%,93%)] px-5 py-4 flex items-center justify-between text-right shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition ${
-              unit.locked
-                ? "bg-[hsl(0,0%,97%)] opacity-85 cursor-not-allowed"
-                : "bg-white hover:shadow-[0_4px_14px_rgba(15,23,42,0.06)]"
-            }`}
-          >
-            <div className="flex items-center gap-3 shrink-0">
-              {unit.locked ? (
-                <div className="w-9 h-9 rounded-[14px] bg-[hsl(0,0%,92%)] flex items-center justify-center">
-                  <Lock className="h-4 w-4 text-muted-foreground/70" />
-                </div>
-              ) : (
-                <div className="w-9 h-9 rounded-[14px] bg-[hsl(145,36%,92%)] flex items-center justify-center">
-                  <CheckCircle2 className="h-4 w-4 text-[hsl(145,42%,38%)]" />
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 px-3">
-              <h2 className="text-[15.5px] md:text-[16.5px] font-medium tracking-tight text-foreground">
-                {unit.title}
-              </h2>
-              <p className="text-[12.5px] text-muted-foreground/75 mt-0.5">
-                {unit.description}
-              </p>
-            </div>
-
-            <div className="text-[12px] text-muted-foreground/65 shrink-0">
-              {unit.locked ? "נעול" : `יחידה ${unit.id}`}
-            </div>
+      {/* Table */}
+      <div className="card-premium overflow-hidden">
+        <div className="hidden md:grid grid-cols-[1fr_120px_100px_100px] gap-4 px-6 py-3.5 border-b border-border bg-accent/30">
+          <button onClick={() => toggleSort("name")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            שם <SortIcon col="name" />
           </button>
-        ))}
+          <button onClick={() => toggleSort("subject")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            מקצוע <SortIcon col="subject" />
+          </button>
+          <span className="text-[12px] font-medium text-muted-foreground">ענף</span>
+          <button onClick={() => toggleSort("status")} className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+            סטטוס <SortIcon col="status" />
+          </button>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-[13px] text-muted-foreground">
+            לא נמצאו תוצאות — נסו לשנות את הסינון
+          </div>
+        ) : (
+          filtered.slice(0, 100).map((row, i) => (
+            <div
+              key={row.id}
+              className={`grid grid-cols-1 md:grid-cols-[1fr_120px_100px_100px] gap-1 md:gap-4 px-5 md:px-6 py-4 md:py-3.5 ${
+                i < Math.min(filtered.length, 100) - 1 ? "border-b border-border" : ""
+              } hover:bg-accent/20 transition-colors duration-100`}
+            >
+              <div className="flex items-center justify-between md:contents">
+                <span className="text-[13px] font-medium text-foreground">{row.studentName}</span>
+                <div className="md:hidden">
+                  <StatusBadge type={row.status} />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 md:contents text-[12px] text-muted-foreground">
+                <span>{row.subject}</span>
+                <span className="text-border md:hidden">·</span>
+                <span>{row.branch}</span>
+              </div>
+              <div className="hidden md:flex items-center">
+                <StatusBadge type={row.status} />
+              </div>
+            </div>
+          ))
+        )}
+        {filtered.length > 100 && (
+          <div className="py-3 text-center text-[12px] text-muted-foreground border-t border-border">
+            מוצגות 100 מתוך {filtered.length} רשומות — צמצמו את הסינון
+          </div>
+        )}
       </div>
     </div>
   );
