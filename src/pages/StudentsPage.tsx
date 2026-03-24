@@ -82,7 +82,7 @@ const StudentHomePage = () => {
     {
       id: "start-learning",
       title: "התחל למידה",
-      description: "כניסה מהירה למקצועות, קורסים וחומרי לימוד",
+      description: "גישה לקורסים ומשאבי למידה",
       icon: BookOpen,
       path: "/subjects",
       color: "bg-[hsl(270,25%,93%)]",
@@ -91,7 +91,7 @@ const StudentHomePage = () => {
     {
       id: "progress",
       title: "ההתקדמות שלי",
-      description: "מבט מסודר על התקדמות לימודית ומשימות",
+      description: "התקדמות, משימות וסטטוס לימודי",
       icon: TrendingUp,
       path: "/courses",
       color: "bg-[hsl(210,40%,93%)]",
@@ -100,7 +100,7 @@ const StudentHomePage = () => {
     {
       id: "grades",
       title: "ציונים",
-      description: "מבחנים, עבודות והישגים לפי מקצוע",
+      description: "מבחנים, עבודות והישגים",
       icon: GraduationCap,
       path: "/students",
       color: "bg-[hsl(35,35%,93%)]",
@@ -109,7 +109,7 @@ const StudentHomePage = () => {
     {
       id: "calendar",
       title: "לוח שנה",
-      description: "משימות, מבחנים, שיעורים ואירועים קרובים",
+      description: "משימות, מבחנים, שיעורים ואירועים",
       icon: CalendarDays,
       path: "/calendar",
       color: "bg-[hsl(150,25%,93%)]",
@@ -119,7 +119,6 @@ const StudentHomePage = () => {
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto" dir="rtl">
-      {/* Header */}
       <section className="mb-8">
         <div className="flex items-center gap-4 mb-6">
           <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
@@ -134,7 +133,6 @@ const StudentHomePage = () => {
         </div>
       </section>
 
-      {/* Continue from last time */}
       {last && (
         <div className="mb-6 animate-fade-in-up">
           <p className="text-[10.5px] font-medium text-primary/50 mb-2.5 tracking-tight">
@@ -165,7 +163,6 @@ const StudentHomePage = () => {
         </div>
       )}
 
-      {/* Top stats - without traffic lights */}
       <div className="grid gap-3 mb-7 grid-cols-3">
         <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up">
           <div className="flex items-center justify-center mb-1.5">
@@ -213,7 +210,6 @@ const StudentHomePage = () => {
         </div>
       </div>
 
-      {/* Main cards */}
       <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">
         כלים מרכזיים
       </h2>
@@ -254,7 +250,6 @@ const StudentHomePage = () => {
         ))}
       </div>
 
-      {/* Bottom branding */}
       <div className="mt-16 text-center">
         <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
           האקדמיה למצוינות · מכון וינגייט
