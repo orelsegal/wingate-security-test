@@ -10,76 +10,76 @@ const CoursesListPage = () => {
       title: "היסטוריה",
       subtitle: "30% לבגרות",
       progress: 60,
-      icon: <BookOpen className="h-4 w-4 text-[hsl(270,28%,56%)]" strokeWidth={1.7} />,
-      color: "bg-[hsl(270,24%,93%)]",
+      icon: <BookOpen className="h-7 w-7 text-[hsl(270,30%,52%)]" strokeWidth={1.8} />,
+      iconBg: "bg-[hsl(270,28%,92%)]",
     },
     {
       id: "english",
       title: "אנגלית",
       subtitle: "Module E",
       progress: 40,
-      icon: <Globe className="h-4 w-4 text-[hsl(210,32%,58%)]" strokeWidth={1.7} />,
-      color: "bg-[hsl(210,26%,93%)]",
+      icon: <Globe className="h-7 w-7 text-[hsl(210,32%,56%)]" strokeWidth={1.8} />,
+      iconBg: "bg-[hsl(210,28%,91%)]",
     },
     {
       id: "math",
       title: "מתמטיקה",
       subtitle: "4/5 יחידות",
       progress: 30,
-      icon: <Calculator className="h-4 w-4 text-[hsl(145,24%,46%)]" strokeWidth={1.7} />,
-      color: "bg-[hsl(145,18%,92%)]",
+      icon: <Calculator className="h-7 w-7 text-[hsl(145,24%,44%)]" strokeWidth={1.8} />,
+      iconBg: "bg-[hsl(145,18%,91%)]",
     },
     {
       id: "science-intro",
       title: "מבוא למדעים",
       subtitle: "יחידות פתיחה",
       progress: 20,
-      icon: <FlaskConical className="h-4 w-4 text-[hsl(210,32%,58%)]" strokeWidth={1.7} />,
-      color: "bg-[hsl(210,26%,93%)]",
+      icon: <FlaskConical className="h-7 w-7 text-[hsl(210,32%,56%)]" strokeWidth={1.8} />,
+      iconBg: "bg-[hsl(210,28%,91%)]",
     },
   ];
 
   return (
-    <div className="p-5 md:p-8 max-w-[660px] mx-auto" dir="rtl">
-      <div className="mb-6">
-        <h1 className="text-[19px] md:text-[21px] font-medium tracking-tight text-foreground text-right">
+    <div className="p-5 md:p-8 max-w-[760px] mx-auto" dir="rtl">
+      <div className="mb-8">
+        <h1 className="text-[22px] md:text-[26px] font-medium tracking-tight text-right text-foreground">
           הקורסים שלי
         </h1>
-        <p className="text-[12px] text-muted-foreground/70 text-right mt-1">
+        <p className="text-[13px] text-muted-foreground/70 text-right mt-1.5">
           כניסה מהירה לכל קורסי הלימוד שלך
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-5">
         {courses.map((course) => (
           <button
             key={course.id}
             onClick={() => navigate(`/courses/${course.id}`)}
-            className="w-full bg-white rounded-[22px] border border-[hsl(220,18%,93%)] shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-4 py-4 flex items-center justify-between text-right transition duration-200 hover:shadow-[0_4px_12px_rgba(15,23,42,0.05)]"
+            className="w-full bg-white rounded-[30px] border border-[hsl(220,18%,93%)] shadow-[0_3px_14px_rgba(15,23,42,0.05)] px-6 py-6 flex items-center justify-between transition hover:shadow-[0_6px_18px_rgba(15,23,42,0.06)]"
           >
             <ChevronLeft
-              className="h-4 w-4 text-muted-foreground/30 shrink-0"
+              className="h-6 w-6 text-muted-foreground/35 shrink-0"
               strokeWidth={1.8}
             />
 
-            <div className="flex-1 px-3 min-w-0">
-              <h2 className="text-[15px] md:text-[15.5px] font-medium tracking-tight text-foreground leading-tight">
+            <div className="flex-1 px-6 text-center">
+              <h2 className="text-[20px] md:text-[22px] font-medium tracking-tight text-foreground leading-tight">
                 {course.title}
               </h2>
-              <p className="text-[12px] text-muted-foreground/72 mt-0.5">
+              <p className="text-[14px] text-muted-foreground/72 mt-1.5">
                 {course.subtitle}
               </p>
 
-              <div className="mt-2.5 w-full bg-[hsl(220,16%,92%)] rounded-full h-[5px] overflow-hidden">
+              <div className="mt-4 w-full max-w-[320px] mx-auto bg-[hsl(220,16%,92%)] rounded-full h-[8px] overflow-hidden">
                 <div
-                  className="bg-[hsl(140,55%,47%)] h-[5px] rounded-full transition-all"
+                  className="bg-[hsl(140,55%,47%)] h-[8px] rounded-full transition-all"
                   style={{ width: `${course.progress}%` }}
                 />
               </div>
             </div>
 
             <div
-              className={`w-[46px] h-[46px] rounded-[16px] ${course.color} flex items-center justify-center shrink-0`}
+              className={`w-[94px] h-[94px] rounded-[28px] ${course.iconBg} flex items-center justify-center shrink-0`}
             >
               {course.icon}
             </div>
