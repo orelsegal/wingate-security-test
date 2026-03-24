@@ -13,10 +13,19 @@ import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
 import DataManagementPage from "./pages/DataManagementPage.tsx";
 import StudentHomePage from "./pages/StudentHomePage.tsx";
+import StudentLearningTrafficLight from "./pages/StudentLearningTrafficLight.tsx";
+import StudentRoadmapTrafficLight from "./pages/StudentRoadmapTrafficLight.tsx";
 import RoleHomePage from "./pages/RoleHomePage.tsx";
 import DashboardContent from "./components/DashboardContent.tsx";
 import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
 import SubjectSelectionPage from "./pages/SubjectSelectionPage.tsx";
+import SubjectDetailPage from "./pages/SubjectDetailPage.tsx";
+import TeacherSubjectEditorPage from "./pages/TeacherSubjectEditorPage.tsx";
+import SubjectPartPage from "./pages/SubjectPartPage.tsx";
+import HistoryCoursePage from "./pages/HistoryCoursePage.tsx";
+import GroupsPage from "./pages/GroupsPage.tsx";
+import CalendarPage from "./pages/CalendarPage.tsx";
+import ScienceIntroPage from "./pages/ScienceIntroPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -45,8 +54,18 @@ const App = () => (
               <Route path="/data-entry" element={<DataEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
               <Route path="/student-home" element={<StudentHomePage />} />
+              <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
+              <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
+              <Route path="/role-home" element={<RoleHomePage />} />
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
+              <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
+              <Route path="/subjects/:subjectName/:partId" element={<SubjectPartPage />} />
+              <Route path="/teacher-subjects" element={<TeacherSubjectEditorPage />} />
+              <Route path="/history-course" element={<HistoryCoursePage />} />
+              <Route path="/groups" element={<GroupsPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/science-intro" element={<ScienceIntroPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
