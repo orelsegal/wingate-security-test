@@ -1,3 +1,6 @@
+import GradesPage from "./pages/GradesPage";
+import RoadmapPage from "./pages/RoadmapPage";
+import ToolsPage from "./pages/ToolsPage";
 import CoursesListPage from "./pages/CoursesListPage.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
@@ -45,6 +48,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/grades" element={<GradesPage />} />
+<Route path="/roadmap" element={<RoadmapPage />} />
+<Route path="/tools" element={<ToolsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<StudentHomePage />} />
