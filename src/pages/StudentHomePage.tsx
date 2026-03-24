@@ -2,11 +2,11 @@ import { useNavigate } from "react-router-dom";
 import bg from "@/assets/freepik__abstract-background-of-overlapping-soft-pastel-cir__2226.png";
 import {
   BookOpen,
-  FlaskConical,
   TrendingUp,
-  CalendarDays,
   GraduationCap,
+  CalendarDays,
   Wrench,
+  ChevronLeft,
 } from "lucide-react";
 
 const StudentHomePage = () => {
@@ -16,42 +16,35 @@ const StudentHomePage = () => {
     {
       title: "התחל למידה",
       description: "גישה מהירה לקורסים וחומרי לימוד",
-      icon: <BookOpen />,
-      path: "/courses/history-30",
+      icon: <BookOpen size={24} />,
+      path: "/courses",
       color: "bg-purple-100",
-    },
-    {
-      title: "מבוא למדעים",
-      description: "כניסה ישירה לקורס מדעים",
-      icon: <FlaskConical />,
-      path: "/courses/science-intro",
-      color: "bg-blue-100",
     },
     {
       title: "מפת הדרכים שלי",
       description: "התקדמות אישית וציונים",
-      icon: <TrendingUp />,
+      icon: <TrendingUp size={24} />,
       path: "/roadmap",
       color: "bg-green-100",
     },
     {
       title: "ציונים",
       description: "כל הציונים שלך במקום אחד",
-      icon: <GraduationCap />,
+      icon: <GraduationCap size={24} />,
       path: "/grades",
       color: "bg-yellow-100",
     },
     {
       title: "לוח שנה",
       description: "משימות, מבחנים ואירועים",
-      icon: <CalendarDays />,
+      icon: <CalendarDays size={24} />,
       path: "/calendar",
       color: "bg-teal-100",
     },
     {
       title: "ארגז כלים",
       description: "מחברת, קישורים ומשאבים",
-      icon: <Wrench />,
+      icon: <Wrench size={24} />,
       path: "/tools",
       color: "bg-gray-100",
     },
@@ -66,22 +59,33 @@ const StudentHomePage = () => {
         backgroundPosition: "center",
       }}
     >
-      <h1 className="text-xl font-bold mb-4 text-right">המרחב שלי</h1>
+      {/* כותרת */}
+      <h1 className="text-xl font-bold text-right mb-6">
+        המרחב שלי
+      </h1>
 
+      {/* כרטיסים */}
       <div className="space-y-4">
         {cards.map((card, index) => (
           <div
             key={index}
             onClick={() => navigate(card.path)}
-            className="bg-white/80 backdrop-blur-md p-4 rounded-2xl flex justify-between items-center cursor-pointer shadow"
+            className="bg-white/90 p-4 rounded-2xl shadow flex items-center justify-between cursor-pointer hover:shadow-md transition"
           >
-            <div className={`p-3 rounded-xl ${card.color}`}>
-              {card.icon}
+            {/* חץ */}
+            <ChevronLeft className="text-gray-400" />
+
+            {/* טקסט */}
+            <div className="text-right flex-1 mr-3">
+              <h2 className="font-bold text-lg">{card.title}</h2>
+              <p className="text-sm text-gray-500">
+                {card.description}
+              </p>
             </div>
 
-            <div className="text-right">
-              <h2 className="font-bold">{card.title}</h2>
-              <p className="text-sm text-gray-500">{card.description}</p>
+            {/* אייקון */}
+            <div className={`${card.color} p-3 rounded-xl`}>
+              {card.icon}
             </div>
           </div>
         ))}
