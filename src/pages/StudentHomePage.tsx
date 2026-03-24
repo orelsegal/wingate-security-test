@@ -1,84 +1,66 @@
-import { useNavigate } from "react-router-dom";
-import {
-  BookOpen,
-  TrendingUp,
-  GraduationCap,
-  CalendarDays,
-  Wrench,
-  ChevronLeft,
-} from "lucide-react";
-
 const StudentHomePage = () => {
-  const navigate = useNavigate();
-
   const items = [
     {
       title: "התחל למידה",
-      subtitle: "גישה מהירה לקורסים וחומרי לימוד",
-      icon: <BookOpen className="h-5 w-5 text-[hsl(270,30%,52%)]" />,
-      bg: "bg-[hsl(270,28%,92%)]",
+      subtitle: "גישה לקורסים וחומרי לימוד",
+      icon: "📘",
       path: "/courses",
     },
     {
       title: "מפת הדרכים שלי",
       subtitle: "התקדמות אישית וציונים",
-      icon: <TrendingUp className="h-5 w-5 text-[hsl(145,24%,44%)]" />,
-      bg: "bg-[hsl(145,18%,91%)]",
+      icon: "📈",
       path: "/roadmap",
     },
     {
       title: "ציונים",
-      subtitle: "כל הציונים שלך במקום אחד",
-      icon: <GraduationCap className="h-5 w-5 text-[hsl(42,42%,44%)]" />,
-      bg: "bg-[hsl(50,42%,90%)]",
+      subtitle: "כל הציונים במקום אחד",
+      icon: "🎓",
       path: "/grades",
     },
     {
       title: "לוח שנה",
       subtitle: "משימות, מבחנים ואירועים",
-      icon: <CalendarDays className="h-5 w-5 text-[hsl(170,28%,45%)]" />,
-      bg: "bg-[hsl(170,24%,90%)]",
+      icon: "📅",
       path: "/calendar",
     },
     {
       title: "ארגז כלים",
       subtitle: "מחברת, קישורים ומשאבים",
-      icon: <Wrench className="h-5 w-5 text-[hsl(210,16%,42%)]" />,
-      bg: "bg-[hsl(220,16%,93%)]",
+      icon: "🛠️",
       path: "/tools",
     },
   ];
 
   return (
-    <div className="p-4 max-w-[520px] mx-auto" dir="rtl">
-      <h1 className="text-[20px] font-medium text-center tracking-tight mb-5">
+    <div className="p-4 max-w-md mx-auto">
+      {/* כותרת */}
+      <h1 className="text-xl font-medium text-center mb-6">
         המרחב שלי
       </h1>
 
+      {/* רשימה */}
       <div className="space-y-3">
-        {items.map((item) => (
-          <button
-            key={item.title}
-            onClick={() => navigate(item.path)}
-            className="w-full bg-white rounded-[20px] border border-[hsl(220,18%,93%)] shadow-[0_2px_10px_rgba(15,23,42,0.04)] px-4 py-4 flex items-center justify-between text-right transition hover:shadow-[0_4px_14px_rgba(15,23,42,0.05)]"
+        {items.map((item, index) => (
+          <a
+            key={index}
+            href={item.path}
+            className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-gray-100"
           >
-            <ChevronLeft className="h-4 w-4 text-muted-foreground/40" />
-
-            <div className="flex-1 px-3">
-              <h2 className="text-[15px] font-medium leading-tight">
-                {item.title}
-              </h2>
-              <p className="text-[12px] text-muted-foreground mt-1 leading-snug">
-                {item.subtitle}
-              </p>
-            </div>
-
-            <div
-              className={`w-[56px] h-[56px] rounded-[18px] ${item.bg} flex items-center justify-center`}
-            >
+            {/* אייקון קטן */}
+            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-100 text-lg">
               {item.icon}
             </div>
-          </button>
+
+            {/* טקסט */}
+            <div className="flex-1 text-right">
+              <div className="text-sm font-medium">{item.title}</div>
+              <div className="text-xs text-gray-500">{item.subtitle}</div>
+            </div>
+
+            {/* חץ */}
+            <div className="text-gray-400 text-sm">›</div>
+          </a>
         ))}
       </div>
     </div>
