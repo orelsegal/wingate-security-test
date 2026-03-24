@@ -1,93 +1,82 @@
 import { useNavigate } from "react-router-dom";
-import bg from "@/assets/freepik__abstract-background-of-overlapping-soft-pastel-cir__2226.png";
 import {
   BookOpen,
   TrendingUp,
   GraduationCap,
   CalendarDays,
   Wrench,
-  ChevronLeft,
+  FlaskConical,
 } from "lucide-react";
 
 const StudentHomePage = () => {
   const navigate = useNavigate();
 
-  const cards = [
+  const items = [
     {
       title: "התחל למידה",
-      description: "גישה מהירה לקורסים וחומרי לימוד",
-      icon: <BookOpen size={24} />,
+      subtitle: "גישה מהירה לקורסים וחומרי לימוד",
+      icon: <BookOpen className="h-7 w-7 text-[hsl(270,30%,52%)]" />,
+      bg: "bg-[hsl(270,28%,92%)]",
       path: "/courses",
-      color: "bg-purple-100",
     },
     {
       title: "מפת הדרכים שלי",
-      description: "התקדמות אישית וציונים",
-      icon: <TrendingUp size={24} />,
-      path: "/roadmap",
-      color: "bg-green-100",
+      subtitle: "התקדמות אישית וציונים",
+      icon: <TrendingUp className="h-7 w-7 text-[hsl(145,24%,44%)]" />,
+      bg: "bg-[hsl(145,18%,91%)]",
+      path: "/student-roadmap",
     },
     {
       title: "ציונים",
-      description: "כל הציונים שלך במקום אחד",
-      icon: <GraduationCap size={24} />,
+      subtitle: "כל הציונים שלך במקום אחד",
+      icon: <GraduationCap className="h-7 w-7 text-[hsl(40,40%,45%)]" />,
+      bg: "bg-[hsl(45,35%,90%)]",
       path: "/grades",
-      color: "bg-yellow-100",
     },
     {
       title: "לוח שנה",
-      description: "משימות, מבחנים ואירועים",
-      icon: <CalendarDays size={24} />,
+      subtitle: "משימות, מבחנים ואירועים",
+      icon: <CalendarDays className="h-7 w-7 text-[hsl(170,30%,45%)]" />,
+      bg: "bg-[hsl(170,22%,90%)]",
       path: "/calendar",
-      color: "bg-teal-100",
     },
     {
       title: "ארגז כלים",
-      description: "מחברת, קישורים ומשאבים",
-      icon: <Wrench size={24} />,
+      subtitle: "מחברת, קישורים ומשאבים",
+      icon: <Wrench className="h-7 w-7 text-[hsl(210,20%,45%)]" />,
+      bg: "bg-[hsl(210,18%,92%)]",
       path: "/tools",
-      color: "bg-gray-100",
     },
   ];
 
   return (
-    <div
-      className="min-h-screen p-4"
-      style={{
-        backgroundImage: `url(${bg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      {/* כותרת */}
-      <h1 className="text-xl font-bold text-right mb-6">
+    <div className="p-5 max-w-[760px] mx-auto" dir="rtl">
+      <h1 className="text-[24px] font-medium text-right mb-6">
         המרחב שלי
       </h1>
 
-      {/* כרטיסים */}
-      <div className="space-y-4">
-        {cards.map((card, index) => (
-          <div
-            key={index}
-            onClick={() => navigate(card.path)}
-            className="bg-white/90 p-4 rounded-2xl shadow flex items-center justify-between cursor-pointer hover:shadow-md transition"
+      <div className="space-y-5">
+        {items.map((item) => (
+          <button
+            key={item.title}
+            onClick={() => navigate(item.path)}
+            className="w-full bg-white rounded-[30px] border border-[hsl(220,18%,93%)] shadow-[0_3px_14px_rgba(15,23,42,0.05)] px-6 py-6 flex items-center justify-between text-right transition hover:shadow-[0_6px_18px_rgba(15,23,42,0.06)]"
           >
-            {/* חץ */}
-            <ChevronLeft className="text-gray-400" />
-
-            {/* טקסט */}
-            <div className="text-right flex-1 mr-3">
-              <h2 className="font-bold text-lg">{card.title}</h2>
-              <p className="text-sm text-gray-500">
-                {card.description}
+            <div className="flex-1 px-6">
+              <h2 className="text-[20px] font-medium">
+                {item.title}
+              </h2>
+              <p className="text-[14px] text-muted-foreground mt-1">
+                {item.subtitle}
               </p>
             </div>
 
-            {/* אייקון */}
-            <div className={`${card.color} p-3 rounded-xl`}>
-              {card.icon}
+            <div
+              className={`w-[90px] h-[90px] rounded-[26px] ${item.bg} flex items-center justify-center`}
+            >
+              {item.icon}
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
