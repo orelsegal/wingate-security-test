@@ -290,6 +290,20 @@ const CalendarPage = () => {
                   </div>
                   {canEdit && (
                     <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
+
+  {/* 👇 זה הכפתור החדש */}
+  <button
+    onClick={() => sendToWhatsApp(ev)}
+    className="p-1.5 rounded-lg text-muted-foreground hover:text-green-600 hover:bg-green-100 transition-colors"
+  >
+    💬
+  </button>
+
+  <button onClick={() => openEditForm(ev)} ...>
+  <button onClick={() => setDeleteTarget(ev)} ...>
+
+</div>
                       <button onClick={() => openEditForm(ev)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                         <Pencil className="h-3 w-3" strokeWidth={1.5} />
                       </button>
