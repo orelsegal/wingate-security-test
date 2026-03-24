@@ -13,6 +13,7 @@ import StudentHomePage from "./pages/StudentHomePage";
 import StudentProfilePage from "./pages/StudentProfilePage";
 import CalendarPage from "./pages/CalendarPage";
 import CoursesListPage from "./pages/CoursesListPage";
+import CoursesPage from "./pages/CoursesPage";
 import GradesPage from "./pages/GradesPage";
 import RoadmapPage from "./pages/RoadmapPage";
 import ToolsPage from "./pages/ToolsPage";
@@ -51,6 +52,8 @@ const App = () => {
                 <Route path="/student-home" element={<StudentHomePage />} />
 
                 <Route path="/courses" element={<CoursesListPage />} />
+                <Route path="/courses/:courseId" element={<CoursesPage />} />
+
                 <Route path="/grades" element={<GradesPage />} />
                 <Route path="/roadmap" element={<RoadmapPage />} />
                 <Route path="/tools" element={<ToolsPage />} />
