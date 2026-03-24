@@ -19,6 +19,7 @@ import RoadmapPage from "./pages/RoadmapPage";
 import ToolsPage from "./pages/ToolsPage";
 
 import ParentHomePage from "./pages/ParentHomePage";
+import ScienceIntroPage from "./pages/ScienceIntroPage";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => {
                 <Route path="/tools" element={<ToolsPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/students/:id" element={<StudentProfilePage />} />
+                <Route path="/science-intro" element={<ScienceIntroPage />} />
 
                 <Route path="/parent-home" element={<ParentHomePage />} />
               </Route>
