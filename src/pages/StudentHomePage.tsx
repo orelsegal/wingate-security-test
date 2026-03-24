@@ -18,11 +18,6 @@ const StudentHomePage = () => {
   const totalRoadmapCount = roadmap.length;
   const progressPct = totalRoadmapCount > 0 ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100) : 0;
 
-  const subjectsAtRisk = useMemo(
-    () => progress.filter((p: any) => p.status === "red" || p.status === "yellow").length,
-    [progress],
-  );
-
   const avgGrade = useMemo(() => {
     const graded = progress.filter((p: any) => p.grade != null && p.grade > 0);
     return graded.length > 0 ? Math.round(graded.reduce((s: number, p: any) => s + p.grade, 0) / graded.length) : 0;
@@ -37,6 +32,12 @@ const StudentHomePage = () => {
     return count;
   }, [progressPct, avgGrade, progress]);
 
+  // Find subject with lowest grade for "AI suggestion"
+  const weakSubject = useMemo(() => {
+    const sorted = [...progress].filter((p: any) => p.grade != null && p.grade > 0).sort((a: any, b: any) => a.grade - b.grade);
+    return sorted[0] as any;
+  }, [progress]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -44,12 +45,6 @@ const StudentHomePage = () => {
       </div>
     );
   }
-
-  // Find subject with lowest grade for "AI suggestion"
-  const weakSubject = useMemo(() => {
-    const sorted = [...progress].filter((p: any) => p.grade != null && p.grade > 0).sort((a: any, b: any) => a.grade - b.grade);
-    return sorted[0] as any;
-  }, [progress]);
 
   const mainCards = [
     {
