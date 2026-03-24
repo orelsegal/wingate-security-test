@@ -51,7 +51,7 @@ const StudentHomePage = () => {
 
   return (
     <div className="p-4 max-w-[520px] mx-auto" dir="rtl">
-      <h1 className="text-[20px] font-medium text-right mb-4">
+      <h1 className="text-[20px] font-medium text-center tracking-tight mb-5">
         המרחב שלי
       </h1>
 
