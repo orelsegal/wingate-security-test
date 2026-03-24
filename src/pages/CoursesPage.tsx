@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { BookOpen, FlaskConical, Calculator, Globe, ChevronLeft } from "lucide-react";
 
-const CoursesListPage = () => {
+const CoursesPage = () => {
   const navigate = useNavigate();
 
   const courses = [
@@ -82,4 +82,4 @@ const CoursesListPage = () => {
   );
 };
 
-export default CoursesListPage;
+export default CoursesPage;
