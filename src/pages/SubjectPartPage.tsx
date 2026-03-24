@@ -34,16 +34,19 @@ interface PartDef {
 const allParts: Record<string, PartDef[]> = {
   "היסטוריה": [
     {
-      id: "hist-30", title: "30%", weight: "30%",
+      id: "hist-30", title: "30% פנימי", weight: "30%",
       topics: [{ name: "הלאומיות באירופה" }, { name: "מלחמת העולם הראשונה" }, { name: "התקופה שבין המלחמות" }],
-      materials: [], assignments: [], notes: ""
+      materials: [
+        { id: "hm1", title: "מצגת – הלאומיות באירופה", type: "file" },
+      ], assignments: [], notes: ""
     },
     {
-      id: "hist-70", title: "70%", weight: "70%",
+      id: "hist-70", title: "70% חיצוני", weight: "70%",
       topics: [{ name: "מלחמת העולם השנייה" }, { name: "השואה" }, { name: "הקמת המדינה" }, { name: "סכסוך ערבי-ישראלי" }],
       materials: [
         { id: "m1", title: "מצגת – מלחמת העולם השנייה", type: "file" },
         { id: "m2", title: "סרטון – השואה", type: "link", url: "#" },
+        { id: "m3", title: "Google Classroom – היסטוריה", type: "link", url: "#" },
       ],
       assignments: [
         { id: "a1", title: "עבודה – מלחמת העולם השנייה", grade: 82, submitted: true },
@@ -54,20 +57,24 @@ const allParts: Record<string, PartDef[]> = {
     },
   ],
   "אזרחות": [
-    { id: "civ-30", title: "30%", weight: "30%", topics: [{ name: "עקרונות הדמוקרטיה" }, { name: "זכויות האדם" }, { name: "הכרזת העצמאות" }], materials: [], assignments: [], notes: "" },
-    { id: "civ-70", title: "70%", weight: "70%", topics: [{ name: "מוסדות השלטון" }, { name: "חוקה ומשפט" }, { name: "אזרחות פעילה" }, { name: "מיעוטים בישראל" }], materials: [], assignments: [], notes: "" },
+    { id: "civ-30", title: "30% פנימי", weight: "30%", topics: [{ name: "עקרונות הדמוקרטיה" }, { name: "זכויות האדם" }, { name: "הכרזת העצמאות" }], materials: [], assignments: [], notes: "" },
+    { id: "civ-70", title: "70% חיצוני", weight: "70%", topics: [{ name: "מוסדות השלטון" }, { name: "חוקה ומשפט" }, { name: "אזרחות פעילה" }, { name: "מיעוטים בישראל" }], materials: [], assignments: [], notes: "" },
+  ],
+  "ספרות": [
+    { id: "lit-30", title: "30% פנימי", weight: "30%", topics: [{ name: "שירה מודרנית" }, { name: "סיפור קצר" }, { name: "ניתוח טקסט" }], materials: [{ id: "lm1", title: "דף עבודה – שירה", type: "file" }], assignments: [{ id: "la1", title: "ניתוח שיר", submitted: false }], notes: "" },
+    { id: "lit-70", title: "70% חיצוני", weight: "70%", topics: [{ name: "רומן" }, { name: "דרמה" }, { name: "שירה קלאסית" }, { name: "חיבור השוואתי" }], materials: [], assignments: [], notes: "" },
   ],
   "לשון": [
-    { id: "heb-20", title: "20%", weight: "20%", topics: [{ name: "תחביר בסיסי" }, { name: "חלקי דיבר" }, { name: "פיסוק" }], materials: [], assignments: [], notes: "" },
-    { id: "heb-80", title: "80%", weight: "80%", topics: [{ name: "הבנת הנקרא" }, { name: "כתיבה אקדמית" }, { name: "לשון פורמלית" }, { name: "מבנה טקסט" }], materials: [], assignments: [], notes: "" },
+    { id: "heb-20", title: "20% פנימי", weight: "20%", topics: [{ name: "תחביר בסיסי" }, { name: "חלקי דיבר" }, { name: "פיסוק" }], materials: [], assignments: [], notes: "" },
+    { id: "heb-80", title: "80% חיצוני", weight: "80%", topics: [{ name: "הבנת הנקרא" }, { name: "כתיבה אקדמית" }, { name: "לשון פורמלית" }, { name: "מבנה טקסט" }], materials: [], assignments: [], notes: "" },
   ],
   "מתמטיקה": [
-    { id: "math-1", title: "אלגברה ופונקציות", weight: "~35%", topics: [{ name: "משוואות" }, { name: "פונקציה ליניארית" }, { name: "פונקציה ריבועית" }], materials: [], assignments: [], notes: "" },
+    { id: "math-1", title: "אלגברה ופונקציות", weight: "~35%", topics: [{ name: "משוואות" }, { name: "פונקציה ליניארית" }, { name: "פונקציה ריבועית" }], materials: [{ id: "mm1", title: "סרטון – פונקציה ריבועית", type: "link", url: "#" }], assignments: [], notes: "" },
     { id: "math-2", title: "גיאומטריה וטריגונומטריה", weight: "~35%", topics: [{ name: "משולשים" }, { name: "מעגל" }, { name: "טריגונומטריה" }], materials: [], assignments: [], notes: "" },
     { id: "math-3", title: "הסתברות וסטטיסטיקה", weight: "~30%", topics: [{ name: "הסתברות" }, { name: "התפלגויות" }, { name: "סטטיסטיקה תיאורית" }], materials: [], assignments: [], notes: "" },
   ],
   "אנגלית": [
-    { id: "eng-e", title: "Module E", weight: "Literature", topics: [{ name: "Unseen passages" }, { name: "Literature – Play" }, { name: "Literature – Poem" }], materials: [], assignments: [], notes: "" },
+    { id: "eng-e", title: "Module E", weight: "Literature", topics: [{ name: "Unseen passages" }, { name: "Literature – Play" }, { name: "Literature – Poem" }], materials: [{ id: "em1", title: "Reading Comprehension Guide", type: "file" }, { id: "em2", title: "Google Classroom – English", type: "link", url: "#" }], assignments: [{ id: "ea1", title: "Essay – Poem Analysis", submitted: false }], notes: "" },
     { id: "eng-f", title: "Module F", weight: "Writing", topics: [{ name: "Essay writing" }, { name: "Formal letter" }, { name: "Report" }], materials: [], assignments: [], notes: "" },
     { id: "eng-g", title: "Module G", weight: "Oral", topics: [{ name: "Oral presentation" }, { name: "Listening comprehension" }], materials: [], assignments: [], notes: "" },
   ],

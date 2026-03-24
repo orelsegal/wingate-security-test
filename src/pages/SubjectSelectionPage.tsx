@@ -5,15 +5,16 @@ import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
 
 const subjectMeta: Record<string, { icon: any; color: string; iconColor: string; subtitle: string }> = {
-  "היסטוריה": { icon: Scroll, color: "bg-[hsl(35,30%,94%)]", iconColor: "text-[hsl(35,40%,45%)]", subtitle: "30% + 70%" },
-  "אזרחות": { icon: Scale, color: "bg-[hsl(180,20%,93%)]", iconColor: "text-[hsl(180,30%,42%)]", subtitle: "30% + 70%" },
-  "אנגלית": { icon: Globe, color: "bg-[hsl(210,30%,94%)]", iconColor: "text-[hsl(210,40%,50%)]", subtitle: "Module E · F · G" },
-  "לשון": { icon: Languages, color: "bg-primary/8", iconColor: "text-primary", subtitle: "20% + 80%" },
-  "מתמטיקה": { icon: Calculator, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", subtitle: "לפי רמת יחידות לימוד" },
-  "מבוא למדעים": { icon: Lightbulb, color: "bg-[hsl(45,35%,93%)]", iconColor: "text-[hsl(45,45%,42%)]", subtitle: "קורס מפת דרכים אינטראקטיבי" },
+  "אנגלית": { icon: Globe, color: "bg-[hsl(210,30%,94%)]", iconColor: "text-[hsl(210,40%,50%)]", subtitle: "5 יח״ל · Module E · F · G" },
+  "מתמטיקה": { icon: Calculator, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", subtitle: "4/5 יח״ל · לפי רמה" },
+  "היסטוריה": { icon: Scroll, color: "bg-[hsl(35,30%,94%)]", iconColor: "text-[hsl(35,40%,45%)]", subtitle: "30% פנימי + 70% חיצוני" },
+  "אזרחות": { icon: Scale, color: "bg-[hsl(180,20%,93%)]", iconColor: "text-[hsl(180,30%,42%)]", subtitle: "30% פנימי + 70% חיצוני" },
+  "ספרות": { icon: BookOpen, color: "bg-[hsl(320,25%,94%)]", iconColor: "text-[hsl(320,35%,50%)]", subtitle: "30% פנימי + 70% חיצוני" },
+  "לשון": { icon: Languages, color: "bg-primary/8", iconColor: "text-primary", subtitle: "20% פנימי + 80% חיצוני" },
+  "מבוא למדעים": { icon: Lightbulb, color: "bg-[hsl(45,35%,93%)]", iconColor: "text-[hsl(45,45%,42%)]", subtitle: "קורס אינטראקטיבי" },
 };
 
-const subjectOrder = ["היסטוריה", "אזרחות", "אנגלית", "לשון", "מתמטיקה", "מבוא למדעים"];
+const subjectOrder = ["אנגלית", "מתמטיקה", "היסטוריה", "אזרחות", "ספרות", "לשון", "מבוא למדעים"];
 
 const SubjectSelectionPage = () => {
   const navigate = useNavigate();
