@@ -154,15 +154,6 @@ interface LastVisited {
   timestamp: number;
 }
 
-const saveLastVisited = (path: string, label: string) => {
-  try {
-    localStorage.setItem(
-      LAST_VISITED_KEY,
-      JSON.stringify({ path, label, timestamp: Date.now() })
-    );
-  } catch {}
-};
-
 const getLastVisited = (): LastVisited | null => {
   try {
     const raw = localStorage.getItem(LAST_VISITED_KEY);
@@ -172,7 +163,14 @@ const getLastVisited = (): LastVisited | null => {
   }
 };
 
-export { saveLastVisited };
+export const saveLastVisited = (path: string, label: string) => {
+  try {
+    localStorage.setItem(
+      LAST_VISITED_KEY,
+      JSON.stringify({ path, label, timestamp: Date.now() })
+    );
+  } catch {}
+};
 
 const ContinueCard = ({ navigate }: { navigate: (p: string) => void }) => {
   const [last, setLast] = useState<LastVisited | null>(null);
@@ -200,7 +198,9 @@ const ContinueCard = ({ navigate }: { navigate: (p: string) => void }) => {
             <p className="text-[12.5px] font-semibold text-foreground leading-tight">
               {last.label}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">חזור למקום שעצרת</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              חזור למקום שעצרת
+            </p>
           </div>
           <ChevronLeft
             className="h-4 w-4 text-primary/30 group-hover:text-primary/60 transition-colors"
@@ -567,49 +567,50 @@ const StudentHome = () => {
   const navigate = useNavigate();
 
   const cards: ActionCard[] = [
-  {
-    id: "start-learning",
-    title: "התחל למידה",
-    description: "גישה לקורסים ומשאבי למידה",
-    icon: BookOpen,
-    color: "bg-[hsl(270,25%,93%)]",
-    iconColor: "text-[hsl(270,35%,50%)]",
-    path: "/subjects",
-  },
-  {
-    id: "progress",
-    title: "ההתקדמות שלי",
-    description: "התקדמות, משימות וסטטוס לימודי",
-    icon: TrendingUp,
-    color: "bg-[hsl(210,40%,93%)]",
-    iconColor: "text-[hsl(210,45%,48%)]",
-    path: "/courses",
-  },
-  {
-    id: "grades",
-    title: "ציונים",
-    description: "מבחנים, עבודות והישגים",
-    icon: GraduationCap,
-    color: "bg-[hsl(35,35%,93%)]",
-    iconColor: "text-[hsl(35,45%,42%)]",
-    path: "/students",
-  },
-  {
-    id: "calendar",
-    title: "לוח שנה",
-    description: "משימות, מבחנים, שיעורים ואירועים",
-    icon: Calendar,
-    color: "bg-[hsl(150,25%,93%)]",
-    iconColor: "text-[hsl(150,35%,42%)]",
-    path: "/calendar",
-  },
-];
+    {
+      id: "start-learning",
+      title: "התחל למידה",
+      description: "גישה לקורסים ומשאבי למידה",
+      icon: BookOpen,
+      color: "bg-[hsl(270,25%,93%)]",
+      iconColor: "text-[hsl(270,35%,50%)]",
+      path: "/subjects",
+    },
+    {
+      id: "progress",
+      title: "ההתקדמות שלי",
+      description: "התקדמות, משימות וסטטוס לימודי",
+      icon: TrendingUp,
+      color: "bg-[hsl(210,40%,93%)]",
+      iconColor: "text-[hsl(210,45%,48%)]",
+      path: "/courses",
+    },
+    {
+      id: "grades",
+      title: "ציונים",
+      description: "מבחנים, עבודות והישגים",
+      icon: GraduationCap,
+      color: "bg-[hsl(35,35%,93%)]",
+      iconColor: "text-[hsl(35,45%,42%)]",
+      path: "/students",
+    },
+    {
+      id: "calendar",
+      title: "לוח שנה",
+      description: "משימות, מבחנים, שיעורים ואירועים",
+      icon: Calendar,
+      color: "bg-[hsl(150,25%,93%)]",
+      iconColor: "text-[hsl(150,35%,42%)]",
+      path: "/calendar",
+    },
+  ];
 
   return (
     <>
       <ContinueCard navigate={navigate} />
-      <MainEntryButtons navigate={navigate} />
-      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
+      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">
+        כלים מרכזיים
+      </h2>
       <CardGrid cards={cards} navigate={navigate} />
     </>
   );
