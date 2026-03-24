@@ -1,3 +1,4 @@
+import CoursesListPage from "./pages/CoursesListPage.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -50,7 +51,7 @@ const App = () => (
               <Route path="/dashboard" element={<DashboardContent />} />
               <Route path="/students" element={<StudentsPage />} />
               <Route path="/students/:id" element={<StudentProfilePage />} />
-              <Route path="/courses" element={<CoursesPage />} />
+              <Route path="/courses" element={<CoursesListPage />} />
               <Route path="/data-entry" element={<DataEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
               <Route path="/student-home" element={<StudentHomePage />} />
