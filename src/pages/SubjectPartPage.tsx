@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowRight, CheckCircle2, Lock, Clock, BookOpen, FileText, Plus,
   ClipboardList, Sparkles, ChevronDown, ChevronUp, Trash2, Pencil,
-  Link as LinkIcon, Upload, Save, GraduationCap, TrafficCone, Map
+  Link as LinkIcon, Upload, Save, GraduationCap, TrafficCone, Map, Award
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
@@ -400,7 +400,25 @@ const SubjectPartPage = () => {
         )}
       </section>
 
-      {/* Quick links for student */}
+      {/* Bagrut Grading Agent */}
+      <section className="mb-6">
+        <button
+          onClick={() => navigate(`/bagrut-grading?subject=${encodeURIComponent(decoded)}`)}
+          className="w-full bg-gradient-to-l from-primary/10 to-primary/5 rounded-2xl border border-primary/15 p-4 text-start hover:from-primary/15 hover:to-primary/8 transition-all duration-300"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Award className="h-5 w-5 text-primary" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[12px] font-semibold text-foreground leading-tight">בוחן בגרות חכם</p>
+              <p className="text-[10px] text-muted-foreground font-normal mt-0.5">הערכה ברמת בגרות אמיתית עם AI</p>
+            </div>
+            <Sparkles className="h-4 w-4 text-primary/50" strokeWidth={1.5} />
+          </div>
+        </button>
+      </section>
+
       {!isTeacher && (
         <div className="grid grid-cols-2 gap-3 mb-6">
           <button

@@ -26,6 +26,7 @@ import HistoryCoursePage from "./pages/HistoryCoursePage.tsx";
 import GroupsPage from "./pages/GroupsPage.tsx";
 import CalendarPage from "./pages/CalendarPage.tsx";
 import ScienceIntroPage from "./pages/ScienceIntroPage.tsx";
+import BagrutGradingPage from "./pages/BagrutGradingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/science-intro" element={<ScienceIntroPage />} />
+              <Route path="/bagrut-grading" element={<BagrutGradingPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
