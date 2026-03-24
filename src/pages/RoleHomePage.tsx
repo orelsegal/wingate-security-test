@@ -1,3 +1,11 @@
+export const saveLastVisited = (key: string, value: string) => {
+  try { localStorage.setItem(`wingate_last_${key}`, value); } catch {}
+};
+
+export const getLastVisited = (key: string): string | null => {
+  try { return localStorage.getItem(`wingate_last_${key}`); } catch { return null; }
+};
+
 const RoadmapPage = () => {
   const steps = [
     { name: "יחידה 1", progress: 100, status: "הושלם" },

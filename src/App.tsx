@@ -19,6 +19,7 @@ import RoadmapPage from "./pages/RoadmapPage";
 import ToolsPage from "./pages/ToolsPage";
 
 import ParentHomePage from "./pages/ParentHomePage";
+import ScienceIntroPage from "./pages/ScienceIntroPage";
 
 const queryClient = new QueryClient();
 
