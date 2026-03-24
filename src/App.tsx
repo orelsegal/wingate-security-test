@@ -60,6 +60,7 @@ const App = () => {
                 <Route path="/tools" element={<ToolsPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/students/:id" element={<StudentProfilePage />} />
+                <Route path="/science-intro" element={<ScienceIntroPage />} />
 
                 <Route path="/parent-home" element={<ParentHomePage />} />
               </Route>
