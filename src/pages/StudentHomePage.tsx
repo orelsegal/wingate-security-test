@@ -88,16 +88,7 @@ const StudentHomePage = () => {
       path: "/subjects",
       color: "bg-[hsl(270,25%,93%)]",
       iconColor: "text-[hsl(270,35%,50%)]",
-    },
-    {
-      id: "science-intro",
-      title: "מבוא למדעים",
-      description: "כניסה ישירה לקורס מבוא למדעים",
-      icon: FlaskConical,
-      path: "/science-intro",
-      color: "bg-[hsl(190,30%,93%)]",
-      iconColor: "text-[hsl(190,40%,45%)]",
-    },
+    }
     {
       id: "progress",
       title: "ההתקדמות שלי",
