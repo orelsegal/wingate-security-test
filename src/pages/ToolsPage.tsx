@@ -7,32 +7,26 @@ const ToolsPage = () => {
   ];
 
   return (
-    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto" dir="rtl">
-      <div className="mb-8">
-        <h1 className="text-[22px] md:text-[28px] font-bold text-foreground text-right">
-          ארגז כלים
-        </h1>
-        <p className="text-[14px] text-muted-foreground text-right mt-2">
-          מחברת, קישורים, תרגול ומשאבים שימושיים
-        </p>
-      </div>
+    <div className="p-4 max-w-[520px] mx-auto" dir="rtl">
+      <h1 className="text-[20px] font-medium text-center tracking-tight mb-2">
+        ארגז כלים
+      </h1>
+      <p className="text-[12px] text-muted-foreground text-center mb-5">
+        מחברת, קישורים, תרגול ומשאבים שימושיים
+      </p>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {tools.map((tool, index) => (
           <div
             key={index}
-            className="w-full bg-white rounded-[28px] border border-black/5 shadow-[0_4px_18px_rgba(0,0,0,0.06)] px-6 py-6 flex items-center justify-between text-right"
+            className="bg-white rounded-[20px] border border-[hsl(220,18%,93%)] shadow-[0_2px_10px_rgba(15,23,42,0.04)] px-4 py-4 flex items-center justify-between"
           >
             <div className="text-right">
-              <h2 className="text-[18px] font-bold text-foreground leading-tight">
-                {tool.title}
-              </h2>
-              <p className="text-[14px] text-muted-foreground mt-1">
-                {tool.description}
-              </p>
+              <h2 className="text-[15px] font-medium">{tool.title}</h2>
+              <p className="text-[12px] text-muted-foreground mt-1">{tool.description}</p>
             </div>
 
-            <div className="min-w-[72px] h-[72px] rounded-[22px] bg-[hsl(210,35%,92%)] flex items-center justify-center text-[28px]">
+            <div className="w-[52px] h-[52px] rounded-[16px] bg-[hsl(210,18%,93%)] flex items-center justify-center text-[22px]">
               {tool.emoji}
             </div>
           </div>
