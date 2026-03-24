@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import AppLayout from "@/components/AppLayout";
 
@@ -36,40 +35,38 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
 
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/" element={<StudentHomePage />} />
-                <Route path="/student-home" element={<StudentHomePage />} />
-                <Route path="/courses" element={<CoursesListPage />} />
-                <Route path="/courses/:courseId" element={<CoursesPage />} />
-                <Route path="/grades" element={<GradesPage />} />
-                <Route path="/roadmap" element={<RoadmapPage />} />
-                <Route path="/tools" element={<ToolsPage />} />
-                <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/students/:id" element={<StudentProfilePage />} />
-                <Route path="/science-intro" element={<ScienceIntroPage />} />
+            <Route
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<StudentHomePage />} />
+              <Route path="/student-home" element={<StudentHomePage />} />
+              <Route path="/courses" element={<CoursesListPage />} />
+              <Route path="/courses/:courseId" element={<CoursesPage />} />
+              <Route path="/grades" element={<GradesPage />} />
+              <Route path="/roadmap" element={<RoadmapPage />} />
+              <Route path="/tools" element={<ToolsPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/students/:id" element={<StudentProfilePage />} />
+              <Route path="/science-intro" element={<ScienceIntroPage />} />
 
-                <Route path="/parent-home" element={<ParentHomePage />} />
-              </Route>
+              <Route path="/parent-home" element={<ParentHomePage />} />
+            </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
