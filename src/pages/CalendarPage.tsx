@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-  ChevronRight,
   ChevronLeft,
+  ChevronRight,
   CalendarDays,
   ListChecks,
   Plus,
@@ -24,6 +24,7 @@ import {
   isToday,
 } from "date-fns";
 import { he } from "date-fns/locale";
+
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,7 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface CalendarEvent {
   id: string;
@@ -146,7 +146,10 @@ const exportDayEventsToCsv = (
 
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const dateLabel = selectedDate.toLocaleDateString("he-IL").replace(/\//g, "-");
+  const dateLabel = selectedDate
+    .toLocaleDateString("he-IL")
+    .replace(/\//g, "-");
+
   link.href = url;
   link.setAttribute("download", `אירועים-${dateLabel}.csv`);
   document.body.appendChild(link);
@@ -156,6 +159,7 @@ const exportDayEventsToCsv = (
 };
 
 const now = new Date();
+
 const initialEvents: CalendarEvent[] = [
   {
     id: "1",
@@ -219,8 +223,6 @@ const CalendarPage = () => {
     useState<CalendarEvent["type"]>("assignment");
   const [formDate, setFormDate] = useState("");
   const [formNotes, setFormNotes] = useState("");
-
-  const [deleteTarget, setDeleteTarget] = useState<CalendarEvent | null>(null);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -303,10 +305,10 @@ const CalendarPage = () => {
     setFormOpen(false);
   };
 
-  const handleDeleteEvent = () => {
-    if (!deleteTarget) return;
-    setEvents((prev) => prev.filter((e) => e.id !== deleteTarget.id));
-    setDeleteTarget(null);
+  const handleDeleteEvent = (ev: CalendarEvent) => {
+    const ok = window.confirm(`האם למחוק את "${ev.title}"?`);
+    if (!ok) return;
+    setEvents((prev) => prev.filter((e) => e.id !== ev.id));
   };
 
   return (
@@ -549,7 +551,7 @@ const CalendarPage = () => {
                       </button>
 
                       <button
-                        onClick={() => setDeleteTarget(ev)}
+                        onClick={() => handleDeleteEvent(ev)}
                         className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         title="מחק"
                       >
@@ -638,4 +640,39 @@ const CalendarPage = () => {
               />
             </div>
 
-            <div className="space
+            <div className="space-y-1.5">
+              <label className="text-[11px] text-muted-foreground font-medium">
+                הערות
+              </label>
+              <Input
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+                placeholder="הערות נוספות..."
+                className="text-[13px]"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={handleSaveEvent}
+                className="flex-1 text-[12px]"
+                disabled={!formTitle.trim() || !formDate}
+              >
+                {editingEvent ? "שמור שינויים" : "הוסף אירוע"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setFormOpen(false)}
+                className="text-[12px]"
+              >
+                ביטול
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default CalendarPage;
