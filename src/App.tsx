@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import AppLayout from "@/components/AppLayout";
-import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
 import StudentProfilePage from "./pages/StudentProfilePage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
@@ -36,6 +35,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const HomeRouter = () => {
+  const { user } = useAuth();
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (user.role === "student") {
+    return <StudentHomePage />;
+  }
+
+  return <RoleHomePage />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -45,17 +56,28 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Index />} />
+
+            <Route
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<HomeRouter />} />
+              <Route path="/role-home" element={<RoleHomePage />} />
+              <Route path="/student-home" element={<StudentHomePage />} />
+
               <Route path="/dashboard" element={<DashboardContent />} />
               <Route path="/students" element={<StudentsPage />} />
               <Route path="/students/:id" element={<StudentProfilePage />} />
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/data-entry" element={<DataEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
-              <Route path="/student-home" element={<StudentHomePage />} />
+
               <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
               <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
+
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
               <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
@@ -66,6 +88,7 @@ const App = () => (
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/science-intro" element={<ScienceIntroPage />} />
             </Route>
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
