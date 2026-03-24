@@ -24,35 +24,21 @@ import {
   isToday,
 } from "date-fns";
 import { he } from "date-fns/locale";
-
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+type EventType = "assignment" | "test" | "lesson" | "event";
 
 interface CalendarEvent {
   id: string;
   title: string;
   subject: string;
   date: Date;
-  type: "assignment" | "test" | "lesson" | "event";
+  type: EventType;
   notes?: string;
 }
 
 const typeConfig: Record<
-  CalendarEvent["type"],
+  EventType,
   { label: string; dotClass: string; textClass: string }
 > = {
   assignment: {
@@ -75,87 +61,6 @@ const typeConfig: Record<
     dotClass: "bg-yellow-500",
     textClass: "text-yellow-600",
   },
-};
-
-const typeOptions: { value: CalendarEvent["type"]; label: string }[] = [
-  { value: "assignment", label: "משימה" },
-  { value: "test", label: "מבחן" },
-  { value: "lesson", label: "שיעור / מפגש" },
-  { value: "event", label: "אירוע" },
-];
-
-const sendSingleEventToWhatsApp = (ev: CalendarEvent) => {
-  const message = `שם אירוע: ${ev.title}
-מקצוע: ${ev.subject}
-סוג: ${typeConfig[ev.type]?.label || ev.type}
-תאריך: ${new Date(ev.date).toLocaleDateString("he-IL")}
-${ev.notes ? `הערות: ${ev.notes}` : ""}
-
-נשלח מתוך מערכת וינגייט`;
-
-  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank");
-};
-
-const sendDayEventsToWhatsApp = (
-  events: CalendarEvent[],
-  selectedDate: Date | null
-) => {
-  if (!selectedDate || events.length === 0) return;
-
-  const dateLabel = selectedDate.toLocaleDateString("he-IL");
-  const lines = events.map(
-    (ev, index) =>
-      `${index + 1}. ${ev.title} | ${ev.subject} | ${typeConfig[ev.type]?.label || ev.type}`
-  );
-
-  const message = `אירועים ליום ${dateLabel}
-
-${lines.join("\n")}
-
-נשלח מתוך מערכת וינגייט`;
-
-  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank");
-};
-
-const exportDayEventsToCsv = (
-  events: CalendarEvent[],
-  selectedDate: Date | null
-) => {
-  if (!selectedDate || events.length === 0) return;
-
-  const headers = ["תאריך", "כותרת", "מקצוע", "סוג", "הערות"];
-  const rows = events.map((ev) => [
-    new Date(ev.date).toLocaleDateString("he-IL"),
-    ev.title,
-    ev.subject,
-    typeConfig[ev.type]?.label || ev.type,
-    ev.notes || "",
-  ]);
-
-  const csvContent = [headers, ...rows]
-    .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    )
-    .join("\n");
-
-  const blob = new Blob(["\uFEFF" + csvContent], {
-    type: "text/csv;charset=utf-8;",
-  });
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  const dateLabel = selectedDate
-    .toLocaleDateString("he-IL")
-    .replace(/\//g, "-");
-
-  link.href = url;
-  link.setAttribute("download", `אירועים-${dateLabel}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 };
 
 const now = new Date();
@@ -200,6 +105,77 @@ const initialEvents: CalendarEvent[] = [
 
 const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
+const sendSingleEventToWhatsApp = (ev: CalendarEvent) => {
+  const message = `שם אירוע: ${ev.title}
+מקצוע: ${ev.subject}
+סוג: ${typeConfig[ev.type].label}
+תאריך: ${new Date(ev.date).toLocaleDateString("he-IL")}
+${ev.notes ? `הערות: ${ev.notes}` : ""}
+
+נשלח מתוך מערכת וינגייט`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+};
+
+const sendDayEventsToWhatsApp = (
+  events: CalendarEvent[],
+  selectedDate: Date | null
+) => {
+  if (!selectedDate || events.length === 0) return;
+
+  const dateLabel = selectedDate.toLocaleDateString("he-IL");
+  const lines = events.map(
+    (ev, index) =>
+      `${index + 1}. ${ev.title} | ${ev.subject} | ${typeConfig[ev.type].label}`
+  );
+
+  const message = `אירועים ליום ${dateLabel}
+
+${lines.join("\n")}
+
+נשלח מתוך מערכת וינגייט`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+};
+
+const exportDayEventsToCsv = (
+  events: CalendarEvent[],
+  selectedDate: Date | null
+) => {
+  if (!selectedDate || events.length === 0) return;
+
+  const headers = ["תאריך", "כותרת", "מקצוע", "סוג", "הערות"];
+  const rows = events.map((ev) => [
+    new Date(ev.date).toLocaleDateString("he-IL"),
+    ev.title,
+    ev.subject,
+    typeConfig[ev.type].label,
+    ev.notes || "",
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    )
+    .join("\n");
+
+  const blob = new Blob(["\uFEFF" + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateLabel = selectedDate.toLocaleDateString("he-IL").replace(/\//g, "-");
+  link.href = url;
+  link.setAttribute("download", `אירועים-${dateLabel}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 const CalendarPage = () => {
   const { user } = useAuth();
 
@@ -208,21 +184,10 @@ const CalendarPage = () => {
     user?.role === "teacher" ||
     user?.role === "coach";
 
-  const canExport = canEdit;
-
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [view, setView] = useState<"month" | "week">("month");
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [formTitle, setFormTitle] = useState("");
-  const [formSubject, setFormSubject] = useState("");
-  const [formType, setFormType] =
-    useState<CalendarEvent["type"]>("assignment");
-  const [formDate, setFormDate] = useState("");
-  const [formNotes, setFormNotes] = useState("");
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -248,67 +213,77 @@ const CalendarPage = () => {
 
   const selectedEvents = selectedDate ? eventsForDate(selectedDate) : [];
 
-  const openAddForm = () => {
-    setEditingEvent(null);
-    setFormTitle("");
-    setFormSubject("");
-    setFormType("assignment");
-    setFormDate(
-      selectedDate
-        ? format(selectedDate, "yyyy-MM-dd")
-        : format(new Date(), "yyyy-MM-dd")
+  const handleAddEvent = () => {
+    const title = window.prompt("כותרת האירוע");
+    if (!title) return;
+
+    const subject = window.prompt("מקצוע") || "";
+    const typeInput =
+      (window.prompt("סוג: assignment / test / lesson / event") as EventType) ||
+      "assignment";
+    const notes = window.prompt("הערות (לא חובה)") || "";
+
+    const safeType: EventType =
+      typeInput === "assignment" ||
+      typeInput === "test" ||
+      typeInput === "lesson" ||
+      typeInput === "event"
+        ? typeInput
+        : "assignment";
+
+    const eventDate = selectedDate || new Date();
+
+    const newEvent: CalendarEvent = {
+      id: crypto.randomUUID(),
+      title,
+      subject,
+      date: eventDate,
+      type: safeType,
+      notes,
+    };
+
+    setEvents((prev) => [...prev, newEvent]);
+  };
+
+  const handleEditEvent = (ev: CalendarEvent) => {
+    const title = window.prompt("כותרת האירוע", ev.title);
+    if (!title) return;
+
+    const subject = window.prompt("מקצוע", ev.subject) || "";
+    const typeInput =
+      (window.prompt(
+        "סוג: assignment / test / lesson / event",
+        ev.type
+      ) as EventType) || ev.type;
+    const notes = window.prompt("הערות", ev.notes || "") || "";
+
+    const safeType: EventType =
+      typeInput === "assignment" ||
+      typeInput === "test" ||
+      typeInput === "lesson" ||
+      typeInput === "event"
+        ? typeInput
+        : ev.type;
+
+    setEvents((prev) =>
+      prev.map((item) =>
+        item.id === ev.id
+          ? {
+              ...item,
+              title,
+              subject,
+              type: safeType,
+              notes,
+            }
+          : item
+      )
     );
-    setFormNotes("");
-    setFormOpen(true);
-  };
-
-  const openEditForm = (ev: CalendarEvent) => {
-    setEditingEvent(ev);
-    setFormTitle(ev.title);
-    setFormSubject(ev.subject);
-    setFormType(ev.type);
-    setFormDate(format(ev.date, "yyyy-MM-dd"));
-    setFormNotes(ev.notes || "");
-    setFormOpen(true);
-  };
-
-  const handleSaveEvent = () => {
-    if (!formTitle.trim() || !formDate) return;
-
-    if (editingEvent) {
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.id === editingEvent.id
-            ? {
-                ...e,
-                title: formTitle.trim(),
-                subject: formSubject.trim(),
-                type: formType,
-                date: new Date(formDate),
-                notes: formNotes.trim(),
-              }
-            : e
-        )
-      );
-    } else {
-      const newEvent: CalendarEvent = {
-        id: crypto.randomUUID(),
-        title: formTitle.trim(),
-        subject: formSubject.trim(),
-        date: new Date(formDate),
-        type: formType,
-        notes: formNotes.trim(),
-      };
-      setEvents((prev) => [...prev, newEvent]);
-    }
-
-    setFormOpen(false);
   };
 
   const handleDeleteEvent = (ev: CalendarEvent) => {
     const ok = window.confirm(`האם למחוק את "${ev.title}"?`);
     if (!ok) return;
-    setEvents((prev) => prev.filter((e) => e.id !== ev.id));
+    setEvents((prev) => prev.filter((item) => item.id !== ev.id));
   };
 
   return (
@@ -326,19 +301,18 @@ const CalendarPage = () => {
 
         <div className="flex items-center gap-2">
           {canEdit && (
-            <Button
-              size="sm"
-              className="gap-1.5 text-[11px]"
-              onClick={openAddForm}
+            <button
+              onClick={handleAddEvent}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[11px] text-primary-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
               הוסף אירוע
-            </Button>
+            </button>
           )}
 
           <button
             onClick={() => setView(view === "month" ? "week" : "month")}
-            className="text-[11px] px-3 py-1.5 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[11px] px-3 py-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"
           >
             {view === "month" ? "תצוגה שבועית" : "תצוגה חודשית"}
           </button>
@@ -445,44 +419,38 @@ const CalendarPage = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              {canExport && selectedEvents.length > 0 && (
+              {canEdit && selectedEvents.length > 0 && (
                 <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-[10px] h-7 gap-1"
+                  <button
                     onClick={() =>
                       sendDayEventsToWhatsApp(selectedEvents, selectedDate)
                     }
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-[10px]"
                   >
                     <MessageCircle className="h-3 w-3" />
                     שלח לוואטסאפ
-                  </Button>
+                  </button>
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-[10px] h-7 gap-1"
+                  <button
                     onClick={() =>
                       exportDayEventsToCsv(selectedEvents, selectedDate)
                     }
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-[10px]"
                   >
                     <FileSpreadsheet className="h-3 w-3" />
                     ייצא לאקסל
-                  </Button>
+                  </button>
                 </>
               )}
 
               {canEdit && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1 text-[10px] h-7"
-                  onClick={openAddForm}
+                <button
+                  onClick={handleAddEvent}
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-[10px]"
                 >
                   <Plus className="h-3 w-3" />
                   הוסף
-                </Button>
+                </button>
               )}
             </div>
           </div>
@@ -511,11 +479,9 @@ const CalendarPage = () => {
 
                     <div className="flex items-center gap-2 mt-0.5">
                       <p
-                        className={`text-[10px] font-medium ${
-                          typeConfig[ev.type]?.textClass || "text-muted-foreground"
-                        }`}
+                        className={`text-[10px] font-medium ${typeConfig[ev.type].textClass}`}
                       >
-                        {typeConfig[ev.type]?.label || ev.type}
+                        {typeConfig[ev.type].label}
                       </p>
 
                       {ev.subject && (
@@ -543,7 +509,7 @@ const CalendarPage = () => {
                       </button>
 
                       <button
-                        onClick={() => openEditForm(ev)}
+                        onClick={() => handleEditEvent(ev)}
                         className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                         title="ערוך"
                       >
@@ -571,106 +537,6 @@ const CalendarPage = () => {
           האקדמיה למצוינות · מכון וינגייט
         </span>
       </div>
-
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent dir="rtl" className="max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="text-[15px]">
-              {editingEvent ? "עריכת אירוע" : "הוספת אירוע"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <label className="text-[11px] text-muted-foreground font-medium">
-                כותרת
-              </label>
-              <Input
-                value={formTitle}
-                onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="שם האירוע..."
-                className="text-[13px]"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] text-muted-foreground font-medium">
-                מקצוע
-              </label>
-              <Input
-                value={formSubject}
-                onChange={(e) => setFormSubject(e.target.value)}
-                placeholder="היסטוריה, מתמטיקה..."
-                className="text-[13px]"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] text-muted-foreground font-medium">
-                סוג
-              </label>
-              <Select
-                value={formType}
-                onValueChange={(v) =>
-                  setFormType(v as "assignment" | "test" | "lesson" | "event")
-                }
-              >
-                <SelectTrigger className="text-[13px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {typeOptions.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] text-muted-foreground font-medium">
-                תאריך
-              </label>
-              <Input
-                type="date"
-                value={formDate}
-                onChange={(e) => setFormDate(e.target.value)}
-                className="text-[13px]"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] text-muted-foreground font-medium">
-                הערות
-              </label>
-              <Input
-                value={formNotes}
-                onChange={(e) => setFormNotes(e.target.value)}
-                placeholder="הערות נוספות..."
-                className="text-[13px]"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button
-                onClick={handleSaveEvent}
-                className="flex-1 text-[12px]"
-                disabled={!formTitle.trim() || !formDate}
-              >
-                {editingEvent ? "שמור שינויים" : "הוסף אירוע"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setFormOpen(false)}
-                className="text-[12px]"
-              >
-                ביטול
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
