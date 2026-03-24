@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { useMemo } from "react";
 import DataExportTools from "@/components/DataExportTools";
-
+import AIInsightsPanel from "@/components/AIInsightsPanel";
 const DashboardContent = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -147,6 +147,11 @@ const DashboardContent = () => {
           </div>
         )}
       </section>
+
+      {/* ═══ AI INSIGHTS ═══ */}
+      {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
+        <AIInsightsPanel students={students} role={user.role} navigate={navigate} />
+      )}
 
       {/* ═══ SECTION 2 — BRANCH OVERVIEW ═══ */}
       <section className="mb-10 md:mb-14">
