@@ -1,3 +1,4 @@
+import bg from "@/assets/freepik__abstract-background-of-overlapping-soft-pastel-cir__2226.png";
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
 import {
