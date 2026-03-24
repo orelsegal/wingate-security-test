@@ -9,6 +9,7 @@ import {
   Dumbbell, ChevronLeft, GraduationCap, Layers, Play,
 } from "lucide-react";
 import WingateBadge from "@/components/WingateBadge";
+import AIInsightsPanel from "@/components/AIInsightsPanel";
 
 /* ═══ Role Titles ═══ */
 const roleTitles: Record<UserRole, string> = {
@@ -218,10 +219,11 @@ const AdminHome = () => {
           { label: "דורשים תשומת לב", value: yellowCount, icon: Target, color: "text-[hsl(var(--warning))]" },
         ]}
       />
-      <ContinueCard navigate={useNavigate()} />
-      <MainEntryButtons navigate={useNavigate()} />
+      <AIInsightsPanel students={students} role="admin" navigate={navigate} />
+      <ContinueCard navigate={navigate} />
+      <MainEntryButtons navigate={navigate} />
       <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
-      <CardGrid cards={cards} navigate={useNavigate()} />
+      <CardGrid cards={cards} navigate={navigate} />
     </>
   );
 };
@@ -247,6 +249,7 @@ const TeacherHome = () => {
           { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
         ]}
       />
+      <AIInsightsPanel students={students} role="teacher" navigate={navigate} />
       <ContinueCard navigate={navigate} />
       <MainEntryButtons navigate={navigate} />
       <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
@@ -296,6 +299,7 @@ const CoachHome = () => {
           { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
         ]}
       />
+      <AIInsightsPanel students={myStudents} role="coach" navigate={navigate} />
       <CardGrid cards={cards} navigate={navigate} />
     </>
   );
