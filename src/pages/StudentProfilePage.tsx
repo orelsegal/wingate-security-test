@@ -1,8 +1,3 @@
-<p className="text-lg mt-1">
-  {student.status === "🔴 אדום" && "🔴 תלמיד בסיכון"}
-  {student.status === "🟡 צהוב" && "🟡 דורש חיזוק"}
-  {student.status === "🟢 ירוק" && "🟢 מתקדם מצוין"}
-</p>
 import { useParams } from "react-router-dom";
 
 const StudentProfilePage = () => {
