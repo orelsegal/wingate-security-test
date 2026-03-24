@@ -1,489 +1,267 @@
-import { useState, useMemo, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp,
-  UserPlus, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, SlidersHorizontal,
-} from "lucide-react";
-import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSports, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
-import InitialsAvatar from "@/components/InitialsAvatar";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import StudentFormModal from "@/components/StudentFormModal";
-import ConfirmDialog from "@/components/ConfirmDialog";
-import QuickEditDrawer from "@/components/QuickEditDrawer";
-import DataExportTools from "@/components/DataExportTools";
-import * as XLSX from "xlsx";
+import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
+import {
+  BookOpen,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  CalendarDays,
+  GraduationCap,
+  TrendingUp,
+  Play,
+  ChevronLeft,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useMemo, useEffect, useState } from "react";
+import WingateBadge from "@/components/WingateBadge";
 
-const grades = ["ט׳", "י׳", "י״א", "י״ב"];
+const LAST_VISITED_KEY = "wingate_last_visited";
 
-const classToGrade = (className: string): string => {
-  if (className.startsWith("י״ב") || className.startsWith("יב")) return "י״ב";
-  if (className.startsWith("י״א") || className.startsWith("יא")) return "י״א";
-  if (className.startsWith("י׳") || className.startsWith("י'") || className.startsWith("י")) {
-    if (className.startsWith("יא") || className.startsWith("י״א")) return "י״א";
-    return "י׳";
+interface LastVisited {
+  path: string;
+  label: string;
+  timestamp: number;
+}
+
+const getLastVisited = (): LastVisited | null => {
+  try {
+    const raw = localStorage.getItem(LAST_VISITED_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
   }
-  if (className.startsWith("ט")) return "ט׳";
-  return className;
 };
 
-type ViewMode = "cards" | "table";
+interface StudentActionCard {
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  path: string;
+  color: string;
+  iconColor: string;
+}
 
-const StudentsPage = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+const StudentHomePage = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { data: students = [], isLoading } = useStudents();
-  const { data: allProgress = [] } = useAllStudentProgress();
-  const deleteStudent = useDeleteStudent();
-  const updateStudent = useUpdateStudent();
+  const navigate = useNavigate();
+  const studentId = user?.scopeFilter?.[0] || "";
 
-  const initialStatus = searchParams.get("status") as StatusType | null;
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
-  const [branchFilters, setBranchFilters] = useState<string[]>([]);
-  const [gradeFilter, setGradeFilter] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [viewMode, setViewMode] = useState<ViewMode>("cards");
-  const [showFilters, setShowFilters] = useState(false);
+  const { data: student, isLoading } = useStudent(studentId);
+  const { data: progress = [] } = useStudentProgress(studentId);
+  const { data: roadmap = [] } = useStudentRoadmap(studentId, student?.math_level ?? 3);
 
-  // CRUD modals
-  const [formOpen, setFormOpen] = useState(false);
-  const [editStudent, setEditStudent] = useState<Student | null>(null);
-  const [duplicateStudent, setDuplicateStudent] = useState<Student | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [dataManagementOpen, setDataManagementOpen] = useState(false); // unused, kept for compat
-  const [quickEditStudent, setQuickEditStudent] = useState<Student | null>(null);
+  const [last, setLast] = useState<LastVisited | null>(null);
 
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setLast(getLastVisited());
+  }, []);
 
-  // Get unique branches from actual data
-  const branches = useMemo(() => {
-    const unique = new Set(students.map(s => s.sport));
-    return Array.from(unique).sort();
-  }, [students]);
+  const completedRoadmapCount = useMemo(
+    () => roadmap.filter((r: any) => r.completed).length,
+    [roadmap]
+  );
 
-  const progressByStudent = useMemo(() => {
-    const map = new Map<string, Array<{ subjectName: string; grade: number | null; status: string; missingItems: string[] | null }>>();
-    allProgress.forEach((p: any) => {
-      const sid = p.student_id;
-      if (!map.has(sid)) map.set(sid, []);
-      map.get(sid)!.push({ subjectName: p.subjects?.subject_name || "", grade: p.grade, status: p.status, missingItems: p.missing_items });
-    });
-    return map;
-  }, [allProgress]);
+  const totalRoadmapCount = roadmap.length;
+  const progressPct =
+    totalRoadmapCount > 0
+      ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100)
+      : 0;
 
-  const filtered = useMemo(() => {
-    const statusOrder: Record<string, number> = { red: 0, yellow: 1, green: 2 };
-    const list = students.filter((s) => {
-      if ((s as any).archived) return false;
-      if (search && !s.full_name.includes(search) && !s.sport.includes(search) && !s.class_name.includes(search)) return false;
-      if (statusFilter && s.overall_status !== statusFilter) return false;
-      if (branchFilters.length > 0 && !branchFilters.includes(s.sport)) return false;
-      if (gradeFilter && classToGrade(s.class_name) !== gradeFilter) return false;
-      return true;
-    });
-    if (sortBy) {
-      list.sort((a, b) => {
-        let cmp = 0;
-        if (sortBy === "name") cmp = a.full_name.localeCompare(b.full_name, "he");
-        else if (sortBy === "avg") cmp = (a.avg_score || 0) - (b.avg_score || 0);
-        else if (sortBy === "status") cmp = (statusOrder[a.overall_status] ?? 2) - (statusOrder[b.overall_status] ?? 2);
-        return sortDir === "desc" ? -cmp : cmp;
-      });
-    }
-    return list;
-  }, [students, search, statusFilter, branchFilters, gradeFilter, sortBy, sortDir]);
-
-  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || sortBy;
-
-  const toggleSort = (col: "name" | "avg" | "status") => {
-    if (sortBy === col) {
-      if (sortDir === "asc") setSortDir("desc");
-      else { setSortBy(null); setSortDir("asc"); }
-    } else { setSortBy(col); setSortDir("asc"); }
-  };
-
-  const SortIcon = ({ col }: { col: "name" | "avg" | "status" }) => {
-    if (sortBy !== col) return <ArrowUpDown className="h-3 w-3 opacity-40" strokeWidth={1.5} />;
-    return sortDir === "asc" ? <ArrowUp className="h-3 w-3 text-primary" strokeWidth={1.5} /> : <ArrowDown className="h-3 w-3 text-primary" strokeWidth={1.5} />;
-  };
-
-  const clearAll = () => {
-    setSearch(""); setStatusFilter(null); setBranchFilters([]); setGradeFilter(null); setSortBy(null); setSortDir("asc");
-  };
-
-  const greenCount = students.filter(s => s.overall_status === "green" && !(s as any).archived).length;
-  const yellowCount = students.filter(s => s.overall_status === "yellow" && !(s as any).archived).length;
-  const redCount = students.filter(s => s.overall_status === "red" && !(s as any).archived).length;
-  const total = greenCount + yellowCount + redCount;
-  const avgAll = total > 0 ? (students.filter(s => !(s as any).archived).reduce((sum, s) => sum + (s.avg_score || 0), 0) / total).toFixed(0) : "—";
-
-  const toggleSelect = (id: string) => setSelected(prev => {
-    const n = new Set(prev);
-    n.has(id) ? n.delete(id) : n.add(id);
-    return n;
-  });
-  const toggleSelectAll = () => {
-    if (selected.size === filtered.length) setSelected(new Set());
-    else setSelected(new Set(filtered.map(s => s.id)));
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteStudent.mutateAsync(deleteTarget.id);
-      toast.success(`"${deleteTarget.full_name}" נמחק`);
-      setDeleteTarget(null);
-    } catch (err: any) {
-      toast.error("שגיאה: " + err.message);
-    }
-  };
-
-  const handleExport = useCallback(() => {
-    const data = (selected.size > 0 ? filtered.filter(s => selected.has(s.id)) : filtered).map(s => ({
-      "שם מלא": s.full_name, "ענף": s.sport, "כיתה": s.class_name,
-      "ממוצע": s.avg_score || 0, "סטטוס": statusConfig[s.overall_status as StatusType]?.label || s.overall_status,
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "ספורטאים");
-    XLSX.writeFile(wb, "ספורטאים_ייצוא.xlsx");
-    toast.success(`${data.length} ספורטאים יוצאו`);
-  }, [filtered, selected]);
+  const activeSubjectsCount = progress.length;
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  const isAdmin = user?.role === "admin" || user?.role === "teacher";
+  const cards: StudentActionCard[] = [
+    {
+      id: "start-learning",
+      title: "התחל למידה",
+      description: "כניסה מהירה למקצועות, קורסים וחומרי לימוד",
+      icon: BookOpen,
+      path: "/subjects",
+      color: "bg-[hsl(270,25%,93%)]",
+      iconColor: "text-[hsl(270,35%,50%)]",
+    },
+    {
+      id: "progress",
+      title: "ההתקדמות שלי",
+      description: "מבט מסודר על התקדמות לימודית ומשימות",
+      icon: TrendingUp,
+      path: "/courses",
+      color: "bg-[hsl(210,40%,93%)]",
+      iconColor: "text-[hsl(210,45%,48%)]",
+    },
+    {
+      id: "grades",
+      title: "ציונים",
+      description: "מבחנים, עבודות והישגים לפי מקצוע",
+      icon: GraduationCap,
+      path: "/students",
+      color: "bg-[hsl(35,35%,93%)]",
+      iconColor: "text-[hsl(35,45%,42%)]",
+    },
+    {
+      id: "calendar",
+      title: "לוח שנה",
+      description: "משימות, מבחנים, שיעורים ואירועים קרובים",
+      icon: CalendarDays,
+      path: "/calendar",
+      color: "bg-[hsl(150,25%,93%)]",
+      iconColor: "text-[hsl(150,35%,42%)]",
+    },
+  ];
 
   return (
-    <div className="p-4 md:p-8 lg:p-10 max-w-[1400px]">
+    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto" dir="rtl">
+      {/* Header */}
+      <section className="mb-8">
+        <div className="flex items-center gap-4 mb-6">
+          <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
+          <div>
+            <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
+              שלום, {user?.name}
+            </h1>
+            <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
+              תלמיד/ה · סמסטר א׳ תשפ״ה
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* ── ACTION BAR ── */}
-      <section className="mb-6">
-        <div className="flex flex-wrap items-center gap-2">
-          {isAdmin && (
-            <Button onClick={() => { setEditStudent(null); setDuplicateStudent(null); setFormOpen(true); }} className="gap-1.5" size="sm">
-              <UserPlus className="h-3.5 w-3.5" />
-              הוסף ספורטאי
-            </Button>
-          )}
-          {isAdmin && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/data-management")}>
-              <Settings2 className="h-3.5 w-3.5" />
-              ניהול נתונים
-            </Button>
-          )}
-          <Button
-            variant={showFilters ? "secondary" : "outline"}
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setShowFilters(!showFilters)}
+      {/* Continue from last time */}
+      {last && (
+        <div className="mb-6 animate-fade-in-up">
+          <p className="text-[10.5px] font-medium text-primary/50 mb-2.5 tracking-tight">
+            המשך מהפעם האחרונה
+          </p>
+          <button
+            onClick={() => navigate(last.path)}
+            className="w-full group bg-primary/5 rounded-2xl border border-primary/10 p-4 text-start transition-all duration-300 hover:bg-primary/8 cursor-pointer"
           >
-            <Search className="h-3.5 w-3.5" />
-            סינון
-            {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-          </Button>
-          <DataExportTools students={filtered} label="ספורטאים" showImport />
-
-          {/* View toggle */}
-          <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5">
-            <button onClick={() => setViewMode("cards")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>כרטיסים</button>
-            <button onClick={() => setViewMode("table")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>טבלה</button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── KPI CARDS ── */}
-      <section className="mb-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {(["green", "yellow", "red"] as StatusType[]).map((type) => {
-            const config = statusConfig[type];
-            const count = type === "green" ? greenCount : type === "yellow" ? yellowCount : redCount;
-            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-            const isActive = statusFilter === type;
-            return (
-              <button key={type} onClick={() => setStatusFilter(isActive ? null : type)}
-                className={`card-premium p-4 text-start transition-all duration-200 cursor-pointer group relative overflow-hidden ${isActive ? "ring-2 ring-offset-1 " + (type === "green" ? "ring-success/40" : type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : ""}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${config.bgClass}`}>
-                    <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                  </div>
-                  {isActive && <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>פעיל</span>}
-                </div>
-                <p className={`text-[24px] font-bold leading-none tracking-tight ${config.textClass}`}>{count}</p>
-                <div className="flex items-center justify-between mt-1.5">
-                  <p className="text-[11px] text-muted-foreground font-medium">{config.label}</p>
-                  <span className="text-[10px] text-muted-foreground/50">{pct}%</span>
-                </div>
-              </button>
-            );
-          })}
-          <div className="card-premium p-4 text-start">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-primary/8">
-                <TrendingUp className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Play className="h-4 w-4 text-primary" strokeWidth={1.5} />
               </div>
-            </div>
-            <p className="text-[24px] font-bold leading-none tracking-tight text-foreground">{avgAll}</p>
-            <p className="text-[11px] text-muted-foreground font-medium mt-1.5">ממוצע כללי</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FILTERS (collapsible) ── */}
-      {showFilters && (
-        <section className="mb-6 animate-in slide-in-from-top-2 duration-200">
-          <div className="card-premium p-4 space-y-3">
-            <div className="relative">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="חיפוש לפי שם, ענף או כיתה..."
-                className="w-full h-9 ps-10 pe-4 bg-background border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/25 transition-all" />
-              {search && <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" strokeWidth={1.5} /></button>}
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] text-muted-foreground font-medium ml-1">סטטוס:</span>
-              {(["green", "yellow", "red"] as StatusType[]).map((type) => {
-                const config = statusConfig[type];
-                const active = statusFilter === type;
-                return (
-                  <button key={type} onClick={() => setStatusFilter(active ? null : type)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? config.activeBg + " " + config.textClass : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
-                    <span className={`w-[5px] h-[5px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/30"}`} />
-                    {config.label}
-                  </button>
-                );
-              })}
-              <span className="w-px h-3 bg-border mx-1" />
-              <span className="text-[10px] text-muted-foreground font-medium ml-1">ענף:</span>
-              {branches.map((b) => {
-                const active = branchFilters.includes(b);
-                return (
-                  <button key={b} onClick={() => setBranchFilters(prev => active ? prev.filter(x => x !== b) : [...prev, b])}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
-                    {active && <span className="text-[8px]">✓</span>}
-                    {b}
-                  </button>
-                );
-              })}
-              <span className="w-px h-3 bg-border mx-1" />
-              <span className="text-[10px] text-muted-foreground font-medium ml-1">שכבה:</span>
-              {grades.map((g) => {
-                const active = gradeFilter === g;
-                return (
-                  <button key={g} onClick={() => setGradeFilter(active ? null : g)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
-                    {g}
-                  </button>
-                );
-              })}
-            </div>
-            {hasFilters && (
-              <div className="flex items-center justify-between pt-0.5">
-                <span className="text-[11px] text-muted-foreground">{filtered.length} מתוך {total} ספורטאים</span>
-                <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors">נקה הכל</button>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12.5px] font-semibold text-foreground leading-tight">
+                  {last.label}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  חזור למקום שעצרת
+                </p>
               </div>
-            )}
-          </div>
-        </section>
+              <ChevronLeft
+                className="h-4 w-4 text-primary/30 group-hover:text-primary/60 transition-colors"
+                strokeWidth={1.5}
+              />
+            </div>
+          </button>
+        </div>
       )}
 
-      {/* ── STUDENTS ── */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-foreground">{filtered.length} ספורטאים</span>
-            {selected.size > 0 && <span className="text-[11px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">{selected.size} נבחרו</span>}
+      {/* Top stats - without traffic lights */}
+      <div className="grid gap-3 mb-7 grid-cols-3">
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up">
+          <div className="flex items-center justify-center mb-1.5">
+            <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
           </div>
-          <div className="flex items-center gap-1">
-            {(["name", "avg", "status"] as const).map((col) => (
-              <button key={col} onClick={() => toggleSort(col)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-accent transition-colors">
-                {col === "name" ? "שם" : col === "avg" ? "ממוצע" : "סטטוס"}
-                <SortIcon col={col} />
-              </button>
-            ))}
-          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">
+            {progressPct}%
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+            התקדמות כללית
+          </p>
         </div>
 
-        {filtered.length === 0 ? (
-          <div className="card-premium py-16 text-center">
-            <Search className="h-7 w-7 text-muted-foreground/20 mx-auto mb-3" strokeWidth={1.5} />
-            <p className="text-[13px] text-muted-foreground">לא נמצאו תוצאות</p>
+        <div
+          className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+          style={{ animationDelay: "40ms" }}
+        >
+          <div className="flex items-center justify-center mb-1.5">
+            <Clock
+              className="h-4 w-4 text-[hsl(var(--warning))]"
+              strokeWidth={1.5}
+            />
           </div>
-        ) : viewMode === "table" ? (
-          <div className="card-premium overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10 text-center"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
-                    <TableHead className="text-right">שם</TableHead>
-                    <TableHead className="text-right">ענף</TableHead>
-                    <TableHead className="text-right">כיתה</TableHead>
-                    <TableHead className="text-right">ממוצע</TableHead>
-                    <TableHead className="text-right">סטטוס</TableHead>
-                    <TableHead className="text-right">פעולות</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((student) => {
-                    const status = student.overall_status as StatusType;
-                    const config = statusConfig[status];
-                    return (
-                      <TableRow key={student.id} className={`cursor-pointer hover:bg-accent/30 ${selected.has(student.id) ? "bg-primary/5" : ""}`}>
-                        <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                          <Checkbox checked={selected.has(student.id)} onCheckedChange={() => toggleSelect(student.id)} />
-                        </TableCell>
-                        <TableCell className="font-medium" onClick={() => navigate(`/students/${student.id}`)}>
-                          <div className="flex items-center gap-2">
-                            <InitialsAvatar name={student.full_name} size="sm" />
-                            <span className="text-[13px]">{student.full_name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-[12px]">{student.sport}</TableCell>
-                        <TableCell className="text-[12px]">{student.class_name}</TableCell>
-                        <TableCell className="text-[12px] font-semibold">{student.avg_score || "—"}</TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${config.bgClass} ${config.textClass}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />
-                            {config.label}
-                          </span>
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-1">
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/students/${student.id}`)}>
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setQuickEditStudent(student)}>
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                            {isAdmin && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="icon" variant="ghost" className="h-7 w-7"><MoreHorizontal className="h-3 w-3" /></Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => { setDuplicateStudent(student); setEditStudent(student); setFormOpen(true); }} className="gap-2 text-xs"><Copy className="h-3 w-3" />שכפל</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={async () => { await updateStudent.mutateAsync({ id: student.id, data: { archived: true } }); toast.success(`"${student.full_name}" הועבר לארכיון`); }} className="gap-2 text-xs"><Archive className="h-3 w-3" />ארכיון</DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => setDeleteTarget(student)} className="gap-2 text-xs text-destructive"><Trash2 className="h-3 w-3" />מחק</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+          <p className="text-[18px] font-semibold text-foreground leading-none">
+            {activeSubjectsCount}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+            מקצועות פעילים
+          </p>
+        </div>
+
+        <div
+          className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+          style={{ animationDelay: "80ms" }}
+        >
+          <div className="flex items-center justify-center mb-1.5">
+            <BookOpen className="h-4 w-4 text-[hsl(270,35%,50%)]" strokeWidth={1.5} />
+          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">
+            {completedRoadmapCount}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+            שלבים שהושלמו
+          </p>
+        </div>
+      </div>
+
+      {/* Main cards */}
+      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">
+        כלים מרכזיים
+      </h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {cards.map((card, i) => (
+          <button
+            key={card.id}
+            onClick={() => navigate(card.path)}
+            className="group relative bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 animate-fade-in-up shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
+            style={{ animationDelay: `${80 + i * 50}ms` }}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className={`w-11 h-11 rounded-xl ${card.color} flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105`}
+              >
+                <card.icon
+                  className={`h-[18px] w-[18px] ${card.iconColor}`}
+                  strokeWidth={1.5}
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[13.5px] font-semibold text-foreground leading-tight">
+                  {card.title}
+                </h3>
+                <p className="text-[11.5px] text-muted-foreground mt-1.5 leading-relaxed">
+                  {card.description}
+                </p>
+              </div>
+
+              <ChevronLeft
+                className="h-4 w-4 text-border shrink-0 mt-0.5 group-hover:text-primary/50 transition-colors duration-200"
+                strokeWidth={1.5}
+              />
             </div>
-          </div>
-        ) : (
-          /* CARD VIEW */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filtered.map((student) => {
-              const status = student.overall_status as StatusType;
-              const config = statusConfig[status];
-              const subjects = progressByStudent.get(student.id) || [];
-              const topSubjects = subjects.slice(0, 3);
-              const missingCount = subjects.reduce((acc, s) => acc + (s.missingItems?.length || 0), 0);
+          </button>
+        ))}
+      </div>
 
-              return (
-                <div key={student.id} className={`card-premium overflow-hidden group ${selected.has(student.id) ? "ring-2 ring-primary/30" : ""}`}>
-                  <div className={`h-[3px] ${config.dotClass} opacity-60`} />
-                  <div className="p-4">
-                    {/* Top row: avatar, name, score */}
-                    <div className="flex items-start gap-3 mb-3">
-                      <InitialsAvatar name={student.full_name} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-foreground leading-tight truncate">{student.full_name}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
-                      </div>
-                      <span className="text-[18px] font-bold text-foreground tabular-nums shrink-0">{student.avg_score || "—"}</span>
-                    </div>
-
-                    {/* Status bar */}
-                    <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${config.bgClass} mb-2.5`}>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                        <span className={`text-[12px] font-semibold ${config.textClass}`}>{config.label}</span>
-                      </div>
-                      <span className={`text-[11px] font-medium ${config.textClass} opacity-70`}>{student.completion_percent}%</span>
-                    </div>
-
-                    {/* Subject chips */}
-                    {topSubjects.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2.5">
-                        {topSubjects.map((subj, i) => {
-                          const subjConfig = statusConfig[(subj.status as StatusType)] || statusConfig.green;
-                          return (
-                            <span key={i} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${subjConfig.bgClass} ${subjConfig.textClass}`}>
-                              <span className={`w-1 h-1 rounded-full ${subjConfig.dotClass}`} />
-                              {subj.subjectName}
-                            </span>
-                          );
-                        })}
-                        {subjects.length > 3 && <span className="text-[10px] text-muted-foreground/50 px-1 py-0.5">+{subjects.length - 3}</span>}
-                      </div>
-                    )}
-                    {missingCount > 0 && (
-                      <p className="text-[10px] text-destructive/70 mb-2 flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5" strokeWidth={1.5} />חוסרים: {missingCount}</p>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1.5 pt-2 border-t border-border/50">
-                      <Button size="sm" variant="outline" className="flex-1 h-7 text-[11px] gap-1" onClick={() => navigate(`/students/${student.id}`)}>
-                        <Eye className="h-3 w-3" />
-                        כניסה לפרופיל
-                      </Button>
-                      <Button size="icon" variant="outline" className="h-7 w-7 shrink-0" onClick={() => setQuickEditStudent(student)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      {isAdmin && (
-                        <Button size="icon" variant="outline" className="h-7 w-7 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20" onClick={() => setDeleteTarget(student)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* Modals */}
-      <StudentFormModal
-        open={formOpen}
-        onClose={() => { setFormOpen(false); setEditStudent(null); setDuplicateStudent(null); }}
-        student={editStudent}
-        duplicate={!!duplicateStudent}
-      />
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="מחיקת ספורטאי"
-        description={`האם למחוק את "${deleteTarget?.full_name}"? כל הנתונים יימחקו לצמיתות.`}
-        confirmLabel="מחק"
-        destructive
-        loading={deleteStudent.isPending}
-      />
-      
-      <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
+      {/* Bottom branding */}
+      <div className="mt-16 text-center">
+        <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
+          האקדמיה למצוינות · מכון וינגייט
+        </span>
+      </div>
     </div>
   );
 };
 
-export default StudentsPage;
+export default StudentHomePage;
