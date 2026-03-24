@@ -113,7 +113,6 @@ const StudentHomePage = () => {
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
-      {/* Header */}
       <section className="mb-8">
         <div className="flex items-center gap-4 mb-6">
           <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
@@ -128,61 +127,101 @@ const StudentHomePage = () => {
         </div>
       </section>
 
-      {/* Continue */}
       {last && (
         <div className="mb-6 animate-fade-in-up">
-          <p className="text-[10.5px] font-medium text-primary/50 mb-2.5">
+          <p className="text-[10.5px] font-medium text-primary/50 mb-2.5 tracking-tight">
             המשך מהפעם האחרונה
           </p>
           <button
             onClick={() => navigate(last.path)}
-            className="w-full bg-primary/5 rounded-2xl border border-primary/10 p-4 text-start"
+            className="w-full group bg-primary/5 rounded-2xl border border-primary/10 p-4 text-start transition-all duration-300 hover:bg-primary/8 cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <Play className="h-4 w-4 text-primary" />
-              <span className="text-[12.5px] font-semibold">{last.label}</span>
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Play className="h-4 w-4 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12.5px] font-semibold text-foreground leading-tight">
+                  {last.label}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  חזור למקום שעצרת
+                </p>
+              </div>
+              <ChevronLeft
+                className="h-4 w-4 text-primary/30 group-hover:text-primary/60 transition-colors"
+                strokeWidth={1.5}
+              />
             </div>
           </button>
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-7">
-        <div className="bg-card rounded-xl border p-3 text-center">
-          <CheckCircle2 className="mx-auto mb-1 text-primary" />
-          <p>{progressPct}%</p>
-          <p className="text-xs">התקדמות</p>
+      <div className="grid gap-3 mb-7 grid-cols-3">
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-center mb-1.5">
+            <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
+          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">{progressPct}%</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">התקדמות כללית</p>
         </div>
 
-        <div className="bg-card rounded-xl border p-3 text-center">
-          <Clock className="mx-auto mb-1 text-yellow-500" />
-          <p>{progress.length}</p>
-          <p className="text-xs">מקצועות</p>
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-center mb-1.5">
+            <Clock className="h-4 w-4 text-[hsl(var(--warning))]" strokeWidth={1.5} />
+          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">{progress.length}</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">מקצועות פעילים</p>
         </div>
 
-        <div className="bg-card rounded-xl border p-3 text-center">
-          <Target className="mx-auto mb-1 text-red-500" />
-          <p>{subjectsAtRisk}</p>
-          <p className="text-xs">דורשים חיזוק</p>
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-center mb-1.5">
+            <Target className="h-4 w-4 text-destructive" strokeWidth={1.5} />
+          </div>
+          <p className="text-[18px] font-semibold text-foreground leading-none">{subjectsAtRisk}</p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">דורשים חיזוק</p>
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid gap-3">
-        {cards.map((card) => (
+      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים מרכזיים</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {cards.map((card, i) => (
           <button
             key={card.id}
             onClick={() => navigate(card.path)}
-            className="bg-card rounded-xl border p-4 text-start flex items-center gap-3"
+            className="group relative bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 animate-fade-in-up shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
+            style={{ animationDelay: `${80 + i * 50}ms` }}
           >
-            <card.icon className="h-5 w-5" />
-            <div>
-              <p className="font-semibold">{card.title}</p>
-              <p className="text-xs text-muted-foreground">{card.description}</p>
+            <div className="flex items-start gap-4">
+              <div
+                className={`w-11 h-11 rounded-xl ${card.color} flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105`}
+              >
+                <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} strokeWidth={1.5} />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[13.5px] font-semibold text-foreground leading-tight">
+                  {card.title}
+                </h3>
+                <p className="text-[11.5px] text-muted-foreground mt-1.5 leading-relaxed">
+                  {card.description}
+                </p>
+              </div>
+
+              <ChevronLeft
+                className="h-4 w-4 text-border shrink-0 mt-0.5 group-hover:text-primary/50 transition-colors duration-200"
+                strokeWidth={1.5}
+              />
             </div>
-            <ChevronLeft className="mr-auto" />
           </button>
         ))}
+      </div>
+
+      <div className="mt-16 text-center">
+        <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
+          האקדמיה למצוינות · מכון וינגייט
+        </span>
       </div>
     </div>
   );
