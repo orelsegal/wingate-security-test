@@ -8,6 +8,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/ConfirmDialog";
+const sendToWhatsApp = (ev) => {
+  const message = `
+שם אירוע: ${ev.title}
+מקצוע: ${ev.subject}
+תאריך: ${new Date(ev.date).toLocaleDateString("he-IL")}
+
+נשלח מתוך מערכת וינגייט
+  `;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+};
 
 /* ═══ Types ═══ */
 interface CalendarEvent {
