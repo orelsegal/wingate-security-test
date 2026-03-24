@@ -567,43 +567,43 @@ const StudentHome = () => {
   const navigate = useNavigate();
 
   const cards: ActionCard[] = [
-    {
-      id: "courses",
-      title: "מקצועות",
-      description: "כניסה למקצועות, חלקי בגרות וקורסים",
-      icon: BookOpen,
-      color: "bg-[hsl(270,25%,93%)]",
-      iconColor: "text-[hsl(270,35%,50%)]",
-      path: "/courses",
-    },
-    {
-      id: "progress",
-      title: "ההתקדמות שלי",
-      description: "מצב לימודי, התקדמות ומשימות",
-      icon: TrendingUp,
-      color: "bg-[hsl(210,40%,93%)]",
-      iconColor: "text-[hsl(210,45%,48%)]",
-      path: "/courses",
-    },
-    {
-      id: "grades",
-      title: "ציונים",
-      description: "מבחנים, עבודות והישגים",
-      icon: GraduationCap,
-      color: "bg-[hsl(35,35%,93%)]",
-      iconColor: "text-[hsl(35,45%,42%)]",
-      path: "/courses",
-    },
-    {
-      id: "calendar",
-      title: "לוח שנה",
-      description: "משימות, מבחנים, שיעורים ואירועים",
-      icon: Calendar,
-      color: "bg-[hsl(150,25%,93%)]",
-      iconColor: "text-[hsl(150,35%,42%)]",
-      path: "/calendar",
-    },
-  ];
+  {
+    id: "start-learning",
+    title: "התחל למידה",
+    description: "גישה לקורסים ומשאבי למידה",
+    icon: BookOpen,
+    color: "bg-[hsl(270,25%,93%)]",
+    iconColor: "text-[hsl(270,35%,50%)]",
+    path: "/subjects",
+  },
+  {
+    id: "progress",
+    title: "ההתקדמות שלי",
+    description: "התקדמות, משימות וסטטוס לימודי",
+    icon: TrendingUp,
+    color: "bg-[hsl(210,40%,93%)]",
+    iconColor: "text-[hsl(210,45%,48%)]",
+    path: "/courses",
+  },
+  {
+    id: "grades",
+    title: "ציונים",
+    description: "מבחנים, עבודות והישגים",
+    icon: GraduationCap,
+    color: "bg-[hsl(35,35%,93%)]",
+    iconColor: "text-[hsl(35,45%,42%)]",
+    path: "/students",
+  },
+  {
+    id: "calendar",
+    title: "לוח שנה",
+    description: "משימות, מבחנים, שיעורים ואירועים",
+    icon: Calendar,
+    color: "bg-[hsl(150,25%,93%)]",
+    iconColor: "text-[hsl(150,35%,42%)]",
+    path: "/calendar",
+  },
+];
 
   return (
     <>
