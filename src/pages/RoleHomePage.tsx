@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import WingateBadge from "@/components/WingateBadge";
 
-/* ═══ Role Titles ═══ */
 const roleTitles: Record<UserRole, string> = {
   admin: "מרכז ניהול",
   teacher: "מרכז עבודה",
@@ -34,7 +33,6 @@ const roleTitles: Record<UserRole, string> = {
   coach: "מרכז המאמן",
 };
 
-/* ═══ Types ═══ */
 interface ActionCard {
   id: string;
   title: string;
@@ -49,7 +47,6 @@ interface ActionCard {
   size?: "large" | "normal";
 }
 
-/* ═══ Card Grid ═══ */
 const CardGrid = ({
   cards,
   navigate,
@@ -122,7 +119,6 @@ const CardGrid = ({
   </div>
 );
 
-/* ═══ Insight Strip ═══ */
 const InsightStrip = ({
   items,
 }: {
@@ -145,7 +141,6 @@ const InsightStrip = ({
   </div>
 );
 
-/* ═══ Continue From Last Time ═══ */
 const LAST_VISITED_KEY = "wingate_last_visited";
 
 interface LastVisited {
@@ -212,7 +207,6 @@ const ContinueCard = ({ navigate }: { navigate: (p: string) => void }) => {
   );
 };
 
-/* ═══ Main Entry Buttons ═══ */
 const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
   const entries = [
     {
@@ -274,7 +268,6 @@ const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
   );
 };
 
-/* ═══ ADMIN ═══ */
 const AdminHome = () => {
   const navigate = useNavigate();
   const { data: students = [] } = useStudents();
@@ -356,7 +349,6 @@ const AdminHome = () => {
   );
 };
 
-/* ═══ TEACHER ═══ */
 const TeacherHome = () => {
   const navigate = useNavigate();
   const { data: students = [] } = useStudents();
@@ -426,7 +418,6 @@ const TeacherHome = () => {
   );
 };
 
-/* ═══ PARENT ═══ */
 const ParentHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -483,7 +474,6 @@ const ParentHome = () => {
   return <CardGrid cards={cards} navigate={navigate} />;
 };
 
-/* ═══ COACH ═══ */
 const CoachHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -562,7 +552,6 @@ const CoachHome = () => {
   );
 };
 
-/* ═══ STUDENT ═══ */
 const StudentHome = () => {
   const navigate = useNavigate();
 
@@ -616,7 +605,6 @@ const StudentHome = () => {
   );
 };
 
-/* ═══ MAIN ═══ */
 const RoleHomePage = () => {
   const { user } = useAuth();
 
