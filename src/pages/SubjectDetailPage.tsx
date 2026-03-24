@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowRight, BookOpen, CheckCircle2, Lock, Clock, Loader2,
+  ArrowRight, BookOpen, CheckCircle2, Clock, Loader2,
   GraduationCap, AlertTriangle, ChevronLeft
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -9,48 +9,14 @@ import { Progress } from "@/components/ui/progress";
 import { useMemo, useEffect } from "react";
 import { saveLastVisited } from "@/pages/RoleHomePage";
 import DataExportTools from "@/components/DataExportTools";
-
-/* ── Part definitions ── */
-interface PartDef {
-  id: string;
-  title: string;
-  weight: string;
-  topics: string[];
-}
-
-const subjectParts: Record<string, PartDef[]> = {
-  "היסטוריה": [
-    { id: "hist-30", title: "30% פנימי", weight: "30%", topics: ["הלאומיות באירופה", "מלחמת העולם הראשונה", "התקופה שבין המלחמות"] },
-    { id: "hist-70", title: "70% חיצוני", weight: "70%", topics: ["מלחמת העולם השנייה", "השואה", "הקמת המדינה", "סכסוך ערבי-ישראלי"] },
-  ],
-  "אזרחות": [
-    { id: "civ-30", title: "30% פנימי", weight: "30%", topics: ["עקרונות הדמוקרטיה", "זכויות האדם", "הכרזת העצמאות"] },
-    { id: "civ-70", title: "70% חיצוני", weight: "70%", topics: ["מוסדות השלטון", "חוקה ומשפט", "אזרחות פעילה", "מיעוטים בישראל"] },
-  ],
-  "ספרות": [
-    { id: "lit-30", title: "30% פנימי", weight: "30%", topics: ["שירה מודרנית", "סיפור קצר", "ניתוח טקסט"] },
-    { id: "lit-70", title: "70% חיצוני", weight: "70%", topics: ["רומן", "דרמה", "שירה קלאסית", "חיבור השוואתי"] },
-  ],
-  "לשון": [
-    { id: "heb-20", title: "20% פנימי", weight: "20%", topics: ["תחביר בסיסי", "חלקי דיבר", "פיסוק"] },
-    { id: "heb-80", title: "80% חיצוני", weight: "80%", topics: ["הבנת הנקרא", "כתיבה אקדמית", "לשון פורמלית", "מבנה טקסט"] },
-  ],
-  "מתמטיקה": [
-    { id: "math-1", title: "אלגברה ופונקציות", weight: "~35%", topics: ["משוואות", "פונקציה ליניארית", "פונקציה ריבועית"] },
-    { id: "math-2", title: "גיאומטריה וטריגונומטריה", weight: "~35%", topics: ["משולשים", "מעגל", "טריגונומטריה"] },
-    { id: "math-3", title: "הסתברות וסטטיסטיקה", weight: "~30%", topics: ["הסתברות", "התפלגויות", "סטטיסטיקה תיאורית"] },
-  ],
-  "אנגלית": [
-    { id: "eng-e", title: "Module E", weight: "Literature", topics: ["Unseen passages", "Literature – Play", "Literature – Poem"] },
-    { id: "eng-f", title: "Module F", weight: "Writing", topics: ["Essay writing", "Formal letter", "Report"] },
-    { id: "eng-g", title: "Module G", weight: "Oral", topics: ["Oral presentation", "Listening comprehension"] },
-  ],
-};
+import TeacherAIAssistant from "@/components/TeacherAIAssistant";
+import { courseContent } from "@/lib/courseContent";
 
 const SubjectDetailPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isTeacher = user?.role === "teacher" || user?.role === "admin";
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: progress = [], isLoading } = useStudentProgress(studentId);
   const decoded = decodeURIComponent(subjectName || "");
@@ -64,7 +30,8 @@ const SubjectDetailPage = () => {
     [progress, decoded]
   );
 
-  const parts = subjectParts[decoded] || [];
+  const subjectData = courseContent[decoded];
+  const parts = subjectData?.parts || [];
   const pct = subjectProgress?.completion_percent ?? 0;
   const grade = subjectProgress?.grade;
   const status = (subjectProgress?.status as string) || "gray";
@@ -92,7 +59,7 @@ const SubjectDetailPage = () => {
         </button>
         <div className="flex-1">
           <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-tight">{decoded}</h1>
-          <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">מבנה בגרות ומעקב התקדמות</p>
+          <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">{subjectData?.subtitle || "מבנה בגרות ומעקב התקדמות"}</p>
         </div>
         <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
       </div>
@@ -123,7 +90,7 @@ const SubjectDetailPage = () => {
           { label: "ציון", value: grade != null ? `${grade}` : "—" },
           { label: "יחידות", value: `${parts.length}` },
         ].map((kpi, i) => (
-          <div key={i} className="bg-card rounded-xl border border-border p-3 text-center shadow-[var(--shadow-card)] animate-fade-in-up" style={{ animationDelay: `${i * 40}ms` }}>
+          <div key={i} className="bg-card rounded-xl border border-border p-3 text-center shadow-[var(--shadow-card)]">
             <p className="text-[16px] font-semibold text-foreground leading-none">{kpi.value}</p>
             <p className="text-[9.5px] text-muted-foreground mt-1 font-medium">{kpi.label}</p>
           </div>
@@ -147,8 +114,9 @@ const SubjectDetailPage = () => {
         </h2>
         <div className="flex flex-col gap-3">
           {parts.map((part, pi) => {
-            const topicsDone = part.topics.filter(t => coveredTopics.includes(t)).length;
-            const partPct = part.topics.length > 0 ? Math.round((topicsDone / part.topics.length) * 100) : 0;
+            const partTopics = part.units.flatMap(u => u.items.map(i => i.title));
+            const topicsDone = partTopics.filter(t => coveredTopics.includes(t)).length;
+            const partPct = partTopics.length > 0 ? Math.round((topicsDone / partTopics.length) * 100) : 0;
             const isComplete = partPct === 100;
 
             return (
@@ -168,7 +136,7 @@ const SubjectDetailPage = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-[13px] font-semibold text-foreground leading-tight">{part.title}</h3>
-                    <p className="text-[10px] text-muted-foreground font-normal mt-0.5">{part.weight} · {topicsDone} מתוך {part.topics.length} נושאים</p>
+                    <p className="text-[10px] text-muted-foreground font-normal mt-0.5">{part.weight} · {topicsDone} מתוך {partTopics.length} נושאים</p>
                   </div>
                   <span className={`text-[10px] font-semibold tabular-nums ml-1 ${isComplete ? "text-[hsl(var(--success))]" : "text-muted-foreground"}`}>{partPct}%</span>
                   <ChevronLeft className="h-4 w-4 text-border group-hover:text-primary/50 transition-colors shrink-0" strokeWidth={1.5} />
@@ -182,7 +150,7 @@ const SubjectDetailPage = () => {
 
       {/* Missing items */}
       {missingItems.length > 0 && (
-        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+        <section className="mb-6">
           <h2 className="text-[12px] font-semibold text-destructive/60 mb-3 tracking-tight flex items-center gap-1.5">
             <AlertTriangle className="h-3.5 w-3.5" strokeWidth={1.5} />
             דורש השלמה
@@ -197,6 +165,13 @@ const SubjectDetailPage = () => {
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* Teacher AI Assistant */}
+      {isTeacher && (
+        <section className="mb-6">
+          <TeacherAIAssistant defaultSubject={decoded} compact />
         </section>
       )}
     </div>

@@ -1,0 +1,232 @@
+import { useState } from "react";
+import type { UnitDef } from "@/lib/courseContent";
+import {
+  ChevronDown, ChevronUp, CheckCircle2, BookOpen,
+  Lightbulb, PenLine, HelpCircle, Sparkles
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+
+const FEEDBACK_MESSAGES = {
+  correct: [
+    "מצוין — שלטת היטב במושג הזה",
+    "יפה מאוד — תשובה מדויקת",
+    "נכון! הבנה מעולה",
+    "בול — ממשיכים קדימה",
+  ],
+  incorrect: [
+    "כמעט שם — קרא שוב את ההסבר ונסה שנית",
+    "לא בדיוק — שים לב לפרטים",
+    "נסה שוב — התשובה הנכונה מופיעה בהסבר למעלה",
+  ],
+};
+
+const randomFeedback = (correct: boolean) => {
+  const arr = correct ? FEEDBACK_MESSAGES.correct : FEEDBACK_MESSAGES.incorrect;
+  return arr[Math.floor(Math.random() * arr.length)];
+};
+
+interface Props {
+  unit: UnitDef;
+  coveredTopics: string[];
+  onTopicComplete?: (topicTitle: string) => void;
+}
+
+const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props) => {
+  const [expandedItem, setExpandedItem] = useState<string | null>(
+    unit.items.find(i => !coveredTopics.includes(i.title))?.id || null
+  );
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
+  const [quizFeedback, setQuizFeedback] = useState<Record<string, { correct: boolean; message: string } | null>>({});
+  const [practiceText, setPracticeText] = useState<Record<string, string>>({});
+
+  const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
+  const pct = unit.items.length > 0 ? Math.round((completedCount / unit.items.length) * 100) : 0;
+
+  const handleQuizAnswer = (itemId: string, quizIdx: number, selectedIdx: number, correctIdx: number) => {
+    const key = `${itemId}-${quizIdx}`;
+    setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
+    const isCorrect = selectedIdx === correctIdx;
+    setQuizFeedback(prev => ({ ...prev, [key]: { correct: isCorrect, message: randomFeedback(isCorrect) } }));
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Unit header */}
+      <div className="flex items-center gap-3 mb-1">
+        <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+          <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[13px] font-semibold text-foreground leading-tight">{unit.title}</h3>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{completedCount} מתוך {unit.items.length} נושאים</p>
+        </div>
+        <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">{pct}%</span>
+      </div>
+      <Progress value={pct} className="h-1.5 bg-muted/50 mb-3" />
+
+      {/* Items */}
+      {unit.items.map((item, idx) => {
+        const isDone = coveredTopics.includes(item.title);
+        const isOpen = expandedItem === item.id;
+
+        return (
+          <div
+            key={item.id}
+            className={`bg-card rounded-2xl border transition-all duration-300 ${
+              isOpen ? "border-primary/20 shadow-[var(--shadow-card-hover)]" : "border-border shadow-[var(--shadow-card)]"
+            }`}
+          >
+            {/* Topic header */}
+            <button
+              onClick={() => setExpandedItem(isOpen ? null : item.id)}
+              className="w-full flex items-center gap-3 p-4 text-start"
+            >
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                isDone ? "bg-[hsl(var(--success))]/10" : "bg-muted/60"
+              }`}>
+                {isDone ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-[hsl(var(--success))]" strokeWidth={1.5} />
+                ) : (
+                  <span className="text-[10px] font-semibold text-muted-foreground">{idx + 1}</span>
+                )}
+              </div>
+              <span className={`text-[12px] font-medium flex-1 ${isDone ? "text-foreground" : "text-foreground/80"}`}>
+                {item.title}
+              </span>
+              {isOpen ? (
+                <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/50" strokeWidth={1.5} />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" strokeWidth={1.5} />
+              )}
+            </button>
+
+            {/* Expanded content */}
+            {isOpen && (
+              <div className="px-4 pb-4 space-y-4 animate-fade-in-up">
+                {/* Explanation */}
+                <div className="bg-muted/30 rounded-xl p-4">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <BookOpen className="h-3 w-3 text-primary/60" strokeWidth={1.5} />
+                    <span className="text-[10px] font-semibold text-primary/60">הסבר</span>
+                  </div>
+                  <p className="text-[11.5px] text-foreground leading-relaxed whitespace-pre-wrap">
+                    {item.explanation}
+                  </p>
+                </div>
+
+                {/* Example */}
+                {item.example && (
+                  <div className="bg-primary/[0.04] rounded-xl p-4 border border-primary/8">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Lightbulb className="h-3 w-3 text-primary/60" strokeWidth={1.5} />
+                      <span className="text-[10px] font-semibold text-primary/60">דוגמה</span>
+                    </div>
+                    <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
+                      {item.example}
+                    </p>
+                  </div>
+                )}
+
+                {/* Practice */}
+                {item.practice && (
+                  <div className="bg-card rounded-xl border border-border p-4">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <PenLine className="h-3 w-3 text-[hsl(var(--warning))]/70" strokeWidth={1.5} />
+                      <span className="text-[10px] font-semibold text-[hsl(var(--warning))]/70">תרגול</span>
+                    </div>
+                    <p className="text-[11px] text-foreground leading-relaxed mb-3 whitespace-pre-wrap">
+                      {item.practice}
+                    </p>
+                    <Textarea
+                      value={practiceText[item.id] || ""}
+                      onChange={e => setPracticeText(prev => ({ ...prev, [item.id]: e.target.value }))}
+                      placeholder="כתוב את תשובתך כאן..."
+                      className="text-[11px] min-h-[60px] rounded-lg bg-muted/20 border-border/50 resize-none"
+                    />
+                  </div>
+                )}
+
+                {/* Quiz */}
+                {item.quiz && item.quiz.map((q, qi) => {
+                  const key = `${item.id}-${qi}`;
+                  const answered = quizAnswers[key] != null;
+                  const fb = quizFeedback[key];
+
+                  return (
+                    <div key={qi} className="bg-card rounded-xl border border-border p-4">
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <HelpCircle className="h-3 w-3 text-primary/50" strokeWidth={1.5} />
+                        <span className="text-[10px] font-semibold text-primary/50">בדיקת הבנה</span>
+                      </div>
+                      <p className="text-[11.5px] font-medium text-foreground mb-3">{q.question}</p>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {q.options.map((opt, oi) => {
+                          const isSelected = quizAnswers[key] === oi;
+                          const isCorrectOption = oi === q.correct;
+                          let btnClass = "bg-muted/30 text-foreground hover:bg-muted/50";
+                          if (answered) {
+                            if (isCorrectOption) btnClass = "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20";
+                            else if (isSelected && !isCorrectOption) btnClass = "bg-destructive/10 text-destructive border-destructive/20";
+                          }
+                          return (
+                            <button
+                              key={oi}
+                              onClick={() => !answered && handleQuizAnswer(item.id, qi, oi, q.correct)}
+                              disabled={answered}
+                              className={`text-start px-3 py-2 rounded-lg text-[11px] border border-transparent transition-all ${btnClass} ${!answered ? "cursor-pointer" : ""}`}
+                            >
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {fb && (
+                        <div className={`mt-2.5 flex items-center gap-2 px-3 py-2 rounded-lg text-[10.5px] ${
+                          fb.correct ? "bg-[hsl(var(--success))]/8 text-[hsl(var(--success))]" : "bg-destructive/8 text-destructive"
+                        }`}>
+                          {fb.correct ? <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.5} /> : <Sparkles className="h-3 w-3 shrink-0" strokeWidth={1.5} />}
+                          <span>{fb.message}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Tip */}
+                {item.tip && (
+                  <div className="flex items-start gap-2 px-3 py-2.5 bg-[hsl(var(--warning))]/5 rounded-lg border border-[hsl(var(--warning))]/10">
+                    <Sparkles className="h-3 w-3 text-[hsl(var(--warning))] shrink-0 mt-0.5" strokeWidth={1.5} />
+                    <p className="text-[10px] text-foreground/80 leading-relaxed">{item.tip}</p>
+                  </div>
+                )}
+
+                {/* Mark complete */}
+                {!isDone && onTopicComplete && (
+                  <Button
+                    size="sm"
+                    onClick={() => onTopicComplete(item.title)}
+                    className="w-full gap-1.5 text-[11px] h-9 rounded-xl"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    סיימתי — המשך הלאה
+                  </Button>
+                )}
+
+                {isDone && (
+                  <div className="flex items-center gap-2 justify-center py-1">
+                    <CheckCircle2 className="h-3 w-3 text-[hsl(var(--success))]" strokeWidth={1.5} />
+                    <span className="text-[10px] text-[hsl(var(--success))] font-medium">נושא הושלם</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export default InteractiveLearningUnit;
