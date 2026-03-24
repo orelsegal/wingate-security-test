@@ -5,12 +5,12 @@ import {
   Loader2,
   CheckCircle2,
   Clock,
-  Target,
   CalendarDays,
   GraduationCap,
   TrendingUp,
   Play,
   ChevronLeft,
+  FlaskConical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useEffect, useState } from "react";
@@ -22,6 +22,16 @@ interface LastVisited {
   path: string;
   label: string;
   timestamp: number;
+}
+
+interface StudentActionCard {
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  path: string;
+  color: string;
+  iconColor: string;
 }
 
 const getLastVisited = (): LastVisited | null => {
@@ -59,60 +69,66 @@ const StudentHomePage = () => {
       ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100)
       : 0;
 
-  const subjectsAtRisk = useMemo(
-    () => progress.filter((p: any) => p.status === "red" || p.status === "yellow").length,
-    [progress]
-  );
+  const activeSubjectsCount = progress.length;
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" dir="rtl">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
       </div>
     );
   }
 
-  const cards = [
+  const cards: StudentActionCard[] = [
     {
-      id: "subjects",
-      title: "מקצועות",
-      description: "כניסה למקצועות, חלקי בגרות וקורסים",
+      id: "start-learning",
+      title: "התחל למידה",
+      description: "גישה מהירה למקצועות, קורסים וחומרי לימוד",
       icon: BookOpen,
+      path: "/subjects",
       color: "bg-[hsl(270,25%,93%)]",
       iconColor: "text-[hsl(270,35%,50%)]",
-      path: "/courses",
+    },
+    {
+      id: "science-intro",
+      title: "מבוא למדעים",
+      description: "כניסה ישירה לקורס מבוא למדעים",
+      icon: FlaskConical,
+      path: "/science-intro",
+      color: "bg-[hsl(190,30%,93%)]",
+      iconColor: "text-[hsl(190,40%,45%)]",
     },
     {
       id: "progress",
       title: "ההתקדמות שלי",
       description: "התקדמות, משימות וסטטוס לימודי",
       icon: TrendingUp,
+      path: "/courses",
       color: "bg-[hsl(210,40%,93%)]",
       iconColor: "text-[hsl(210,45%,48%)]",
-      path: "/courses",
     },
     {
       id: "grades",
       title: "ציונים",
       description: "מבחנים, עבודות והישגים",
       icon: GraduationCap,
+      path: "/students",
       color: "bg-[hsl(35,35%,93%)]",
       iconColor: "text-[hsl(35,45%,42%)]",
-      path: "/courses",
     },
     {
       id: "calendar",
       title: "לוח שנה",
       description: "משימות, מבחנים, שיעורים ואירועים",
       icon: CalendarDays,
+      path: "/calendar",
       color: "bg-[hsl(150,25%,93%)]",
       iconColor: "text-[hsl(150,35%,42%)]",
-      path: "/calendar",
     },
   ];
 
   return (
-    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
+    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto" dir="rtl">
       <section className="mb-8">
         <div className="flex items-center gap-4 mb-6">
           <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
@@ -158,32 +174,52 @@ const StudentHomePage = () => {
       )}
 
       <div className="grid gap-3 mb-7 grid-cols-3">
-        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up">
           <div className="flex items-center justify-center mb-1.5">
             <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
           </div>
-          <p className="text-[18px] font-semibold text-foreground leading-none">{progressPct}%</p>
-          <p className="text-[10px] text-muted-foreground mt-1 font-medium">התקדמות כללית</p>
+          <p className="text-[18px] font-semibold text-foreground leading-none">
+            {progressPct}%
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+            התקדמות כללית
+          </p>
         </div>
 
-        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+        <div
+          className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+          style={{ animationDelay: "40ms" }}
+        >
           <div className="flex items-center justify-center mb-1.5">
             <Clock className="h-4 w-4 text-[hsl(var(--warning))]" strokeWidth={1.5} />
           </div>
-          <p className="text-[18px] font-semibold text-foreground leading-none">{progress.length}</p>
-          <p className="text-[10px] text-muted-foreground mt-1 font-medium">מקצועות פעילים</p>
+          <p className="text-[18px] font-semibold text-foreground leading-none">
+            {activeSubjectsCount}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+            מקצועות פעילים
+          </p>
         </div>
 
-        <div className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)]">
+        <div
+          className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+          style={{ animationDelay: "80ms" }}
+        >
           <div className="flex items-center justify-center mb-1.5">
-            <Target className="h-4 w-4 text-destructive" strokeWidth={1.5} />
+            <BookOpen className="h-4 w-4 text-[hsl(270,35%,50%)]" strokeWidth={1.5} />
           </div>
-          <p className="text-[18px] font-semibold text-foreground leading-none">{subjectsAtRisk}</p>
-          <p className="text-[10px] text-muted-foreground mt-1 font-medium">דורשים חיזוק</p>
+          <p className="text-[18px] font-semibold text-foreground leading-none">
+            {completedRoadmapCount}
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1 font-medium">
+            שלבים שהושלמו
+          </p>
         </div>
       </div>
 
-      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים מרכזיים</h2>
+      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">
+        כלים מרכזיים
+      </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         {cards.map((card, i) => (
@@ -197,7 +233,10 @@ const StudentHomePage = () => {
               <div
                 className={`w-11 h-11 rounded-xl ${card.color} flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105`}
               >
-                <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} strokeWidth={1.5} />
+                <card.icon
+                  className={`h-[18px] w-[18px] ${card.iconColor}`}
+                  strokeWidth={1.5}
+                />
               </div>
 
               <div className="flex-1 min-w-0">
