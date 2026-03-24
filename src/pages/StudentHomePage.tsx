@@ -10,7 +10,6 @@ import {
   TrendingUp,
   Play,
   ChevronLeft,
-  FlaskConical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useEffect, useState } from "react";
@@ -88,7 +87,7 @@ const StudentHomePage = () => {
       path: "/subjects",
       color: "bg-[hsl(270,25%,93%)]",
       iconColor: "text-[hsl(270,35%,50%)]",
-    }
+    },
     {
       id: "progress",
       title: "ההתקדמות שלי",
