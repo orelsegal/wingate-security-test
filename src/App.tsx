@@ -1,7 +1,3 @@
-import GradesPage from "./pages/GradesPage";
-import RoadmapPage from "./pages/RoadmapPage";
-import ToolsPage from "./pages/ToolsPage";
-import CoursesListPage from "./pages/CoursesListPage.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,77 +5,67 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import AppLayout from "@/components/AppLayout";
-import Index from "./pages/Index.tsx";
-import StudentsPage from "./pages/StudentsPage.tsx";
-import StudentProfilePage from "./pages/StudentProfilePage.tsx";
-import LoginPage from "./pages/LoginPage.tsx";
-import CoursesPage from "./pages/CoursesPage.tsx";
-import DataEntryPage from "./pages/DataEntryPage.tsx";
-import DataManagementPage from "./pages/DataManagementPage.tsx";
-import StudentHomePage from "./pages/StudentHomePage.tsx";
-import StudentLearningTrafficLight from "./pages/StudentLearningTrafficLight.tsx";
-import StudentRoadmapTrafficLight from "./pages/StudentRoadmapTrafficLight.tsx";
-import RoleHomePage from "./pages/RoleHomePage.tsx";
-import DashboardContent from "./components/DashboardContent.tsx";
-import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
-import SubjectSelectionPage from "./pages/SubjectSelectionPage.tsx";
-import SubjectDetailPage from "./pages/SubjectDetailPage.tsx";
-import TeacherSubjectEditorPage from "./pages/TeacherSubjectEditorPage.tsx";
-import SubjectPartPage from "./pages/SubjectPartPage.tsx";
-import HistoryCoursePage from "./pages/HistoryCoursePage.tsx";
-import GroupsPage from "./pages/GroupsPage.tsx";
-import CalendarPage from "./pages/CalendarPage.tsx";
-import ScienceIntroPage from "./pages/ScienceIntroPage.tsx";
-import NotFound from "./pages/NotFound.tsx";
+
+import LoginPage from "./pages/LoginPage";
+import NotFound from "./pages/NotFound";
+
+import StudentHomePage from "./pages/StudentHomePage";
+import StudentProfilePage from "./pages/StudentProfilePage";
+import CalendarPage from "./pages/CalendarPage";
+import CoursesListPage from "./pages/CoursesListPage";
+import GradesPage from "./pages/GradesPage";
+import RoadmapPage from "./pages/RoadmapPage";
+import ToolsPage from "./pages/ToolsPage";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn } = useAuth();
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/grades" element={<GradesPage />} />
-<Route path="/roadmap" element={<RoadmapPage />} />
-<Route path="/tools" element={<ToolsPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<StudentHomePage />} />
-              <Route path="/dashboard" element={<DashboardContent />} />
-              <Route path="/students" element={<StudentsPage />} />
-              <Route path="/students/:id" element={<StudentProfilePage />} />
-              <Route path="/courses" element={<CoursesListPage />} />
-              <Route path="/data-entry" element={<DataEntryPage />} />
-              <Route path="/data-management" element={<DataManagementPage />} />
-              <Route path="/student-home" element={<StudentHomePage />} />
-              <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
-              <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
-              <Route path="/role-home" element={<RoleHomePage />} />
-              <Route path="/external" element={<ExternalWrapperPage />} />
-              <Route path="/subjects" element={<SubjectSelectionPage />} />
-              <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
-              <Route path="/subjects/:subjectName/:partId" element={<SubjectPartPage />} />
-              <Route path="/teacher-subjects" element={<TeacherSubjectEditorPage />} />
-              <Route path="/history-course" element={<HistoryCoursePage />} />
-              <Route path="/groups" element={<GroupsPage />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/science-intro" element={<ScienceIntroPage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/" element={<StudentHomePage />} />
+                <Route path="/student-home" element={<StudentHomePage />} />
+
+                <Route path="/courses" element={<CoursesListPage />} />
+                <Route path="/grades" element={<GradesPage />} />
+                <Route path="/roadmap" element={<RoadmapPage />} />
+                <Route path="/tools" element={<ToolsPage />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+
+                <Route path="/students/:id" element={<StudentProfilePage />} />
+              </Route>
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
