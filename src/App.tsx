@@ -1,3 +1,8 @@
+import ParentHomePage from "./pages/ParentHomePage";
+import ParentProgressPage from "./pages/ParentProgressPage";
+import ParentGradesPage from "./pages/ParentGradesPage";
+import ParentCalendarPage from "./pages/ParentCalendarPage";
+import ParentSupportPage from "./pages/ParentSupportPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
