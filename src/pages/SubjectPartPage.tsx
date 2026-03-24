@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowRight, CheckCircle2, Lock, Clock, BookOpen, FileText, Plus,
   ClipboardList, Sparkles, ChevronDown, ChevronUp, Trash2, Pencil,
-  Link as LinkIcon, Upload, Save, GraduationCap, TrafficCone, Map
+  Link as LinkIcon, Upload, Save, GraduationCap, TrafficCone, Map, Award
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
