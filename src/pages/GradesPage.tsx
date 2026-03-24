@@ -6,35 +6,27 @@ const GradesPage = () => {
   ];
 
   return (
-    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto" dir="rtl">
-      <div className="mb-8">
-        <h1 className="text-[22px] md:text-[28px] font-bold text-foreground text-right">
-          הציונים שלי
-        </h1>
-        <p className="text-[14px] text-muted-foreground text-right mt-2">
-          כל הציונים שלך במקום אחד
-        </p>
-      </div>
+    <div className="p-4 max-w-[520px] mx-auto" dir="rtl">
+      <h1 className="text-[20px] font-medium text-center tracking-tight mb-2">
+        ציונים
+      </h1>
+      <p className="text-[12px] text-muted-foreground text-center mb-5">
+        כל הציונים שלך במקום אחד
+      </p>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {grades.map((item, index) => (
           <div
             key={index}
-            className="w-full bg-white rounded-[28px] border border-black/5 shadow-[0_4px_18px_rgba(0,0,0,0.06)] px-6 py-6 flex items-center justify-between text-right"
+            className="bg-white rounded-[20px] border border-[hsl(220,18%,93%)] shadow-[0_2px_10px_rgba(15,23,42,0.04)] px-4 py-4 flex items-center justify-between"
           >
             <div className="text-right">
-              <h2 className="text-[18px] font-bold text-foreground leading-tight">
-                {item.subject}
-              </h2>
-              <p className="text-[14px] text-muted-foreground mt-1">
-                {item.note}
-              </p>
+              <h2 className="text-[15px] font-medium">{item.subject}</h2>
+              <p className="text-[12px] text-muted-foreground mt-1">{item.note}</p>
             </div>
 
-            <div className="min-w-[72px] h-[72px] rounded-[22px] bg-[hsl(50,85%,90%)] flex items-center justify-center">
-              <span className="text-[24px] font-bold text-foreground">
-                {item.grade}
-              </span>
+            <div className="w-[52px] h-[52px] rounded-[16px] bg-[hsl(50,42%,90%)] flex items-center justify-center">
+              <span className="text-[18px] font-medium">{item.grade}</span>
             </div>
           </div>
         ))}
