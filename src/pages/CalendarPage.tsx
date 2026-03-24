@@ -7,6 +7,8 @@ import {
   Plus,
   Pencil,
   Trash2,
+  FileSpreadsheet,
+  MessageCircle,
 } from "lucide-react";
 import {
   format,
@@ -40,20 +42,6 @@ import {
 } from "@/components/ui/select";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
-/* ===== WhatsApp ===== */
-const sendToWhatsApp = (ev: any) => {
-  const message = `
-שם אירוע: ${ev.title}
-מקצוע: ${ev.subject}
-תאריך: ${new Date(ev.date).toLocaleDateString("he-IL")}
-
-נשלח מתוך מערכת וינגייט
-  `;
-
-  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank");
-};
-
 /* ===== Types ===== */
 interface CalendarEvent {
   id: string;
@@ -65,190 +53,179 @@ interface CalendarEvent {
 }
 
 const typeConfig: Record<
-  string,
+  CalendarEvent["type"],
   { label: string; dotClass: string; textClass: string }
 > = {
-  assignment: { label: "משימה", dotClass: "bg-primary", textClass: "text-primary" },
-  test: { label: "מבחן", dotClass: "bg-destructive", textClass: "text-destructive" },
-  lesson: { label: "שיעור", dotClass: "bg-green-500", textClass: "text-green-600" },
-  event: { label: "אירוע", dotClass: "bg-yellow-500", textClass: "text-yellow-600" },
+  assignment: {
+    label: "משימה",
+    dotClass: "bg-primary",
+    textClass: "text-primary",
+  },
+  test: {
+    label: "מבחן",
+    dotClass: "bg-destructive",
+    textClass: "text-destructive",
+  },
+  lesson: {
+    label: "שיעור / מפגש",
+    dotClass: "bg-green-500",
+    textClass: "text-green-600",
+  },
+  event: {
+    label: "אירוע",
+    dotClass: "bg-yellow-500",
+    textClass: "text-yellow-600",
+  },
 };
 
-const typeOptions = [
+const typeOptions: { value: CalendarEvent["type"]; label: string }[] = [
   { value: "assignment", label: "משימה" },
   { value: "test", label: "מבחן" },
   { value: "lesson", label: "שיעור / מפגש" },
   { value: "event", label: "אירוע" },
 ];
 
+/* ===== Helpers ===== */
+const sendSingleEventToWhatsApp = (ev: CalendarEvent) => {
+  const message = `שם אירוע: ${ev.title}
+מקצוע: ${ev.subject}
+סוג: ${typeConfig[ev.type]?.label || ev.type}
+תאריך: ${new Date(ev.date).toLocaleDateString("he-IL")}
+${ev.notes ? `הערות: ${ev.notes}` : ""}
+
+נשלח מתוך מערכת וינגייט`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+};
+
+const sendDayEventsToWhatsApp = (
+  events: CalendarEvent[],
+  selectedDate: Date | null
+) => {
+  if (!selectedDate || events.length === 0) return;
+
+  const dateLabel = selectedDate.toLocaleDateString("he-IL");
+  const lines = events.map(
+    (ev, index) =>
+      `${index + 1}. ${ev.title} | ${ev.subject} | ${typeConfig[ev.type]?.label || ev.type}`
+  );
+
+  const message = `אירועים ליום ${dateLabel}
+
+${lines.join("\n")}
+
+נשלח מתוך מערכת וינגייט`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+};
+
+const exportDayEventsToCsv = (
+  events: CalendarEvent[],
+  selectedDate: Date | null
+) => {
+  if (!selectedDate || events.length === 0) return;
+
+  const headers = ["תאריך", "כותרת", "מקצוע", "סוג", "הערות"];
+
+  const rows = events.map((ev) => [
+    new Date(ev.date).toLocaleDateString("he-IL"),
+    ev.title,
+    ev.subject,
+    typeConfig[ev.type]?.label || ev.type,
+    ev.notes || "",
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    )
+    .join("\n");
+
+  const blob = new Blob(["\uFEFF" + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateLabel = selectedDate.toLocaleDateString("he-IL").replace(/\//g, "-");
+  link.href = url;
+  link.setAttribute("download", `אירועים-${dateLabel}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 /* ===== Demo Data ===== */
 const now = new Date();
 const initialEvents: CalendarEvent[] = [
   {
     id: "1",
+    title: "הגשת עבודה – היסטוריה 70%",
+    subject: "היסטוריה",
+    date: new Date(now.getFullYear(), now.getMonth(), 5),
+    type: "assignment",
+  },
+  {
+    id: "2",
+    title: "מבחן אזרחות – 30%",
+    subject: "אזרחות",
+    date: new Date(now.getFullYear(), now.getMonth(), 10),
+    type: "test",
+  },
+  {
+    id: "3",
+    title: "שיעור אנגלית – Module E",
+    subject: "אנגלית",
+    date: new Date(now.getFullYear(), now.getMonth(), 12),
+    type: "lesson",
+  },
+  {
+    id: "4",
+    title: "הגשת פרויקט לשון",
+    subject: "לשון",
+    date: new Date(now.getFullYear(), now.getMonth(), 18),
+    type: "assignment",
+  },
+  {
+    id: "5",
     title: "מבחן מתמטיקה",
     subject: "מתמטיקה",
-    date: new Date(now.getFullYear(), now.getMonth(), 5),
+    date: new Date(now.getFullYear(), now.getMonth(), 22),
     type: "test",
+  },
+  {
+    id: "6",
+    title: "שיעור היסטוריה – סיכום",
+    subject: "היסטוריה",
+    date: new Date(now.getFullYear(), now.getMonth(), 25),
+    type: "lesson",
+  },
+  {
+    id: "7",
+    title: "הגשת תרגיל אנגלית",
+    subject: "אנגלית",
+    date: new Date(now.getFullYear(), now.getMonth() + 1, 3),
+    type: "assignment",
   },
 ];
 
 const dayNames = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
-/* ===== Main ===== */
+/* ===== Page ===== */
 const CalendarPage = () => {
   const { user } = useAuth();
+
   const canEdit =
     user?.role === "admin" ||
     user?.role === "teacher" ||
     user?.role === "coach";
 
+  const canExport = canEdit;
+
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-
-  const [formTitle, setFormTitle] = useState("");
-  const [formSubject, setFormSubject] = useState("");
-  const [formType, setFormType] = useState<any>("assignment");
-  const [formDate, setFormDate] = useState("");
-
-  const [deleteTarget, setDeleteTarget] = useState<CalendarEvent | null>(null);
-
-  const days = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(currentMonth)),
-    end: endOfWeek(endOfMonth(currentMonth)),
-  });
-
-  const eventsForDate = (date: Date) =>
-    events.filter((e) => isSameDay(e.date, date));
-
-  const selectedEvents = selectedDate ? eventsForDate(selectedDate) : [];
-
-  const handleSave = () => {
-    if (!formTitle || !formDate) return;
-
-    if (editingEvent) {
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.id === editingEvent.id
-            ? { ...e, title: formTitle, subject: formSubject, date: new Date(formDate), type: formType }
-            : e
-        )
-      );
-    } else {
-      setEvents((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          title: formTitle,
-          subject: formSubject,
-          date: new Date(formDate),
-          type: formType,
-        },
-      ]);
-    }
-
-    setFormOpen(false);
-  };
-
-  return (
-    <div className="p-6 max-w-[900px] mx-auto" dir="rtl">
-
-      {/* Header */}
-      <div className="flex justify-between mb-4">
-        <h1 className="text-lg font-semibold flex gap-2 items-center">
-          <CalendarDays className="w-5 h-5" />
-          לוח שנה
-        </h1>
-
-        {canEdit && (
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            הוסף
-          </Button>
-        )}
-      </div>
-
-      {/* Calendar */}
-      <div className="grid grid-cols-7 gap-1 border rounded-xl overflow-hidden">
-        {days.map((day, i) => (
-          <button
-            key={i}
-            onClick={() => setSelectedDate(day)}
-            className="p-2 min-h-[70px] bg-white"
-          >
-            <div className="text-xs">{format(day, "d")}</div>
-            {eventsForDate(day).map((e) => (
-              <div key={e.id} className="text-[10px] truncate">
-                • {e.title}
-              </div>
-            ))}
-          </button>
-        ))}
-      </div>
-
-      {/* Selected */}
-      {selectedDate && (
-        <div className="mt-6 space-y-2">
-          {selectedEvents.map((ev) => (
-            <div key={ev.id} className="p-3 border rounded-xl flex justify-between items-center">
-              <div>
-                <p>{ev.title}</p>
-                <p className="text-xs text-gray-500">{ev.subject}</p>
-              </div>
-
-              {canEdit && (
-                <div className="flex gap-2">
-
-                  <button onClick={() => sendToWhatsApp(ev)}>💬</button>
-
-                  <button onClick={() => setEditingEvent(ev)}>
-                    <Pencil className="w-4 h-4" />
-                  </button>
-
-                  <button onClick={() => setDeleteTarget(ev)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent dir="rtl">
-          <DialogHeader>
-            <DialogTitle>אירוע</DialogTitle>
-          </DialogHeader>
-
-          <Input placeholder="כותרת" onChange={(e) => setFormTitle(e.target.value)} />
-          <Input placeholder="מקצוע" onChange={(e) => setFormSubject(e.target.value)} />
-          <Input type="date" onChange={(e) => setFormDate(e.target.value)} />
-
-          <Button onClick={handleSave}>שמור</Button>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete */}
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => {
-          setEvents((prev) => prev.filter((e) => e.id !== deleteTarget?.id));
-          setDeleteTarget(null);
-        }}
-        title="מחיקה"
-        description="למחוק אירוע?"
-        confirmLabel="מחק"
-      />
-    </div>
-  );
-};
-
-export default CalendarPage;
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [view, setView] = useState<"month" | "
