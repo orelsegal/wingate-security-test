@@ -8,8 +8,8 @@ const Index = () => {
   if (user?.role === "teacher") return <Navigate to="/teacher-home" replace />;
   if (user?.role === "admin") return <Navigate to="/admin-dashboard" replace />;
 
-  // fallback for other roles
-  return <Navigate to="/login" replace />;
+  // fallback — show welcome/role selection
+  return <Navigate to="/welcome" replace />;
 };
 
 export default Index;
