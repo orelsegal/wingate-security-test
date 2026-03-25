@@ -33,9 +33,24 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
+const roleHomeMap: Record<string, string> = {
+  teacher: "/teacher-home",
+  student: "/student-home",
+  admin: "/admin-dashboard",
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn } = useAuth();
   if (!isLoggedIn) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
+
+const RoleRoute = ({ roles, children }: { roles: string[]; children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (!roles.includes(user.role)) {
+    return <Navigate to={roleHomeMap[user.role] || "/"} replace />;
+  }
   return <>{children}</>;
 };
 
