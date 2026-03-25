@@ -1,196 +1,138 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
-import { useAuth, demoUsers, roleLabels } from "@/context/AuthContext";
-import type { UserRole, AppUser } from "@/context/AuthContext";
+import { useAuth, mockUsers } from "@/context/AuthContext";
 import WingateBadge from "@/components/WingateBadge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { LogIn } from "lucide-react";
 
-const roleIcons: Record<UserRole, typeof Settings> = {
-  admin: Settings,
-  teacher: BookOpen,
-  parent: Heart,
-  coach: Dumbbell,
-  student: GraduationCap,
+const MOCK_PASSWORD = "123456";
+
+const roleRedirects: Record<string, string> = {
+  teacher: "/teacher-courses",
+  student: "/student-home",
+  admin: "/",
 };
-
-const roleCircleColors: Record<UserRole, string> = {
-  admin: "bg-primary/10",
-  teacher: "bg-[hsl(35,30%,92%)]",
-  parent: "bg-[hsl(350,25%,93%)]",
-  coach: "bg-[hsl(25,30%,92%)]",
-  student: "bg-[hsl(210,30%,92%)]",
-};
-
-const roleIconColors: Record<UserRole, string> = {
-  admin: "text-primary",
-  teacher: "text-[hsl(35,45%,38%)]",
-  parent: "text-[hsl(350,38%,45%)]",
-  coach: "text-[hsl(25,48%,42%)]",
-  student: "text-[hsl(210,45%,42%)]",
-};
-
-const roleDescriptions: Record<UserRole, string> = {
-  admin: "ניהול המערכת",
-  teacher: "מערכת הוראה",
-  parent: "מעקב הורים",
-  coach: "ניהול אימונים",
-  student: "המרחב האישי",
-};
-
-const topRowRoles: UserRole[] = ["parent", "admin", "coach"];
-const bottomRowRoles: UserRole[] = ["teacher", "student"];
 
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [hoveredRole, setHoveredRole] = useState<UserRole | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  const [exiting, setExiting] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (user: AppUser) => {
-    setSelectedRole(user.role);
-    setExiting(true);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const found = mockUsers.find((u) => u.email === email.trim().toLowerCase());
+    if (!found || password !== MOCK_PASSWORD) {
+      setError("אימייל או סיסמה שגויים");
+      return;
+    }
+
+    setLoading(true);
     setTimeout(() => {
-      login(user);
-      navigate(user.role === "student" ? "/student-home" : "/");
-    }, 400);
-  };
-
-  const findUser = (role: UserRole) => demoUsers.find((u) => u.role === role)!;
-
-  const RoleCard = ({ role, delay, wide }: { role: UserRole; delay: number; wide?: boolean }) => {
-    const demoUser = findUser(role);
-    const Icon = roleIcons[role];
-    const isSelected = selectedRole === role;
-    const isHovered = hoveredRole === role;
-    const isActive = isSelected || isHovered;
-
-    return (
-      <button
-        onClick={() => handleLogin(demoUser)}
-        onMouseEnter={() => setHoveredRole(role)}
-        onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out w-full ${
-          wide ? "py-6 px-4" : "py-5 px-3"
-        } ${
-          isSelected
-            ? "shadow-md scale-[0.97] border-primary/20"
-            : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-[var(--shadow-card)] border-border/50 ${
-                isActive ? "border-primary/15" : ""
-              }`
-        }`}
-        style={{ animationDelay: `${delay}ms` }}
-      >
-        <div
-          className={`${wide ? "w-[58px] h-[58px]" : "w-[52px] h-[52px]"} rounded-full ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
-            isActive ? "scale-110" : ""
-          }`}
-        >
-          <Icon
-            className={`${wide ? "h-[24px] w-[24px]" : "h-[22px] w-[22px]"} ${roleIconColors[role]}`}
-            strokeWidth={1.5}
-          />
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <p
-            className={`${wide ? "text-[15px]" : "text-[14px]"} font-medium leading-tight transition-colors duration-200 ${
-              isActive ? "text-primary" : "text-foreground/85"
-            }`}
-          >
-            {roleLabels[role]}
-          </p>
-          <p className={`${wide ? "text-[11px]" : "text-[10.5px]"} text-muted-foreground/55 leading-tight`}>
-            {roleDescriptions[role]}
-          </p>
-        </div>
-        <div
-          className={`absolute top-2 start-2 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-200 ${
-            isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
-          }`}
-        />
-      </button>
-    );
+      login(found);
+      navigate(roleRedirects[found.role] || "/");
+    }, 300);
   };
 
   return (
     <div
-      className={`min-h-screen bg-background flex items-center justify-center relative overflow-hidden transition-all duration-500 ${
-        exiting ? "opacity-0 scale-[1.02]" : "opacity-100 scale-100"
-      }`}
+      className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden"
       dir="rtl"
     >
-      {/* Soft circular background shapes */}
+      {/* Background shapes */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Upper-right — large soft green */}
         <div
           className="absolute -top-[12%] -right-[8%] w-[620px] h-[620px] rounded-full blur-3xl"
           style={{ background: "radial-gradient(circle, hsla(150,38%,70%,0.14) 0%, transparent 60%)" }}
         />
-        {/* Middle-right — warm beige */}
         <div
           className="absolute top-[38%] -right-[3%] w-[420px] h-[420px] rounded-full blur-2xl"
           style={{ background: "radial-gradient(circle, hsla(38,42%,78%,0.12) 0%, transparent 58%)" }}
         />
-        {/* Lower-left — large soft warm gray-green */}
         <div
           className="absolute -bottom-[10%] -left-[12%] w-[580px] h-[580px] rounded-full blur-3xl"
           style={{ background: "radial-gradient(circle, hsla(155,28%,65%,0.11) 0%, transparent 60%)" }}
         />
-        {/* Hero area — very subtle green halo */}
-        <div
-          className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[480px] h-[480px] rounded-full blur-3xl"
-          style={{ background: "radial-gradient(circle, hsla(148,30%,68%,0.08) 0%, transparent 55%)" }}
-        />
       </div>
 
-      <div className="w-full max-w-[400px] px-6 relative z-10">
-        {/* Logo with soft halo */}
-        <div className="flex justify-center mb-7 animate-fade-in-up">
-          <div className="relative">
-            <div
-              className="absolute inset-0 rounded-full scale-[1.8]"
-              style={{ background: "radial-gradient(circle, hsla(152,30%,50%,0.06) 0%, transparent 70%)" }}
-            />
-            <WingateBadge size="lg" className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.07)] relative" />
-          </div>
+      <div className="w-full max-w-[380px] px-6 relative z-10">
+        {/* Logo */}
+        <div className="flex justify-center mb-6 animate-fade-in-up">
+          <WingateBadge size="lg" className="shadow-[0_4px_24px_-6px_hsla(150,20%,20%,0.07)]" />
         </div>
 
-        {/* Title + Subtitle */}
-        <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <h1 className="text-[22px] font-bold text-primary tracking-tight leading-snug mb-2.5">
+        {/* Title */}
+        <div className="text-center mb-8 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+          <h1 className="text-[22px] font-bold text-primary tracking-tight leading-snug mb-2">
             האקדמיה למצוינות בספורט
           </h1>
-          <div className="w-10 h-[2px] rounded-full bg-primary/25 mx-auto mb-2.5" />
-          <p className="text-[11px] font-light leading-relaxed tracking-wide text-muted-foreground/50">
+          <div className="w-10 h-[2px] rounded-full bg-primary/25 mx-auto mb-2" />
+          <p className="text-[11px] font-light tracking-wide text-muted-foreground/50">
             למידה וניהול מותאמים לספורטאים מצטיינים
           </p>
         </div>
 
-        {/* Top Row — 3 equal cards */}
-        <div className="grid grid-cols-3 gap-3 mb-3">
-          {topRowRoles.map((role, i) => (
-            <RoleCard key={role} role={role} delay={120 + i * 60} />
-          ))}
+        {/* Login Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-card rounded-2xl border border-border/50 shadow-[var(--shadow-card)] p-6 space-y-4 animate-fade-in-up"
+          style={{ animationDelay: "120ms" }}
+        >
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground/80">אימייל</label>
+            <Input
+              type="email"
+              placeholder="teacher@test.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="text-start"
+              dir="ltr"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground/80">סיסמה</label>
+            <Input
+              type="password"
+              placeholder="••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              dir="ltr"
+              required
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-destructive text-center">{error}</p>
+          )}
+
+          <Button type="submit" className="w-full gap-2" disabled={loading}>
+            <LogIn className="h-4 w-4" />
+            {loading ? "מתחבר..." : "כניסה"}
+          </Button>
+        </form>
+
+        {/* Dev hint */}
+        <div
+          className="mt-6 bg-muted/40 rounded-xl p-4 text-[11px] text-muted-foreground/60 space-y-1 animate-fade-in-up"
+          style={{ animationDelay: "200ms" }}
+        >
+          <p className="font-medium text-muted-foreground/70 mb-1.5">משתמשים לפיתוח:</p>
+          <p dir="ltr" className="text-start">teacher@test.com / 123456</p>
+          <p dir="ltr" className="text-start">student@test.com / 123456</p>
+          <p dir="ltr" className="text-start">admin@test.com / 123456</p>
         </div>
 
-        {/* Bottom Row — 2 wider cards, centered */}
-        <div className="flex justify-center gap-3 mb-10">
-          {bottomRowRoles.map((role, i) => (
-            <div key={role} className="flex-1">
-              <RoleCard role={role} delay={300 + i * 60} wide />
-            </div>
-          ))}
-        </div>
-
-        {/* Footer branding */}
-        <div className="text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
-          <div className="w-12 h-[1px] rounded-full bg-primary/15 mx-auto mb-3" />
-          <p className="text-[10px] font-medium tracking-[0.18em] text-primary/45">
-            WINGATE INSTITUTE
-          </p>
-          <p className="text-[9px] font-normal tracking-[0.12em] text-primary/30 mt-1">
-            מכון וינגייט
-          </p>
+        {/* Footer */}
+        <div className="text-center mt-8 animate-fade-in-up" style={{ animationDelay: "280ms" }}>
+          <p className="text-[10px] font-medium tracking-[0.18em] text-primary/45">WINGATE INSTITUTE</p>
+          <p className="text-[9px] tracking-[0.12em] text-primary/30 mt-1">מכון וינגייט</p>
         </div>
       </div>
     </div>
