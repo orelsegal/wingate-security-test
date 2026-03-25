@@ -231,43 +231,9 @@ const AdminHome = () => {
 /* ═══ TEACHER ═══ */
 const TeacherHome = () => {
   const navigate = useNavigate();
-  const { data: students = [] } = useStudents();
-  const redCount = students.filter((s) => s.overall_status === "red").length;
-
-  /* Priority students */
-  const priorityStudents = students
-    .filter(s => s.overall_status === "red")
-    .slice(0, 3);
 
   return (
     <>
-      <InsightStrip
-        items={[
-          { label: "סה״כ תלמידים", value: students.length, icon: Users, color: "text-primary" },
-          { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
-        ]}
-      />
-
-      {/* Priority Banner */}
-      {priorityStudents.length > 0 && (
-        <div className="mb-6 bg-destructive/5 border border-destructive/10 rounded-2xl p-4 animate-fade-in-up">
-          <div className="flex items-center gap-2 mb-2.5">
-            <AlertTriangle className="h-3.5 w-3.5 text-destructive" strokeWidth={1.5} />
-            <span className="text-[12px] font-semibold text-foreground">תלמידים הדורשים תשומת לב</span>
-          </div>
-          {priorityStudents.map(s => (
-            <button
-              key={s.id}
-              onClick={() => navigate(`/students/${s.id}`)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-card transition-colors cursor-pointer mb-1"
-            >
-              <span className="text-[12px] font-medium text-foreground">{s.full_name}</span>
-              <span className="text-[10px] text-muted-foreground">{s.sport}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
       <ContinueCard navigate={navigate} />
 
       {/* Main action — go to courses */}
@@ -290,7 +256,6 @@ const TeacherHome = () => {
       <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
       <CardGrid cards={[
         { id: "students", title: "ניהול תלמידים", description: "צפייה ועדכון נתוני תלמידים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
-        { id: "groups", title: "קבוצות", description: "ניהול קבוצות לימוד", icon: Layers, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/groups" },
         { id: "data-entry", title: "עדכון ציונים", description: "הזנה ועדכון נתונים", icon: ClipboardEdit, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/data-entry" },
         { id: "calendar", title: "לוח שנה", description: "משימות ומועדים", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", path: "/calendar" },
       ]} navigate={navigate} />
