@@ -5,10 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import AppLayout from "@/components/AppLayout";
-import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
 import StudentProfilePage from "./pages/StudentProfilePage.tsx";
-import LoginPage from "./pages/LoginPage.tsx";
 import WelcomePage from "./pages/WelcomePage.tsx";
 import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
@@ -34,25 +32,25 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
-const roleHomeMap: Record<string, string> = {
-  teacher: "/teacher-home",
-  student: "/student-home",
-  admin: "/admin-dashboard",
-};
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+/** Redirects to welcome if no role selected */
+const RequireRole = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn } = useAuth();
   if (!isLoggedIn) return <Navigate to="/welcome" replace />;
   return <>{children}</>;
 };
 
-const RoleRoute = ({ roles, children }: { roles: string[]; children: React.ReactNode }) => {
+/** Index redirects to role home */
+const IndexRedirect = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/welcome" replace />;
-  if (!roles.includes(user.role)) {
-    return <Navigate to={roleHomeMap[user.role] || "/"} replace />;
-  }
-  return <>{children}</>;
+  const map: Record<string, string> = {
+    teacher: "/teacher-home",
+    student: "/student-home",
+    admin: "/admin-dashboard",
+    parent: "/parent-home",
+    coach: "/coach-home",
+  };
+  return <Navigate to={map[user.role] || "/welcome"} replace />;
 };
 
 const App = () => (
@@ -64,32 +62,34 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/welcome" element={<WelcomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Index />} />
-              <Route path="/admin-dashboard" element={<RoleRoute roles={["admin"]}><DashboardContent /></RoleRoute>} />
-              <Route path="/dashboard" element={<RoleRoute roles={["admin"]}><DashboardContent /></RoleRoute>} />
-              <Route path="/students" element={<RoleRoute roles={["admin", "teacher", "coach"]}><StudentsPage /></RoleRoute>} />
-              <Route path="/students/:id" element={<RoleRoute roles={["admin", "teacher", "coach"]}><StudentProfilePage /></RoleRoute>} />
+            <Route element={<RequireRole><AppLayout /></RequireRole>}>
+              <Route path="/" element={<IndexRedirect />} />
+              <Route path="/admin-dashboard" element={<RoleHomePage />} />
+              <Route path="/admin-home" element={<Navigate to="/admin-dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardContent />} />
+              <Route path="/teacher-home" element={<RoleHomePage />} />
+              <Route path="/student-home" element={<StudentHomePage />} />
+              <Route path="/parent-home" element={<RoleHomePage />} />
+              <Route path="/coach-home" element={<RoleHomePage />} />
+              <Route path="/students" element={<StudentsPage />} />
+              <Route path="/students/:id" element={<StudentProfilePage />} />
               <Route path="/courses" element={<CoursesPage />} />
-              <Route path="/data-entry" element={<RoleRoute roles={["admin", "teacher", "coach"]}><DataEntryPage /></RoleRoute>} />
-              <Route path="/data-management" element={<RoleRoute roles={["admin"]}><DataManagementPage /></RoleRoute>} />
-              <Route path="/student-home" element={<RoleRoute roles={["student"]}><StudentHomePage /></RoleRoute>} />
-              <Route path="/student-learning" element={<RoleRoute roles={["admin", "teacher"]}><StudentLearningTrafficLight /></RoleRoute>} />
-              <Route path="/student-roadmap" element={<RoleRoute roles={["admin", "teacher"]}><StudentRoadmapTrafficLight /></RoleRoute>} />
+              <Route path="/data-entry" element={<DataEntryPage />} />
+              <Route path="/data-management" element={<DataManagementPage />} />
+              <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
+              <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
               <Route path="/external" element={<ExternalWrapperPage />} />
               <Route path="/subjects" element={<SubjectSelectionPage />} />
               <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
               <Route path="/subjects/:subjectName/:partId" element={<SubjectPartPage />} />
-              <Route path="/teacher-subjects" element={<RoleRoute roles={["admin", "teacher"]}><TeacherSubjectEditorPage /></RoleRoute>} />
-              <Route path="/teacher-home" element={<RoleRoute roles={["teacher"]}><RoleHomePage /></RoleRoute>} />
+              <Route path="/teacher-subjects" element={<TeacherSubjectEditorPage />} />
               <Route path="/history-course" element={<HistoryCoursePage />} />
-              <Route path="/groups" element={<RoleRoute roles={["admin", "teacher", "coach"]}><GroupsPage /></RoleRoute>} />
+              <Route path="/groups" element={<GroupsPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/science-intro" element={<ScienceIntroPage />} />
               <Route path="/bagrut-grading" element={<BagrutGradingPage />} />
-              <Route path="/teacher-courses" element={<RoleRoute roles={["teacher"]}><TeacherCoursesPage /></RoleRoute>} />
-              <Route path="/teacher-course/:courseId" element={<RoleRoute roles={["teacher"]}><TeacherCourseDetailPage /></RoleRoute>} />
+              <Route path="/teacher-courses" element={<TeacherCoursesPage />} />
+              <Route path="/teacher-course/:courseId" element={<TeacherCourseDetailPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student";
 
@@ -12,16 +12,19 @@ export interface AppUser {
 
 interface AuthContextType {
   user: AppUser | null;
-  login: (user: AppUser) => void;
+  setRole: (role: UserRole) => void;
   logout: () => void;
   isLoggedIn: boolean;
+  /** @deprecated use setRole */
+  login: (user: AppUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  login: () => {},
+  setRole: () => {},
   logout: () => {},
   isLoggedIn: false,
+  login: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -42,16 +45,18 @@ export const roleDescriptions: Record<UserRole, string> = {
   student: "צפייה בלוח זמנים, מפת דרכים ולמידה",
 };
 
-/** Mock users for development — login with email + password "123456" */
-export const mockUsers: AppUser[] = [
-  { name: "דני כהן", role: "admin", email: "admin@test.com" },
-  { name: "רונית לוי", role: "teacher", email: "teacher@test.com" },
-  { name: "נועם שטיינר", role: "student", email: "student@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
-  { name: "יוסי אברהם", role: "parent", email: "parent@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
-  { name: "מיכל דוד", role: "coach", email: "coach@test.com", scopeFilter: ["כדורגל"] },
-];
+/** Preset users per role */
+const roleUsers: Record<UserRole, AppUser> = {
+  admin: { name: "דני כהן", role: "admin", email: "admin@test.com" },
+  teacher: { name: "רונית לוי", role: "teacher", email: "teacher@test.com" },
+  student: { name: "נועם שטיינר", role: "student", email: "student@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
+  parent: { name: "יוסי אברהם", role: "parent", email: "parent@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
+  coach: { name: "מיכל דוד", role: "coach", email: "coach@test.com", scopeFilter: ["כדורגל"] },
+};
 
-/** @deprecated use mockUsers */
+/** @deprecated use roleUsers */
+export const mockUsers: AppUser[] = Object.values(roleUsers);
+/** @deprecated */
 export const demoUsers = mockUsers;
 
 const STORAGE_KEY = "wingate_auth_user";
@@ -64,6 +69,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch { return null; }
   });
 
+  const setRole = useCallback((role: UserRole) => {
+    const u = roleUsers[role];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+    setUser(u);
+  }, []);
+
   const login = useCallback((u: AppUser) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
     setUser(u);
@@ -75,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user }}>
+    <AuthContext.Provider value={{ user, setRole, login, logout, isLoggedIn: !!user }}>
       {children}
     </AuthContext.Provider>
   );
