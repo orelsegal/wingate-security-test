@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronRight, Loader2, Users, Layers, BarChart3, Lightbulb, AlertTriangle, TrendingUp, TrendingDown, FileCheck, Download, Sparkles } from "lucide-react";
-import { useStudents, useAllStudentProgress, type StatusType, statusConfig } from "@/hooks/useStudents";
+import { ChevronRight, Loader2, Users, Layers, BarChart3, Lightbulb, AlertTriangle, TrendingUp, TrendingDown, FileCheck, Sparkles, BookOpen } from "lucide-react";
+import { useStudents, useAllStudentProgress, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TeacherAIAssistant from "@/components/TeacherAIAssistant";
+import { calculateTrafficLight, getStatusLabel } from "@/lib/trafficLight";
 
 /* ═══ Course mapping ═══ */
 const COURSES: Record<string, { name: string; subjectMatch: string; icon: string }> = {
@@ -19,25 +20,23 @@ const COURSES: Record<string, { name: string; subjectMatch: string; icon: string
   "science": { name: "מדעים", subjectMatch: "מדעים", icon: "🔬" },
 };
 
-/* ═══ Smart Group definitions ═══ */
 const SMART_GROUPS = [
   { id: "missing", label: "חסרי הגשות", icon: FileCheck, filter: (p: any) => (p.completion_percent || 0) < 20, color: "text-destructive" },
-  { id: "below-60", label: "מתחת ל-60", icon: TrendingDown, filter: (p: any) => (p.grade || 0) < 60 && (p.grade || 0) > 0, color: "text-warning" },
+  { id: "below-60", label: "מתחת ל-60", icon: TrendingDown, filter: (p: any) => (p.grade || 0) < 60 && (p.grade || 0) > 0, color: "text-[hsl(var(--warning))]" },
   { id: "at-risk", label: "בסיכון לבגרות", icon: AlertTriangle, filter: (p: any) => p.status === "red", color: "text-destructive" },
-  { id: "top", label: "מצטיינים", icon: TrendingUp, filter: (p: any) => (p.grade || 0) >= 85, color: "text-success" },
+  { id: "top", label: "מצטיינים", icon: TrendingUp, filter: (p: any) => (p.grade || 0) >= 85, color: "text-[hsl(var(--success))]" },
 ];
 
 const TeacherCourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const course = COURSES[courseId || ""];
-  const [activeTab, setActiveTab] = useState("students");
+  const [activeTab, setActiveTab] = useState("course");
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
 
   const { data: students = [], isLoading: sLoading } = useStudents();
   const { data: allProgress = [], isLoading: pLoading } = useAllStudentProgress();
 
-  /* Filter progress for this course */
   const courseProgress = useMemo(() => {
     if (!course) return [];
     const studentIds = new Set(students.map(s => s.id));
@@ -46,20 +45,26 @@ const TeacherCourseDetailPage = () => {
     );
   }, [students, allProgress, course]);
 
-  /* Enrich students with course-specific data */
   const courseStudents = useMemo(() => {
     const progressMap = new Map(courseProgress.map(p => [p.student_id, p]));
     return students
       .filter(s => progressMap.has(s.id))
       .map(s => {
         const p = progressMap.get(s.id)!;
+        // Auto traffic light per student for this course
+        const tl = calculateTrafficLight([{
+          grade: p.grade || 0,
+          completionPercent: p.completion_percent || 0,
+          missingItems: p.missing_items || [],
+          absences: p.absences || 0,
+        }]);
         return {
           ...s,
           courseGrade: p.grade || 0,
-          courseStatus: p.status as StatusType,
+          courseStatus: tl.status as StatusType,
           courseCompletion: p.completion_percent || 0,
           courseMissing: p.missing_items || [],
-          courseNotes: p.notes || "",
+          trafficReasons: tl.reasons,
         };
       })
       .sort((a, b) => {
@@ -68,7 +73,6 @@ const TeacherCourseDetailPage = () => {
       });
   }, [students, courseProgress]);
 
-  /* Smart groups with counts */
   const smartGroups = useMemo(() => {
     return SMART_GROUPS.map(g => ({
       ...g,
@@ -79,73 +83,34 @@ const TeacherCourseDetailPage = () => {
     }));
   }, [courseStudents, courseProgress]);
 
-  /* Insights */
-  const insights = useMemo(() => {
-    const items: { icon: typeof AlertTriangle; text: string; type: "critical" | "warning" | "info" }[] = [];
-    const redCount = courseStudents.filter(s => s.courseStatus === "red").length;
-    const avg = courseStudents.length > 0
-      ? courseStudents.reduce((s, st) => s + st.courseGrade, 0) / courseStudents.length
-      : 0;
-    const submissionRate = courseStudents.length > 0
-      ? Math.round((courseStudents.filter(s => s.courseCompletion > 0).length / courseStudents.length) * 100)
-      : 0;
-    const lowStudents = courseStudents.filter(s => s.courseGrade > 0 && s.courseGrade < 60);
-
-    if (redCount > 0) {
-      items.push({ icon: AlertTriangle, text: `${redCount} תלמידים בסיכון — מומלץ לתת תגבור`, type: "critical" });
-    }
-    if (submissionRate < 70) {
-      items.push({ icon: FileCheck, text: `שיעור ההגשות ${submissionRate}% — נדרש מעקב`, type: "warning" });
-    }
-    if (avg > 0 && avg < 65) {
-      items.push({ icon: TrendingDown, text: `ממוצע הכיתה ${avg.toFixed(0)} — מומלץ לחזור על חומר`, type: "warning" });
-    }
-    if (lowStudents.length > 3) {
-      items.push({ icon: Lightbulb, text: `${lowStudents.length} תלמידים מתחת ל-60 — שקול קבוצת תגבור`, type: "info" });
-    }
-    if (items.length === 0) {
-      items.push({ icon: TrendingUp, text: "הקורס במצב טוב — המשך לעקוב", type: "info" });
-    }
-    return items;
-  }, [courseStudents]);
-
   if (!course) {
     return (
       <div className="p-10 text-center text-muted-foreground">
         <p>קורס לא נמצא</p>
-        <button onClick={() => navigate("/teacher-courses")} className="text-primary text-[13px] mt-2 hover:underline">
-          חזרה לקורסים
-        </button>
+        <button onClick={() => navigate("/teacher-courses")} className="text-primary text-[13px] mt-2 hover:underline">חזרה</button>
       </div>
     );
   }
 
   if (sLoading || pLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
   const redCount = courseStudents.filter(s => s.courseStatus === "red").length;
-  const yellowCount = courseStudents.filter(s => s.courseStatus === "yellow").length;
-  const greenCount = courseStudents.filter(s => s.courseStatus === "green").length;
   const avgGrade = courseStudents.length > 0
-    ? (courseStudents.reduce((s, st) => s + st.courseGrade, 0) / courseStudents.length).toFixed(0)
-    : "—";
+    ? (courseStudents.reduce((s, st) => s + st.courseGrade, 0) / courseStudents.length).toFixed(0) : "—";
+  const submissionRate = courseStudents.length > 0
+    ? Math.round((courseStudents.filter(s => s.courseCompletion > 0).length / courseStudents.length) * 100) : 0;
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[1000px] mx-auto" dir="rtl">
-      {/* Back + Header */}
-      <button
-        onClick={() => navigate("/teacher-courses")}
-        className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors mb-5"
-      >
+      {/* Back */}
+      <button onClick={() => navigate("/teacher-courses")} className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors mb-5">
         <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.5} />
         <span>חזרה לקורסים</span>
       </button>
 
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <span className="text-[28px]">{course.icon}</span>
         <div>
@@ -154,34 +119,19 @@ const TeacherCourseDetailPage = () => {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {[
-          { label: "ממוצע", value: avgGrade, color: "text-foreground" },
-          { label: "במסלול", value: String(greenCount), color: "text-success" },
-          { label: "פערים", value: String(yellowCount), color: "text-[hsl(var(--warning))]" },
-          { label: "בסיכון", value: String(redCount), color: "text-destructive" },
-        ].map(stat => (
-          <div key={stat.label} className="bg-card rounded-xl border border-border p-3 text-center">
-            <p className={`text-[20px] font-semibold ${stat.color}`}>{stat.value}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Tabs */}
+      {/* Tabs: הקורס · ניהול תלמידים · קבוצות · עדכון ציונים */}
       <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
         <TabsList className="w-full grid grid-cols-4 h-auto p-1 bg-accent/40 rounded-xl mb-6">
           {[
-            { value: "students", label: "תלמידים", icon: Users },
-            { value: "groups", label: "קבוצות חכמות", icon: Layers },
-            { value: "grades", label: "ציונים והגשות", icon: BarChart3 },
-            { value: "insights", label: "תובנות", icon: Lightbulb },
+            { value: "course", label: "הקורס", icon: BookOpen },
+            { value: "students", label: "ניהול תלמידים", icon: Users },
+            { value: "groups", label: "קבוצות", icon: Layers },
+            { value: "grades", label: "עדכון ציונים", icon: BarChart3 },
           ].map(tab => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="flex items-center gap-1.5 text-[11px] md:text-[12px] py-2.5 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              className="flex items-center gap-1.5 text-[10px] md:text-[12px] py-2.5 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
             >
               <tab.icon className="h-3.5 w-3.5" strokeWidth={1.5} />
               <span className="hidden sm:inline">{tab.label}</span>
@@ -189,8 +139,57 @@ const TeacherCourseDetailPage = () => {
           ))}
         </TabsList>
 
-        {/* ═══ TAB 1: STUDENTS ═══ */}
+        {/* ═══ TAB 1: COURSE OVERVIEW ═══ */}
+        <TabsContent value="course" className="space-y-4">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "ממוצע", value: avgGrade, color: "text-foreground" },
+              { label: "הגשות", value: `${submissionRate}%`, color: "text-foreground" },
+              { label: "בסיכון", value: String(redCount), color: redCount > 0 ? "text-destructive" : "text-[hsl(var(--success))]" },
+            ].map(stat => (
+              <div key={stat.label} className="bg-card rounded-xl border border-border p-4 text-center">
+                <p className={`text-[20px] font-semibold ${stat.color}`}>{stat.value}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Insights */}
+          <div className="bg-card rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.5} />
+              <span className="text-[13px] font-semibold text-foreground">תובנות</span>
+            </div>
+            <div className="space-y-2">
+              {redCount > 0 && (
+                <p className="text-[12px] text-foreground bg-destructive/5 rounded-lg p-3">{redCount} תלמידים בסיכון — מומלץ לתת תגבור</p>
+              )}
+              {submissionRate < 70 && (
+                <p className="text-[12px] text-foreground bg-[hsl(var(--warning))]/5 rounded-lg p-3">שיעור ההגשות {submissionRate}% — נדרש מעקב</p>
+              )}
+              {redCount === 0 && submissionRate >= 70 && (
+                <p className="text-[12px] text-foreground bg-[hsl(var(--success))]/5 rounded-lg p-3">הקורס במצב טוב — המשך לעקוב</p>
+              )}
+            </div>
+          </div>
+
+          {/* AI Assistant */}
+          <TeacherAIAssistant defaultSubject={course.subjectMatch} />
+        </TabsContent>
+
+        {/* ═══ TAB 2: STUDENTS (Traffic Light Cards) ═══ */}
         <TabsContent value="students" className="space-y-2">
+          {/* Priority banner */}
+          {redCount > 0 && (
+            <div className="bg-destructive/5 border border-destructive/10 rounded-xl p-3 mb-2">
+              <p className="text-[12px] font-medium text-foreground flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-destructive" strokeWidth={1.5} />
+                {redCount} תלמידים דורשים תשומת לב מיידית
+              </p>
+            </div>
+          )}
+
           {courseStudents.length === 0 ? (
             <p className="text-center text-muted-foreground text-[13px] py-12">אין תלמידים בקורס זה</p>
           ) : (
@@ -198,43 +197,43 @@ const TeacherCourseDetailPage = () => {
               <button
                 key={s.id}
                 onClick={() => navigate(`/students/${s.id}`)}
-                className="w-full flex items-center justify-between bg-card rounded-xl border border-border px-4 py-3.5 hover:bg-accent/30 transition-colors cursor-pointer"
+                className="w-full bg-card rounded-xl border border-border px-4 py-3.5 hover:bg-accent/30 transition-colors cursor-pointer"
               >
-                <div className="flex items-center gap-3">
-                  <InitialsAvatar name={s.full_name} size="sm" />
-                  <div className="text-start">
-                    <p className="text-[13px] font-medium text-foreground">{s.full_name}</p>
-                    <p className="text-[10px] text-muted-foreground">{s.sport} · {s.class_name}</p>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-3">
+                    <InitialsAvatar name={s.full_name} size="sm" />
+                    <div className="text-start">
+                      <p className="text-[13px] font-medium text-foreground">{s.full_name}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.sport} · {s.class_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {s.courseGrade > 0 && <span className="text-[12px] text-muted-foreground font-medium">{s.courseGrade}</span>}
+                    {s.courseCompletion > 0 ? <span className="text-[10px] text-[hsl(var(--success))]">✔</span> : <span className="text-[10px] text-destructive">✗</span>}
+                    <StatusBadge type={s.courseStatus} />
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {s.courseGrade > 0 && (
-                    <span className="text-[12px] text-muted-foreground font-medium">{s.courseGrade}</span>
-                  )}
-                  <div className="flex items-center gap-1.5">
-                    {s.courseCompletion > 0 ? (
-                      <span className="text-[10px] text-success">✔</span>
-                    ) : (
-                      <span className="text-[10px] text-destructive">✗</span>
-                    )}
-                  </div>
-                  <StatusBadge type={s.courseStatus} />
-                </div>
+                {/* Learning status — why this traffic light */}
+                {s.courseStatus !== "green" && (
+                  <p className="text-[10px] text-muted-foreground text-start mr-10 mt-0.5">
+                    {s.trafficReasons.slice(0, 2).join(" · ")}
+                  </p>
+                )}
               </button>
             ))
           )}
         </TabsContent>
 
-        {/* ═══ TAB 2: SMART GROUPS ═══ */}
+        {/* ═══ TAB 3: GROUPS ═══ */}
         <TabsContent value="groups" className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             {smartGroups.map(g => (
               <button
                 key={g.id}
                 onClick={() => setActiveGroup(activeGroup === g.id ? null : g.id)}
-                className={`bg-card rounded-xl border border-border p-4 text-start transition-all ${
+                className={`bg-card rounded-xl border border-border p-4 text-start transition-all cursor-pointer ${
                   activeGroup === g.id ? "ring-2 ring-primary/20 border-primary/30" : "hover:bg-accent/30"
-                } cursor-pointer`}
+                }`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <g.icon className={`h-4 w-4 ${g.color}`} strokeWidth={1.5} />
@@ -246,12 +245,9 @@ const TeacherCourseDetailPage = () => {
             ))}
           </div>
 
-          {/* Expanded group */}
           {activeGroup && (() => {
             const group = smartGroups.find(g => g.id === activeGroup);
-            if (!group || group.students.length === 0) return (
-              <p className="text-[13px] text-muted-foreground text-center py-6">אין תלמידים בקבוצה זו</p>
-            );
+            if (!group || group.students.length === 0) return <p className="text-[13px] text-muted-foreground text-center py-6">אין תלמידים בקבוצה זו</p>;
             return (
               <div className="bg-card rounded-xl border border-border divide-y divide-border">
                 <div className="px-4 py-3 flex items-center justify-between">
@@ -259,11 +255,7 @@ const TeacherCourseDetailPage = () => {
                   <span className="text-[11px] text-muted-foreground">{group.students.length} תלמידים</span>
                 </div>
                 {group.students.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => navigate(`/students/${s.id}`)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/20 transition-colors cursor-pointer"
-                  >
+                  <button key={s.id} onClick={() => navigate(`/students/${s.id}`)} className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/20 transition-colors cursor-pointer">
                     <div className="flex items-center gap-2.5">
                       <InitialsAvatar name={s.full_name} size="sm" />
                       <span className="text-[12.5px] font-medium text-foreground">{s.full_name}</span>
@@ -274,17 +266,11 @@ const TeacherCourseDetailPage = () => {
               </div>
             );
           })()}
-
-          {/* AI Assistant */}
-          <div className="mt-4">
-            <TeacherAIAssistant defaultSubject={course.subjectMatch} />
-          </div>
         </TabsContent>
 
-        {/* ═══ TAB 3: GRADES & SUBMISSIONS ═══ */}
+        {/* ═══ TAB 4: GRADES (Excel-like) ═══ */}
         <TabsContent value="grades">
           <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {/* Header */}
             <div className="hidden md:grid grid-cols-[1fr_80px_80px_80px_90px] gap-3 px-5 py-3 border-b border-border bg-accent/30">
               <span className="text-[11px] font-medium text-muted-foreground">תלמיד</span>
               <span className="text-[11px] font-medium text-muted-foreground text-center">ציון</span>
@@ -310,9 +296,9 @@ const TeacherCourseDetailPage = () => {
                       <p className="text-[10px] text-muted-foreground md:hidden">{s.sport}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center md:justify-center">
+                  <div className="flex items-center justify-center">
                     <span className={`text-[13px] font-semibold ${
-                      s.courseGrade >= 70 ? "text-success" : s.courseGrade >= 55 ? "text-[hsl(var(--warning))]" : s.courseGrade > 0 ? "text-destructive" : "text-muted-foreground"
+                      s.courseGrade >= 70 ? "text-[hsl(var(--success))]" : s.courseGrade >= 55 ? "text-[hsl(var(--warning))]" : s.courseGrade > 0 ? "text-destructive" : "text-muted-foreground"
                     }`}>
                       {s.courseGrade > 0 ? s.courseGrade : "—"}
                     </span>
@@ -321,9 +307,7 @@ const TeacherCourseDetailPage = () => {
                     <span className="text-[12px] text-muted-foreground">{s.courseCompletion}%</span>
                   </div>
                   <div className="flex items-center justify-center">
-                    <span className="text-[12px] text-muted-foreground">
-                      {s.courseMissing.length > 0 ? s.courseMissing.length : "—"}
-                    </span>
+                    <span className="text-[12px] text-muted-foreground">{s.courseMissing.length > 0 ? s.courseMissing.length : "—"}</span>
                   </div>
                   <div className="flex items-center justify-center">
                     <StatusBadge type={s.courseStatus} />
@@ -332,83 +316,6 @@ const TeacherCourseDetailPage = () => {
               ))
             )}
           </div>
-        </TabsContent>
-
-        {/* ═══ TAB 4: INSIGHTS ═══ */}
-        <TabsContent value="insights" className="space-y-4">
-          {/* Key Metrics */}
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "שיעור הגשות", value: `${courseStudents.length > 0 ? Math.round((courseStudents.filter(s => s.courseCompletion > 0).length / courseStudents.length) * 100) : 0}%` },
-              { label: "ממוצע כיתתי", value: courseStudents.length > 0 ? (courseStudents.reduce((s, st) => s + st.courseGrade, 0) / courseStudents.length).toFixed(0) : "—" },
-              { label: "פער ביצועים", value: courseStudents.length > 0 ? `${Math.max(...courseStudents.map(s => s.courseGrade)) - Math.min(...courseStudents.filter(s => s.courseGrade > 0).map(s => s.courseGrade))}` : "—" },
-              { label: "תלמידים פעילים", value: `${courseStudents.filter(s => s.courseCompletion > 20).length}/${courseStudents.length}` },
-            ].map(m => (
-              <div key={m.label} className="bg-card rounded-xl border border-border p-4 text-center">
-                <p className="text-[18px] font-semibold text-foreground">{m.value}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{m.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* AI Insights */}
-          <div className="bg-card rounded-xl border border-border p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.5} />
-              <span className="text-[13px] font-semibold text-foreground">תובנות חכמות</span>
-            </div>
-            <div className="space-y-2.5">
-              {insights.map((insight, i) => (
-                <div
-                  key={i}
-                  className={`flex items-start gap-2.5 p-3 rounded-lg ${
-                    insight.type === "critical" ? "bg-destructive/5" : insight.type === "warning" ? "bg-warning/5" : "bg-primary/5"
-                  }`}
-                >
-                  <insight.icon className={`h-4 w-4 mt-0.5 shrink-0 ${
-                    insight.type === "critical" ? "text-destructive" : insight.type === "warning" ? "text-[hsl(var(--warning))]" : "text-primary"
-                  }`} strokeWidth={1.5} />
-                  <p className="text-[12px] text-foreground leading-relaxed">{insight.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Sport breakdown */}
-          {(() => {
-            const sportMap = new Map<string, { total: number; red: number; avg: number }>();
-            courseStudents.forEach(s => {
-              if (!sportMap.has(s.sport)) sportMap.set(s.sport, { total: 0, red: 0, avg: 0 });
-              const entry = sportMap.get(s.sport)!;
-              entry.total++;
-              if (s.courseStatus === "red") entry.red++;
-              entry.avg += s.courseGrade;
-            });
-            const sportStats = Array.from(sportMap.entries()).map(([name, d]) => ({
-              name,
-              total: d.total,
-              red: d.red,
-              avg: d.total > 0 ? Math.round(d.avg / d.total) : 0,
-            }));
-            if (sportStats.length <= 1) return null;
-            return (
-              <div className="bg-card rounded-xl border border-border p-4">
-                <span className="text-[12px] font-medium text-muted-foreground mb-3 block">ביצועים לפי ענף</span>
-                <div className="space-y-2">
-                  {sportStats.map(s => (
-                    <div key={s.name} className="flex items-center justify-between py-2">
-                      <span className="text-[12px] font-medium text-foreground">{s.name}</span>
-                      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-                        <span>ממוצע {s.avg}</span>
-                        <span>{s.total} תלמידים</span>
-                        {s.red > 0 && <span className="text-destructive">{s.red} בסיכון</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
         </TabsContent>
       </Tabs>
     </div>
