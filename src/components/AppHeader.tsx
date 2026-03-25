@@ -67,6 +67,79 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
   return { crumbs, title };
 };
 
+const roleHomeMap: Record<string, string> = {
+  admin: "/admin-dashboard",
+  teacher: "/teacher-home",
+  student: "/student-home",
+  parent: "/",
+  coach: "/",
+};
+
+const ProfileSwitcher = () => {
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const switchTo = (u: AppUser) => {
+    login(u);
+    setOpen(false);
+    navigate(roleHomeMap[u.role] || "/");
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-1.5 rounded-lg hover:bg-accent transition-colors duration-150"
+      >
+        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+          {user?.name?.charAt(0) || "?"}
+        </div>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1.5 w-48 bg-card rounded-xl border border-border shadow-lg z-50 overflow-hidden animate-fade-in" dir="rtl">
+          <div className="p-2.5 border-b border-border/50">
+            <p className="text-[11px] font-semibold text-foreground">{user?.name}</p>
+            <p className="text-[9.5px] text-muted-foreground">{user ? roleLabels[user.role] : ""}</p>
+          </div>
+          <div className="p-1.5">
+            <p className="text-[9px] text-muted-foreground/60 px-2 py-1 font-medium">החלף פרופיל</p>
+            {mockUsers.map((mu) => (
+              <button
+                key={mu.email}
+                onClick={() => switchTo(mu)}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-start transition-colors duration-150 ${
+                  user?.email === mu.email ? "bg-primary/8 text-primary" : "hover:bg-accent text-foreground"
+                }`}
+              >
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">
+                  {mu.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-medium leading-tight truncate">{mu.name}</p>
+                  <p className="text-[9px] text-muted-foreground">{roleLabels[mu.role]}</p>
+                </div>
+                {user?.email === mu.email && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -100,13 +173,8 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           </h1>
         </div>
 
-        {/* LEFT: Icons */}
+        {/* LEFT: Icons + Profile Switcher */}
         <div className="flex items-center gap-1">
-          {user && (
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/60 text-[10px] font-medium text-muted-foreground me-1">
-              {roleLabels[user.role]}
-            </span>
-          )}
           <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150">
             <Search className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -114,6 +182,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             <Bell className="h-4 w-4" strokeWidth={1.5} />
             <span className="absolute top-1.5 start-1.5 w-[6px] h-[6px] bg-primary rounded-full ring-2 ring-card" />
           </button>
+          <ProfileSwitcher />
         </div>
       </div>
 
