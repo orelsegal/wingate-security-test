@@ -82,7 +82,7 @@ const App = () => (
               <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
               <Route path="/subjects/:subjectName/:partId" element={<SubjectPartPage />} />
               <Route path="/teacher-subjects" element={<RoleRoute roles={["admin", "teacher"]}><TeacherSubjectEditorPage /></RoleRoute>} />
-              <Route path="/teacher-home" element={<RoleRoute roles={["teacher"]}><TeacherCoursesPage /></RoleRoute>} />
+              <Route path="/teacher-home" element={<RoleRoute roles={["teacher"]}><RoleHomePage /></RoleRoute>} />
               <Route path="/history-course" element={<HistoryCoursePage />} />
               <Route path="/groups" element={<RoleRoute roles={["admin", "teacher", "coach"]}><GroupsPage /></RoleRoute>} />
               <Route path="/calendar" element={<CalendarPage />} />

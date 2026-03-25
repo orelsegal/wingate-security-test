@@ -1,8 +1,10 @@
-import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
-import { useAuth, roleLabels } from "@/context/AuthContext";
-import type { UserRole } from "@/context/AuthContext";
+import { Bell, Search, Menu, ChevronLeft, UserCircle } from "lucide-react";
+import { useAuth, roleLabels, mockUsers } from "@/context/AuthContext";
+import type { UserRole, AppUser } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import WingateBadge from "@/components/WingateBadge";
+import { useState, useRef, useEffect } from "react";
+import InitialsAvatar from "@/components/InitialsAvatar";
 
 interface AppHeaderProps {
   onMenuToggle?: () => void;
