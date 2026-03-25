@@ -1,10 +1,41 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
-import { BookOpen, Loader2, ChevronLeft, CheckCircle2, Clock, Target, CalendarDays, Brain, GraduationCap, Trophy, BarChart3, Sparkles } from "lucide-react";
+import { BookOpen, Loader2, ChevronLeft, Target, CalendarDays, GraduationCap, BarChart3, Sparkles, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import WingateBadge from "@/components/WingateBadge";
 import { Progress } from "@/components/ui/progress";
+import { calculateTrafficLight, getStatusLabel, type TrafficResult } from "@/lib/trafficLight";
+
+/* ═══ Status Card ═══ */
+const StatusCard = ({ result }: { result: TrafficResult }) => {
+  const bg = result.status === "green" ? "bg-[hsl(var(--success))]/8 border-[hsl(var(--success))]/15"
+    : result.status === "yellow" ? "bg-[hsl(var(--warning))]/8 border-[hsl(var(--warning))]/15"
+    : "bg-destructive/5 border-destructive/10";
+  const dot = result.status === "green" ? "bg-[hsl(var(--success))]"
+    : result.status === "yellow" ? "bg-[hsl(var(--warning))]"
+    : "bg-destructive";
+  const textColor = result.status === "green" ? "text-[hsl(var(--success))]"
+    : result.status === "yellow" ? "text-[hsl(var(--warning))]"
+    : "text-destructive";
+
+  return (
+    <div className={`rounded-2xl border ${bg} p-4 mb-6 animate-fade-in-up`}>
+      <div className="flex items-center gap-2.5 mb-2">
+        <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
+        <span className={`text-[13px] font-semibold ${textColor}`}>{getStatusLabel(result.status)}</span>
+      </div>
+      <div className="space-y-1">
+        {result.reasons.map((r, i) => (
+          <p key={i} className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-2">
+            <AlertCircle className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground/50" strokeWidth={1.5} />
+            {r}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const StudentHomePage = () => {
   const { user } = useAuth();
@@ -18,26 +49,34 @@ const StudentHomePage = () => {
   const totalRoadmapCount = roadmap.length;
   const progressPct = totalRoadmapCount > 0 ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100) : 0;
 
-  const subjectsAtRisk = useMemo(
-    () => progress.filter((p: any) => p.status === "red" || p.status === "yellow").length,
-    [progress],
-  );
-
   const avgGrade = useMemo(() => {
     const graded = progress.filter((p: any) => p.grade != null && p.grade > 0);
     return graded.length > 0 ? Math.round(graded.reduce((s: number, p: any) => s + p.grade, 0) / graded.length) : 0;
   }, [progress]);
 
-  const medals = useMemo(() => {
-    let count = 0;
-    if (progressPct >= 50) count++;
-    if (progressPct >= 80) count++;
-    if (avgGrade >= 80) count++;
-    progress.forEach((p: any) => { if (p.completion_percent >= 100) count++; });
-    return count;
-  }, [progressPct, avgGrade, progress]);
+  // Auto traffic light
+  const trafficResult = useMemo(() => {
+    if (progress.length === 0) return { status: "green" as const, reasons: ["אין נתונים עדיין"] };
+    return calculateTrafficLight(progress.map((p: any) => ({
+      grade: p.grade,
+      completionPercent: p.completion_percent || 0,
+      missingItems: p.missing_items || [],
+      absences: p.absences || 0,
+    })));
+  }, [progress]);
 
-  // Find subject with lowest grade for "AI suggestion"
+  // Missing tasks
+  const missingTasks = useMemo(() => {
+    return progress
+      .filter((p: any) => p.missing_items && p.missing_items.length > 0)
+      .flatMap((p: any) => (p.missing_items || []).map((item: string) => ({
+        subject: (p as any).subjects?.subject_name || "",
+        task: item,
+      })))
+      .slice(0, 5);
+  }, [progress]);
+
+  // AI suggestion — weakest subject
   const weakSubject = useMemo(() => {
     const sorted = [...progress].filter((p: any) => p.grade != null && p.grade > 0).sort((a: any, b: any) => a.grade - b.grade);
     return sorted[0] as any;
@@ -52,49 +91,17 @@ const StudentHomePage = () => {
   }
 
   const mainCards = [
-    {
-      id: "subjects",
-      title: "התחלת למידה",
-      description: "כנס למקצועות, יחידות לימוד וחומרי עזר",
-      icon: BookOpen,
-      color: "bg-[hsl(270,25%,94%)]",
-      iconColor: "text-[hsl(270,35%,50%)]",
-      action: () => navigate("/subjects"),
-    },
-    {
-      id: "profile",
-      title: "מפת הדרכים שלי",
-      description: "התקדמות, חוסרים ושלבים הבאים",
-      icon: GraduationCap,
-      color: "bg-primary/10",
-      iconColor: "text-primary",
-      action: () => navigate(`/students/${studentId}`),
-    },
-    {
-      id: "grades",
-      title: "ציונים",
-      description: "ציונים עדכניים בכל מקצוע",
-      icon: BarChart3,
-      color: "bg-[hsl(150,25%,93%)]",
-      iconColor: "text-[hsl(150,35%,42%)]",
-      action: () => navigate(`/students/${studentId}`),
-    },
-    {
-      id: "calendar",
-      title: "לוח שנה",
-      description: "משימות, מבחנים ומפגשים קרובים",
-      icon: CalendarDays,
-      color: "bg-secondary",
-      iconColor: "text-foreground/80",
-      action: () => navigate("/calendar"),
-    },
+    { id: "subjects", title: "התחלת למידה", description: "כנס למקצועות ויחידות לימוד", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", action: () => navigate("/subjects") },
+    { id: "profile", title: "מפת הדרכים שלי", description: "התקדמות ושלבים הבאים", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary", action: () => navigate(`/students/${studentId}`) },
+    { id: "grades", title: "ציונים", description: "ציונים עדכניים בכל מקצוע", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", action: () => navigate(`/students/${studentId}`) },
+    { id: "calendar", title: "לוח שנה", description: "משימות ומועדים קרובים", icon: CalendarDays, color: "bg-secondary", iconColor: "text-foreground/80", action: () => navigate("/calendar") },
   ];
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
       {/* Welcome */}
-      <section className="mb-8">
-        <div className="flex items-center gap-4 mb-6">
+      <section className="mb-6">
+        <div className="flex items-center gap-4 mb-5">
           <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
           <div>
             <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
@@ -107,12 +114,11 @@ const StudentHomePage = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-3 gap-2.5 mb-5">
           {[
             { icon: Target, color: "text-primary", value: `${progressPct}%`, label: "התקדמות" },
             { icon: BarChart3, color: "text-[hsl(var(--success))]", value: avgGrade || "—", label: "ממוצע" },
-            { icon: Clock, color: "text-[hsl(var(--warning))]", value: subjectsAtRisk, label: "לטיפול" },
-            { icon: Trophy, color: "text-[hsl(35,50%,50%)]", value: medals, label: "מדליות" },
+            { icon: Clock, color: "text-[hsl(var(--warning))]", value: missingTasks.length, label: "חסרות" },
           ].map((stat, i) => (
             <div
               key={i}
@@ -129,7 +135,28 @@ const StudentHomePage = () => {
         </div>
       </section>
 
-      {/* AI Smart Feedback */}
+      {/* Traffic Light Status — student sees WHY */}
+      <StatusCard result={trafficResult} />
+
+      {/* Missing Tasks */}
+      {missingTasks.length > 0 && (
+        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+          <h2 className="text-[11.5px] font-medium text-destructive/70 mb-3 tracking-tight">משימות חסרות</h2>
+          <div className="bg-card rounded-2xl border border-border divide-y divide-border shadow-[var(--shadow-card)]">
+            {missingTasks.map((t, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11.5px] font-medium text-foreground truncate">{t.task}</p>
+                  <p className="text-[10px] text-muted-foreground">{t.subject}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* AI Feedback */}
       {weakSubject && (
         <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "160ms" }}>
           <div className="bg-primary/5 rounded-2xl border border-primary/10 p-4">
@@ -138,12 +165,9 @@ const StudentHomePage = () => {
                 <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.5} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] text-primary/60 font-medium mb-0.5 flex items-center gap-1">
-                  <Brain className="h-3 w-3" strokeWidth={1.5} />
-                  המלצה אישית
-                </p>
+                <p className="text-[10px] text-primary/60 font-medium mb-0.5">המלצה אישית</p>
                 <p className="text-[11.5px] text-foreground leading-relaxed">
-                  כדאי לחזק את <strong>{weakSubject.subjects?.subject_name}</strong> (ציון {weakSubject.grade}) — מומלץ לחזור על החומר ולפנות למורה לתגבור
+                  כדאי לחזק את <strong>{weakSubject.subjects?.subject_name}</strong> (ציון {weakSubject.grade}) — שיפור יפה אפשרי עם תרגול ממוקד
                 </p>
               </div>
             </div>
@@ -151,13 +175,13 @@ const StudentHomePage = () => {
         </section>
       )}
 
-      {/* Subject Progress Overview */}
+      {/* Subject Progress */}
       {progress.length > 0 && (
         <section className="mb-7">
           <h2 className="text-[11.5px] font-medium text-primary/60 mb-3 tracking-tight">מצב לימודי לפי מקצוע</h2>
           <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)]">
             <div className="flex flex-col gap-3">
-              {progress.slice(0, 5).map((sp: any, i: number) => {
+              {progress.slice(0, 6).map((sp: any, i: number) => {
                 const name = sp.subjects?.subject_name || "";
                 const pct = sp.completion_percent ?? 0;
                 const grade = sp.grade;
@@ -182,7 +206,7 @@ const StudentHomePage = () => {
         </section>
       )}
 
-      {/* Action Cards */}
+      {/* Action Cards — המרחב שלי */}
       <section>
         <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">המרחב שלי</h2>
         <div className="grid grid-cols-2 gap-3">
