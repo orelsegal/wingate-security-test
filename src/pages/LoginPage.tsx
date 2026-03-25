@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, mockUsers } from "@/context/AuthContext";
 import WingateBadge from "@/components/WingateBadge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
+import { LogIn, ArrowRight } from "lucide-react";
 
 const MOCK_PASSWORD = "123456";
 
@@ -12,13 +12,24 @@ const roleRedirects: Record<string, string> = {
   teacher: "/teacher-home",
   student: "/student-home",
   admin: "/admin-dashboard",
+  parent: "/",
+  coach: "/",
 };
 
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [searchParams] = useSearchParams();
+  const prefillEmail = searchParams.get("email") || "";
+  const [email, setEmail] = useState(prefillEmail);
+  const [password, setPassword] = useState(prefillEmail ? MOCK_PASSWORD : "");
+
+  useEffect(() => {
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+      setPassword(MOCK_PASSWORD);
+    }
+  }, [prefillEmail]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -118,15 +129,15 @@ const LoginPage = () => {
           </Button>
         </form>
 
-        {/* Dev hint */}
-        <div
-          className="mt-6 bg-muted/40 rounded-xl p-4 text-[11px] text-muted-foreground/60 space-y-1 animate-fade-in-up"
-          style={{ animationDelay: "200ms" }}
-        >
-          <p className="font-medium text-muted-foreground/70 mb-1.5">משתמשים לפיתוח:</p>
-          <p dir="ltr" className="text-start">teacher@test.com / 123456</p>
-          <p dir="ltr" className="text-start">student@test.com / 123456</p>
-          <p dir="ltr" className="text-start">admin@test.com / 123456</p>
+        {/* Back button */}
+        <div className="mt-6 text-center animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+          <button
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+          >
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+            חזרה לבחירת תפקיד
+          </button>
         </div>
 
         {/* Footer */}

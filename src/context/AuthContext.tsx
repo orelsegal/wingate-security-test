@@ -47,6 +47,8 @@ export const mockUsers: AppUser[] = [
   { name: "דני כהן", role: "admin", email: "admin@test.com" },
   { name: "רונית לוי", role: "teacher", email: "teacher@test.com" },
   { name: "נועם שטיינר", role: "student", email: "student@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
+  { name: "יוסי אברהם", role: "parent", email: "parent@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
+  { name: "מיכל דוד", role: "coach", email: "coach@test.com", scopeFilter: ["כדורגל"] },
 ];
 
 /** @deprecated use mockUsers */

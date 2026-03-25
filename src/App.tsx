@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
 import StudentProfilePage from "./pages/StudentProfilePage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
+import WelcomePage from "./pages/WelcomePage.tsx";
 import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
 import DataManagementPage from "./pages/DataManagementPage.tsx";
@@ -41,13 +42,13 @@ const roleHomeMap: Record<string, string> = {
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn } = useAuth();
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (!isLoggedIn) return <Navigate to="/welcome" replace />;
   return <>{children}</>;
 };
 
 const RoleRoute = ({ roles, children }: { roles: string[]; children: React.ReactNode }) => {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/welcome" replace />;
   if (!roles.includes(user.role)) {
     return <Navigate to={roleHomeMap[user.role] || "/"} replace />;
   }
@@ -62,6 +63,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/welcome" element={<WelcomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Index />} />
