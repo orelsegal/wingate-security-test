@@ -277,7 +277,7 @@ const TeacherCourseDetailPage = () => {
 
           {/* AI Assistant */}
           <div className="mt-4">
-            <TeacherAIAssistant subjectName={course.name} />
+            <TeacherAIAssistant defaultSubject={course.subjectMatch} />
           </div>
         </TabsContent>
 
