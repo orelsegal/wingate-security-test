@@ -5,9 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import AppLayout from "@/components/AppLayout";
+import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
 import StudentProfilePage from "./pages/StudentProfilePage.tsx";
-import WelcomePage from "./pages/WelcomePage.tsx";
+import LoginPage from "./pages/LoginPage.tsx";
 import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
 import DataManagementPage from "./pages/DataManagementPage.tsx";
@@ -32,25 +33,10 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
-/** Redirects to welcome if no role selected */
-const RequireRole = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn } = useAuth();
-  if (!isLoggedIn) return <Navigate to="/welcome" replace />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
   return <>{children}</>;
-};
-
-/** Index redirects to role home */
-const IndexRedirect = () => {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/welcome" replace />;
-  const map: Record<string, string> = {
-    teacher: "/teacher-home",
-    student: "/student-home",
-    admin: "/admin-dashboard",
-    parent: "/parent-home",
-    coach: "/coach-home",
-  };
-  return <Navigate to={map[user.role] || "/welcome"} replace />;
 };
 
 const App = () => (
@@ -61,21 +47,16 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/welcome" element={<WelcomePage />} />
-            <Route element={<RequireRole><AppLayout /></RequireRole>}>
-              <Route path="/" element={<IndexRedirect />} />
-              <Route path="/admin-dashboard" element={<RoleHomePage />} />
-              <Route path="/admin-home" element={<Navigate to="/admin-dashboard" replace />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<DashboardContent />} />
-              <Route path="/teacher-home" element={<RoleHomePage />} />
-              <Route path="/student-home" element={<StudentHomePage />} />
-              <Route path="/parent-home" element={<RoleHomePage />} />
-              <Route path="/coach-home" element={<RoleHomePage />} />
               <Route path="/students" element={<StudentsPage />} />
               <Route path="/students/:id" element={<StudentProfilePage />} />
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/data-entry" element={<DataEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
+              <Route path="/student-home" element={<StudentHomePage />} />
               <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
               <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
               <Route path="/external" element={<ExternalWrapperPage />} />

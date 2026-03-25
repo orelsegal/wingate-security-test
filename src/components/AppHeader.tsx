@@ -21,24 +21,14 @@ const roleTitles: Record<UserRole, string> = {
   coach: "מרכז המאמן",
 };
 
-const roleHomeMap: Record<UserRole, string> = {
-  admin: "/admin-dashboard",
-  teacher: "/teacher-home",
-  student: "/student-home",
-  parent: "/parent-home",
-  coach: "/coach-home",
-};
-
 const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => {
   const location = useLocation();
   const path = location.pathname;
   const homeLabel = role ? roleTitles[role] : "עמוד הבית";
-  const homePaths = ["/", "/student-home", "/teacher-home", "/admin-dashboard", "/parent-home", "/coach-home"];
 
-  if (homePaths.includes(path)) return { crumbs: [], title: homeLabel };
+  if (path === "/" || path === "/student-home") return { crumbs: [], title: homeLabel };
 
-  const homePath = role ? roleHomeMap[role] : "/";
-  const crumbs: Crumb[] = [{ label: homeLabel, path: homePath }];
+  const crumbs: Crumb[] = [{ label: homeLabel, path: role === "student" ? "/student-home" : "/" }];
   let title = "";
 
   if (path.startsWith("/students")) {
@@ -60,6 +50,9 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
   } else if (path.startsWith("/dashboard")) {
     crumbs.push({ label: "דשבורד ניהולי" });
     title = "דשבורד ניהולי";
+  } else if (path.startsWith("/reports")) {
+    crumbs.push({ label: "דוחות וניתוח" });
+    title = "דוחות וניתוח";
   } else if (path.startsWith("/external")) {
     const params = new URLSearchParams(location.search);
     const type = params.get("type") || "smartbase";
@@ -73,20 +66,21 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
 };
 
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { crumbs, title } = useBreadcrumbs(user?.role);
-  const homePath = user ? roleHomeMap[user.role] : "/";
-  const homePaths = ["/", "/student-home", "/teacher-home", "/admin-dashboard", "/parent-home", "/coach-home"];
-  const isHome = homePaths.includes(location.pathname);
+  const isHome = location.pathname === "/" || location.pathname === "/student-home";
 
   return (
     <header className="h-auto bg-card border-b border-border sticky top-0 z-10" dir="rtl">
       <div className="h-[56px] flex items-center justify-between px-4 md:px-7">
         {/* RIGHT: Logo + Menu */}
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(homePath)} className="group">
+          <button
+            onClick={() => navigate(user?.role === "student" ? "/student-home" : "/")}
+            className="group"
+          >
             <WingateBadge size="sm" className="transition-all group-hover:border-primary/30 group-hover:shadow-[var(--shadow-card-hover)]" />
           </button>
           <button
@@ -104,23 +98,19 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           </h1>
         </div>
 
-        {/* LEFT: Icons + Switch role */}
+        {/* LEFT: Icons */}
         <div className="flex items-center gap-1">
+          {user && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/60 text-[10px] font-medium text-muted-foreground me-1">
+              {roleLabels[user.role]}
+            </span>
+          )}
           <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150">
             <Search className="h-4 w-4" strokeWidth={1.5} />
           </button>
           <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150 relative">
             <Bell className="h-4 w-4" strokeWidth={1.5} />
             <span className="absolute top-1.5 start-1.5 w-[6px] h-[6px] bg-primary rounded-full ring-2 ring-card" />
-          </button>
-          <button
-            onClick={() => { logout(); navigate("/welcome"); }}
-            className="p-1.5 rounded-lg hover:bg-accent transition-colors duration-150"
-            title="החלף תפקיד"
-          >
-            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
-              {user?.name?.charAt(0) || "?"}
-            </div>
           </button>
         </div>
       </div>

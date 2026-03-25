@@ -12,19 +12,16 @@ export interface AppUser {
 
 interface AuthContextType {
   user: AppUser | null;
-  setRole: (role: UserRole) => void;
+  login: (user: AppUser) => void;
   logout: () => void;
   isLoggedIn: boolean;
-  /** @deprecated use setRole */
-  login: (user: AppUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  setRole: () => {},
+  login: () => {},
   logout: () => {},
   isLoggedIn: false,
-  login: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -45,48 +42,23 @@ export const roleDescriptions: Record<UserRole, string> = {
   student: "צפייה בלוח זמנים, מפת דרכים ולמידה",
 };
 
-/** Preset users per role */
-const roleUsers: Record<UserRole, AppUser> = {
-  admin: { name: "דני כהן", role: "admin", email: "admin@test.com" },
-  teacher: { name: "רונית לוי", role: "teacher", email: "teacher@test.com" },
-  student: { name: "נועם שטיינר", role: "student", email: "student@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
-  parent: { name: "יוסי אברהם", role: "parent", email: "parent@test.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
-  coach: { name: "מיכל דוד", role: "coach", email: "coach@test.com", scopeFilter: ["כדורגל"] },
-};
-
-/** @deprecated use roleUsers */
-export const mockUsers: AppUser[] = Object.values(roleUsers);
-/** @deprecated */
-export const demoUsers = mockUsers;
-
-const STORAGE_KEY = "wingate_auth_user";
+/** Demo users for each role — scopeFilter uses DB UUIDs */
+export const demoUsers: AppUser[] = [
+  { name: "דני כהן", role: "admin", email: "admin@wingate.ac.il" },
+  { name: "רונית לוי", role: "teacher", email: "ronit@wingate.ac.il" },
+  { name: "משה אברהם", role: "parent", email: "moshe@parent.com", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
+  { name: "יוסי גולן", role: "coach", email: "yossi@wingate.ac.il", scopeFilter: ["כדורסל"] },
+  { name: "נועם שטיינר", role: "student", email: "noam@student.wingate.ac.il", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
+];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AppUser | null>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
-  });
+  const [user, setUser] = useState<AppUser | null>(null);
 
-  const setRole = useCallback((role: UserRole) => {
-    const u = roleUsers[role];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    setUser(u);
-  }, []);
-
-  const login = useCallback((u: AppUser) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    setUser(u);
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
-  }, []);
+  const login = useCallback((u: AppUser) => setUser(u), []);
+  const logout = useCallback(() => setUser(null), []);
 
   return (
-    <AuthContext.Provider value={{ user, setRole, login, logout, isLoggedIn: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user }}>
       {children}
     </AuthContext.Provider>
   );
