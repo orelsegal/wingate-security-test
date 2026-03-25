@@ -13,9 +13,10 @@ const roleTitles: Record<UserRole, string> = {
 };
 
 const allMenuItems = [
-  { title: "עמוד הבית", icon: Home, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
+  { title: "עמוד הבית", icon: Home, path: "/", roles: ["admin", "parent", "coach"] },
+  { title: "עמוד הבית", icon: Home, path: "/teacher-home", roles: ["teacher"] },
   { title: "עמוד הבית", icon: Home, path: "/student-home", roles: ["student"] },
-  { title: "דשבורד ניהולי", icon: LayoutDashboard, path: "/dashboard", roles: ["admin"] },
+  { title: "דשבורד ניהולי", icon: LayoutDashboard, path: "/admin-dashboard", roles: ["admin"] },
   { title: "הקורסים שלי", icon: BookOpen, path: "/teacher-courses", roles: ["teacher"] },
   { title: "ניהול ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
   { title: "קבוצות", icon: Layers, path: "/groups", roles: ["admin", "teacher", "coach"] },
@@ -44,7 +45,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   return (
     <aside className="w-[256px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-s border-sidebar-border" dir="rtl">
       {/* Logo & Branding */}
-      <button onClick={() => { navigate(user?.role === "student" ? "/student-home" : "/"); onNavigate?.(); }} className="px-6 pt-6 pb-5 w-full text-start group cursor-pointer">
+      <button onClick={() => { navigate(user?.role === "student" ? "/student-home" : user?.role === "teacher" ? "/teacher-home" : "/"); onNavigate?.(); }} className="px-6 pt-6 pb-5 w-full text-start group cursor-pointer">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-card border border-sidebar-border p-1.5 flex items-center justify-center shrink-0 transition-opacity duration-150 group-hover:opacity-75">
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />

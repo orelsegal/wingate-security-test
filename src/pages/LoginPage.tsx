@@ -9,9 +9,9 @@ import { LogIn } from "lucide-react";
 const MOCK_PASSWORD = "123456";
 
 const roleRedirects: Record<string, string> = {
-  teacher: "/teacher-courses",
+  teacher: "/teacher-home",
   student: "/student-home",
-  admin: "/",
+  admin: "/admin-dashboard",
 };
 
 const LoginPage = () => {
