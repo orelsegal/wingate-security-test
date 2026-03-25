@@ -234,26 +234,66 @@ const TeacherHome = () => {
   const { data: students = [] } = useStudents();
   const redCount = students.filter((s) => s.overall_status === "red").length;
 
-  const cards: ActionCard[] = [
-    { id: "overview", title: "סקירה כללית", description: "דשבורד עם מבט על מצב כללי", icon: LayoutDashboard, color: "bg-primary/10", iconColor: "text-primary", path: "/dashboard" },
-    { id: "courses", title: "מפת מצב לימודית", description: "סקירת מקצועות והתקדמות כללית", icon: GraduationCap, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/courses" },
-    { id: "data-entry", title: "עדכון ציונים והערות", description: "הזנה ועדכון נתוני ספורטאים", icon: ClipboardEdit, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/data-entry" },
-    { id: "subject-editor", title: "ניהול מבנה למידה", description: "עריכת יחידות לימוד ומבנה קורסים", icon: Route, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/teacher-subjects" },
-  ];
+  /* Priority students */
+  const priorityStudents = students
+    .filter(s => s.overall_status === "red")
+    .slice(0, 3);
 
   return (
     <>
       <InsightStrip
         items={[
-          { label: "סה״כ ספורטאים", value: students.length, icon: Users, color: "text-primary" },
+          { label: "סה״כ תלמידים", value: students.length, icon: Users, color: "text-primary" },
           { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
         ]}
       />
-      <AIInsightsPanel students={students} role="teacher" navigate={navigate} />
+
+      {/* Priority Banner */}
+      {priorityStudents.length > 0 && (
+        <div className="mb-6 bg-destructive/5 border border-destructive/10 rounded-2xl p-4 animate-fade-in-up">
+          <div className="flex items-center gap-2 mb-2.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-destructive" strokeWidth={1.5} />
+            <span className="text-[12px] font-semibold text-foreground">תלמידים הדורשים תשומת לב</span>
+          </div>
+          {priorityStudents.map(s => (
+            <button
+              key={s.id}
+              onClick={() => navigate(`/students/${s.id}`)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-card transition-colors cursor-pointer mb-1"
+            >
+              <span className="text-[12px] font-medium text-foreground">{s.full_name}</span>
+              <span className="text-[10px] text-muted-foreground">{s.sport}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <ContinueCard navigate={navigate} />
-      <MainEntryButtons navigate={navigate} />
+
+      {/* Main action — go to courses */}
+      <button
+        onClick={() => navigate("/teacher-courses")}
+        className="w-full group bg-primary/5 rounded-2xl border border-primary/10 p-5 text-start transition-all duration-300 hover:bg-primary/8 cursor-pointer mb-6 animate-fade-in-up"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <BookOpen className="h-5 w-5 text-primary" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-[14px] font-semibold text-foreground">הקורסים שלי</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">ניהול קורסים, ציונים ותלמידים</p>
+          </div>
+          <ChevronLeft className="h-4 w-4 text-primary/30 group-hover:text-primary/60 transition-colors" strokeWidth={1.5} />
+        </div>
+      </button>
+
       <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
-      <CardGrid cards={cards} navigate={navigate} />
+      <CardGrid cards={[
+        { id: "students", title: "ניהול תלמידים", description: "צפייה ועדכון נתוני תלמידים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
+        { id: "groups", title: "קבוצות", description: "ניהול קבוצות לימוד", icon: Layers, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/groups" },
+        { id: "data-entry", title: "עדכון ציונים", description: "הזנה ועדכון נתונים", icon: ClipboardEdit, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/data-entry" },
+        { id: "calendar", title: "לוח שנה", description: "משימות ומועדים", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", path: "/calendar" },
+      ]} navigate={navigate} />
     </>
   );
 };
