@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Settings, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
 import { useAuth, demoUsers, roleLabels } from "@/context/AuthContext";
 import type { UserRole, AppUser } from "@/context/AuthContext";
+import { logActivity } from "@/hooks/useActivityLogger";
 import WingateBadge from "@/components/WingateBadge";
 
 const roleIcons: Record<UserRole, typeof Settings> = {
@@ -52,6 +53,7 @@ const LoginPage = () => {
     setExiting(true);
     setTimeout(() => {
       login(user);
+      logActivity(user.name, user.role, user.email, "login", user.role === "student" ? "/student-home" : "/");
       navigate(user.role === "student" ? "/student-home" : "/");
     }, 400);
   };
