@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          page_path: string | null
+          user_email: string
+          user_name: string
+          user_role: string
+        }
+        Insert: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          page_path?: string | null
+          user_email: string
+          user_name: string
+          user_role: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          page_path?: string | null
+          user_email?: string
+          user_name?: string
+          user_role?: string
+        }
+        Relationships: []
+      }
       app_users: {
         Row: {
           email: string
