@@ -3,9 +3,11 @@ import { Outlet } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import AppHeader from "@/components/AppHeader";
 import PageTransition from "@/components/PageTransition";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useActivityLogger();
 
   return (
     <div className="min-h-screen flex flex-row-reverse" dir="rtl">
