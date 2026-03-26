@@ -29,6 +29,7 @@ import ScienceIntroPage from "./pages/ScienceIntroPage.tsx";
 import BagrutGradingPage from "./pages/BagrutGradingPage.tsx";
 import TeacherCoursesPage from "./pages/TeacherCoursesPage.tsx";
 import TeacherCourseDetailPage from "./pages/TeacherCourseDetailPage.tsx";
+import UserActivityPage from "./pages/UserActivityPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/bagrut-grading" element={<BagrutGradingPage />} />
               <Route path="/teacher-courses" element={<TeacherCoursesPage />} />
               <Route path="/teacher-course/:courseId" element={<TeacherCourseDetailPage />} />
+              <Route path="/user-activity" element={<UserActivityPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

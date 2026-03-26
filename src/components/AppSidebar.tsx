@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -22,6 +22,7 @@ const allMenuItems = [
   { title: "מעקב לימודי", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
   { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
   { title: "לוח שנה", icon: CalendarDays, path: "/calendar", roles: ["admin", "teacher", "coach", "student", "parent"] },
+  { title: "פעילות משתמשים", icon: Activity, path: "/user-activity", roles: ["admin"] },
   { title: "ניהול מערכת", icon: Database, path: "/data-management", roles: ["admin"] },
 ];
 
