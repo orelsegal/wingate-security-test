@@ -124,7 +124,8 @@ const SubjectDetailPage = () => {
                 key={part.id}
                 onClick={() => {
                   if (decoded === "היסטוריה" && part.id === "hist-30") {
-                    navigate(`/external?url=${encodeURIComponent("https://wingate-history.lovable.app")}&type=learning`);
+                    window.open("https://wingate-history.lovable.app", "_blank");
+                    return;
                   } else {
                     navigate(`/subjects/${encodeURIComponent(decoded)}/${part.id}`);
                   }
