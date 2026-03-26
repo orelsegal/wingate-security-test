@@ -122,7 +122,13 @@ const SubjectDetailPage = () => {
             return (
               <button
                 key={part.id}
-                onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${part.id}`)}
+                onClick={() => {
+                  if (decoded === "היסטוריה" && part.id === "hist-30") {
+                    navigate(`/external?url=${encodeURIComponent("https://lovable.dev/projects/28e67e73-467e-47dc-adbe-a6e5755ce9f7")}&type=learning`);
+                  } else {
+                    navigate(`/subjects/${encodeURIComponent(decoded)}/${part.id}`);
+                  }
+                }}
                 className="group bg-card rounded-2xl border border-border p-4 text-start shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer animate-fade-in-up"
                 style={{ animationDelay: `${100 + pi * 50}ms` }}
               >
