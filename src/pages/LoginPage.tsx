@@ -1,117 +1,68 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, BookOpen, Heart, Dumbbell, GraduationCap } from "lucide-react";
-import { useAuth, demoUsers, roleLabels } from "@/context/AuthContext";
-import type { UserRole, AppUser } from "@/context/AuthContext";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/hooks/useActivityLogger";
 import WingateBadge from "@/components/WingateBadge";
-
-const roleIcons: Record<UserRole, typeof Settings> = {
-  admin: Settings,
-  teacher: BookOpen,
-  parent: Heart,
-  coach: Dumbbell,
-  student: GraduationCap,
-};
-
-const roleCircleColors: Record<UserRole, string> = {
-  admin: "bg-primary/10",
-  teacher: "bg-[hsl(35,30%,92%)]",
-  parent: "bg-[hsl(350,25%,93%)]",
-  coach: "bg-[hsl(25,30%,92%)]",
-  student: "bg-[hsl(210,30%,92%)]",
-};
-
-const roleIconColors: Record<UserRole, string> = {
-  admin: "text-primary",
-  teacher: "text-[hsl(35,45%,38%)]",
-  parent: "text-[hsl(350,38%,45%)]",
-  coach: "text-[hsl(25,48%,42%)]",
-  student: "text-[hsl(210,45%,42%)]",
-};
-
-const roleDescriptions: Record<UserRole, string> = {
-  admin: "ניהול המערכת",
-  teacher: "מערכת הוראה",
-  parent: "מעקב הורים",
-  coach: "ניהול אימונים",
-  student: "המרחב האישי",
-};
-
-const topRowRoles: UserRole[] = ["parent", "admin", "coach"];
-const bottomRowRoles: UserRole[] = ["teacher", "student"];
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  useAuth(); // ensure context is mounted
   const navigate = useNavigate();
-  const [hoveredRole, setHoveredRole] = useState<UserRole | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [exiting, setExiting] = useState(false);
 
-  const handleLogin = (user: AppUser) => {
-    setSelectedRole(user.role);
-    setExiting(true);
-    setTimeout(() => {
-      login(user);
-      logActivity(user.name, user.role, user.email, "login", user.role === "student" ? "/student-home" : "/");
-      navigate(user.role === "student" ? "/student-home" : "/");
-    }, 400);
-  };
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (signInError) {
+        setError("פרטי ההתחברות שגויים. אנא נסה/י שוב.");
+        setLoading(false);
+        return;
+      }
 
-  const findUser = (role: UserRole) => demoUsers.find((u) => u.role === role)!;
+      // Resolve role to know where to redirect
+      const userId = data.user?.id;
+      let role: string | null = null;
+      let fullName = data.user?.email ?? "";
+      if (userId) {
+        const [{ data: roles }, { data: profile }] = await Promise.all([
+          supabase.from("user_roles").select("role").eq("user_id", userId),
+          supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+        ]);
+        const roleList = (roles ?? []).map((r) => r.role as string);
+        role = roleList.includes("admin") ? "admin" : roleList[0] ?? null;
+        if (profile?.full_name) fullName = profile.full_name;
+      }
 
-  const RoleCard = ({ role, delay, wide }: { role: UserRole; delay: number; wide?: boolean }) => {
-    const demoUser = findUser(role);
-    const Icon = roleIcons[role];
-    const isSelected = selectedRole === role;
-    const isHovered = hoveredRole === role;
-    const isActive = isSelected || isHovered;
+      if (!role) {
+        setError("לא הוגדר תפקיד למשתמש זה. פנה/י למנהל המערכת.");
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
 
-    return (
-      <button
-        onClick={() => handleLogin(demoUser)}
-        onMouseEnter={() => setHoveredRole(role)}
-        onMouseLeave={() => setHoveredRole(null)}
-        className={`group relative bg-card rounded-2xl flex flex-col items-center justify-center gap-2.5 text-center cursor-pointer animate-fade-in-up border transition-all duration-200 ease-out w-full ${
-          wide ? "py-6 px-4" : "py-5 px-3"
-        } ${
-          isSelected
-            ? "shadow-md scale-[0.97] border-primary/20"
-            : `hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] shadow-[var(--shadow-card)] border-border/50 ${
-                isActive ? "border-primary/15" : ""
-              }`
-        }`}
-        style={{ animationDelay: `${delay}ms` }}
-      >
-        <div
-          className={`${wide ? "w-[58px] h-[58px]" : "w-[52px] h-[52px]"} rounded-full ${roleCircleColors[role]} flex items-center justify-center transition-transform duration-200 ease-out ${
-            isActive ? "scale-110" : ""
-          }`}
-        >
-          <Icon
-            className={`${wide ? "h-[24px] w-[24px]" : "h-[22px] w-[22px]"} ${roleIconColors[role]}`}
-            strokeWidth={1.5}
-          />
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <p
-            className={`${wide ? "text-[15px]" : "text-[14px]"} font-medium leading-tight transition-colors duration-200 ${
-              isActive ? "text-primary" : "text-foreground/85"
-            }`}
-          >
-            {roleLabels[role]}
-          </p>
-          <p className={`${wide ? "text-[11px]" : "text-[10.5px]"} text-muted-foreground/55 leading-tight`}>
-            {roleDescriptions[role]}
-          </p>
-        </div>
-        <div
-          className={`absolute top-2 start-2 w-1.5 h-1.5 rounded-full bg-primary transition-all duration-200 ${
-            isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
-          }`}
-        />
-      </button>
-    );
+      const target = role === "student" ? "/student-home" : "/";
+      logActivity(fullName, role as never, email.trim(), "login", target);
+
+      setExiting(true);
+      setTimeout(() => navigate(target), 400);
+    } catch {
+      setError("שגיאה בלתי צפויה. נסה/י שוב.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -123,22 +74,18 @@ const LoginPage = () => {
     >
       {/* Soft circular background shapes */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Upper-right — large soft green */}
         <div
           className="absolute -top-[12%] -right-[8%] w-[620px] h-[620px] rounded-full blur-3xl"
           style={{ background: "radial-gradient(circle, hsla(150,38%,70%,0.14) 0%, transparent 60%)" }}
         />
-        {/* Middle-right — warm beige */}
         <div
           className="absolute top-[38%] -right-[3%] w-[420px] h-[420px] rounded-full blur-2xl"
           style={{ background: "radial-gradient(circle, hsla(38,42%,78%,0.12) 0%, transparent 58%)" }}
         />
-        {/* Lower-left — large soft warm gray-green */}
         <div
           className="absolute -bottom-[10%] -left-[12%] w-[580px] h-[580px] rounded-full blur-3xl"
           style={{ background: "radial-gradient(circle, hsla(155,28%,65%,0.11) 0%, transparent 60%)" }}
         />
-        {/* Hero area — very subtle green halo */}
         <div
           className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[480px] h-[480px] rounded-full blur-3xl"
           style={{ background: "radial-gradient(circle, hsla(148,30%,68%,0.08) 0%, transparent 55%)" }}
@@ -146,7 +93,7 @@ const LoginPage = () => {
       </div>
 
       <div className="w-full max-w-[400px] px-6 relative z-10">
-        {/* Logo with soft halo */}
+        {/* Logo */}
         <div className="flex justify-center mb-7 animate-fade-in-up">
           <div className="relative">
             <div
@@ -157,35 +104,82 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Title + Subtitle */}
+        {/* Title */}
         <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
           <h1 className="text-[22px] font-bold text-primary tracking-tight leading-snug mb-2.5">
             האקדמיה למצוינות בספורט
           </h1>
           <div className="w-10 h-[2px] rounded-full bg-primary/25 mx-auto mb-2.5" />
           <p className="text-[11px] font-light leading-relaxed tracking-wide text-muted-foreground/50">
-            למידה וניהול מותאמים לספורטאים מצטיינים
+            התחברות למערכת
           </p>
         </div>
 
-        {/* Top Row — 3 equal cards */}
-        <div className="grid grid-cols-3 gap-3 mb-3">
-          {topRowRoles.map((role, i) => (
-            <RoleCard key={role} role={role} delay={120 + i * 60} />
-          ))}
-        </div>
+        {/* Login form */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-card rounded-2xl border border-border/50 shadow-[var(--shadow-card)] p-6 animate-fade-in-up space-y-4"
+          style={{ animationDelay: "120ms" }}
+        >
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-[13px] text-foreground/80">
+              אימייל
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              dir="ltr"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@wingate.ac.il"
+              disabled={loading}
+              className="text-left"
+            />
+          </div>
 
-        {/* Bottom Row — 2 wider cards, centered */}
-        <div className="flex justify-center gap-3 mb-10">
-          {bottomRowRoles.map((role, i) => (
-            <div key={role} className="flex-1">
-              <RoleCard role={role} delay={300 + i * 60} wide />
-            </div>
-          ))}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-[13px] text-foreground/80">
+              סיסמה
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              dir="ltr"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              className="text-left"
+            />
+          </div>
 
-        {/* Footer branding */}
-        <div className="text-center animate-fade-in-up" style={{ animationDelay: "440ms" }}>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !email || !password}
+            className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 text-[14px] font-medium transition-all duration-200 hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                מתחבר...
+              </>
+            ) : (
+              "התחבר"
+            )}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <div className="text-center mt-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
           <div className="w-12 h-[1px] rounded-full bg-primary/15 mx-auto mb-3" />
           <p className="text-[10px] font-medium tracking-[0.18em] text-primary/45">
             WINGATE INSTITUTE
