@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 
 export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student";
 
@@ -15,6 +17,7 @@ interface AuthContextType {
   login: (user: AppUser) => void;
   logout: () => void;
   isLoggedIn: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   isLoggedIn: false,
+  loading: true,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -42,7 +46,7 @@ export const roleDescriptions: Record<UserRole, string> = {
   student: "צפייה בלוח זמנים, מפת דרכים ולמידה",
 };
 
-/** Demo users for each role — scopeFilter uses DB UUIDs */
+/** Demo users for each role — kept for LoginPage fallback (mock mode) */
 export const demoUsers: AppUser[] = [
   { name: "דני כהן", role: "admin", email: "admin@wingate.ac.il" },
   { name: "רונית לוי", role: "teacher", email: "ronit@wingate.ac.il" },
@@ -51,14 +55,84 @@ export const demoUsers: AppUser[] = [
   { name: "נועם שטיינר", role: "student", email: "noam@student.wingate.ac.il", scopeFilter: ["adbc2bd3-ccaf-420b-9fcc-c82fe6e3b8f5"] },
 ];
 
+/** Build AppUser from Supabase session by fetching profile + role. */
+async function buildAppUserFromSession(session: Session): Promise<AppUser | null> {
+  const userId = session.user.id;
+  const email = session.user.email ?? "";
+
+  const [{ data: profile }, { data: roles }] = await Promise.all([
+    supabase.from("profiles").select("full_name, email, linked_student_id, linked_sport").eq("id", userId).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+  ]);
+
+  if (!roles || roles.length === 0) {
+    // No role assigned yet — cannot resolve a typed AppUser
+    return null;
+  }
+
+  // Prefer admin if multiple roles exist, otherwise pick the first
+  const roleList = roles.map((r) => r.role as UserRole);
+  const role: UserRole = roleList.includes("admin") ? "admin" : roleList[0];
+
+  let scopeFilter: string[] | undefined;
+  if (role === "parent" || role === "student") {
+    if (profile?.linked_student_id) scopeFilter = [profile.linked_student_id];
+  } else if (role === "coach") {
+    if (profile?.linked_sport) scopeFilter = [profile.linked_sport];
+  }
+
+  return {
+    name: profile?.full_name || email,
+    email: profile?.email || email,
+    role,
+    scopeFilter,
+  };
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    // Subscribe FIRST, then check the existing session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setUser((prev) => {
+          // If a mock-login user is in place (no Supabase session), keep it
+          return prev;
+        });
+        return;
+      }
+      // Defer DB calls to avoid deadlock inside the auth callback
+      setTimeout(async () => {
+        const appUser = await buildAppUserFromSession(session);
+        if (appUser) setUser(appUser);
+      }, 0);
+    });
+
+    // Initial session check
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const appUser = await buildAppUserFromSession(session);
+        if (appUser) setUser(appUser);
+      }
+      setLoading(false);
+    })();
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Mock login (still used by LoginPage demo cards). Sets local user only.
   const login = useCallback((u: AppUser) => setUser(u), []);
-  const logout = useCallback(() => setUser(null), []);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    void supabase.auth.signOut();
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   );
