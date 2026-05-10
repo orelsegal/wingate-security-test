@@ -35,7 +35,14 @@ import NotFound from "./pages/NotFound.tsx";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+        <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+      </div>
+    );
+  }
   if (!isLoggedIn) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
