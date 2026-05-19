@@ -560,10 +560,11 @@ const StudentProfilePage = () => {
       )}
 
       {/* ═══ SUBJECT PROGRESS — EXPANDABLE ═══ */}
+      {isSectionVisible("sys-roadmap") && (
       <div>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
-          <h3 className="text-[14px] font-semibold text-foreground">מפת דרכים</h3>
+          <h3 className="text-[14px] font-semibold text-foreground">{sectionTitle("sys-roadmap", "מפת דרכים")}</h3>
           <span className="text-[11px] text-muted-foreground/50 bg-accent/50 px-2 py-0.5 rounded-full">{allSubjects.length}</span>
         </div>
 
@@ -787,6 +788,10 @@ const StudentProfilePage = () => {
           })}
         </div>
       </div>
+      )}
+
+      {/* Admin-defined custom sections */}
+      <CustomSectionsRenderer studentId={student.id} />
     </div>
   );
 };
