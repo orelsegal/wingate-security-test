@@ -68,7 +68,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div
+    <>
+      {exiting && <OlympicLoader />}
+      <div
       className={`min-h-screen bg-background flex items-center justify-center relative overflow-hidden transition-all duration-500 ${
         exiting ? "opacity-0 scale-[1.02]" : "opacity-100 scale-100"
       }`}
