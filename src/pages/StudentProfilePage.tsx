@@ -11,6 +11,10 @@ import { toast } from "sonner";
 import { InlineEdit, InlineSelect, ChipEditor } from "@/components/InlineEdit";
 import { EditModeToggle } from "@/components/EditModeToggle";
 import { useEditMode } from "@/context/EditModeContext";
+import { useBuilder } from "@/context/BuilderContext";
+import { BuilderPanel } from "@/components/builder/BuilderPanel";
+import { CustomSectionsRenderer } from "@/components/builder/CustomSectionsRenderer";
+import { Wrench } from "lucide-react";
 import DataExportTools from "@/components/DataExportTools";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -87,8 +91,18 @@ const StudentProfilePage = () => {
   const [activeSubjectTab, setActiveSubjectTab] = useState<string | null>(null);
 
   const { canEdit: editModeActive } = useEditMode();
-  // Admin Builder — Phase 1: only admins can edit, and only while Edit Mode is active.
+  const { layout: builderLayout } = useBuilder();
+  const [builderOpen, setBuilderOpen] = useState(false);
+  // Admin Builder — Phase 2: admins can edit fields and open the visual builder panel.
   const isEditable = editModeActive;
+  const userRole = (user?.role || "student") as any;
+  const isSectionVisible = (id: string) => {
+    const sec = builderLayout.sections.find((s) => s.id === id);
+    if (!sec) return true;
+    return sec.visible && sec.visibleRoles.includes(userRole);
+  };
+  const sectionTitle = (id: string, fallback: string) =>
+    builderLayout.sections.find((s) => s.id === id)?.title || fallback;
 
   // Per-subject level helper. Math uses math_level; others use subject_levels jsonb.
   const subjectLevels = ((student as any)?.subject_levels || {}) as Record<string, number>;
