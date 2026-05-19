@@ -1,0 +1,1 @@
+ALTER TABLE public.student_subject_progress ADD COLUMN IF NOT EXISTS extras jsonb NOT NULL DEFAULT '{}'::jsonb;
