@@ -85,6 +85,25 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               </button>
             );
           })}
+
+          {/* Messages — distinct orange entry with unread badge */}
+          <button
+            onClick={() => {
+              toast({ title: "הודעות", description: "התיבה עוד בפיתוח. תיפתח בקרוב." });
+              onNavigate?.();
+            }}
+            className="w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start font-medium text-[hsl(25,85%,45%)] hover:bg-[hsl(25,85%,50%)]/10"
+          >
+            <span className="relative inline-flex items-center justify-center">
+              <Mail className="h-[15px] w-[15px] shrink-0 text-[hsl(25,85%,50%)]" strokeWidth={1.5} />
+              {MESSAGES_UNREAD > 0 && (
+                <span className="absolute -top-1 -end-1 min-w-[14px] h-[14px] px-1 rounded-full bg-[hsl(25,90%,52%)] text-[9px] font-bold text-white flex items-center justify-center leading-none ring-2 ring-sidebar">
+                  {MESSAGES_UNREAD}
+                </span>
+              )}
+            </span>
+            <span>הודעות</span>
+          </button>
         </div>
       </nav>
 
