@@ -307,9 +307,6 @@ const StudentProfilePage = () => {
 
       {/* ═══ HERO CARD ═══ */}
       {isSectionVisible("sys-hero") && (
-      <></>
-      )}
-      {/* ═══ HERO CARD ═══ */}
       <div className="card-premium p-5 md:p-7">
         <div className="flex flex-col sm:flex-row items-start gap-5">
           <InitialsAvatar name={student.full_name} size="lg" />
