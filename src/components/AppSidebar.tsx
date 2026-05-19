@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
+import EditableElement from "@/components/builder/EditableElement";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 import { toast } from "@/hooks/use-toast";
 
@@ -82,18 +83,27 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             const active = location.pathname === item.path || (item.path !== "/" && item.path !== "/student-home" && location.pathname.startsWith(item.path));
             const title = labels.nav[item.key];
             return (
-              <button
+              <EditableElement
                 key={item.key + item.path}
-                onClick={() => { navigate(item.path); onNavigate?.(); }}
-                className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start ${
-                  active
-                    ? "bg-sidebar-accent font-semibold text-sidebar-foreground"
-                    : "text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground font-medium"
-                }`}
+                id={`sidebar.nav.${item.key}`}
+                type="nav-item"
+                pageKey="sidebar"
+                defaultLabel={title}
               >
-                <item.icon className={`h-[15px] w-[15px] shrink-0 ${active ? "text-primary" : "text-sidebar-muted"}`} strokeWidth={1.5} />
-                <span>{title}</span>
-              </button>
+                {({ label }) => (
+                  <button
+                    onClick={() => { navigate(item.path); onNavigate?.(); }}
+                    className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start ${
+                      active
+                        ? "bg-sidebar-accent font-semibold text-sidebar-foreground"
+                        : "text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground font-medium"
+                    }`}
+                  >
+                    <item.icon className={`h-[15px] w-[15px] shrink-0 ${active ? "text-primary" : "text-sidebar-muted"}`} strokeWidth={1.5} />
+                    <span>{label}</span>
+                  </button>
+                )}
+              </EditableElement>
             );
           })}
 

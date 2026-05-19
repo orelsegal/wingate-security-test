@@ -8,6 +8,7 @@ import { useUiLabels } from "@/context/UiLabelsContext";
 import { useMemo } from "react";
 import DataExportTools from "@/components/DataExportTools";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
+import EditableElement from "@/components/builder/EditableElement";
 const DashboardContent = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -72,15 +73,25 @@ const DashboardContent = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-[22px] md:text-[26px] font-semibold text-foreground tracking-tight leading-tight">
-              {isTeacher ? labels.pages.adminDashboard.titleTeacher : labels.pages.adminDashboard.titleAdmin}
-            </h2>
-            <p className="text-muted-foreground text-[13px] mt-1.5">
-              {labels.pages.adminDashboard.subtitle}
-              {user?.role === "coach" && ` · ענף ${user.scopeFilter?.[0]}`}
-            </p>
-          </div>
+          <EditableElement
+            id="dashboard.pageTitle"
+            type="page-title"
+            pageKey="admin-dashboard"
+            defaultLabel={isTeacher ? labels.pages.adminDashboard.titleTeacher : labels.pages.adminDashboard.titleAdmin}
+            defaultSubtitle={labels.pages.adminDashboard.subtitle}
+          >
+            {({ label, subtitle }) => (
+              <div>
+                <h2 className="text-[22px] md:text-[26px] font-semibold text-foreground tracking-tight leading-tight">
+                  {label}
+                </h2>
+                <p className="text-muted-foreground text-[13px] mt-1.5">
+                  {subtitle ?? labels.pages.adminDashboard.subtitle}
+                  {user?.role === "coach" && ` · ענף ${user.scopeFilter?.[0]}`}
+                </p>
+              </div>
+            )}
+          </EditableElement>
           <div className="flex items-center gap-2 flex-wrap shrink-0 self-start sm:self-auto">
             {redCount > 0 && (
               <button
@@ -106,18 +117,29 @@ const DashboardContent = () => {
         {!isTeacher && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
             {[
-              { label: "ספורטאים", value: String(totalStudents), icon: Users, sub: "פעילים במערכת" },
-              { label: "ממוצע כללי", value: avgScore, icon: TrendingUp, sub: "ממוצע משוקלל" },
-              { label: "בסיכון", value: String(redCount), icon: AlertTriangle, sub: "דורשים טיפול" },
+              { key: "students", label: "ספורטאים", value: String(totalStudents), icon: Users, sub: "פעילים במערכת" },
+              { key: "avg", label: "ממוצע כללי", value: avgScore, icon: TrendingUp, sub: "ממוצע משוקלל" },
+              { key: "risk", label: "בסיכון", value: String(redCount), icon: AlertTriangle, sub: "דורשים טיפול" },
             ].map((stat) => (
-              <div key={stat.label} className="card-premium p-5 md:p-6">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <stat.icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
-                  <span className="text-[12px] text-muted-foreground">{stat.label}</span>
-                </div>
-                <p className="text-[30px] md:text-[36px] font-semibold text-foreground leading-none tracking-tight">{stat.value}</p>
-                <p className="text-[11px] text-muted-foreground/60 mt-2">{stat.sub}</p>
-              </div>
+              <EditableElement
+                key={stat.key}
+                id={`dashboard.statCard.${stat.key}`}
+                type="card"
+                pageKey="admin-dashboard"
+                defaultLabel={stat.label}
+                defaultSubtitle={stat.sub}
+              >
+                {({ label, subtitle, stylePresetClass }) => (
+                  <div className={`card-premium p-5 md:p-6 ${stylePresetClass}`}>
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <stat.icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
+                      <span className="text-[12px] text-muted-foreground">{label}</span>
+                    </div>
+                    <p className="text-[30px] md:text-[36px] font-semibold text-foreground leading-none tracking-tight">{stat.value}</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-2">{subtitle ?? stat.sub}</p>
+                  </div>
+                )}
+              </EditableElement>
             ))}
           </div>
         )}

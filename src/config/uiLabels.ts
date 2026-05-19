@@ -91,7 +91,7 @@ export const defaultUiLabels: UiLabels = {
     dataManagement: "ניהול מערכת",
     messages: "הודעות",
     semester: "סמסטר א׳ תשפ״ה",
-    adminLabels: "ניהול תצוגה ולייבלים",
+    adminLabels: "בונה ממשק",
   },
   roleTitles: {
     admin: "מרכז ניהול",
