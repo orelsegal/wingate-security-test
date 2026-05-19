@@ -74,6 +74,7 @@ const StudentProfilePage = () => {
   const updateStudent = useUpdateStudent();
   const { data: student, isLoading: studentLoading } = useStudent(id || "");
   const { data: subjectProgress = [], isLoading: progressLoading } = useStudentProgress(id || "");
+  const { data: allSubjects = [] } = useSubjects();
 
   const [mathLevel, setMathLevel] = useState<number | null>(null);
   const effectiveMathLevel = mathLevel ?? student?.math_level ?? 3;
