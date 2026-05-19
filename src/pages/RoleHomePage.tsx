@@ -203,11 +203,7 @@ const AdminHome = () => {
   const yellowCount = students.filter((s) => s.overall_status === "yellow").length;
 
   const cards: ActionCard[] = [
-    { id: "overview", title: "דשבורד ניהולי", description: "נתונים, KPIs וסטטיסטיקות כלליות", icon: LayoutDashboard, color: "bg-primary/10", iconColor: "text-primary", path: "/dashboard" },
-    { id: "data-mgmt", title: "ניהול מערכת", description: "ענפי ספורט, מקצועות וכיתות", icon: Database, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/data-management" },
-    { id: "courses", title: "מעקב לימודי", description: "מעקב מקצועות והתקדמות לימודית", icon: GraduationCap, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/courses" },
-    { id: "data-entry", title: "הזנת נתונים", description: "עדכון ציונים, סטטוסים והערות", icon: ClipboardEdit, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/data-entry" },
-    { id: "reports", title: "דוחות וניתוח", description: "ניתוח נתונים ודוחות מתקדמים", icon: BarChart3, color: "bg-muted", iconColor: "text-muted-foreground", comingSoon: true },
+    { id: "reports", title: "נתונים ודוחות", description: "ניתוח נתונים ודוחות מתקדמים", icon: BarChart3, color: "bg-muted", iconColor: "text-muted-foreground", comingSoon: true },
   ];
 
   return (
@@ -222,7 +218,7 @@ const AdminHome = () => {
       <AIInsightsPanel students={students} role="admin" navigate={navigate} />
       <ContinueCard navigate={navigate} />
       <MainEntryButtons navigate={navigate} />
-      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
+      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">נתונים ודוחות</h2>
       <CardGrid cards={cards} navigate={navigate} />
     </>
   );
