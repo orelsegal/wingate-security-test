@@ -415,7 +415,7 @@ const StudentProfilePage = () => {
             <div className="mb-5">
               <label className="text-[11px] text-muted-foreground font-medium mb-2 block">רמת לימוד ({tabSubject})</label>
               <div className="flex gap-2">
-                {[3, 4, 5].map((level) => (
+                {(["לשון","תנך","תנ״ך","היסטוריה","ספרות","אזרחות","חינוך גופני"].includes(tabSubject) ? [2] : [3, 4, 5]).map((level) => (
                   <button
                     key={level}
                     onClick={() => isEditable && saveSubjectLevel(tabSubject, level)}

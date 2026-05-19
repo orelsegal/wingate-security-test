@@ -184,6 +184,8 @@ export default function StudentFormModal({ open, onClose, student, duplicate }: 
             <p className="text-[11px] font-semibold text-muted-foreground tracking-wide">יחידות לימוד לכל מקצוע</p>
             <div className="space-y-2">
               {subjectsList.map((subject) => {
+                const TWO_UNIT_ONLY = ["לשון", "תנך", "תנ״ך", "היסטוריה", "ספרות", "אזרחות", "חינוך גופני"];
+                const levelOptions = TWO_UNIT_ONLY.includes(subject) ? [2] : [3, 4, 5];
                 const current = subject === "מתמטיקה"
                   ? parseInt(form.math_level)
                   : form.subject_levels[subject] || 0;
@@ -191,7 +193,7 @@ export default function StudentFormModal({ open, onClose, student, duplicate }: 
                   <div key={subject} className="flex items-center gap-3">
                     <Label className="text-[12px] flex-1 text-foreground">{subject}</Label>
                     <div className="flex gap-1">
-                      {[3, 4, 5].map((l) => (
+                      {levelOptions.map((l) => (
                         <button
                           key={l}
                           type="button"
