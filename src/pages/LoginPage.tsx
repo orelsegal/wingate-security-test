@@ -59,7 +59,8 @@ const LoginPage = () => {
       logActivity(fullName, role as never, email.trim(), "login", target);
 
       setExiting(true);
-      setTimeout(() => navigate(target), 400);
+      // Show olympic-rings splash, then navigate
+      setTimeout(() => navigate(target), 1400);
     } catch {
       setError("שגיאה בלתי צפויה. נסה/י שוב.");
       setLoading(false);
