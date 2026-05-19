@@ -177,7 +177,7 @@ const StudentHomePage = () => {
       {/* Subject Progress */}
       {progress.length > 0 && (
         <section className="mb-7">
-          <h2 className="text-[11.5px] font-medium text-primary/60 mb-3 tracking-tight">מצב לימודי לפי מקצוע</h2>
+          <h2 className="text-[11.5px] font-medium text-primary/60 mb-3 tracking-tight">התקדמות לימודית לפי מקצוע</h2>
           <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)]">
             <div className="flex flex-col gap-3">
               {progress.slice(0, 6).map((sp: any, i: number) => {
