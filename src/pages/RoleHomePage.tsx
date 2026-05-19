@@ -1,7 +1,7 @@
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useStudents } from "@/hooks/useStudents";
+import { useStudents, useSubjects } from "@/hooks/useStudents";
 import { useMemo, useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, Database, BarChart3, BookOpen, ClipboardEdit,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import WingateBadge from "@/components/WingateBadge";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
+import DashboardContent from "@/components/DashboardContent";
 
 /* ═══ Role Titles ═══ */
 const roleTitles: Record<UserRole, string> = {
