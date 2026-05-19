@@ -86,7 +86,9 @@ const StudentProfilePage = () => {
   const [savedMsg, setSavedMsg] = useState(false);
   const [activeSubjectTab, setActiveSubjectTab] = useState<string | null>(null);
 
-  const isEditable = user?.role === "admin" || user?.role === "teacher";
+  const { canEdit: editModeActive } = useEditMode();
+  // Admin Builder — Phase 1: only admins can edit, and only while Edit Mode is active.
+  const isEditable = editModeActive;
 
   // Per-subject level helper. Math uses math_level; others use subject_levels jsonb.
   const subjectLevels = ((student as any)?.subject_levels || {}) as Record<string, number>;
