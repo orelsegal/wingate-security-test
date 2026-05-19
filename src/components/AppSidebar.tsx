@@ -14,8 +14,8 @@ const roleTitles: Record<UserRole, string> = {
 };
 
 const allMenuItems = [
-  { title: "עמוד הבית", icon: Home, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
-  { title: "עמוד הבית", icon: Home, path: "/student-home", roles: ["student"] },
+  { title: "תמונת מצב", icon: Home, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
+  { title: "תמונת מצב", icon: Home, path: "/student-home", roles: ["student"] },
   { title: "הקורסים שלי", icon: BookOpen, path: "/teacher-courses", roles: ["teacher"] },
   { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
   { title: "קבוצות", icon: Layers, path: "/groups", roles: ["admin", "teacher", "coach"] },

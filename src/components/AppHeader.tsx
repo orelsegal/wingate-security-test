@@ -24,7 +24,7 @@ const roleTitles: Record<UserRole, string> = {
 const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => {
   const location = useLocation();
   const path = location.pathname;
-  const homeLabel = role ? roleTitles[role] : "עמוד הבית";
+  const homeLabel = role ? roleTitles[role] : "תמונת מצב";
 
   if (path === "/" || path === "/student-home") return { crumbs: [], title: homeLabel };
 
@@ -94,7 +94,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         {/* CENTER: Page title */}
         <div className="absolute left-1/2 -translate-x-1/2 text-center">
           <h1 className="text-[14px] md:text-[15px] font-semibold text-foreground tracking-tight leading-tight">
-            {isHome ? (user ? roleTitles[user.role] : "עמוד הבית") : title}
+            {isHome ? (user ? roleTitles[user.role] : "תמונת מצב") : title}
           </h1>
         </div>
 

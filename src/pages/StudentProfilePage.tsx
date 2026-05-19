@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert, ChevronDown, Loader2, FileText, Stethoscope, Languages, Check, GraduationCap, Hash, ClipboardList, PenLine } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
-import { useStudent, useStudentProgress, useStudentRoadmap, useUpdateStudent, statusConfig, type StatusType } from "@/hooks/useStudents";
+import { useStudent, useStudentProgress, useStudentRoadmap, useUpdateStudent, useSubjects, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +74,7 @@ const StudentProfilePage = () => {
   const updateStudent = useUpdateStudent();
   const { data: student, isLoading: studentLoading } = useStudent(id || "");
   const { data: subjectProgress = [], isLoading: progressLoading } = useStudentProgress(id || "");
+  const { data: allSubjects = [] } = useSubjects();
 
   const [mathLevel, setMathLevel] = useState<number | null>(null);
   const effectiveMathLevel = mathLevel ?? student?.math_level ?? 3;
@@ -417,9 +418,31 @@ const StudentProfilePage = () => {
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
           <h3 className="text-[14px] font-semibold text-foreground">מקצועות לימוד</h3>
-          <span className="text-[11px] text-muted-foreground/50 bg-accent/50 px-2 py-0.5 rounded-full">{subjectProgress.length}</span>
+          <span className="text-[11px] text-muted-foreground/50 bg-accent/50 px-2 py-0.5 rounded-full">{allSubjects.length}</span>
         </div>
+
+        {/* All subjects — quick navigation */}
+        {allSubjects.length > 0 && (
+          <div className="mb-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            {allSubjects.map((s: any) => (
+              <button
+                key={s.id}
+                onClick={() => navigate(`/subjects/${encodeURIComponent(s.subject_name)}`)}
+                className="group bg-card rounded-xl border border-border p-3 text-start transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 hover:border-primary/30 cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <BookOpen className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <span className="text-[12.5px] font-semibold text-foreground truncate">{s.subject_name}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="space-y-3">
+
           {subjectProgress.map((sp) => {
             const subjName = (sp as any).subjects?.subject_name || "";
             const isOpen = expanded === subjName;
