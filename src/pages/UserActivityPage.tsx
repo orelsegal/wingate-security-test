@@ -60,6 +60,7 @@ const getStatusBadge = (lastDate: string) => {
 type StatusFilter = "all" | "active_today" | "active_week" | "inactive_3" | "inactive_7";
 
 const UserActivityPage = () => {
+  const { labels } = useUiLabels();
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -158,8 +159,8 @@ const UserActivityPage = () => {
   return (
     <div className="space-y-6" dir="rtl">
       <div>
-        <h1 className="text-xl font-bold text-foreground">פעילות משתמשים</h1>
-        <p className="text-sm text-muted-foreground mt-1">מעקב כניסות ופעילות במערכת</p>
+        <h1 className="text-xl font-bold text-foreground">{labels.pages.userActivity.title}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{labels.pages.userActivity.subtitle}</p>
       </div>
 
       {/* Summary Cards */}
