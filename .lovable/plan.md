@@ -1,149 +1,54 @@
-# Global Admin Builder / Label Manager — Phased Plan
+# בונה ממשק — Visual Admin Builder (Phase 1 Foundation)
 
-## Phase A — Analysis (findings)
+## Why the current label table is not enough
+The existing `/admin/labels` page is a flat form: an accordion with text inputs per label. It edits strings only, away from where they appear. It cannot touch visibility, style, layout, role-permissions or non-text elements (cards, buttons, sidebar items, badges). It feels like a settings screen, not a builder.
 
-After scanning the codebase, here is where UI text currently lives:
+## Builder architecture to add
 
-**1. Navigation labels** — `src/components/AppSidebar.tsx`
-- `allMenuItems[]` (titles like "ספורטאים", "התקדמות לימודית", "קבוצות", "הזנת נתונים", "לוח שנה", "פעילות משתמשים", "ניהול מערכת", "שנת 2026", "הקורסים שלי", "תמונת מצב")
-- `roleTitles` map ("מרכז ניהול", "מרכז עבודה", "המרחב שלי"…)
-- "הודעות" button label
-- "סמסטר א׳ תשפ״ה" badge
+### Concepts
+- **EditableElement** — wrapper component any page uses to mark a UI node as editable. Registers itself into the builder registry with: `id`, `type` (title/section/card/button/nav-item/badge/field), `pageKey`, `defaultLabel`, optional `defaultIcon`. Renders children with hover outline + type chip + edit handle when builder Edit Mode is on.
+- **BuilderRegistry** (in-memory) — list of every mounted editable element on the current page, used to build the left structure tree.
+- **BuilderOverridesContext** — extends current `UiLabelsContext` pattern. Stores per-element overrides: `{ label?, visible?, style?, layout?, roleVisibility?, roleEdit? }`. localStorage-persisted (`wingate_builder_overrides_v1`). Keyed by stable `elementId`.
+- **BuilderUIContext** — ephemeral UI state: `editMode`, `selectedElementId`, `previewRole`, `mode: 'edit' | 'preview'`.
+- **useEditableElement(id, defaults)** hook — returns resolved props (label, visible, style classes) after applying overrides + role filter.
 
-**2. Role labels** — `src/context/AuthContext.tsx` → `roleLabels`, `roleDescriptions`
+### New components
+- `src/components/builder/EditableElement.tsx` — wrapper with outline/handle/click-to-select.
+- `src/components/builder/BuilderToolbar.tsx` — top bar: עריכה / תצוגה מקדימה / צפייה כ-role / שמור / איפוס.
+- `src/components/builder/StructurePanel.tsx` — left tree from registry.
+- `src/components/builder/ElementSettingsPanel.tsx` — right panel with 5 tabs: תוכן / סטייל / פריסה / הרשאות / מתקדם.
+- `src/components/builder/BuilderWorkspace.tsx` — the new בונה ממשק page shell (toolbar + structure + canvas iframe-of-routes + settings).
+- `src/context/BuilderUIContext.tsx`, `src/context/BuilderOverridesContext.tsx`.
+- `src/config/builderRegistry.ts` — types + helpers.
 
-**3. Page titles & section titles** — hardcoded per page:
-- `DashboardContent.tsx`, `StudentsPage.tsx`, `StudentProfilePage.tsx`, `CoursesPage.tsx`, `DataEntryPage.tsx`, `DataManagementPage.tsx`, `GroupsPage.tsx`, `CalendarPage.tsx`, `UserActivityPage.tsx`, `RoleHomePage.tsx`, `YearPlan2026Page.tsx`, etc.
-- Each page has its own `<h1>` + subtitle + section headers as string literals.
+### Files to edit (Phase 1 wiring only)
+- `src/App.tsx` — wrap with new providers; replace `/admin/labels` element with `BuilderWorkspace` (route path kept for back-compat) and add `/admin/builder` alias.
+- `src/components/AppSidebar.tsx` — rename nav entry to "בונה ממשק"; wrap each nav button in `EditableElement` (type=nav-item).
+- `src/components/DashboardContent.tsx` — wrap admin dashboard page title + each stat/insight card in `EditableElement`.
+- `src/pages/AdminLabelsPage.tsx` — replaced by re-export of `BuilderWorkspace` (kept as file so route import still resolves).
 
-**4. Status labels** — `src/hooks/useStudents.ts` → `statusConfig` ("במסלול", "פערים", "בסיכון")
+## What will be functional now (Phase 1)
+- Admin-only "מצב עריכה" toggle in the Builder workspace top toolbar.
+- Click any wrapped element (sidebar items, admin dashboard title + cards) to select it.
+- Right settings panel with working: **תוכן** (label/subtitle text), **פריסה** (show/hide, order placeholder), **הרשאות** (per-role visibility checkboxes), **מתקדם** (element key, reset). **סטייל** tab present with 3 working presets (clean/bordered/elevated) applied via class tokens.
+- Left structure panel listing all registered elements on the previewed page.
+- Preview-as-role selector that re-renders the canvas with that role's visibility rules applied.
+- localStorage persistence + per-element reset + global reset.
+- Non-admin users see zero builder UI; overrides apply silently to their normal view.
 
-**5. Common buttons** — scattered ("שמור", "ביטול", "הוסף", "ייצוא", "סינון"…)
+## What is placeholder for later
+- Drag-and-drop reordering (order field stored, no DnD UI yet).
+- Icon picker (shows current icon name as text input).
+- Canvas = embedded route render of current admin pages; only Sidebar + Admin Dashboard are wrapped in Phase 1. Students, Profile, Reports, Roadmaps, Data Entry, Activity Logs get wrapped in Phase 2.
+- Custom (admin-created) elements — Phase 3.
+- Supabase persistence — Phase 4 (table `builder_overrides` with admin RLS; current localStorage shape maps 1:1 to a JSON column).
+- Advanced style controls (shadow/radius/bg color pickers) — Phase 2.
 
-**6. Field labels** — `StudentFormModal.tsx`, inline edit forms.
-
-**7. Builder layer already exists** for the Student Profile only — `BuilderContext.tsx`, `BuilderPanel.tsx`. Limited to per-page sections/fields, not global labels.
-
-### Safe to make configurable now
-- Sidebar nav titles
-- Role titles ("מרכז ניהול"…) and role labels
-- Top-level page titles & subtitles (admin pages)
-- Dashboard card titles
-- Common button text ("שמור", "ביטול"…)
-- Status labels
-
-### Should stay fixed for now
-- Routes, route paths, component names
-- Data field semantics (subject names, sport names — these are real data, not UI labels)
-- Hebrew academic terminology in memory ("במסלול"/"פערים"/"בסיכון" — configurable text only, but defaults locked)
-- Auth/DB/RLS/edge functions
-
----
-
-## Phase B — Centralized config (will implement)
-
-Create `src/config/uiLabels.ts` exporting a typed `defaultUiLabels` object:
-
-```text
-uiLabels = {
-  nav: { dashboard, students, courses, dataEntry, calendar, groups,
-         userActivity, dataManagement, yearPlan, teacherCourses,
-         studentHome, messages, semester },
-  roleTitles: { admin, teacher, student, parent, coach },
-  roleLabels: { admin, teacher, student, parent, coach },
-  pages: {
-    adminDashboard: { title, subtitle },
-    students:       { title, subtitle },
-    studentProfile: { title },
-    courses:        { title, subtitle },
-    dataEntry:      { title, subtitle },
-    dataManagement: { title, subtitle },
-    groups:         { title, subtitle },
-    calendar:       { title, subtitle },
-    userActivity:   { title, subtitle },
-    roadmap:        { title },
-  },
-  cards: { /* dashboard card titles */ },
-  buttons: { save, cancel, add, edit, delete, export, filter, search, close, confirm },
-  statuses: { onTrack, gaps, atRisk },
-  visibility: { /* per-key boolean toggles, default true */ },
-}
-```
-
-Plus a React context `UiLabelsProvider` + `useUiLabels()` hook with in-memory override + `localStorage` persistence (key `wingate_ui_labels_overrides`). No DB.
-
----
-
-## Phase C — Wire into admin-facing UI
-
-Replace hardcoded strings in these files with `useUiLabels()`:
-- `src/components/AppSidebar.tsx` (nav titles, role titles, messages, semester)
-- `src/context/AuthContext.tsx` — keep `roleLabels` export but back it by defaults (no runtime dependency; sidebar will read from labels context)
-- `src/components/DashboardContent.tsx` (title, subtitle, card titles)
-- `src/pages/StudentsPage.tsx` (title, subtitle)
-- `src/pages/CoursesPage.tsx` (title, subtitle)
-- `src/pages/DataEntryPage.tsx` (title)
-- `src/pages/DataManagementPage.tsx` (title)
-- `src/pages/UserActivityPage.tsx` (title)
-
-Logic untouched. Only `<h1>`/subtitle/menu strings change source.
-
----
-
-## Phase D — Admin page "ניהול תצוגה ולייבלים"
-
-New route `/admin/labels` (admin only — redirect silently otherwise).
-New file `src/pages/AdminLabelsPage.tsx` with grouped accordion sections:
-1. ניווט
-2. דשבורד מנהל
-3. ספורטאים
-4. התקדמות לימודית
-5. מפת דרכים
-6. נתונים ודוחות
-7. משתמשים והרשאות
-8. כפתורים וטקסטים כלליים
-9. סטטוסים
-
-Each row: current label, editable input, "אפס לברירת מחדל", visibility switch (only for nav items where hiding is safe).
-
-Add link "ניהול תצוגה ולייבלים" to sidebar under admin-only items.
-
----
-
-## Files I will touch
-
-**Create**
-- `src/config/uiLabels.ts` — default labels + types
-- `src/context/UiLabelsContext.tsx` — provider, hook, localStorage persistence
-- `src/pages/AdminLabelsPage.tsx` — editor UI
-
-**Edit**
-- `src/App.tsx` — wrap with `UiLabelsProvider`, add `/admin/labels` route
-- `src/components/AppSidebar.tsx` — read titles + role titles from context, add admin link, honor visibility
-- `src/components/DashboardContent.tsx` — title/subtitle/cards from context
-- `src/pages/StudentsPage.tsx` — title/subtitle from context
-- `src/pages/CoursesPage.tsx` — title/subtitle from context
-- `src/pages/DataEntryPage.tsx` — title from context
-- `src/pages/DataManagementPage.tsx` — title from context
-- `src/pages/UserActivityPage.tsx` — title from context
-
-**Not touched**
-- Routes, DB, RLS, auth, edge functions, types.ts
-- Student Profile builder (existing Phase 2 work stays)
-- Per-page section internals, status colors, business logic
-- Teacher/parent/coach/student-specific pages (Phase later)
-
----
-
-## Phase E — (NOT implementing now)
-
-Future: persist `uiLabels` overrides in a new `app_settings` table (JSON column, single row, admin-only RLS). Will request approval before adding.
-
----
+## What stays untouched
+Routes, auth, RLS, DB schema, real data, business logic, existing pages' content, Student Profile builder (`BuilderContext`), `UiLabelsContext` (kept for back-compat; new system reads from it as fallback for nav labels).
 
 ## Risks
-- Many pages still hardcoded — admin will see only the centralized subset editable. Will be documented in the admin page header.
-- Hiding a nav item could lock admin out of an area — visibility toggles limited to safe items, with a note.
-- localStorage-only persistence means overrides are per-browser until Phase E.
-
-Proceeding to implement Phases B + C + D after approval.
+- Wrapping many nodes in `EditableElement` adds render overhead — mitigated by no-op render when `editMode=false` and user is not admin.
+- localStorage drift across browsers until Phase 4.
+- Hiding a sidebar item via role-visibility could lock admin out — guarded by always forcing admin role to bypass hide rules in edit mode.
+- Two overlapping override systems (`UiLabelsContext` + new `BuilderOverridesContext`) during transition — resolved by reading old labels as defaults when no new override exists.
