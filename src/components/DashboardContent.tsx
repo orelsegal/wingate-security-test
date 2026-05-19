@@ -102,10 +102,9 @@ const DashboardContent = () => {
         </div>
 
         {!isTeacher && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
             {[
               { label: "ספורטאים", value: String(totalStudents), icon: Users, sub: "פעילים במערכת" },
-              { label: "התקדמות לימודית", value: String(totalStatuses), icon: BarChart3, sub: `${totalStudents} × ${totalSubjects} מקצועות` },
               { label: "ממוצע כללי", value: avgScore, icon: TrendingUp, sub: "ממוצע משוקלל" },
               { label: "בסיכון", value: String(redCount), icon: AlertTriangle, sub: "דורשים טיפול" },
             ].map((stat) => (
