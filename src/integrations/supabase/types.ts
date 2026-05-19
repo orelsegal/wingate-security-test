@@ -231,6 +231,7 @@ export type Database = {
           archived: boolean | null
           avg_score: number | null
           bagrut_accommodations: string | null
+          birth_year: number | null
           book_grade: number | null
           book_name: string | null
           class_name: string
@@ -238,6 +239,8 @@ export type Database = {
           completion_percent: number
           created_at: string
           diagnosis_status: string | null
+          email: string | null
+          emergency_contact: string | null
           english_support: string | null
           exams_completed: string | null
           first_name: string | null
@@ -246,16 +249,20 @@ export type Database = {
           last_name: string | null
           last_updated_at: string | null
           math_level: number | null
+          national_id: string | null
           notes: string | null
           overall_status: string
           parent_user_id: string | null
+          phone: string | null
           sport: string
+          subject_levels: Json | null
           summative_assessment: string | null
         }
         Insert: {
           archived?: boolean | null
           avg_score?: number | null
           bagrut_accommodations?: string | null
+          birth_year?: number | null
           book_grade?: number | null
           book_name?: string | null
           class_name: string
@@ -263,6 +270,8 @@ export type Database = {
           completion_percent?: number
           created_at?: string
           diagnosis_status?: string | null
+          email?: string | null
+          emergency_contact?: string | null
           english_support?: string | null
           exams_completed?: string | null
           first_name?: string | null
@@ -271,16 +280,20 @@ export type Database = {
           last_name?: string | null
           last_updated_at?: string | null
           math_level?: number | null
+          national_id?: string | null
           notes?: string | null
           overall_status?: string
           parent_user_id?: string | null
+          phone?: string | null
           sport: string
+          subject_levels?: Json | null
           summative_assessment?: string | null
         }
         Update: {
           archived?: boolean | null
           avg_score?: number | null
           bagrut_accommodations?: string | null
+          birth_year?: number | null
           book_grade?: number | null
           book_name?: string | null
           class_name?: string
@@ -288,6 +301,8 @@ export type Database = {
           completion_percent?: number
           created_at?: string
           diagnosis_status?: string | null
+          email?: string | null
+          emergency_contact?: string | null
           english_support?: string | null
           exams_completed?: string | null
           first_name?: string | null
@@ -296,10 +311,13 @@ export type Database = {
           last_name?: string | null
           last_updated_at?: string | null
           math_level?: number | null
+          national_id?: string | null
           notes?: string | null
           overall_status?: string
           parent_user_id?: string | null
+          phone?: string | null
           sport?: string
+          subject_levels?: Json | null
           summative_assessment?: string | null
         }
         Relationships: []
