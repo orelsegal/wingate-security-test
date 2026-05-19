@@ -419,9 +419,10 @@ const StudentProfilePage = () => {
           ))}
         </div>
       </div>
+      )}
 
       {/* ═══ PER-SUBJECT DETAILS TABS ═══ */}
-      {allSubjects.length > 0 && (() => {
+      {isSectionVisible("sys-subjects") && allSubjects.length > 0 && (() => {
         const tabSubject = activeSubjectTab || allSubjects[0].subject_name;
         const extras = getSubjectExtras(tabSubject);
         const tabLevel = getSubjectLevel(tabSubject);
