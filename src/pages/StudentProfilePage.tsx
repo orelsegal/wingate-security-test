@@ -11,6 +11,10 @@ import { toast } from "sonner";
 import { InlineEdit, InlineSelect, ChipEditor } from "@/components/InlineEdit";
 import { EditModeToggle } from "@/components/EditModeToggle";
 import { useEditMode } from "@/context/EditModeContext";
+import { useBuilder } from "@/context/BuilderContext";
+import { BuilderPanel } from "@/components/builder/BuilderPanel";
+import { CustomSectionsRenderer } from "@/components/builder/CustomSectionsRenderer";
+import { Wrench } from "lucide-react";
 import DataExportTools from "@/components/DataExportTools";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -87,8 +91,18 @@ const StudentProfilePage = () => {
   const [activeSubjectTab, setActiveSubjectTab] = useState<string | null>(null);
 
   const { canEdit: editModeActive } = useEditMode();
-  // Admin Builder — Phase 1: only admins can edit, and only while Edit Mode is active.
+  const { layout: builderLayout } = useBuilder();
+  const [builderOpen, setBuilderOpen] = useState(false);
+  // Admin Builder — Phase 2: admins can edit fields and open the visual builder panel.
   const isEditable = editModeActive;
+  const userRole = (user?.role || "student") as any;
+  const isSectionVisible = (id: string) => {
+    const sec = builderLayout.sections.find((s) => s.id === id);
+    if (!sec) return true;
+    return sec.visible && sec.visibleRoles.includes(userRole);
+  };
+  const sectionTitle = (id: string, fallback: string) =>
+    builderLayout.sections.find((s) => s.id === id)?.title || fallback;
 
   // Per-subject level helper. Math uses math_level; others use subject_levels jsonb.
   const subjectLevels = ((student as any)?.subject_levels || {}) as Record<string, number>;
@@ -264,22 +278,35 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* Admin Builder — Phase 1: Edit Mode toggle (admins only) */}
+      {/* Admin Builder — Phase 2: Edit Mode + Visual Builder */}
       {user?.role === "admin" && (
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             {editModeActive ? (
-              <span className="text-primary font-medium">מצב עריכה פעיל — שדות הניתנים לעריכה מסומנים בעיפרון</span>
+              <span className="text-primary font-medium">מצב בנייה פעיל — סקציות ושדות ניתנים לעריכה. פתחו את הבונה לפעולות מתקדמות.</span>
             ) : (
-              <span>מצב צפייה — לחצו על "מצב עריכה" כדי לערוך שדות</span>
+              <span>מצב צפייה — הפעילו את מצב הבנייה כדי לערוך פריסה ושדות</span>
             )}
           </div>
-          <EditModeToggle />
+          <div className="flex items-center gap-2">
+            {editModeActive && (
+              <button
+                onClick={() => setBuilderOpen(true)}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[12px] font-medium hover:bg-primary/90 transition"
+              >
+                <Wrench className="h-3.5 w-3.5" />
+                בונה הפרופיל
+              </button>
+            )}
+            <EditModeToggle />
+          </div>
         </div>
       )}
 
+      <BuilderPanel open={builderOpen} onClose={() => setBuilderOpen(false)} />
 
       {/* ═══ HERO CARD ═══ */}
+      {isSectionVisible("sys-hero") && (
       <div className="card-premium p-5 md:p-7">
         <div className="flex flex-col sm:flex-row items-start gap-5">
           <InitialsAvatar name={student.full_name} size="lg" />
@@ -363,8 +390,10 @@ const StudentProfilePage = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* ═══ MATH LEVEL SELECTOR ═══ */}
+      {isSectionVisible("sys-math") && (
       <div className="card-premium p-5 md:p-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -390,9 +419,10 @@ const StudentProfilePage = () => {
           ))}
         </div>
       </div>
+      )}
 
       {/* ═══ PER-SUBJECT DETAILS TABS ═══ */}
-      {allSubjects.length > 0 && (() => {
+      {isSectionVisible("sys-subjects") && allSubjects.length > 0 && (() => {
         const tabSubject = activeSubjectTab || allSubjects[0].subject_name;
         const extras = getSubjectExtras(tabSubject);
         const tabLevel = getSubjectLevel(tabSubject);
@@ -530,10 +560,11 @@ const StudentProfilePage = () => {
       )}
 
       {/* ═══ SUBJECT PROGRESS — EXPANDABLE ═══ */}
+      {isSectionVisible("sys-roadmap") && (
       <div>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
-          <h3 className="text-[14px] font-semibold text-foreground">מפת דרכים</h3>
+          <h3 className="text-[14px] font-semibold text-foreground">{sectionTitle("sys-roadmap", "מפת דרכים")}</h3>
           <span className="text-[11px] text-muted-foreground/50 bg-accent/50 px-2 py-0.5 rounded-full">{allSubjects.length}</span>
         </div>
 
@@ -757,6 +788,10 @@ const StudentProfilePage = () => {
           })}
         </div>
       </div>
+      )}
+
+      {/* Admin-defined custom sections */}
+      <CustomSectionsRenderer studentId={student.id} />
     </div>
   );
 };

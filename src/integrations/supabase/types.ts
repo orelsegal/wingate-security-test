@@ -79,6 +79,30 @@ export type Database = {
           },
         ]
       }
+      builder_layouts: {
+        Row: {
+          id: string
+          layout: Json
+          page_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          layout?: Json
+          page_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          layout?: Json
+          page_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -130,6 +154,27 @@ export type Database = {
           id?: string
           notes?: string | null
           sport_name?: string
+        }
+        Relationships: []
+      }
+      student_custom_values: {
+        Row: {
+          field_key: string
+          student_id: string
+          updated_at: string
+          value: Json | null
+        }
+        Insert: {
+          field_key: string
+          student_id: string
+          updated_at?: string
+          value?: Json | null
+        }
+        Update: {
+          field_key?: string
+          student_id?: string
+          updated_at?: string
+          value?: Json | null
         }
         Relationships: []
       }

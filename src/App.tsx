@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { EditModeProvider } from "@/context/EditModeContext";
+import { BuilderProvider } from "@/context/BuilderContext";
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
@@ -54,6 +55,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <EditModeProvider>
+        <BuilderProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -88,6 +90,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </BrowserRouter>
+        </BuilderProvider>
         </EditModeProvider>
       </AuthProvider>
     </TooltipProvider>
