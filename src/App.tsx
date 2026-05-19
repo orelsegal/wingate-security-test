@@ -30,6 +30,7 @@ import BagrutGradingPage from "./pages/BagrutGradingPage.tsx";
 import TeacherCoursesPage from "./pages/TeacherCoursesPage.tsx";
 import TeacherCourseDetailPage from "./pages/TeacherCourseDetailPage.tsx";
 import UserActivityPage from "./pages/UserActivityPage.tsx";
+import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
