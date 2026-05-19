@@ -264,7 +264,20 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* Back button removed — breadcrumbs handle navigation */}
+      {/* Admin Builder — Phase 1: Edit Mode toggle (admins only) */}
+      {user?.role === "admin" && (
+        <div className="flex items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            {editModeActive ? (
+              <span className="text-primary font-medium">מצב עריכה פעיל — שדות הניתנים לעריכה מסומנים בעיפרון</span>
+            ) : (
+              <span>מצב צפייה — לחצו על "מצב עריכה" כדי לערוך שדות</span>
+            )}
+          </div>
+          <EditModeToggle />
+        </div>
+      )}
+
 
       {/* ═══ HERO CARD ═══ */}
       <div className="card-premium p-5 md:p-7">
