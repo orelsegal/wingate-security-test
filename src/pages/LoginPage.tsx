@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/hooks/useActivityLogger";
 import WingateBadge from "@/components/WingateBadge";
+import OlympicLoader from "@/components/OlympicLoader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -58,7 +59,8 @@ const LoginPage = () => {
       logActivity(fullName, role as never, email.trim(), "login", target);
 
       setExiting(true);
-      setTimeout(() => navigate(target), 400);
+      // Show olympic-rings splash, then navigate
+      setTimeout(() => navigate(target), 1400);
     } catch {
       setError("שגיאה בלתי צפויה. נסה/י שוב.");
       setLoading(false);
@@ -66,7 +68,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div
+    <>
+      {exiting && <OlympicLoader />}
+      <div
       className={`min-h-screen bg-background flex items-center justify-center relative overflow-hidden transition-all duration-500 ${
         exiting ? "opacity-0 scale-[1.02]" : "opacity-100 scale-100"
       }`}
@@ -189,7 +193,8 @@ const LoginPage = () => {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

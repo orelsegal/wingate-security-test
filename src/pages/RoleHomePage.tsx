@@ -1,7 +1,7 @@
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useStudents } from "@/hooks/useStudents";
+import { useStudents, useSubjects } from "@/hooks/useStudents";
 import { useMemo, useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, Database, BarChart3, BookOpen, ClipboardEdit,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import WingateBadge from "@/components/WingateBadge";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
+import DashboardContent from "@/components/DashboardContent";
 
 /* ═══ Role Titles ═══ */
 const roleTitles: Record<UserRole, string> = {
@@ -164,6 +165,35 @@ const ContinueCard = ({ navigate }: { navigate: (p: string) => void }) => {
     </div>
   );
 };
+/* ═══ Subjects List ═══ */
+const SubjectsList = ({ navigate }: { navigate: (p: string) => void }) => {
+  const { data: subjects = [] } = useSubjects();
+  if (!subjects.length) return null;
+  return (
+    <div className="mb-7 animate-fade-in-up">
+      <p className="text-[10.5px] font-medium text-primary/50 mb-2.5 tracking-tight">המקצועות שלי</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        {subjects.map((s: any, i: number) => (
+          <button
+            key={s.id}
+            onClick={() => navigate(`/subjects/${encodeURIComponent(s.subject_name)}`)}
+            className="group bg-card rounded-xl border border-border p-3.5 text-start transition-all duration-200 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
+            style={{ animationDelay: `${i * 30}ms` }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                <BookOpen className="h-4 w-4 text-primary/70" strokeWidth={1.5} />
+              </div>
+              <span className="text-[12.5px] font-semibold text-foreground leading-tight flex-1 truncate">{s.subject_name}</span>
+              <ChevronLeft className="h-3.5 w-3.5 text-border group-hover:text-primary/50 transition-colors" strokeWidth={1.5} />
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 /* ═══ Main Entry Buttons ═══ */
 const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
@@ -211,15 +241,22 @@ const AdminHome = () => {
       <InsightStrip
         items={[
           { label: "סה״כ ספורטאים", value: students.length, icon: Users, color: "text-primary" },
-          { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
           { label: "דורשים תשומת לב", value: yellowCount, icon: Target, color: "text-[hsl(var(--warning))]" },
+          { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
         ]}
       />
       <AIInsightsPanel students={students} role="admin" navigate={navigate} />
       <ContinueCard navigate={navigate} />
+      <SubjectsList navigate={navigate} />
       <MainEntryButtons navigate={navigate} />
+
       <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">נתונים ודוחות</h2>
       <CardGrid cards={cards} navigate={navigate} />
+
+      {/* Embedded admin dashboard */}
+      <div className="mt-12 -mx-5 md:-mx-10 lg:-mx-14 border-t border-border">
+        <DashboardContent />
+      </div>
     </>
   );
 };
