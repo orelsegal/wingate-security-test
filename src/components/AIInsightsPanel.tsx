@@ -157,7 +157,7 @@ export default function AIInsightsPanel({
       </button>
 
       {!collapsed && (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 mt-3">
           {insights.map((insight, i) => {
             const style = typeStyles[insight.type];
             return (
