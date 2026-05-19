@@ -23,6 +23,7 @@ const allMenuItems = [
   { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
   { title: "לוח שנה", icon: CalendarDays, path: "/calendar", roles: ["admin", "teacher", "coach", "student", "parent"] },
   { title: "פעילות משתמשים", icon: Activity, path: "/user-activity", roles: ["admin"] },
+  { title: "שנת 2026", icon: CalendarRange, path: "/year-plan-2026", roles: ["admin"] },
   { title: "ניהול מערכת", icon: Database, path: "/data-management", roles: ["admin"] },
 ];
 
