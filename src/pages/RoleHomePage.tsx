@@ -280,10 +280,8 @@ const CoachHome = () => {
   const redCount = myStudents.filter((s) => s.overall_status === "red").length;
 
   const cards: ActionCard[] = [
-    { id: "students", title: "ספורטאי הענף", description: `צפייה בספורטאי ${mySport || "הענף"}`, icon: Dumbbell, color: "bg-[hsl(25,35%,92%)]", iconColor: "text-[hsl(25,50%,45%)]", path: "/students" },
-    { id: "status", title: "מצב לימודי לפי ענף", description: "סקירת התקדמות לימודית של הענף", icon: BookOpen, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/courses" },
+    { id: "status", title: "התקדמות לימודית לפי ענף", description: "סקירת התקדמות לימודית של הענף", icon: BookOpen, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/courses" },
     { id: "risk", title: "דורשים תשומת לב", description: "ספורטאים עם סטטוס אדום או צהוב", icon: AlertTriangle, color: "bg-[hsl(0,35%,94%)]", iconColor: "text-destructive", path: "/students?status=red" },
-    { id: "data-entry", title: "עדכונים", description: "הזנת נתונים והערות", icon: ClipboardEdit, color: "bg-primary/10", iconColor: "text-primary", path: "/data-entry" },
   ];
 
   return (
