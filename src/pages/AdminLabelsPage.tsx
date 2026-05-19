@@ -1,262 +1,163 @@
 /**
- * Admin-only labels editor — "ניהול תצוגה ולייבלים".
+ * AdminBuilderPage — "בונה ממשק"
  *
- * Phase D of the Admin Builder. Edits live UI labels via UiLabelsContext.
- * Persistence is local (browser only) until Phase E adds backend storage.
+ * The Visual Admin Builder workspace. Admin-only. This page replaces the
+ * previous flat label-table editor. Instead of editing labels in a form,
+ * the admin turns on Edit Mode here and edits the live app directly via
+ * the floating BuilderOverlay (toolbar + structure + settings panels).
  *
- * Non-admin users are silently redirected to "/".
+ * This page itself is the landing/help hub: it explains the workflow,
+ * surfaces quick links to admin-visible pages, and shows all current
+ * overrides so the admin can review or reset them.
  */
-import { useMemo } from "react";
-import { Navigate } from "react-router-dom";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { SlidersHorizontal, RotateCcw, Info } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useUiLabels } from "@/context/UiLabelsContext";
-import { defaultUiLabels } from "@/config/uiLabels";
-import { toast } from "sonner";
+import { useBuilderUI } from "@/context/BuilderUIContext";
+import { useBuilderOverrides } from "@/context/BuilderOverridesContext";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Pencil, Layers, Eye, RotateCcw, ArrowLeft, Sparkles, MousePointerClick, Shield, Palette } from "lucide-react";
 
-type Path = (string | number)[];
+const QUICK_LINKS = [
+  { label: "תמונת מצב", path: "/" },
+  { label: "ספורטאים", path: "/students" },
+  { label: "התקדמות לימודית", path: "/courses" },
+  { label: "הזנת נתונים", path: "/data-entry" },
+  { label: "ניהול נתונים", path: "/data-management" },
+  { label: "פעילות משתמשים", path: "/user-activity" },
+];
 
-interface Row {
-  path: Path;
-  label: string;
-  /** Show a visibility toggle next to this row, mapped to visibility.nav[key] */
-  visibilityNavKey?: string;
-}
+const FEATURES = [
+  { icon: MousePointerClick, title: "בחירה ויזואלית", body: "לחיצה על כל רכיב — כותרת, כרטיס, פריט תפריט — תפתח חלונית הגדרות." },
+  { icon: Pencil, title: "עריכת תוכן", body: "טקסט, כותרת משנה וטקסט עזרה — הכל נשמר אוטומטית בדפדפן." },
+  { icon: Palette, title: "סטייל", body: "החלפת סגנון כרטיס: נקי / מסגרת / מוגבה / מודגש." },
+  { icon: Shield, title: "הרשאות לפי תפקיד", body: "בחר אילו תפקידים יראו כל רכיב." },
+  { icon: Eye, title: "צפייה כתפקיד אחר", body: "פתח את התצוגה בעיני מורה, הורה, מאמן או תלמיד." },
+  { icon: Layers, title: "מבנה העמוד", body: "עץ כל הרכיבים הניתנים לעריכה בעמוד הנוכחי." },
+];
 
-interface Group {
-  id: string;
-  title: string;
-  rows: Row[];
-}
-
-const get = (obj: any, path: Path) => path.reduce((a, k) => (a == null ? a : a[k]), obj);
-
-const AdminLabelsPage = () => {
+const AdminBuilderPage = () => {
   const { user } = useAuth();
-  const { labels, setLabel, resetPath, resetAll, hasOverrides } = useUiLabels();
+  const navigate = useNavigate();
+  const ui = useBuilderUI();
+  const ov = useBuilderOverrides();
 
-  if (!user || user.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
+  if (user && user.role !== "admin") return <Navigate to="/" replace />;
 
-  const groups: Group[] = useMemo(() => [
-    {
-      id: "nav",
-      title: "ניווט",
-      rows: [
-        { path: ["nav", "dashboard"], label: "תמונת מצב (מנהל/מורה/הורה/מאמן)" },
-        { path: ["nav", "studentHome"], label: "תמונת מצב (תלמיד)" },
-        { path: ["nav", "yearPlan"], label: "שנת 2026", visibilityNavKey: "yearPlan" },
-        { path: ["nav", "teacherCourses"], label: "הקורסים שלי" },
-        { path: ["nav", "students"], label: "ספורטאים" },
-        { path: ["nav", "groups"], label: "קבוצות", visibilityNavKey: "groups" },
-        { path: ["nav", "courses"], label: "התקדמות לימודית" },
-        { path: ["nav", "dataEntry"], label: "הזנת נתונים" },
-        { path: ["nav", "calendar"], label: "לוח שנה", visibilityNavKey: "calendar" },
-        { path: ["nav", "userActivity"], label: "פעילות משתמשים", visibilityNavKey: "userActivity" },
-        { path: ["nav", "dataManagement"], label: "ניהול מערכת" },
-        { path: ["nav", "messages"], label: "הודעות", visibilityNavKey: "messages" },
-        { path: ["nav", "semester"], label: "טקסט סמסטר" },
-        { path: ["nav", "adminLabels"], label: "כניסה לניהול תצוגה ולייבלים" },
-      ],
-    },
-    {
-      id: "dashboard",
-      title: "דשבורד מנהל",
-      rows: [
-        { path: ["pages", "adminDashboard", "titleAdmin"], label: "כותרת — מנהל" },
-        { path: ["pages", "adminDashboard", "titleTeacher"], label: "כותרת — מורה" },
-        { path: ["pages", "adminDashboard", "subtitle"], label: "כותרת משנה" },
-      ],
-    },
-    {
-      id: "students",
-      title: "ספורטאים",
-      rows: [
-        { path: ["entities", "student"], label: "ספורטאי (יחיד)" },
-        { path: ["entities", "students"], label: "ספורטאים (רבים)" },
-        { path: ["buttons", "addStudent"], label: "כפתור: הוסף ספורטאי" },
-      ],
-    },
-    {
-      id: "courses",
-      title: "התקדמות לימודית",
-      rows: [
-        { path: ["pages", "courses", "title"], label: "כותרת עמוד" },
-      ],
-    },
-    {
-      id: "roadmap",
-      title: "מפת דרכים",
-      rows: [
-        // Currently rendered inside Student Profile; will be wired in next pass.
-      ],
-    },
-    {
-      id: "data",
-      title: "נתונים ודוחות",
-      rows: [
-        { path: ["pages", "dataEntry", "title"], label: "ממשק ניהול — כותרת" },
-        { path: ["pages", "dataEntry", "subtitle"], label: "ממשק ניהול — תיאור" },
-        { path: ["pages", "dataManagement", "title"], label: "ניהול נתונים — כותרת" },
-        { path: ["pages", "dataManagement", "subtitle"], label: "ניהול נתונים — תיאור" },
-      ],
-    },
-    {
-      id: "users",
-      title: "משתמשים והרשאות",
-      rows: [
-        { path: ["pages", "userActivity", "title"], label: "פעילות משתמשים — כותרת" },
-        { path: ["pages", "userActivity", "subtitle"], label: "פעילות משתמשים — תיאור" },
-        { path: ["roleLabels", "admin"], label: "תפקיד: מנהל" },
-        { path: ["roleLabels", "teacher"], label: "תפקיד: מורה" },
-        { path: ["roleLabels", "coach"], label: "תפקיד: מאמן" },
-        { path: ["roleLabels", "parent"], label: "תפקיד: הורה" },
-        { path: ["roleLabels", "student"], label: "תפקיד: תלמיד" },
-        { path: ["roleTitles", "admin"], label: "כותרת ניווט — מנהל" },
-        { path: ["roleTitles", "teacher"], label: "כותרת ניווט — מורה" },
-        { path: ["roleTitles", "coach"], label: "כותרת ניווט — מאמן" },
-        { path: ["roleTitles", "parent"], label: "כותרת ניווט — הורה" },
-        { path: ["roleTitles", "student"], label: "כותרת ניווט — תלמיד" },
-      ],
-    },
-    {
-      id: "buttons",
-      title: "כפתורים וטקסטים כלליים",
-      rows: [
-        { path: ["buttons", "save"], label: "שמור" },
-        { path: ["buttons", "cancel"], label: "ביטול" },
-        { path: ["buttons", "filter"], label: "סינון" },
-        { path: ["buttons", "manageData"], label: "ניהול נתונים" },
-      ],
-    },
-    {
-      id: "statuses",
-      title: "סטטוסים",
-      rows: [
-        { path: ["statuses", "green"], label: "ירוק — במסלול" },
-        { path: ["statuses", "yellow"], label: "צהוב — פערים" },
-        { path: ["statuses", "red"], label: "אדום — בסיכון" },
-      ],
-    },
-  ], []);
+  const overrideEntries = Object.entries(ov.overrides);
 
   return (
-    <div className="p-5 md:p-10 lg:p-12 max-w-[1100px]" dir="rtl">
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-primary/10">
-            <SlidersHorizontal className="h-5 w-5 text-primary" strokeWidth={1.7} />
+    <div className="p-5 md:p-10 lg:p-12 max-w-[1200px]" dir="rtl">
+      {/* Hero */}
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium mb-3">
+            <Sparkles className="h-3 w-3" strokeWidth={2} />
+            ניסיוני · גרסה 1
           </div>
-          <div>
-            <h1 className="text-xl md:text-[1.5rem] font-bold text-foreground tracking-tight">
-              ניהול תצוגה ולייבלים
-            </h1>
-            <p className="text-[13px] text-muted-foreground mt-1">
-              עריכת טקסטים, כותרות וסטטוסים שמופיעים במערכת. השינויים נשמרים מקומית בדפדפן.
-            </p>
-          </div>
+          <h1 className="text-[26px] md:text-[30px] font-semibold tracking-tight text-foreground">בונה ממשק</h1>
+          <p className="text-[13px] text-muted-foreground mt-2 max-w-[640px] leading-relaxed">
+            עריכת מבנה, תצוגה, סטייל והרשאות של רכיבי המערכת — ישירות מעל הממשק החי.
+            הפעל את מצב העריכה, נווט לעמוד שתרצה להתאים, ולחץ על הרכיב הרצוי.
+          </p>
         </div>
         <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            resetAll();
-            toast.success("כל הלייבלים אופסו לברירת מחדל");
-          }}
-          disabled={!hasOverrides}
-          className="gap-1.5 shrink-0"
+          size="lg"
+          onClick={() => ui.setEditMode(true)}
+          className="gap-2 shrink-0"
         >
-          <RotateCcw className="h-3.5 w-3.5" />
-          איפוס כללי
+          <Pencil className="h-4 w-4" strokeWidth={1.8} />
+          {ui.editMode ? "מצב עריכה פעיל" : "הפעל מצב עריכה"}
         </Button>
       </div>
 
-      <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200/60 text-amber-900 text-[12px] mb-6">
-        <Info className="h-4 w-4 shrink-0 mt-0.5" strokeWidth={1.7} />
-        <p>
-          זוהי גרסה ראשונה — חלק מהטקסטים במערכת עדיין מוטמעים בקוד ויהפכו ניתנים לעריכה בהמשך.
-          ההגדרות נשמרות כרגע בדפדפן הנוכחי; פרסיסטנס כלל-מערכתי יתווסף בשלב הבא.
-        </p>
+      {/* Features grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
+        {FEATURES.map((f) => (
+          <Card key={f.title} className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <f.icon className="h-4 w-4" strokeWidth={1.7} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[13px] font-medium text-foreground">{f.title}</p>
+                <p className="text-[11.5px] text-muted-foreground mt-1 leading-relaxed">{f.body}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
 
-      <Accordion type="multiple" defaultValue={["nav"]} className="space-y-2">
-        {groups.map((g) => (
-          <AccordionItem key={g.id} value={g.id} className="border border-border/60 rounded-lg bg-card">
-            <AccordionTrigger className="px-4 py-3 text-[14px] font-semibold hover:no-underline">
-              {g.title}
-              <span className="me-auto text-[11px] font-normal text-muted-foreground">
-                {g.rows.length} פריטים
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 pt-0">
-              {g.rows.length === 0 ? (
-                <p className="text-[12px] text-muted-foreground py-2">לא קיימים פריטים ניתנים לעריכה כרגע.</p>
-              ) : (
-                <div className="space-y-3">
-                  {g.rows.map((row) => {
-                    const current = String(get(labels, row.path) ?? "");
-                    const def = String(get(defaultUiLabels, row.path) ?? "");
-                    const isOverridden = current !== def;
-                    const visibility = row.visibilityNavKey
-                      ? ((labels.visibility?.nav as Record<string, boolean | undefined>)[row.visibilityNavKey] !== false)
-                      : null;
-                    return (
-                      <div
-                        key={row.path.join(".")}
-                        className="grid grid-cols-12 gap-3 items-center py-2 border-b border-border/40 last:border-0"
-                      >
-                        <div className="col-span-12 md:col-span-4">
-                          <Label className="text-[12.5px] font-medium text-foreground">{row.label}</Label>
-                          <p className="text-[10.5px] text-muted-foreground mt-0.5">ברירת מחדל: {def}</p>
-                        </div>
-                        <div className="col-span-12 md:col-span-5">
-                          <Input
-                            dir="rtl"
-                            value={current}
-                            onChange={(e) => setLabel(row.path, e.target.value)}
-                            className="h-9 text-[13px]"
-                          />
-                        </div>
-                        <div className="col-span-12 md:col-span-3 flex items-center justify-end gap-2">
-                          {row.visibilityNavKey && (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[11px] text-muted-foreground">מוצג</span>
-                              <Switch
-                                checked={visibility ?? true}
-                                onCheckedChange={(v) =>
-                                  setLabel(["visibility", "nav", row.visibilityNavKey!], v)
-                                }
-                              />
-                            </div>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={!isOverridden}
-                            onClick={() => resetPath(row.path)}
-                            className="h-8 px-2 text-[11px] gap-1"
-                          >
-                            <RotateCcw className="h-3 w-3" />
-                            איפוס
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
+      {/* Quick navigation */}
+      <section className="mb-10">
+        <h2 className="text-[15px] font-semibold text-foreground mb-3">עמודים זמינים לעריכה</h2>
+        <p className="text-[11.5px] text-muted-foreground mb-4">
+          כרגע ניתן לערוך את סרגל הניווט ואת לוח המחוונים הראשי. עמודים נוספים יתווספו בגרסה הבאה.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {QUICK_LINKS.map((l) => (
+            <button
+              key={l.path}
+              onClick={() => { ui.setEditMode(true); navigate(l.path); }}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-border bg-card hover:bg-accent transition-colors text-[12.5px]"
+            >
+              <span>{l.label}</span>
+              <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Overrides list */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[15px] font-semibold text-foreground">התאמות פעילות</h2>
+          {overrideEntries.length > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => { if (confirm("לאפס את כל ההתאמות?")) ov.resetAll(); }}
+              className="text-destructive hover:text-destructive gap-1.5"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              איפוס הכל
+            </Button>
+          )}
+        </div>
+        {overrideEntries.length === 0 ? (
+          <Card className="p-8 text-center">
+            <p className="text-[12.5px] text-muted-foreground">עדיין לא בוצעו התאמות.</p>
+          </Card>
+        ) : (
+          <Card className="divide-y divide-border">
+            {overrideEntries.map(([id, o]) => (
+              <div key={id} className="flex items-center justify-between px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-mono text-foreground truncate">{id}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {[
+                      o.label && `טקסט: "${o.label}"`,
+                      o.visible === false && "מוסתר",
+                      o.stylePreset && o.stylePreset !== "default" && `סטייל: ${o.stylePreset}`,
+                      o.roleVisibility && `${o.roleVisibility.length} תפקידים`,
+                    ].filter(Boolean).join(" · ") || "ללא שינויים"}
+                  </p>
                 </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+                <Button size="sm" variant="ghost" onClick={() => ov.resetOverride(id)} className="text-muted-foreground gap-1">
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  איפוס
+                </Button>
+              </div>
+            ))}
+          </Card>
+        )}
+      </section>
+
+      <p className="text-[10.5px] text-muted-foreground/70 mt-10 leading-relaxed">
+        שינויים נשמרים מקומית בדפדפן זה בלבד. בעתיד הם יסונכרנו אוטומטית למסד הנתונים של המערכת.
+      </p>
     </div>
   );
 };
 
-export default AdminLabelsPage;
+export default AdminBuilderPage;

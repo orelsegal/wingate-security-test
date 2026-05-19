@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { EditModeProvider } from "@/context/EditModeContext";
 import { BuilderProvider } from "@/context/BuilderContext";
 import { UiLabelsProvider } from "@/context/UiLabelsContext";
+import { BuilderUIProvider } from "@/context/BuilderUIContext";
+import { BuilderOverridesProvider } from "@/context/BuilderOverridesContext";
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
@@ -57,6 +59,8 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <UiLabelsProvider>
+        <BuilderOverridesProvider>
+        <BuilderUIProvider>
         <EditModeProvider>
         <BuilderProvider>
           <Toaster />
@@ -96,6 +100,8 @@ const App = () => (
           </BrowserRouter>
         </BuilderProvider>
         </EditModeProvider>
+        </BuilderUIProvider>
+        </BuilderOverridesProvider>
         </UiLabelsProvider>
       </AuthProvider>
     </TooltipProvider>
