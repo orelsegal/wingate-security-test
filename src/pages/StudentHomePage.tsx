@@ -92,8 +92,7 @@ const StudentHomePage = () => {
 
   const mainCards = [
     { id: "subjects", title: "התחלת למידה", description: "כנס למקצועות ויחידות לימוד", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", action: () => navigate("/subjects") },
-    { id: "profile", title: "מפת הדרכים שלי", description: "התקדמות ושלבים הבאים", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary", action: () => navigate(`/students/${studentId}`) },
-    { id: "grades", title: "ציונים", description: "ציונים עדכניים בכל מקצוע", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", action: () => navigate(`/students/${studentId}`) },
+    { id: "profile", title: "מפת הדרכים והציונים שלי", description: "התקדמות, שלבים וציונים עדכניים", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary", action: () => navigate(`/students/${studentId}`) },
   ];
 
   return (
