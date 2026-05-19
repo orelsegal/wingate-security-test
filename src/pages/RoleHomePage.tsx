@@ -146,7 +146,6 @@ const ContinueCard = ({ navigate }: { navigate: (p: string) => void }) => {
 
   return (
     <div className="mb-6 animate-fade-in-up">
-      <p className="text-[10.5px] font-medium text-primary/50 mb-2.5 tracking-tight">המשך מהפעם האחרונה</p>
       <button
         onClick={() => navigate(last.path)}
         className="w-full group bg-primary/5 rounded-2xl border border-primary/10 p-4 text-start transition-all duration-300 hover:bg-primary/8 cursor-pointer"
