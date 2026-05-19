@@ -345,7 +345,7 @@ const RoleHomePage = () => {
     coach: <CoachHome />,
   };
 
-  const title = user ? roleTitles[user.role] : "עמוד הבית";
+  const title = user ? roleTitles[user.role] : "תמונת מצב";
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
