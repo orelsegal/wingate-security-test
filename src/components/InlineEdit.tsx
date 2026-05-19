@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, X, Plus, ChevronDown } from "lucide-react";
+import { Check, X, Plus, ChevronDown, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InlineEditProps {
