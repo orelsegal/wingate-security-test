@@ -96,7 +96,7 @@ export function InlineEdit({ value, onSave, type = "text", placeholder = "—", 
         {value || placeholder}
         {suffix && value && <span className="text-muted-foreground/60 mr-1">{suffix}</span>}
       </span>
-      <Pencil className="h-3 w-3 text-muted-foreground/40 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
+      <Pencil className="h-3 w-3 text-primary/50 shrink-0" strokeWidth={1.7} />
     </button>
   );
 }
