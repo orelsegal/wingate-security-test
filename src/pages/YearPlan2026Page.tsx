@@ -236,13 +236,9 @@ export default function YearPlan2026Page() {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <KPI label="בגרויות החודש" value={kpis.bagrutMonth} tone="orange" />
-        <KPI label="אירועים קרובים" value={kpis.upcoming} tone="amber" />
-        <KPI label="שבועות עמוסים" value={kpis.heavyWeeks} tone="violet" />
         <KPI label="חגים וחופשות" value={kpis.holidaysMonth} tone="sky" />
-        <KPI label="דורש טיפול" value={kpis.needsAttention} tone="red" />
-        <KPI label="מקצועות בעומס" value={kpis.heavySubjects} tone="emerald" />
       </div>
 
       {/* Filters */}
