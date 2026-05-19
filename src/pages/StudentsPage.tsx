@@ -228,15 +228,6 @@ const StudentsPage = () => {
               </button>
             );
           })}
-          <div className="card-premium p-4 text-start">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-primary/8">
-                <TrendingUp className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-              </div>
-            </div>
-            <p className="text-[24px] font-bold leading-none tracking-tight text-foreground">{avgAll}</p>
-            <p className="text-[11px] text-muted-foreground font-medium mt-1.5">ממוצע כללי</p>
-          </div>
         </div>
       </section>
 
