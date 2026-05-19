@@ -82,8 +82,16 @@ const StudentProfilePage = () => {
 
   const [expanded, setExpanded] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState(false);
+  const [activeSubjectTab, setActiveSubjectTab] = useState<string | null>(null);
 
   const isEditable = user?.role === "admin" || user?.role === "teacher";
+
+  // Per-subject level helper. Math uses math_level; others use subject_levels jsonb.
+  const subjectLevels = ((student as any)?.subject_levels || {}) as Record<string, number>;
+  const getSubjectLevel = (subjectName: string): number => {
+    if (subjectName === "מתמטיקה") return effectiveMathLevel;
+    return subjectLevels[subjectName] ?? 5;
+  };
 
   const saveField = useCallback(async (field: string, value: any) => {
     if (!student) return;
@@ -98,6 +106,59 @@ const StudentProfilePage = () => {
       toast.error("שמירה נכשלה: " + err.message);
     }
   }, [student, updateStudent]);
+
+  const saveSubjectLevel = async (subjectName: string, level: number) => {
+    if (subjectName === "מתמטיקה") {
+      setMathLevel(level);
+      await saveField("math_level", level);
+    } else {
+      const next = { ...subjectLevels, [subjectName]: level };
+      await saveField("subject_levels", next);
+    }
+  };
+
+  // Ensure a progress row exists for a subject, returns its id
+  const ensureProgressRow = async (subjectName: string): Promise<string | null> => {
+    if (!student) return null;
+    const existing = subjectProgress.find((sp) => (sp as any).subjects?.subject_name === subjectName);
+    if (existing) return existing.id;
+    const subj = allSubjects.find((s: any) => s.subject_name === subjectName);
+    if (!subj) return null;
+    const { data, error } = await supabase
+      .from("student_subject_progress")
+      .insert({ student_id: student.id, subject_id: subj.id, status: "green", grade: 0, completion_percent: 0, absences: 0 } as any)
+      .select("id")
+      .single();
+    if (error) { toast.error("שמירה נכשלה: " + error.message); return null; }
+    queryClient.invalidateQueries({ queryKey: ["student-progress", student.id] });
+    return (data as any).id;
+  };
+
+  const saveSubjectExtra = async (subjectName: string, field: string, value: any) => {
+    const progressId = await ensureProgressRow(subjectName);
+    if (!progressId) return;
+    const row = subjectProgress.find((sp) => sp.id === progressId);
+    const currentExtras = ((row as any)?.extras || {}) as Record<string, any>;
+    const nextExtras = { ...currentExtras, [field]: value };
+    try {
+      const { error } = await supabase
+        .from("student_subject_progress")
+        .update({ extras: nextExtras } as any)
+        .eq("id", progressId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["student-progress", student!.id] });
+      toast.success("נשמר בהצלחה");
+      setSavedMsg(true);
+      setTimeout(() => setSavedMsg(false), 2500);
+    } catch (err: any) {
+      toast.error("שמירה נכשלה: " + err.message);
+    }
+  };
+
+  const getSubjectExtras = (subjectName: string): Record<string, any> => {
+    const row = subjectProgress.find((sp) => (sp as any).subjects?.subject_name === subjectName);
+    return ((row as any)?.extras || {}) as Record<string, any>;
+  };
 
   const roadmapBySubject = useMemo(() => {
     const map = new Map<string, typeof roadmapItems>();
@@ -313,76 +374,114 @@ const StudentProfilePage = () => {
         </div>
       </div>
 
-      {/* ═══ EXTRA DETAILS — REAL FORM ═══ */}
-      <div className="card-premium p-5 md:p-6">
-        <div className="flex items-center gap-2 mb-5">
-          <FileText className="h-4 w-4 text-primary" strokeWidth={1.5} />
-          <h3 className="text-[14px] font-semibold text-foreground">פרטים נוספים</h3>
-          {isEditable && <span className="text-[10px] text-primary/60 font-medium bg-primary/5 px-2 py-0.5 rounded-full mr-2">עריכה ישירה</span>}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
-          <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-              <Stethoscope className="h-3 w-3" />
-              אבחון / לקות
-            </label>
-            <InlineEdit value={student.diagnosis_status || ""} onSave={(v) => saveField("diagnosis_status", v)} editable={isEditable} placeholder="הפרעת קשב, דיסלקציה..." />
+      {/* ═══ PER-SUBJECT DETAILS TABS ═══ */}
+      {allSubjects.length > 0 && (() => {
+        const tabSubject = activeSubjectTab || allSubjects[0].subject_name;
+        const extras = getSubjectExtras(tabSubject);
+        const tabLevel = getSubjectLevel(tabSubject);
+        return (
+          <div className="card-premium p-5 md:p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <FileText className="h-4 w-4 text-primary" strokeWidth={1.5} />
+              <h3 className="text-[14px] font-semibold text-foreground">פרטי מקצוע</h3>
+              {isEditable && <span className="text-[10px] text-primary/60 font-medium bg-primary/5 px-2 py-0.5 rounded-full mr-2">עריכה ישירה</span>}
+            </div>
+
+            {/* Tabs row */}
+            <div className="flex flex-wrap gap-2 mb-5 pb-4 border-b border-border/60">
+              {allSubjects.map((s: any) => {
+                const isActive = tabSubject === s.subject_name;
+                const lvl = getSubjectLevel(s.subject_name);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setActiveSubjectTab(s.subject_name)}
+                    className={`px-3.5 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-150 border flex items-center gap-2 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    <span>{s.subject_name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-primary-foreground/20" : "bg-primary/10 text-primary"}`}>
+                      {lvl} יח״ל
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Per-subject level selector */}
+            <div className="mb-5">
+              <label className="text-[11px] text-muted-foreground font-medium mb-2 block">רמת לימוד ({tabSubject})</label>
+              <div className="flex gap-2">
+                {[3, 4, 5].map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => isEditable && saveSubjectLevel(tabSubject, level)}
+                    disabled={!isEditable}
+                    className={`flex-1 px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-150 border ${
+                      tabLevel === level
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                    } ${!isEditable ? "cursor-default" : "cursor-pointer"}`}
+                  >
+                    {level} יחידות לימוד
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Per-subject form (same fields as previous "פרטים נוספים") */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                  <Stethoscope className="h-3 w-3" />אבחון / לקות
+                </label>
+                <InlineEdit value={extras.diagnosis_status || ""} onSave={(v) => saveSubjectExtra(tabSubject, "diagnosis_status", v)} editable={isEditable} placeholder="הפרעת קשב, דיסלקציה..." />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-muted-foreground font-medium">התאמות בגרות</label>
+                <InlineEdit value={extras.bagrut_accommodations || ""} onSave={(v) => saveSubjectExtra(tabSubject, "bagrut_accommodations", v)} editable={isEditable} placeholder="הארכת זמן, הקראה..." />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                  <Languages className="h-3 w-3" />תמיכה באנגלית
+                </label>
+                <InlineSelect value={extras.english_support || ""} options={ENGLISH_OPTIONS} onSave={(v) => saveSubjectExtra(tabSubject, "english_support", v)} editable={isEditable} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                  <BookOpen className="h-3 w-3" />ספר
+                </label>
+                <InlineEdit value={extras.book_name || ""} onSave={(v) => saveSubjectExtra(tabSubject, "book_name", v)} editable={isEditable} placeholder="שם הספר" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-muted-foreground font-medium">ציון ספר</label>
+                <InlineEdit value={extras.book_grade != null ? String(extras.book_grade) : ""} onSave={(v) => saveSubjectExtra(tabSubject, "book_grade", v ? parseFloat(v) : null)} editable={isEditable} type="number" min={0} max={100} placeholder="0–100" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                  <ClipboardList className="h-3 w-3" />בחינות שהושלמו
+                </label>
+                <InlineEdit value={extras.exams_completed || ""} onSave={(v) => saveSubjectExtra(tabSubject, "exams_completed", v)} editable={isEditable} placeholder="למשל: 3 מתוך 7" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                  <GraduationCap className="h-3 w-3" />הערכה מסכמת
+                </label>
+                <InlineSelect value={extras.summative_assessment || ""} options={ASSESSMENT_OPTIONS} onSave={(v) => saveSubjectExtra(tabSubject, "summative_assessment", v)} editable={isEditable} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
+                <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                  <PenLine className="h-3 w-3" />הערות
+                </label>
+                <InlineEdit value={extras.notes || ""} onSave={(v) => saveSubjectExtra(tabSubject, "notes", v)} editable={isEditable} type="textarea" placeholder="הערות נוספות..." />
+              </div>
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground font-medium">התאמות בגרות</label>
-            <InlineEdit value={student.bagrut_accommodations || ""} onSave={(v) => saveField("bagrut_accommodations", v)} editable={isEditable} placeholder="הארכת זמן, הקראה..." />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-              <Languages className="h-3 w-3" />
-              תמיכה באנגלית
-            </label>
-            <InlineSelect
-              value={student.english_support || ""}
-              options={ENGLISH_OPTIONS}
-              onSave={(v) => saveField("english_support", v)}
-              editable={isEditable}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-              <BookOpen className="h-3 w-3" />
-              ספר
-            </label>
-            <InlineEdit value={student.book_name || ""} onSave={(v) => saveField("book_name", v)} editable={isEditable} placeholder="שם הספר" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground font-medium">ציון ספר</label>
-            <InlineEdit value={student.book_grade != null ? String(student.book_grade) : ""} onSave={(v) => saveField("book_grade", v ? parseFloat(v) : null)} editable={isEditable} type="number" min={0} max={100} placeholder="0–100" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-              <ClipboardList className="h-3 w-3" />
-              בחינות שהושלמו
-            </label>
-            <InlineEdit value={student.exams_completed || ""} onSave={(v) => saveField("exams_completed", v)} editable={isEditable} placeholder="למשל: 3 מתוך 7" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-              <GraduationCap className="h-3 w-3" />
-              הערכה מסכמת
-            </label>
-            <InlineSelect
-              value={student.summative_assessment || ""}
-              options={ASSESSMENT_OPTIONS}
-              onSave={(v) => saveField("summative_assessment", v)}
-              editable={isEditable}
-            />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-              <PenLine className="h-3 w-3" />
-              הערות
-            </label>
-            <InlineEdit value={student.notes || ""} onSave={(v) => saveField("notes", v)} editable={isEditable} type="textarea" placeholder="הערות נוספות..." />
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* ═══ CHARTS ═══ */}
       {subjectProgress.length > 0 && (
@@ -417,27 +516,33 @@ const StudentProfilePage = () => {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
-          <h3 className="text-[14px] font-semibold text-foreground">מקצועות לימוד</h3>
+          <h3 className="text-[14px] font-semibold text-foreground">מפת דרכים</h3>
           <span className="text-[11px] text-muted-foreground/50 bg-accent/50 px-2 py-0.5 rounded-full">{allSubjects.length}</span>
         </div>
 
         {/* All subjects — quick navigation */}
         {allSubjects.length > 0 && (
           <div className="mb-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-            {allSubjects.map((s: any) => (
-              <button
-                key={s.id}
-                onClick={() => navigate(`/subjects/${encodeURIComponent(s.subject_name)}`)}
-                className="group bg-card rounded-xl border border-border p-3 text-start transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 hover:border-primary/30 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <BookOpen className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+            {allSubjects.map((s: any) => {
+              const lvl = getSubjectLevel(s.subject_name);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => navigate(`/subjects/${encodeURIComponent(s.subject_name)}`)}
+                  className="group bg-card rounded-xl border border-border p-3 text-start transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 hover:border-primary/30 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <BookOpen className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                      </div>
+                      <span className="text-[12.5px] font-semibold text-foreground truncate">{s.subject_name}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">{lvl} יח״ל</span>
                   </div>
-                  <span className="text-[12.5px] font-semibold text-foreground truncate">{s.subject_name}</span>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -465,7 +570,7 @@ const StudentProfilePage = () => {
                     </div>
                     <div className="min-w-0">
                       <span className="text-[13px] font-semibold text-foreground block">{subjName}</span>
-                      {isMath && <span className="text-[11px] text-muted-foreground">{effectiveMathLevel} יח״ל</span>}
+                      <span className="text-[11px] text-muted-foreground">{getSubjectLevel(subjName)} יח״ל</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
