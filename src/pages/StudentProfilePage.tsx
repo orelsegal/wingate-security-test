@@ -82,8 +82,16 @@ const StudentProfilePage = () => {
 
   const [expanded, setExpanded] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState(false);
+  const [activeSubjectTab, setActiveSubjectTab] = useState<string | null>(null);
 
   const isEditable = user?.role === "admin" || user?.role === "teacher";
+
+  // Per-subject level helper. Math uses math_level; others use subject_levels jsonb.
+  const subjectLevels = ((student as any)?.subject_levels || {}) as Record<string, number>;
+  const getSubjectLevel = (subjectName: string): number => {
+    if (subjectName === "מתמטיקה") return effectiveMathLevel;
+    return subjectLevels[subjectName] ?? 5;
+  };
 
   const saveField = useCallback(async (field: string, value: any) => {
     if (!student) return;
@@ -98,6 +106,59 @@ const StudentProfilePage = () => {
       toast.error("שמירה נכשלה: " + err.message);
     }
   }, [student, updateStudent]);
+
+  const saveSubjectLevel = async (subjectName: string, level: number) => {
+    if (subjectName === "מתמטיקה") {
+      setMathLevel(level);
+      await saveField("math_level", level);
+    } else {
+      const next = { ...subjectLevels, [subjectName]: level };
+      await saveField("subject_levels", next);
+    }
+  };
+
+  // Ensure a progress row exists for a subject, returns its id
+  const ensureProgressRow = async (subjectName: string): Promise<string | null> => {
+    if (!student) return null;
+    const existing = subjectProgress.find((sp) => (sp as any).subjects?.subject_name === subjectName);
+    if (existing) return existing.id;
+    const subj = allSubjects.find((s: any) => s.subject_name === subjectName);
+    if (!subj) return null;
+    const { data, error } = await supabase
+      .from("student_subject_progress")
+      .insert({ student_id: student.id, subject_id: subj.id, status: "green", grade: 0, completion_percent: 0, absences: 0 } as any)
+      .select("id")
+      .single();
+    if (error) { toast.error("שמירה נכשלה: " + error.message); return null; }
+    queryClient.invalidateQueries({ queryKey: ["student-progress", student.id] });
+    return (data as any).id;
+  };
+
+  const saveSubjectExtra = async (subjectName: string, field: string, value: any) => {
+    const progressId = await ensureProgressRow(subjectName);
+    if (!progressId) return;
+    const row = subjectProgress.find((sp) => sp.id === progressId);
+    const currentExtras = ((row as any)?.extras || {}) as Record<string, any>;
+    const nextExtras = { ...currentExtras, [field]: value };
+    try {
+      const { error } = await supabase
+        .from("student_subject_progress")
+        .update({ extras: nextExtras } as any)
+        .eq("id", progressId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["student-progress", student!.id] });
+      toast.success("נשמר בהצלחה");
+      setSavedMsg(true);
+      setTimeout(() => setSavedMsg(false), 2500);
+    } catch (err: any) {
+      toast.error("שמירה נכשלה: " + err.message);
+    }
+  };
+
+  const getSubjectExtras = (subjectName: string): Record<string, any> => {
+    const row = subjectProgress.find((sp) => (sp as any).subjects?.subject_name === subjectName);
+    return ((row as any)?.extras || {}) as Record<string, any>;
+  };
 
   const roadmapBySubject = useMemo(() => {
     const map = new Map<string, typeof roadmapItems>();
