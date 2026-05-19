@@ -390,8 +390,10 @@ const StudentProfilePage = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* ═══ MATH LEVEL SELECTOR ═══ */}
+      {isSectionVisible("sys-math") && (
       <div className="card-premium p-5 md:p-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
