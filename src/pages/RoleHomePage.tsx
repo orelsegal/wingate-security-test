@@ -165,6 +165,35 @@ const ContinueCard = ({ navigate }: { navigate: (p: string) => void }) => {
     </div>
   );
 };
+/* ═══ Subjects List ═══ */
+const SubjectsList = ({ navigate }: { navigate: (p: string) => void }) => {
+  const { data: subjects = [] } = useSubjects();
+  if (!subjects.length) return null;
+  return (
+    <div className="mb-7 animate-fade-in-up">
+      <p className="text-[10.5px] font-medium text-primary/50 mb-2.5 tracking-tight">המקצועות שלי</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        {subjects.map((s: any, i: number) => (
+          <button
+            key={s.id}
+            onClick={() => navigate(`/subjects/${encodeURIComponent(s.subject_name)}`)}
+            className="group bg-card rounded-xl border border-border p-3.5 text-start transition-all duration-200 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
+            style={{ animationDelay: `${i * 30}ms` }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                <BookOpen className="h-4 w-4 text-primary/70" strokeWidth={1.5} />
+              </div>
+              <span className="text-[12.5px] font-semibold text-foreground leading-tight flex-1 truncate">{s.subject_name}</span>
+              <ChevronLeft className="h-3.5 w-3.5 text-border group-hover:text-primary/50 transition-colors" strokeWidth={1.5} />
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 /* ═══ Main Entry Buttons ═══ */
 const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
