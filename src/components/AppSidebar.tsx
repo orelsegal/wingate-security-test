@@ -1,8 +1,9 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
+import { toast } from "@/hooks/use-toast";
 
 const roleTitles: Record<UserRole, string> = {
   admin: "מרכז ניהול",
@@ -15,7 +16,6 @@ const roleTitles: Record<UserRole, string> = {
 const allMenuItems = [
   { title: "עמוד הבית", icon: Home, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
   { title: "עמוד הבית", icon: Home, path: "/student-home", roles: ["student"] },
-  { title: "דשבורד ניהולי", icon: LayoutDashboard, path: "/dashboard", roles: ["admin"] },
   { title: "הקורסים שלי", icon: BookOpen, path: "/teacher-courses", roles: ["teacher"] },
   { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
   { title: "קבוצות", icon: Layers, path: "/groups", roles: ["admin", "teacher", "coach"] },
@@ -25,6 +25,9 @@ const allMenuItems = [
   { title: "פעילות משתמשים", icon: Activity, path: "/user-activity", roles: ["admin"] },
   { title: "ניהול מערכת", icon: Database, path: "/data-management", roles: ["admin"] },
 ];
+
+/* Mock unread messages counter — replace with real query when messaging backend lands */
+const MESSAGES_UNREAD = 1;
 
 interface AppSidebarProps {
   onNavigate?: () => void;
