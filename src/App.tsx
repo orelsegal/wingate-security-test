@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { EditModeProvider } from "@/context/EditModeContext";
 import { BuilderProvider } from "@/context/BuilderContext";
+import { UiLabelsProvider } from "@/context/UiLabelsContext";
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
@@ -33,6 +34,7 @@ import TeacherCoursesPage from "./pages/TeacherCoursesPage.tsx";
 import TeacherCourseDetailPage from "./pages/TeacherCourseDetailPage.tsx";
 import UserActivityPage from "./pages/UserActivityPage.tsx";
 import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
+import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -54,6 +56,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <UiLabelsProvider>
         <EditModeProvider>
         <BuilderProvider>
           <Toaster />
@@ -86,12 +89,14 @@ const App = () => (
               <Route path="/teacher-course/:courseId" element={<TeacherCourseDetailPage />} />
               <Route path="/user-activity" element={<UserActivityPage />} />
               <Route path="/year-plan-2026" element={<YearPlan2026Page />} />
+              <Route path="/admin/labels" element={<AdminLabelsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
           </BrowserRouter>
         </BuilderProvider>
         </EditModeProvider>
+        </UiLabelsProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

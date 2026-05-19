@@ -3,6 +3,7 @@ import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-reac
 import { useStudents, useAllStudentProgress, useSports, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
+import { useUiLabels } from "@/context/UiLabelsContext";
 
 const grades = ["י׳", "י״א", "י״ב"];
 
@@ -24,6 +25,7 @@ interface SubjectRow {
 
 const CoursesPage = () => {
   const { user } = useAuth();
+  const { labels } = useUiLabels();
   const { data: students = [], isLoading: studentsLoading } = useStudents();
   const { data: allProgress = [], isLoading: progressLoading } = useAllStudentProgress();
   const { data: sportsData = [] } = useSports();
@@ -110,9 +112,9 @@ const CoursesPage = () => {
   return (
     <div className="p-5 md:p-10 lg:p-12 space-y-6 md:space-y-8 max-w-[1400px]">
       <div className="space-y-1.5">
-        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">סטטוס לימודי לפי מקצוע</h2>
+        <h2 className="text-xl md:text-[1.65rem] font-semibold text-foreground tracking-tight">{labels.pages.courses.title}</h2>
         <p className="text-muted-foreground text-[13px] md:text-sm">
-          {allRows.length} רשומות &middot; {students.length} ספורטאים &middot; מוצגות {filtered.length}
+          {allRows.length} רשומות &middot; {students.length} {labels.entities.students} &middot; מוצגות {filtered.length}
         </p>
       </div>
 

@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSports, useSubjects } from "@/hooks/useStudents";
+import { useUiLabels } from "@/context/UiLabelsContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 const CLASSES = ["ט'1", "ט'2", "ט'3", "י'1", "י'2", "י'3", "יא'1", "יא'2", "יא'3"];
 
 const DataManagementPage = () => {
   const queryClient = useQueryClient();
+  const { labels } = useUiLabels();
   const { data: sports = [], isLoading: loadingSports } = useSports();
   const { data: subjects = [], isLoading: loadingSubjects } = useSubjects();
 

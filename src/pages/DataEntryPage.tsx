@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useStudents, useSubjects, useStudentProgress, useStudentRoadmap, useSports } from "@/hooks/useStudents";
+import { useUiLabels } from "@/context/UiLabelsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import * as XLSX from "xlsx";
 const CLASSES = ["ט'1", "ט'2", "ט'3", "ט-1", "י'1", "י'2", "י'3", "י-1", "יא'1", "יא'2", "יא'3", "י\"א-1"];
 
 const DataEntryPageInner = () => {
+  const { labels } = useUiLabels();
   const { data: students, isLoading: loadingStudents } = useStudents();
   const { data: subjects, isLoading: loadingSubjects } = useSubjects();
   const { data: sportsData = [] } = useSports();
@@ -315,9 +317,9 @@ const DataEntryPageInner = () => {
       <div className="space-y-1">
         <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
           <ClipboardEdit className="h-6 w-6 text-primary" strokeWidth={1.5} />
-          ממשק ניהול
+          {labels.pages.dataEntry.title}
         </h1>
-        <p className="text-sm text-muted-foreground">הוספת ספורטאים, הזנת ציונים וייבוא מאסיבי</p>
+        <p className="text-sm text-muted-foreground">{labels.pages.dataEntry.subtitle}</p>
       </div>
 
       <Tabs defaultValue="add-athlete" dir="rtl">
