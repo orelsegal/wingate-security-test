@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert, ChevronDown, Loader2, FileText, Stethoscope, Languages, Check, GraduationCap, Hash, ClipboardList, PenLine } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
-import { useStudent, useStudentProgress, useStudentRoadmap, useUpdateStudent, statusConfig, type StatusType } from "@/hooks/useStudents";
+import { useStudent, useStudentProgress, useStudentRoadmap, useUpdateStudent, useSubjects, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
