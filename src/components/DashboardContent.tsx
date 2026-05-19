@@ -4,12 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
+import { useUiLabels } from "@/context/UiLabelsContext";
 import { useMemo } from "react";
 import DataExportTools from "@/components/DataExportTools";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
 const DashboardContent = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { labels } = useUiLabels();
   const { data: students = [], isLoading } = useStudents();
 
   // Derive branch stats from real data
@@ -72,10 +74,10 @@ const DashboardContent = () => {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
             <h2 className="text-[22px] md:text-[26px] font-semibold text-foreground tracking-tight leading-tight">
-              {isTeacher ? "מעקב מקצועות לימוד" : "מפת מצב לימודית"}
+              {isTeacher ? labels.pages.adminDashboard.titleTeacher : labels.pages.adminDashboard.titleAdmin}
             </h2>
             <p className="text-muted-foreground text-[13px] mt-1.5">
-              סמסטר א׳ תשפ״ה
+              {labels.pages.adminDashboard.subtitle}
               {user?.role === "coach" && ` · ענף ${user.scopeFilter?.[0]}`}
             </p>
           </div>
