@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { EditModeProvider } from "@/context/EditModeContext";
 import { BuilderProvider } from "@/context/BuilderContext";
+import { UiLabelsProvider } from "@/context/UiLabelsContext";
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
