@@ -1,30 +1,33 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth, roleLabels } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
+import { useUiLabels } from "@/context/UiLabelsContext";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 import { toast } from "@/hooks/use-toast";
 
-const roleTitles: Record<UserRole, string> = {
-  admin: "מרכז ניהול",
-  teacher: "מרכז עבודה",
-  student: "המרחב שלי",
-  parent: "התקדמות הילד/ה",
-  coach: "מרכז המאמן",
-};
+type NavKey = keyof ReturnType<typeof useUiLabels>["labels"]["nav"];
 
-const allMenuItems = [
-  { title: "תמונת מצב", icon: Home, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
-  { title: "תמונת מצב", icon: Home, path: "/student-home", roles: ["student"] },
-  { title: "שנת 2026", icon: CalendarRange, path: "/year-plan-2026", roles: ["admin"] },
-  { title: "הקורסים שלי", icon: BookOpen, path: "/teacher-courses", roles: ["teacher"] },
-  { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
-  { title: "קבוצות", icon: Layers, path: "/groups", roles: ["admin", "teacher", "coach"] },
-  { title: "התקדמות לימודית", icon: BookOpen, path: "/courses", roles: ["admin", "teacher"] },
-  { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
-  { title: "לוח שנה", icon: CalendarDays, path: "/calendar", roles: ["admin", "teacher", "coach", "student", "parent"] },
-  { title: "פעילות משתמשים", icon: Activity, path: "/user-activity", roles: ["admin"] },
-  { title: "ניהול מערכת", icon: Database, path: "/data-management", roles: ["admin"] },
+interface MenuItemDef {
+  key: NavKey;
+  icon: typeof Home;
+  path: string;
+  roles: UserRole[];
+}
+
+const allMenuItems: MenuItemDef[] = [
+  { key: "dashboard",      icon: Home,         path: "/",                roles: ["admin", "teacher", "parent", "coach"] },
+  { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"] },
+  { key: "yearPlan",       icon: CalendarRange, path: "/year-plan-2026", roles: ["admin"] },
+  { key: "teacherCourses", icon: BookOpen,     path: "/teacher-courses", roles: ["teacher"] },
+  { key: "students",       icon: Users,        path: "/students",        roles: ["admin", "teacher", "coach"] },
+  { key: "groups",         icon: Layers,       path: "/groups",          roles: ["admin", "teacher", "coach"] },
+  { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["admin", "teacher"] },
+  { key: "dataEntry",      icon: ClipboardEdit, path: "/data-entry",     roles: ["admin", "teacher", "coach"] },
+  { key: "calendar",       icon: CalendarDays, path: "/calendar",        roles: ["admin", "teacher", "coach", "student", "parent"] },
+  { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["admin"] },
+  { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["admin"] },
+  { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels", roles: ["admin"] },
 ];
 
 /* Mock unread messages counter — replace with real query when messaging backend lands */
@@ -38,8 +41,14 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { labels } = useUiLabels();
 
-  const menuItems = allMenuItems.filter((item) => user && item.roles.includes(user.role));
+  const menuItems = allMenuItems.filter((item) => {
+    if (!user || !item.roles.includes(user.role)) return false;
+    // Honor admin-set visibility (default true when key missing)
+    const v = (labels.visibility?.nav as Record<string, boolean | undefined>)[item.key];
+    return v !== false;
+  });
 
   const handleLogout = () => {
     logout();
@@ -66,14 +75,15 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
       {/* Navigation */}
       <nav className="flex-1 px-3.5 pt-5 pb-4">
         <p className="text-[9px] font-semibold text-sidebar-muted/40 tracking-[0.12em] uppercase px-3 mb-3">
-          {user ? roleTitles[user.role] : "תפריט"}
+          {user ? labels.roleTitles[user.role] : "תפריט"}
         </p>
         <div className="space-y-0.5">
           {menuItems.map((item) => {
             const active = location.pathname === item.path || (item.path !== "/" && item.path !== "/student-home" && location.pathname.startsWith(item.path));
+            const title = labels.nav[item.key];
             return (
               <button
-                key={item.title + item.path}
+                key={item.key + item.path}
                 onClick={() => { navigate(item.path); onNavigate?.(); }}
                 className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start ${
                   active
@@ -82,29 +92,31 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
                 }`}
               >
                 <item.icon className={`h-[15px] w-[15px] shrink-0 ${active ? "text-primary" : "text-sidebar-muted"}`} strokeWidth={1.5} />
-                <span>{item.title}</span>
+                <span>{title}</span>
               </button>
             );
           })}
 
           {/* Messages — distinct orange entry with unread badge */}
-          <button
-            onClick={() => {
-              toast({ title: "הודעות", description: "התיבה עוד בפיתוח. תיפתח בקרוב." });
-              onNavigate?.();
-            }}
-            className="w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start font-medium text-[hsl(25,85%,45%)] hover:bg-[hsl(25,85%,50%)]/10"
-          >
-            <span className="relative inline-flex items-center justify-center">
-              <Mail className="h-[15px] w-[15px] shrink-0 text-[hsl(25,85%,50%)]" strokeWidth={1.5} />
-              {MESSAGES_UNREAD > 0 && (
-                <span className="absolute -top-1 -end-1 min-w-[14px] h-[14px] px-1 rounded-full bg-[hsl(25,90%,52%)] text-[9px] font-bold text-white flex items-center justify-center leading-none ring-2 ring-sidebar">
-                  {MESSAGES_UNREAD}
-                </span>
-              )}
-            </span>
-            <span>הודעות</span>
-          </button>
+          {labels.visibility?.nav?.messages !== false && (
+            <button
+              onClick={() => {
+                toast({ title: labels.nav.messages, description: "התיבה עוד בפיתוח. תיפתח בקרוב." });
+                onNavigate?.();
+              }}
+              className="w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start font-medium text-[hsl(25,85%,45%)] hover:bg-[hsl(25,85%,50%)]/10"
+            >
+              <span className="relative inline-flex items-center justify-center">
+                <Mail className="h-[15px] w-[15px] shrink-0 text-[hsl(25,85%,50%)]" strokeWidth={1.5} />
+                {MESSAGES_UNREAD > 0 && (
+                  <span className="absolute -top-1 -end-1 min-w-[14px] h-[14px] px-1 rounded-full bg-[hsl(25,90%,52%)] text-[9px] font-bold text-white flex items-center justify-center leading-none ring-2 ring-sidebar">
+                    {MESSAGES_UNREAD}
+                  </span>
+                )}
+              </span>
+              <span>{labels.nav.messages}</span>
+            </button>
+          )}
         </div>
       </nav>
 
@@ -112,7 +124,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
       <div className="px-5 pb-3">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] text-sidebar-muted/60">
           <Medal className="h-3.5 w-3.5 shrink-0 text-sidebar-muted/35" strokeWidth={1.5} />
-          <span>סמסטר א׳ תשפ״ה</span>
+          <span>{labels.nav.semester}</span>
         </div>
       </div>
 
@@ -127,7 +139,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
           <div className="flex-1 min-w-0">
             <p className="text-[12px] font-medium truncate text-start text-sidebar-foreground">{user?.name}</p>
             <p className="text-[10px] text-sidebar-muted truncate text-start">
-              {user ? roleLabels[user.role] : ""}
+              {user ? labels.roleLabels[user.role] : ""}
             </p>
           </div>
           <button
