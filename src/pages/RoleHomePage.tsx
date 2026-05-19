@@ -249,12 +249,6 @@ const TeacherHome = () => {
         </div>
       </button>
 
-      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
-      <CardGrid cards={[
-        { id: "students", title: "ניהול תלמידים", description: "צפייה ועדכון נתוני תלמידים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
-        { id: "data-entry", title: "עדכון ציונים", description: "הזנה ועדכון נתונים", icon: ClipboardEdit, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/data-entry" },
-        { id: "calendar", title: "לוח שנה", description: "משימות ומועדים", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", path: "/calendar" },
-      ]} navigate={navigate} />
     </>
   );
 };
