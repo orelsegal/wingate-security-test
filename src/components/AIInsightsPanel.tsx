@@ -140,26 +140,24 @@ export default function AIInsightsPanel({
   navigate: (path: string) => void;
 }) {
   const insights = useMemo(() => generateInsights(students, role), [students, role]);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   if (insights.length === 0) return null;
 
   return (
-    <section className="mb-8 animate-fade-in-up">
+    <section className="mb-6 animate-fade-in-up">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center gap-2 mb-4 group cursor-pointer"
+        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-border/60 bg-card hover:bg-muted/40 transition-colors cursor-pointer"
       >
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
-          <Brain className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-        </div>
-        <h2 className="text-[13px] font-semibold text-foreground tracking-tight">תובנות חכמות</h2>
-        <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">AI</span>
-        <ChevronLeft className={`h-3.5 w-3.5 text-muted-foreground/50 transition-transform duration-200 mr-auto ${collapsed ? "rotate-90" : "-rotate-90"}`} strokeWidth={1.5} />
+        <Brain className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+        <h2 className="text-[12.5px] font-semibold text-foreground tracking-tight">תובנות חכמות</h2>
+        <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold">{insights.length}</span>
+        <ChevronLeft className={`h-3.5 w-3.5 text-muted-foreground/60 transition-transform duration-200 mr-auto ${collapsed ? "-rotate-90" : "rotate-90"}`} strokeWidth={1.5} />
       </button>
 
       {!collapsed && (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 mt-3">
           {insights.map((insight, i) => {
             const style = typeStyles[insight.type];
             return (
