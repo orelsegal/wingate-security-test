@@ -570,7 +570,7 @@ const StudentProfilePage = () => {
                     </div>
                     <div className="min-w-0">
                       <span className="text-[13px] font-semibold text-foreground block">{subjName}</span>
-                      {isMath && <span className="text-[11px] text-muted-foreground">{effectiveMathLevel} יח״ל</span>}
+                      <span className="text-[11px] text-muted-foreground">{getSubjectLevel(subjName)} יח״ל</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
