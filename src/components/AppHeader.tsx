@@ -32,15 +32,15 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
   let title = "";
 
   if (path.startsWith("/students")) {
-    crumbs.push({ label: "ניהול ספורטאים", path: "/students" });
-    title = "ניהול ספורטאים";
+    crumbs.push({ label: "ספורטאים", path: "/students" });
+    title = "ספורטאים";
     if (path.match(/^\/students\/.+/)) {
       crumbs.push({ label: "פרופיל ספורטאי" });
       title = "פרופיל ספורטאי";
     }
   } else if (path.startsWith("/courses")) {
-    crumbs.push({ label: "מעקב לימודי" });
-    title = "מעקב לימודי";
+    crumbs.push({ label: "התקדמות לימודית" });
+    title = "התקדמות לימודית";
   } else if (path.startsWith("/data-entry")) {
     crumbs.push({ label: "הזנת נתונים" });
     title = "הזנת נתונים";
