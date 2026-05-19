@@ -16,6 +16,7 @@ const roleTitles: Record<UserRole, string> = {
 const allMenuItems = [
   { title: "תמונת מצב", icon: Home, path: "/", roles: ["admin", "teacher", "parent", "coach"] },
   { title: "תמונת מצב", icon: Home, path: "/student-home", roles: ["student"] },
+  { title: "שנת 2026", icon: CalendarRange, path: "/year-plan-2026", roles: ["admin"] },
   { title: "הקורסים שלי", icon: BookOpen, path: "/teacher-courses", roles: ["teacher"] },
   { title: "ספורטאים", icon: Users, path: "/students", roles: ["admin", "teacher", "coach"] },
   { title: "קבוצות", icon: Layers, path: "/groups", roles: ["admin", "teacher", "coach"] },
@@ -23,7 +24,6 @@ const allMenuItems = [
   { title: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry", roles: ["admin", "teacher", "coach"] },
   { title: "לוח שנה", icon: CalendarDays, path: "/calendar", roles: ["admin", "teacher", "coach", "student", "parent"] },
   { title: "פעילות משתמשים", icon: Activity, path: "/user-activity", roles: ["admin"] },
-  { title: "שנת 2026", icon: CalendarRange, path: "/year-plan-2026", roles: ["admin"] },
   { title: "ניהול מערכת", icon: Database, path: "/data-management", roles: ["admin"] },
 ];
 
