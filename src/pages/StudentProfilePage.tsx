@@ -278,21 +278,37 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* Admin Builder — Phase 1: Edit Mode toggle (admins only) */}
+      {/* Admin Builder — Phase 2: Edit Mode + Visual Builder */}
       {user?.role === "admin" && (
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             {editModeActive ? (
-              <span className="text-primary font-medium">מצב עריכה פעיל — שדות הניתנים לעריכה מסומנים בעיפרון</span>
+              <span className="text-primary font-medium">מצב בנייה פעיל — סקציות ושדות ניתנים לעריכה. פתחו את הבונה לפעולות מתקדמות.</span>
             ) : (
-              <span>מצב צפייה — לחצו על "מצב עריכה" כדי לערוך שדות</span>
+              <span>מצב צפייה — הפעילו את מצב הבנייה כדי לערוך פריסה ושדות</span>
             )}
           </div>
-          <EditModeToggle />
+          <div className="flex items-center gap-2">
+            {editModeActive && (
+              <button
+                onClick={() => setBuilderOpen(true)}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[12px] font-medium hover:bg-primary/90 transition"
+              >
+                <Wrench className="h-3.5 w-3.5" />
+                בונה הפרופיל
+              </button>
+            )}
+            <EditModeToggle />
+          </div>
         </div>
       )}
 
+      <BuilderPanel open={builderOpen} onClose={() => setBuilderOpen(false)} />
 
+      {/* ═══ HERO CARD ═══ */}
+      {isSectionVisible("sys-hero") && (
+      <></>
+      )}
       {/* ═══ HERO CARD ═══ */}
       <div className="card-premium p-5 md:p-7">
         <div className="flex flex-col sm:flex-row items-start gap-5">
