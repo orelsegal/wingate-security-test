@@ -94,7 +94,6 @@ const StudentHomePage = () => {
     { id: "subjects", title: "התחלת למידה", description: "כנס למקצועות ויחידות לימוד", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", action: () => navigate("/subjects") },
     { id: "profile", title: "מפת הדרכים שלי", description: "התקדמות ושלבים הבאים", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary", action: () => navigate(`/students/${studentId}`) },
     { id: "grades", title: "ציונים", description: "ציונים עדכניים בכל מקצוע", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", action: () => navigate(`/students/${studentId}`) },
-    { id: "calendar", title: "לוח שנה", description: "משימות ומועדים קרובים", icon: CalendarDays, color: "bg-secondary", iconColor: "text-foreground/80", action: () => navigate("/calendar") },
   ];
 
   return (
@@ -178,7 +177,7 @@ const StudentHomePage = () => {
       {/* Subject Progress */}
       {progress.length > 0 && (
         <section className="mb-7">
-          <h2 className="text-[11.5px] font-medium text-primary/60 mb-3 tracking-tight">מצב לימודי לפי מקצוע</h2>
+          <h2 className="text-[11.5px] font-medium text-primary/60 mb-3 tracking-tight">התקדמות לימודית לפי מקצוע</h2>
           <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)]">
             <div className="flex flex-col gap-3">
               {progress.slice(0, 6).map((sp: any, i: number) => {

@@ -169,9 +169,9 @@ const ContinueCard = ({ navigate }: { navigate: (p: string) => void }) => {
 const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
   const entries = [
     { id: "subjects", title: "מקצועות", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/subjects" },
-    { id: "students", title: "תלמידים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
+    { id: "students", title: "ספורטאים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
     { id: "groups", title: "קבוצות", icon: Layers, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/groups" },
-    { id: "progress", title: "התקדמות", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", path: "/courses" },
+    { id: "progress", title: "התקדמות לימודית", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", path: "/courses" },
   ];
 
   return (
@@ -203,11 +203,7 @@ const AdminHome = () => {
   const yellowCount = students.filter((s) => s.overall_status === "yellow").length;
 
   const cards: ActionCard[] = [
-    { id: "overview", title: "דשבורד ניהולי", description: "נתונים, KPIs וסטטיסטיקות כלליות", icon: LayoutDashboard, color: "bg-primary/10", iconColor: "text-primary", path: "/dashboard" },
-    { id: "data-mgmt", title: "ניהול מערכת", description: "ענפי ספורט, מקצועות וכיתות", icon: Database, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/data-management" },
-    { id: "courses", title: "מעקב לימודי", description: "מעקב מקצועות והתקדמות לימודית", icon: GraduationCap, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/courses" },
-    { id: "data-entry", title: "הזנת נתונים", description: "עדכון ציונים, סטטוסים והערות", icon: ClipboardEdit, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/data-entry" },
-    { id: "reports", title: "דוחות וניתוח", description: "ניתוח נתונים ודוחות מתקדמים", icon: BarChart3, color: "bg-muted", iconColor: "text-muted-foreground", comingSoon: true },
+    { id: "reports", title: "נתונים ודוחות", description: "ניתוח נתונים ודוחות מתקדמים", icon: BarChart3, color: "bg-muted", iconColor: "text-muted-foreground", comingSoon: true },
   ];
 
   return (
@@ -222,7 +218,7 @@ const AdminHome = () => {
       <AIInsightsPanel students={students} role="admin" navigate={navigate} />
       <ContinueCard navigate={navigate} />
       <MainEntryButtons navigate={navigate} />
-      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
+      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">נתונים ודוחות</h2>
       <CardGrid cards={cards} navigate={navigate} />
     </>
   );
@@ -253,12 +249,6 @@ const TeacherHome = () => {
         </div>
       </button>
 
-      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">כלים נוספים</h2>
-      <CardGrid cards={[
-        { id: "students", title: "ניהול תלמידים", description: "צפייה ועדכון נתוני תלמידים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
-        { id: "data-entry", title: "עדכון ציונים", description: "הזנה ועדכון נתונים", icon: ClipboardEdit, color: "bg-[hsl(180,25%,92%)]", iconColor: "text-[hsl(180,35%,40%)]", path: "/data-entry" },
-        { id: "calendar", title: "לוח שנה", description: "משימות ומועדים", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", path: "/calendar" },
-      ]} navigate={navigate} />
     </>
   );
 };
@@ -272,7 +262,7 @@ const ParentHome = () => {
   const cards: ActionCard[] = [
     { id: "child", title: "הילד/ה שלי", description: "פרופיל, ציונים ומצב לימודי עדכני", icon: Heart, color: "bg-[hsl(350,25%,93%)]", iconColor: "text-[hsl(350,40%,50%)]", path: childId ? `/students/${childId}` : "/students" },
     { id: "roadmap", title: "מפת הדרך לבגרות", description: "התקדמות, חוסרים ושלבים הבאים", icon: Route, color: "bg-primary/10", iconColor: "text-primary", path: childId ? `/students/${childId}` : "/students" },
-    { id: "status", title: "מצב לימודי", description: "ציונים, נוכחות וסטטוס לפי מקצוע", icon: TrendingUp, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: childId ? `/students/${childId}` : "/students" },
+    { id: "status", title: "התקדמות לימודית", description: "ציונים, נוכחות וסטטוס לפי מקצוע", icon: TrendingUp, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: childId ? `/students/${childId}` : "/students" },
     { id: "calendar", title: "לוח שנה", description: "משימות, מבחנים ומפגשים קרובים", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", path: "/calendar" },
     { id: "messages", title: "הודעות והערות", description: "הערות מצוות החינוך", icon: MessageSquare, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", comingSoon: true },
   ];
@@ -290,10 +280,8 @@ const CoachHome = () => {
   const redCount = myStudents.filter((s) => s.overall_status === "red").length;
 
   const cards: ActionCard[] = [
-    { id: "students", title: "ספורטאי הענף", description: `צפייה בספורטאי ${mySport || "הענף"}`, icon: Dumbbell, color: "bg-[hsl(25,35%,92%)]", iconColor: "text-[hsl(25,50%,45%)]", path: "/students" },
-    { id: "status", title: "מצב לימודי לפי ענף", description: "סקירת התקדמות לימודית של הענף", icon: BookOpen, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/courses" },
+    { id: "status", title: "התקדמות לימודית לפי ענף", description: "סקירת התקדמות לימודית של הענף", icon: BookOpen, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/courses" },
     { id: "risk", title: "דורשים תשומת לב", description: "ספורטאים עם סטטוס אדום או צהוב", icon: AlertTriangle, color: "bg-[hsl(0,35%,94%)]", iconColor: "text-destructive", path: "/students?status=red" },
-    { id: "data-entry", title: "עדכונים", description: "הזנת נתונים והערות", icon: ClipboardEdit, color: "bg-primary/10", iconColor: "text-primary", path: "/data-entry" },
   ];
 
   return (
