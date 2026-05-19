@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { InlineEdit, InlineSelect, ChipEditor } from "@/components/InlineEdit";
+import { EditModeToggle } from "@/components/EditModeToggle";
+import { useEditMode } from "@/context/EditModeContext";
 import DataExportTools from "@/components/DataExportTools";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -84,7 +86,9 @@ const StudentProfilePage = () => {
   const [savedMsg, setSavedMsg] = useState(false);
   const [activeSubjectTab, setActiveSubjectTab] = useState<string | null>(null);
 
-  const isEditable = user?.role === "admin" || user?.role === "teacher";
+  const { canEdit: editModeActive } = useEditMode();
+  // Admin Builder — Phase 1: only admins can edit, and only while Edit Mode is active.
+  const isEditable = editModeActive;
 
   // Per-subject level helper. Math uses math_level; others use subject_levels jsonb.
   const subjectLevels = ((student as any)?.subject_levels || {}) as Record<string, number>;
@@ -260,7 +264,20 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* Back button removed — breadcrumbs handle navigation */}
+      {/* Admin Builder — Phase 1: Edit Mode toggle (admins only) */}
+      {user?.role === "admin" && (
+        <div className="flex items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            {editModeActive ? (
+              <span className="text-primary font-medium">מצב עריכה פעיל — שדות הניתנים לעריכה מסומנים בעיפרון</span>
+            ) : (
+              <span>מצב צפייה — לחצו על "מצב עריכה" כדי לערוך שדות</span>
+            )}
+          </div>
+          <EditModeToggle />
+        </div>
+      )}
+
 
       {/* ═══ HERO CARD ═══ */}
       <div className="card-premium p-5 md:p-7">

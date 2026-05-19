@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, X, Plus, ChevronDown } from "lucide-react";
+import { Check, X, Plus, ChevronDown, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InlineEditProps {
@@ -85,7 +85,7 @@ export function InlineEdit({ value, onSave, type = "text", placeholder = "—", 
     <button
       onClick={() => setEditing(true)}
       className={cn(
-        "w-full text-start h-9 px-3 rounded-lg border border-border bg-card text-[13px] text-foreground",
+        "group w-full text-start h-9 px-3 rounded-lg border border-border bg-card text-[13px] text-foreground",
         "hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-150 cursor-text",
         "flex items-center justify-between gap-2",
         type === "textarea" && "h-auto min-h-[72px] py-2 items-start",
@@ -96,6 +96,7 @@ export function InlineEdit({ value, onSave, type = "text", placeholder = "—", 
         {value || placeholder}
         {suffix && value && <span className="text-muted-foreground/60 mr-1">{suffix}</span>}
       </span>
+      <Pencil className="h-3 w-3 text-primary/50 shrink-0" strokeWidth={1.7} />
     </button>
   );
 }
