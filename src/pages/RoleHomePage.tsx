@@ -241,15 +241,22 @@ const AdminHome = () => {
       <InsightStrip
         items={[
           { label: "סה״כ ספורטאים", value: students.length, icon: Users, color: "text-primary" },
-          { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
           { label: "דורשים תשומת לב", value: yellowCount, icon: Target, color: "text-[hsl(var(--warning))]" },
+          { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
         ]}
       />
       <AIInsightsPanel students={students} role="admin" navigate={navigate} />
       <ContinueCard navigate={navigate} />
+      <SubjectsList navigate={navigate} />
       <MainEntryButtons navigate={navigate} />
+
       <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">נתונים ודוחות</h2>
       <CardGrid cards={cards} navigate={navigate} />
+
+      {/* Embedded admin dashboard */}
+      <div className="mt-12 -mx-5 md:-mx-10 lg:-mx-14 border-t border-border">
+        <DashboardContent />
+      </div>
     </>
   );
 };
