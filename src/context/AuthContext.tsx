@@ -2,12 +2,14 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student";
+export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student" | "coordinator" | "staff";
 
 export interface AppUser {
   name: string;
   role: UserRole;
   email: string;
+  /** Optional sub-type for "staff" demo role (e.g. "tutor"). */
+  staff_type?: string;
   /** For parent: student IDs. For coach: sport names. For student: own student ID */
   scopeFilter?: string[];
 }
