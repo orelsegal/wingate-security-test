@@ -183,7 +183,7 @@ const DemoShell = ({ children, nav, tint, workspaceLabel }: Props) => {
             aria-label="החלפת תפקיד"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            <span className="hidden xs:inline sm:inline">החלפת תפקיד</span>
+            <span>החלפת תפקיד</span>
           </button>
 
         </header>
