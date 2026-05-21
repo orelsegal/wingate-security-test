@@ -50,13 +50,14 @@ const cards: Array<{
 const DemoEntryPage = () => {
   const navigate = useNavigate();
   const { user, demoLogin } = useAuth();
+  // /demo is the always-on role hub. /login auto-redirects signed-in users.
+  const isHub = typeof window !== "undefined" && window.location.pathname.startsWith("/demo");
 
-  // If already signed-in as a demo role, skip the picker
   useEffect(() => {
-    if (user && demoRoleHome[user.role]) {
+    if (!isHub && user && demoRoleHome[user.role]) {
       navigate(demoRoleHome[user.role]!, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, isHub]);
 
   const enterAs = (u: AppUser) => {
     demoLogin(u);
