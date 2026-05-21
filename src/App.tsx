@@ -13,7 +13,7 @@ import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
 import StudentProfilePage from "./pages/StudentProfilePage.tsx";
-import LoginPage from "./pages/LoginPage.tsx";
+
 import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
 import DataManagementPage from "./pages/DataManagementPage.tsx";
@@ -38,6 +38,11 @@ import UserActivityPage from "./pages/UserActivityPage.tsx";
 import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
 import BuilderWorkspacePage from "./pages/BuilderWorkspacePage.tsx";
+import DemoEntryPage from "./pages/DemoEntryPage.tsx";
+import DemoRoleRoute from "./components/demo/DemoRoleRoute.tsx";
+import CoordinatorDashboard from "./pages/demo/CoordinatorDashboard.tsx";
+import StaffDashboard from "./pages/demo/StaffDashboard.tsx";
+import StudentDashboardDemo from "./pages/demo/StudentDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -68,7 +73,13 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
+            {/* Temporary demo entry — replaces the broken email/password login */}
+            <Route path="/login" element={<DemoEntryPage />} />
+
+            {/* Demo role dashboards — each role gets its own shell, menu and routes */}
+            <Route path="/coordinator/dashboard" element={<DemoRoleRoute role="coordinator"><CoordinatorDashboard /></DemoRoleRoute>} />
+            <Route path="/staff/dashboard"       element={<DemoRoleRoute role="staff"><StaffDashboard /></DemoRoleRoute>} />
+            <Route path="/student/dashboard"     element={<DemoRoleRoute role="student"><StudentDashboardDemo /></DemoRoleRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<DashboardContent />} />
