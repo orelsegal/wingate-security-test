@@ -8,6 +8,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Briefcase, GraduationCap, Users2 } from "lucide-react";
+import { toast } from "sonner";
 import WingateBadge from "@/components/WingateBadge";
 import { useAuth } from "@/context/AuthContext";
 import { DEMO_COORDINATOR, DEMO_STAFF, DEMO_STUDENT, demoRoleHome } from "@/lib/demoUsers";
