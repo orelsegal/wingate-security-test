@@ -1,13 +1,19 @@
 /**
- * RoleSwitcherDialog — modal with 3 large role cards used to instantly
- * switch the active demo identity. No password, no email, just one tap.
+ * RoleSwitcherDialog — premium role switcher.
+ *
+ * Desktop: centered modal.
+ * Mobile:  bottom sheet (vaul Drawer) for thumb-reach.
+ *
+ * One tap → demoLogin → toast → redirect to that role's dashboard.
  */
 import { useNavigate } from "react-router-dom";
-import { Briefcase, GraduationCap, Users } from "lucide-react";
+import { Briefcase, GraduationCap, Users2, Check } from "lucide-react";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useAuth, type UserRole } from "@/context/AuthContext";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { useAuth, type UserRole, type AppUser } from "@/context/AuthContext";
 import { DEMO_COORDINATOR, DEMO_STAFF, DEMO_STUDENT, demoRoleHome } from "@/lib/demoUsers";
-import type { AppUser } from "@/context/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -15,94 +21,136 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-const ROLES: Array<{
+interface RoleCard {
   user: AppUser;
   title: string;
-  subtitle: string;
-  icon: typeof Users;
-  tint: string;
-  bg: string;
-}> = [
+  short: string;
+  description: string;
+  icon: typeof Users2;
+  tint: string;          // hsl(...)
+  toastLabel: string;
+}
+
+const ROLES: RoleCard[] = [
   {
     user: DEMO_COORDINATOR,
     title: "כניסה כרכז/ת",
-    subtitle: "מרכז שליטה — ניהול מפגשים, צוות וספורטאים",
-    icon: Users,
+    short: "רכז/ת",
+    description: "ניהול מלא, בקשות, שיבוצים וסטטיסטיקות",
+    icon: Users2,
     tint: "hsl(220, 70%, 55%)",
-    bg: "hsl(220, 70%, 55% / 0.08)",
+    toastLabel: "רכז/ת",
   },
   {
     user: DEMO_STAFF,
     title: "כניסה כמתרגל/ת",
-    subtitle: "המפגשים שלי, אישורים וסיכומים",
+    short: "מתרגל/ת",
+    description: "מפגשים, אישורים, סיכומים ותלמידים משויכים",
     icon: Briefcase,
-    tint: "hsl(160, 60%, 40%)",
-    bg: "hsl(160, 60%, 40% / 0.08)",
+    tint: "hsl(160, 55%, 42%)",
+    toastLabel: "מתרגל/ת",
   },
   {
     user: DEMO_STUDENT,
     title: "כניסה כתלמיד/ה",
-    subtitle: "המרחב שלי — בקשות, מפגשים ועדכונים",
+    short: "תלמיד/ה",
+    description: "בקשות תמיכה, מפגשים אישיים ועדכונים",
     icon: GraduationCap,
-    tint: "hsl(280, 60%, 55%)",
-    bg: "hsl(280, 60%, 55% / 0.08)",
+    tint: "hsl(30, 80%, 50%)",
+    toastLabel: "תלמיד/ה",
   },
 ];
 
 const RoleSwitcherDialog = ({ open, onOpenChange }: Props) => {
   const navigate = useNavigate();
   const { user, demoLogin } = useAuth();
+  const isMobile = useIsMobile();
 
-  const handlePick = (u: AppUser) => {
-    demoLogin(u);
+  const pick = (card: RoleCard) => {
+    demoLogin(card.user);
     onOpenChange(false);
-    const home = demoRoleHome[u.role as UserRole] ?? "/login";
-    navigate(home, { replace: true });
+    toast.success(`עברת למצב ${card.toastLabel}`);
+    const home = demoRoleHome[card.user.role as UserRole] ?? "/demo";
+    // Small delay so the drawer close animation doesn't fight the route swap.
+    requestAnimationFrame(() => navigate(home, { replace: true }));
   };
+
+  const Cards = (
+    <div className="space-y-3">
+      {ROLES.map((c) => {
+        const active = user?.role === c.user.role;
+        return (
+          <button
+            key={c.user.role}
+            onClick={() => pick(c)}
+            className={cn(
+              "w-full text-right group relative flex items-center gap-4 p-4 rounded-2xl border transition-all duration-150",
+              "hover:-translate-y-[1px] hover:shadow-[0_8px_24px_-12px_hsla(0,0%,0%,0.18)] active:scale-[0.99]",
+              active
+                ? "border-transparent bg-accent/40 ring-2 ring-offset-1 ring-offset-background"
+                : "border-border hover:border-foreground/25 bg-card",
+            )}
+            style={active ? ({ "--tw-ring-color": c.tint } as React.CSSProperties) : undefined}
+          >
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+              style={{ background: `${c.tint}15`, color: c.tint }}
+            >
+              <c.icon className="h-[22px] w-[22px]" strokeWidth={1.6} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-[14px] font-semibold text-foreground truncate">{c.title}</p>
+                {active && (
+                  <span
+                    className="inline-flex items-center gap-1 text-[9.5px] tracking-wide font-bold uppercase px-1.5 py-0.5 rounded"
+                    style={{ background: `${c.tint}1f`, color: c.tint }}
+                  >
+                    <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                    נוכחי
+                  </span>
+                )}
+              </div>
+              <p className="text-[11.5px] text-muted-foreground mt-1 leading-snug">{c.description}</p>
+            </div>
+            <span
+              className="hidden sm:inline-flex items-center justify-center h-8 px-3 rounded-lg text-[11.5px] font-semibold shrink-0 transition-opacity"
+              style={{ background: `${c.tint}`, color: "white" }}
+            >
+              כניסה
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent dir="rtl" className="px-0 pb-6 max-h-[88vh]">
+          <DrawerHeader className="text-right px-5 pt-2 pb-3">
+            <DrawerTitle className="text-[16px]">החלפת תפקיד</DrawerTitle>
+            <DrawerDescription className="text-[12px]">
+              בחר/י תפקיד כדי להיכנס מיידית — ללא סיסמה.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4">{Cards}</div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="max-w-[520px] p-0 gap-0">
+      <DialogContent dir="rtl" className="max-w-[540px] p-0 gap-0">
         <DialogHeader className="p-5 pb-3 text-right">
-          <DialogTitle className="text-[16px]">החלפת תפקיד דמו</DialogTitle>
+          <DialogTitle className="text-[17px]">החלפת תפקיד</DialogTitle>
           <DialogDescription className="text-[12px]">
-            בחר/י תפקיד כדי להיכנס מיידית למרחב המתאים. ללא סיסמה.
+            בחר/י תפקיד כדי להיכנס מיידית למרחב המתאים.
           </DialogDescription>
         </DialogHeader>
-        <div className="p-5 pt-2 space-y-2.5">
-          {ROLES.map(({ user: u, title, subtitle, icon: Icon, tint, bg }) => {
-            const active = user?.role === u.role;
-            return (
-              <button
-                key={u.role}
-                onClick={() => handlePick(u)}
-                className={cn(
-                  "w-full text-right flex items-center gap-4 p-4 rounded-2xl border-2 transition-all",
-                  "hover:shadow-md hover:-translate-y-px active:scale-[0.99]",
-                  active ? "border-foreground/30 bg-accent/40" : "border-border hover:border-foreground/20",
-                )}
-              >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: bg, color: tint }}
-                >
-                  <Icon className="h-6 w-6" strokeWidth={1.6} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-foreground flex items-center gap-2">
-                    {title}
-                    {active && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-foreground/10 text-foreground/70">
-                        נוכחי
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-snug">{subtitle}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <div className="p-5 pt-2">{Cards}</div>
       </DialogContent>
     </Dialog>
   );
