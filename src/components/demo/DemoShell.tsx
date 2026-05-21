@@ -42,13 +42,14 @@ const DemoShell = ({ children, nav, tint, workspaceLabel }: Props) => {
 
   const roleChip = (
     <span
-      className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase font-semibold px-2 py-0.5 rounded"
-      style={{ background: `${tint}18`, color: tint }}
+      className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2.5 py-1 rounded-full"
+      style={{ background: `${tint}14`, color: tint }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: tint }} />
-      {user ? roleLabels[user.role] : ""} · DEMO
+      מצב דמו: {user ? roleLabels[user.role] : ""}
     </span>
   );
+
 
   const sidebarBody = (
     <>
