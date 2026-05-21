@@ -17,6 +17,10 @@ export interface AppUser {
 interface AuthContextType {
   user: AppUser | null;
   login: (user: AppUser) => void;
+  /** Demo-only: persist a mock user in localStorage and set the session. */
+  demoLogin: (user: AppUser) => void;
+  /** Demo-only: clear the mock user. */
+  demoLogout: () => void;
   logout: () => void;
   isLoggedIn: boolean;
   loading: boolean;
@@ -25,12 +29,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   login: () => {},
+  demoLogin: () => {},
+  demoLogout: () => {},
   logout: () => {},
   isLoggedIn: false,
   loading: true,
 });
 
 export const useAuth = () => useContext(AuthContext);
+
+const DEMO_USER_KEY = "wingate_demo_user";
 
 export const roleLabels: Record<UserRole, string> = {
   admin: "מנהל",
