@@ -179,12 +179,13 @@ const DemoShell = ({ children, nav, tint, workspaceLabel }: Props) => {
           <div className="flex-1" />
           <button
             onClick={openSwitcher}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg bg-foreground text-background text-[11.5px] font-semibold hover:opacity-90"
-            aria-label="החלף תפקיד דמו"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-foreground text-background text-[11.5px] font-semibold hover:opacity-90 active:scale-[0.98] transition"
+            aria-label="החלפת תפקיד"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">החלף תפקיד</span>
+            <span className="hidden xs:inline sm:inline">החלפת תפקיד</span>
           </button>
+
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
