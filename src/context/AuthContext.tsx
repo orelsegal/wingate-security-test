@@ -104,27 +104,25 @@ async function buildAppUserFromSession(session: Session): Promise<AppUser | null
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AppUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(() => {
+    // Hydrate demo user synchronously so first paint is already authed
+    try {
+      const raw = localStorage.getItem(DEMO_USER_KEY);
+      if (raw) return JSON.parse(raw) as AppUser;
+    } catch {}
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Subscribe FIRST, then check the existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setUser((prev) => {
-          // If a mock-login user is in place (no Supabase session), keep it
-          return prev;
-        });
-        return;
-      }
-      // Defer DB calls to avoid deadlock inside the auth callback
+      if (!session) return; // keep any mock/demo user in state
       setTimeout(async () => {
         const appUser = await buildAppUserFromSession(session);
         if (appUser) setUser(appUser);
       }, 0);
     });
 
-    // Initial session check
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -137,16 +135,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Mock login (still used by LoginPage demo cards). Sets local user only.
   const login = useCallback((u: AppUser) => setUser(u), []);
 
+  const demoLogin = useCallback((u: AppUser) => {
+    try { localStorage.setItem(DEMO_USER_KEY, JSON.stringify(u)); } catch {}
+    setUser(u);
+  }, []);
+
+  const demoLogout = useCallback(() => {
+    try { localStorage.removeItem(DEMO_USER_KEY); } catch {}
+    setUser(null);
+  }, []);
+
   const logout = useCallback(() => {
+    try { localStorage.removeItem(DEMO_USER_KEY); } catch {}
     setUser(null);
     void supabase.auth.signOut();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user, loading }}>
+    <AuthContext.Provider value={{ user, login, demoLogin, demoLogout, logout, isLoggedIn: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   );
