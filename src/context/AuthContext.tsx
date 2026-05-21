@@ -38,6 +38,8 @@ export const roleLabels: Record<UserRole, string> = {
   parent: "הורה",
   coach: "מאמן",
   student: "תלמיד",
+  coordinator: "רכזת",
+  staff: "צוות",
 };
 
 export const roleDescriptions: Record<UserRole, string> = {
@@ -46,6 +48,8 @@ export const roleDescriptions: Record<UserRole, string> = {
   parent: "צפייה בהתקדמות הילד/ה שלי",
   coach: "מעקב אחר ספורטאי הענף שלי",
   student: "צפייה בלוח זמנים, מפת דרכים ולמידה",
+  coordinator: "מרכז שליטה — ניהול כולל של מפגשים, צוות וספורטאים",
+  staff: "המפגשים שלי, אישורים, סיכומים וספורטאים משויכים",
 };
 
 /** Demo users for each role — kept for LoginPage fallback (mock mode) */
