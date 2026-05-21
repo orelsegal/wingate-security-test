@@ -30,10 +30,7 @@ const BuilderWorkspacePage = () => {
   const { data: students = [] } = useStudents();
   const b = useBuilder();
 
-  // Admin only
-  if (user && user.role !== "admin") return <Navigate to="/" replace />;
-
-  // Enter / exit builder mode
+  // Enter / exit builder mode (hook must run before any conditional return)
   useEffect(() => {
     b.enterBuilder();
     return () => b.exitBuilder();
@@ -41,6 +38,9 @@ const BuilderWorkspacePage = () => {
   }, []);
 
   const studentId = useMemo(() => routeId || students[0]?.id || "", [routeId, students]);
+
+  // Admin only
+  if (user && user.role !== "admin") return <Navigate to="/" replace />;
 
   const switchStudent = (id: string) => navigate(`/admin/builder/profile/${id}`, { replace: true });
 
