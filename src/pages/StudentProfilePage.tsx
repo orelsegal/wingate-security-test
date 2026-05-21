@@ -91,11 +91,12 @@ const StudentProfilePage = () => {
   const [activeSubjectTab, setActiveSubjectTab] = useState<string | null>(null);
 
   const { canEdit: editModeActive } = useEditMode();
-  const { layout: builderLayout } = useBuilder();
+  const { layout: builderLayout, inBuilder, previewRole } = useBuilder();
   const [builderOpen, setBuilderOpen] = useState(false);
-  // Admin Builder — Phase 2: admins can edit fields and open the visual builder panel.
+  // Admin Builder — Phase 3: admins can edit fields and open the visual builder panel.
   const isEditable = editModeActive;
-  const userRole = (user?.role || "student") as any;
+  // When admin is using the Builder workspace and previewing as a role, swap the role lens.
+  const userRole = ((inBuilder && previewRole) ? previewRole : (user?.role || "student")) as any;
   const isSectionVisible = (id: string) => {
     const sec = builderLayout.sections.find((s) => s.id === id);
     if (!sec) return true;
