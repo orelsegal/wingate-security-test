@@ -127,6 +127,17 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               <span>{labels.nav.messages}</span>
             </button>
           )}
+
+          {/* Admin-only — entrypoint to the dedicated Builder workspace */}
+          {user?.role === "admin" && (
+            <button
+              onClick={() => { navigate("/admin/builder/profile"); onNavigate?.(); }}
+              className="w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start font-medium text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+            >
+              <Wrench className="h-[15px] w-[15px] shrink-0 text-sidebar-muted" strokeWidth={1.5} />
+              <span>בונה פרופיל ספורטאי</span>
+            </button>
+          )}
         </div>
       </nav>
 
