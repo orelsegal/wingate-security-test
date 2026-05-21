@@ -1,17 +1,23 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { UserRole } from "./AuthContext";
 
 /**
- * Admin Builder — Phase 2
+ * Admin Builder — Phase 3
  *
- * Layout schema persisted to `builder_layouts` (one row per page_key).
- * Custom field VALUES per athlete live in `student_custom_values`.
+ * Layout is stored in `builder_layouts.layout` as
+ *   { published: BuilderLayout, draft: BuilderLayout | null }
+ * (legacy rows of shape { sections: [...] } are auto-migrated as published).
  *
- * "system" sections are the hard-coded blocks of StudentProfilePage; the
- * builder can rename/hide/reorder them but cannot delete them. Custom
- * sections / fields are fully managed by the admin.
+ * Behaviour:
+ * - When `inBuilder === true` (i.e. admin opened the Builder workspace), all
+ *   mutations are applied to a draft layout. Profile rendering inside the
+ *   Builder uses the draft, so admins see their unpublished changes live.
+ * - Outside the Builder workspace, the rest of the app keeps reading the
+ *   published layout only, so teachers / coaches / parents / students never
+ *   see in-progress work.
+ * - `publish()` promotes the draft to published; `discardDraft()` throws it away.
  */
 
 export type FieldType =
@@ -43,7 +49,7 @@ export interface BuilderField {
   required?: boolean;
   placeholder?: string;
   defaultValue?: any;
-  options?: string[];                  // for dropdown/multi-select
+  options?: string[];
   visibleRoles: UserRole[];
   editRoles: UserRole[];
 }
@@ -54,7 +60,7 @@ export interface BuilderSection {
   id: string;
   title: string;
   visible: boolean;
-  system?: boolean;                    // if true, can't delete; built-in renderer
+  system?: boolean;
   fields: BuilderField[];
   tabs?: BuilderTab[];
   visibleRoles: UserRole[];
@@ -72,13 +78,40 @@ const DEFAULT_SYSTEM_SECTIONS: BuilderSection[] = [
 ];
 
 const PAGE_KEY = "student-profile";
-
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+const cloneLayout = (l: BuilderLayout): BuilderLayout => JSON.parse(JSON.stringify(l));
+
+const ensureSystemSections = (l: BuilderLayout): BuilderLayout => {
+  const sysIds = new Set(DEFAULT_SYSTEM_SECTIONS.map((s) => s.id));
+  const storedSys = new Set(l.sections.filter((s) => s.system).map((s) => s.id));
+  const missing = DEFAULT_SYSTEM_SECTIONS.filter((s) => !storedSys.has(s.id));
+  return { sections: [...l.sections.filter((s) => !s.system || sysIds.has(s.id)), ...missing] };
+};
+
 interface Ctx {
+  /** Resolved layout to render (draft when inBuilder, published otherwise) */
   layout: BuilderLayout;
+  publishedLayout: BuilderLayout;
+  draftLayout: BuilderLayout | null;
+  isDirty: boolean;
+
+  // Builder workspace state
+  inBuilder: boolean;
+  enterBuilder: () => void;
+  exitBuilder: () => void;
+  previewRole: UserRole | null;
+  setPreviewRole: (r: UserRole | null) => void;
+
+  // draft lifecycle
+  publish: () => Promise<void>;
+  discardDraft: () => Promise<void>;
+  saveDraft: () => Promise<void>;
+
   loading: boolean;
-  /** map of student_id+field_key -> value, scoped to a single student page */
+  saving: boolean;
+
+  // values (custom field values per student)
   values: Record<string, any>;
   setValue: (studentId: string, fieldKey: string, value: any) => Promise<void>;
   loadValues: (studentId: string) => Promise<void>;
@@ -102,7 +135,6 @@ interface Ctx {
   removeTab: (sectionId: string, tabId: string) => void;
   reorderTabs: (sectionId: string, orderedIds: string[]) => void;
 
-  saving: boolean;
   resetLayout: () => void;
 }
 
@@ -114,12 +146,18 @@ export const useBuilder = () => {
 };
 
 export const BuilderProvider = ({ children }: { children: ReactNode }) => {
-  const [layout, setLayout] = useState<BuilderLayout>({ sections: DEFAULT_SYSTEM_SECTIONS });
+  const [publishedLayout, setPublishedLayout] = useState<BuilderLayout>({ sections: DEFAULT_SYSTEM_SECTIONS });
+  const [draftLayout, setDraftLayout] = useState<BuilderLayout | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [values, setValues] = useState<Record<string, any>>({});
+  const [inBuilder, setInBuilder] = useState(false);
+  const [previewRole, setPreviewRole] = useState<UserRole | null>(null);
 
-  // ---- load layout
+  const inBuilderRef = useRef(inBuilder);
+  inBuilderRef.current = inBuilder;
+
+  // ---- load
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
@@ -127,35 +165,71 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
         .select("layout")
         .eq("page_key", PAGE_KEY)
         .maybeSingle();
-      if (!error && data && (data as any).layout?.sections) {
-        const stored = (data as any).layout as BuilderLayout;
-        // Merge: ensure all system sections still present (re-add missing)
-        const sysIds = new Set(DEFAULT_SYSTEM_SECTIONS.map((s) => s.id));
-        const storedSys = new Set(stored.sections.filter((s) => s.system).map((s) => s.id));
-        const missing = DEFAULT_SYSTEM_SECTIONS.filter((s) => !storedSys.has(s.id));
-        setLayout({ sections: [...stored.sections.filter((s) => !s.system || sysIds.has(s.id)), ...missing] });
+      if (!error && data && (data as any).layout) {
+        const raw = (data as any).layout;
+        if (raw.published) {
+          // new shape
+          setPublishedLayout(ensureSystemSections(raw.published));
+          setDraftLayout(raw.draft ? ensureSystemSections(raw.draft) : null);
+        } else if (raw.sections) {
+          // legacy shape
+          setPublishedLayout(ensureSystemSections(raw));
+        }
       }
       setLoading(false);
     })();
   }, []);
 
-  // ---- persist (debounced)
-  const persist = useCallback(async (next: BuilderLayout) => {
+  const persistRaw = useCallback(async (pub: BuilderLayout, draft: BuilderLayout | null) => {
     setSaving(true);
     const { error } = await supabase
       .from("builder_layouts" as any)
-      .upsert({ page_key: PAGE_KEY, layout: next as any }, { onConflict: "page_key" });
+      .upsert({ page_key: PAGE_KEY, layout: { published: pub, draft } as any }, { onConflict: "page_key" });
     setSaving(false);
-    if (error) toast.error("שמירת הפריסה נכשלה: " + error.message);
+    if (error) toast.error("שמירה נכשלה: " + error.message);
   }, []);
 
   const mutate = useCallback((updater: (l: BuilderLayout) => BuilderLayout) => {
-    setLayout((prev) => {
-      const next = updater(prev);
-      void persist(next);
-      return next;
-    });
-  }, [persist]);
+    if (inBuilderRef.current) {
+      setDraftLayout((prev) => {
+        const base = prev ?? cloneLayout(publishedLayout);
+        const next = updater(base);
+        void persistRaw(publishedLayout, next);
+        return next;
+      });
+    } else {
+      setPublishedLayout((prev) => {
+        const next = updater(prev);
+        void persistRaw(next, draftLayout);
+        return next;
+      });
+    }
+  }, [publishedLayout, draftLayout, persistRaw]);
+
+  // ---- draft lifecycle
+  const publish = useCallback(async () => {
+    if (!draftLayout) { toast("אין שינויים לפרסום"); return; }
+    setPublishedLayout(draftLayout);
+    setDraftLayout(null);
+    await persistRaw(draftLayout, null);
+    toast.success("הפריסה פורסמה");
+  }, [draftLayout, persistRaw]);
+
+  const discardDraft = useCallback(async () => {
+    if (!draftLayout) return;
+    setDraftLayout(null);
+    await persistRaw(publishedLayout, null);
+    toast.success("טיוטה נמחקה");
+  }, [draftLayout, publishedLayout, persistRaw]);
+
+  const saveDraft = useCallback(async () => {
+    await persistRaw(publishedLayout, draftLayout);
+    toast.success("טיוטה נשמרה");
+  }, [publishedLayout, draftLayout, persistRaw]);
+
+  // ---- builder mode
+  const enterBuilder = useCallback(() => setInBuilder(true), []);
+  const exitBuilder = useCallback(() => { setInBuilder(false); setPreviewRole(null); }, []);
 
   // ---- values
   const loadValues = useCallback(async (studentId: string) => {
@@ -178,7 +252,7 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     else toast.success("נשמר");
   }, []);
 
-  // ---- section ops
+  // ---- ops
   const addSection = (title: string) => mutate((l) => ({
     sections: [...l.sections, { id: uid(), title, visible: true, fields: [], visibleRoles: [...ALL_ROLES] }],
   }));
@@ -199,7 +273,6 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     return { sections: orderedIds.map((id) => byId.get(id)!).filter(Boolean) };
   });
 
-  // ---- field ops
   const addField = (sectionId: string, field: Omit<BuilderField, "id">) => mutate((l) => ({
     sections: l.sections.map((s) => s.id === sectionId
       ? { ...s, fields: [...s.fields, { ...field, id: uid() }] } : s),
@@ -220,7 +293,6 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     }),
   }));
 
-  // ---- tab ops
   const addTab = (sectionId: string, title: string) => mutate((l) => ({
     sections: l.sections.map((s) => s.id === sectionId
       ? { ...s, tabs: [...(s.tabs || []), { id: uid(), title }] } : s),
@@ -239,13 +311,20 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
 
   const resetLayout = () => mutate(() => ({ sections: DEFAULT_SYSTEM_SECTIONS }));
 
+  const effectiveLayout = inBuilder && draftLayout ? draftLayout : publishedLayout;
+  const isDirty = !!draftLayout;
+
   const value = useMemo<Ctx>(() => ({
-    layout, loading, values, setValue, loadValues,
+    layout: effectiveLayout, publishedLayout, draftLayout, isDirty,
+    inBuilder, enterBuilder, exitBuilder, previewRole, setPreviewRole,
+    publish, discardDraft, saveDraft,
+    loading, saving,
+    values, setValue, loadValues,
     addSection, renameSection, toggleSectionVisible, setSectionRoleVisibility, removeSection, reorderSections,
     addField, updateField, removeField, reorderFields,
     addTab, removeTab, reorderTabs,
-    saving, resetLayout,
-  }), [layout, loading, values, saving, setValue, loadValues]);
+    resetLayout,
+  }), [effectiveLayout, publishedLayout, draftLayout, isDirty, inBuilder, previewRole, loading, saving, values, enterBuilder, exitBuilder, publish, discardDraft, saveDraft, setValue, loadValues]);
 
   return <BuilderContext.Provider value={value}>{children}</BuilderContext.Provider>;
 };
