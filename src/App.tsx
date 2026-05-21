@@ -73,8 +73,11 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
           <Routes>
-            {/* Temporary demo entry — replaces the broken email/password login */}
+            {/* Temporary demo entry — replaces the broken email/password login.
+                Both /login and /demo render the same polished role hub. */}
             <Route path="/login" element={<DemoEntryPage />} />
+            <Route path="/demo" element={<DemoEntryPage />} />
+
 
             {/* Demo role dashboards — each role gets its own shell, menu and routes */}
             <Route path="/coordinator/dashboard" element={<DemoRoleRoute role="coordinator"><CoordinatorDashboard /></DemoRoleRoute>} />

@@ -42,13 +42,14 @@ const DemoShell = ({ children, nav, tint, workspaceLabel }: Props) => {
 
   const roleChip = (
     <span
-      className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.14em] uppercase font-semibold px-2 py-0.5 rounded"
-      style={{ background: `${tint}18`, color: tint }}
+      className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2.5 py-1 rounded-full"
+      style={{ background: `${tint}14`, color: tint }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: tint }} />
-      {user ? roleLabels[user.role] : ""} · DEMO
+      מצב דמו: {user ? roleLabels[user.role] : ""}
     </span>
   );
+
 
   const sidebarBody = (
     <>
@@ -178,12 +179,13 @@ const DemoShell = ({ children, nav, tint, workspaceLabel }: Props) => {
           <div className="flex-1" />
           <button
             onClick={openSwitcher}
-            className="inline-flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg bg-foreground text-background text-[11.5px] font-semibold hover:opacity-90"
-            aria-label="החלף תפקיד דמו"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-foreground text-background text-[11.5px] font-semibold hover:opacity-90 active:scale-[0.98] transition"
+            aria-label="החלפת תפקיד"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">החלף תפקיד</span>
+            <span>החלפת תפקיד</span>
           </button>
+
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
