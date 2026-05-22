@@ -16,6 +16,16 @@ export type Student = Tables<"students"> & {
   exams_completed?: string | null;
   archived?: boolean | null;
   last_updated_at?: string | null;
+  attendance_percent?: number | null;
+  sessions_completed?: number | null;
+  open_requests?: number | null;
+  strengths?: string | null;
+  challenges?: string | null;
+  next_action?: string | null;
+  primary_support_subject?: string | null;
+  last_session_date?: string | null;
+  trend?: string | null;
+  timeline?: Array<{ date: string; type: string; text: string }> | null;
 };
 
 export type StatusType = "green" | "yellow" | "red";

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp,
+  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp, TrendingDown, Minus, CalendarCheck, Activity, MessageCircle,
   UserPlus, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, SlidersHorizontal,
 } from "lucide-react";
 import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSports, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
@@ -400,7 +400,15 @@ const StudentsPage = () => {
                         <p className="text-[13px] font-semibold text-foreground leading-tight truncate">{student.full_name}</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
                       </div>
-                      <span className="text-[18px] font-bold text-foreground tabular-nums shrink-0">{student.avg_score || "—"}</span>
+                      <div className="flex flex-col items-end shrink-0">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[18px] font-bold text-foreground tabular-nums">{student.avg_score || "—"}</span>
+                          {student.trend === "up" && <TrendingUp className="h-3 w-3 text-success" strokeWidth={2} />}
+                          {student.trend === "down" && <TrendingDown className="h-3 w-3 text-destructive" strokeWidth={2} />}
+                          {student.trend === "stable" && <Minus className="h-3 w-3 text-muted-foreground/50" strokeWidth={2} />}
+                        </div>
+                        <span className="text-[9px] text-muted-foreground">ממוצע</span>
+                      </div>
                     </div>
 
                     {/* Status bar */}
@@ -411,6 +419,40 @@ const StudentsPage = () => {
                       </div>
                       <span className={`text-[11px] font-medium ${config.textClass} opacity-70`}>{student.completion_percent}%</span>
                     </div>
+
+                    {/* Quick stats row */}
+                    <div className="grid grid-cols-3 gap-1.5 mb-2.5">
+                      <div className="flex flex-col items-center justify-center bg-accent/40 rounded-lg py-1.5">
+                        <div className="flex items-center gap-0.5">
+                          <CalendarCheck className="h-2.5 w-2.5 text-muted-foreground" strokeWidth={1.8} />
+                          <span className="text-[11px] font-semibold text-foreground tabular-nums">{student.attendance_percent ?? "—"}%</span>
+                        </div>
+                        <span className="text-[8.5px] text-muted-foreground/80">נוכחות</span>
+                      </div>
+                      <div className="flex flex-col items-center justify-center bg-accent/40 rounded-lg py-1.5">
+                        <div className="flex items-center gap-0.5">
+                          <Activity className="h-2.5 w-2.5 text-muted-foreground" strokeWidth={1.8} />
+                          <span className="text-[11px] font-semibold text-foreground tabular-nums">{student.sessions_completed ?? 0}</span>
+                        </div>
+                        <span className="text-[8.5px] text-muted-foreground/80">שיעורי תגבור</span>
+                      </div>
+                      <div className={`flex flex-col items-center justify-center rounded-lg py-1.5 ${(student.open_requests ?? 0) > 0 ? "bg-warning/15" : "bg-accent/40"}`}>
+                        <div className="flex items-center gap-0.5">
+                          <MessageCircle className={`h-2.5 w-2.5 ${(student.open_requests ?? 0) > 0 ? "text-warning" : "text-muted-foreground"}`} strokeWidth={1.8} />
+                          <span className={`text-[11px] font-semibold tabular-nums ${(student.open_requests ?? 0) > 0 ? "text-warning" : "text-foreground"}`}>{student.open_requests ?? 0}</span>
+                        </div>
+                        <span className="text-[8.5px] text-muted-foreground/80">פניות פתוחות</span>
+                      </div>
+                    </div>
+
+                    {/* Primary support subject */}
+                    {student.primary_support_subject && (
+                      <div className="mb-2 px-2.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-1.5">
+                        <BookOpen className="h-2.5 w-2.5 text-primary shrink-0" strokeWidth={1.8} />
+                        <span className="text-[10px] text-muted-foreground">תמיכה ראשית:</span>
+                        <span className="text-[10.5px] font-semibold text-primary truncate">{student.primary_support_subject}</span>
+                      </div>
+                    )}
 
                     {/* Subject chips */}
                     {topSubjects.length > 0 && (
