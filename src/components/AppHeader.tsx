@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
+import { Bell, Search, Menu, ChevronLeft, LogOut } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
