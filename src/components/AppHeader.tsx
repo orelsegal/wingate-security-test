@@ -97,7 +97,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         </div>
 
         {/* CENTER: Page title */}
-        <div className="absolute left-1/2 -translate-x-1/2 text-center">
+        <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 text-center">
           <h1 className="text-[14px] md:text-[15px] font-semibold text-foreground tracking-tight leading-tight">
             {isHome ? (user ? roleTitles[user.role] : "תמונת מצב") : title}
           </h1>
