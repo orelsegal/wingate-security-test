@@ -51,9 +51,9 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
     return v !== false;
   });
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
   };
 
   return (

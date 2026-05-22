@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, ChevronLeft } from "lucide-react";
+import { Bell, Search, Menu, ChevronLeft, LogOut } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -66,11 +66,16 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
 };
 
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { crumbs, title } = useBreadcrumbs(user?.role);
   const isHome = location.pathname === "/" || location.pathname === "/student-home";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="h-auto bg-card border-b border-border sticky top-0 z-10" dir="rtl">
@@ -112,6 +117,17 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             <Bell className="h-4 w-4" strokeWidth={1.5} />
             <span className="absolute top-1.5 start-1.5 w-[6px] h-[6px] bg-primary rounded-full ring-2 ring-card" />
           </button>
+          {user && (
+            <button
+              onClick={handleLogout}
+              title="יציאה מהמערכת"
+              aria-label="יציאה מהמערכת"
+              className="ms-1 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">יציאה</span>
+            </button>
+          )}
         </div>
       </div>
 
