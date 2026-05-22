@@ -122,10 +122,10 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
               onClick={handleLogout}
               title="יציאה מהמערכת"
               aria-label="יציאה מהמערכת"
-              className="ms-1 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150"
+              className="ms-1 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border bg-card text-foreground hover:bg-accent transition-colors duration-150"
             >
               <LogOut className="h-4 w-4" strokeWidth={1.5} />
-              <span className="hidden sm:inline">יציאה</span>
+              <span>יציאה</span>
             </button>
           )}
         </div>
