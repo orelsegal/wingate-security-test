@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, Wrench } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -125,17 +125,6 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
                 )}
               </span>
               <span>{labels.nav.messages}</span>
-            </button>
-          )}
-
-          {/* Admin-only — entrypoint to the dedicated Builder workspace */}
-          {user?.role === "admin" && (
-            <button
-              onClick={() => { navigate("/admin/builder/profile"); onNavigate?.(); }}
-              className="w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start font-medium text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-            >
-              <Wrench className="h-[15px] w-[15px] shrink-0 text-sidebar-muted" strokeWidth={1.5} />
-              <span>בונה פרופיל ספורטאי</span>
             </button>
           )}
         </div>

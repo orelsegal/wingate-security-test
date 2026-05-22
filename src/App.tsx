@@ -37,7 +37,6 @@ import TeacherCourseDetailPage from "./pages/TeacherCourseDetailPage.tsx";
 import UserActivityPage from "./pages/UserActivityPage.tsx";
 import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
-import BuilderWorkspacePage from "./pages/BuilderWorkspacePage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -96,9 +95,6 @@ const App = () => (
               <Route path="/year-plan-2026" element={<YearPlan2026Page />} />
               <Route path="/admin/labels" element={<AdminLabelsPage />} />
             </Route>
-            {/* Admin Builder workspace — full-screen, outside AppLayout chrome */}
-            <Route path="/admin/builder/profile" element={<ProtectedRoute><BuilderWorkspacePage /></ProtectedRoute>} />
-            <Route path="/admin/builder/profile/:id" element={<ProtectedRoute><BuilderWorkspacePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </BrowserRouter>
