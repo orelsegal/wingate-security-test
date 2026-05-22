@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert, ChevronDown, Loader2, FileText, Stethoscope, Languages, Check, GraduationCap, Hash, ClipboardList, PenLine } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, AlertCircle, CheckCircle2, Target, AlertTriangle, ShieldAlert, ChevronDown, Loader2, FileText, Stethoscope, Languages, Check, GraduationCap, Hash, ClipboardList, PenLine, CalendarCheck, Activity, MessageCircle, TrendingUp, TrendingDown, Minus, Sparkles, Lightbulb, History } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useStudent, useStudentProgress, useStudentRoadmap, useUpdateStudent, useSubjects, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { StatusBadge } from "@/components/StatusBadge";
