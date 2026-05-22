@@ -94,19 +94,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Clear any leftover legacy demo auth keys — real auth is Supabase only.
+    try {
+      ["wingate_demo_user", "demo_user", "wingate_role", "demo_role"].forEach((k) =>
+        window.localStorage.removeItem(k),
+      );
+    } catch { /* ignore */ }
+
     // Subscribe FIRST, then check the existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        setUser((prev) => {
-          // If a mock-login user is in place (no Supabase session), keep it
-          return prev;
-        });
+        // No session => signed out. Always clear the in-memory user.
+        setUser(null);
         return;
       }
       // Defer DB calls to avoid deadlock inside the auth callback
       setTimeout(async () => {
         const appUser = await buildAppUserFromSession(session);
-        if (appUser) setUser(appUser);
+        setUser(appUser); // null if no role — ProtectedRoute will bounce to /login
       }, 0);
     });
 
@@ -115,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const appUser = await buildAppUserFromSession(session);
-        if (appUser) setUser(appUser);
+        setUser(appUser);
       }
       setLoading(false);
     })();
@@ -123,12 +128,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Mock login (still used by LoginPage demo cards). Sets local user only.
   const login = useCallback((u: AppUser) => setUser(u), []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setUser(null);
-    void supabase.auth.signOut();
+    try {
+      ["wingate_demo_user", "demo_user", "wingate_role", "demo_role"].forEach((k) =>
+        window.localStorage.removeItem(k),
+      );
+    } catch { /* ignore */ }
+    await supabase.auth.signOut();
   }, []);
 
   return (
