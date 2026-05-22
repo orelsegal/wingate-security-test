@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp,
+  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2, BookOpen, ChevronLeft, TrendingUp, TrendingDown, Minus, CalendarCheck, Activity, MessageCircle,
   UserPlus, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, SlidersHorizontal,
 } from "lucide-react";
 import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSports, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
