@@ -66,11 +66,16 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
 };
 
 const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { crumbs, title } = useBreadcrumbs(user?.role);
   const isHome = location.pathname === "/" || location.pathname === "/student-home";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="h-auto bg-card border-b border-border sticky top-0 z-10" dir="rtl">
