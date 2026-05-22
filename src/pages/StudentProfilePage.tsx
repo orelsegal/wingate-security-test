@@ -392,6 +392,90 @@ const StudentProfilePage = () => {
       </div>
       )}
 
+      {/* ═══ OVERVIEW KPI STRIP ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: CalendarCheck, label: "נוכחות", value: `${(student as any).attendance_percent ?? "—"}%`, accent: "text-success", bg: "bg-success/10" },
+          { icon: Activity, label: "שיעורי תגבור", value: String((student as any).sessions_completed ?? 0), accent: "text-primary", bg: "bg-primary/10" },
+          { icon: MessageCircle, label: "פניות פתוחות", value: String((student as any).open_requests ?? 0), accent: ((student as any).open_requests ?? 0) > 0 ? "text-warning" : "text-muted-foreground", bg: ((student as any).open_requests ?? 0) > 0 ? "bg-warning/10" : "bg-accent/40" },
+          { icon: (student as any).trend === "down" ? TrendingDown : (student as any).trend === "up" ? TrendingUp : Minus, label: "מגמה", value: (student as any).trend === "up" ? "שיפור" : (student as any).trend === "down" ? "ירידה" : "יציב", accent: (student as any).trend === "up" ? "text-success" : (student as any).trend === "down" ? "text-destructive" : "text-muted-foreground", bg: (student as any).trend === "up" ? "bg-success/10" : (student as any).trend === "down" ? "bg-destructive/10" : "bg-accent/40" },
+        ].map((kpi, i) => (
+          <div key={i} className="card-premium p-4 flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
+              <kpi.icon className={`h-4 w-4 ${kpi.accent}`} strokeWidth={1.5} />
+            </div>
+            <div className="min-w-0">
+              <p className={`text-[18px] font-bold leading-none tabular-nums ${kpi.accent}`}>{kpi.value}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">{kpi.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ═══ INSIGHTS: STRENGTHS / CHALLENGES / NEXT ACTION ═══ */}
+      {((student as any).strengths || (student as any).challenges || (student as any).next_action) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {(student as any).strengths && (
+            <div className="card-premium p-4 border-r-2 border-success/40">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-success" strokeWidth={1.5} />
+                <h4 className="text-[12px] font-semibold text-foreground">חוזקות</h4>
+              </div>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">{(student as any).strengths}</p>
+            </div>
+          )}
+          {(student as any).challenges && (
+            <div className="card-premium p-4 border-r-2 border-warning/40">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-warning" strokeWidth={1.5} />
+                <h4 className="text-[12px] font-semibold text-foreground">אתגרים</h4>
+              </div>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">{(student as any).challenges}</p>
+            </div>
+          )}
+          {(student as any).next_action && (
+            <div className="card-premium p-4 border-r-2 border-primary/40">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Lightbulb className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                <h4 className="text-[12px] font-semibold text-foreground">פעולה מומלצת</h4>
+              </div>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">{(student as any).next_action}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══ TIMELINE ═══ */}
+      {Array.isArray((student as any).timeline) && (student as any).timeline.length > 0 && (
+        <div className="card-premium p-5 md:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <History className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            <h3 className="text-[14px] font-semibold text-foreground">ציר זמן — עדכונים אחרונים</h3>
+          </div>
+          <ol className="relative border-r border-border/60 pr-4 space-y-3">
+            {((student as any).timeline as Array<{date:string;type:string;text:string}>).map((ev, i) => {
+              const iconMap: Record<string, typeof Activity> = {
+                session: Activity, note: PenLine, attendance: CalendarCheck, meeting: MessageCircle, grade: GraduationCap,
+              };
+              const Icon = iconMap[ev.type] || PenLine;
+              const dateStr = new Date(ev.date).toLocaleDateString("he-IL", { day: "numeric", month: "short" });
+              return (
+                <li key={i} className="relative">
+                  <span className="absolute -right-[22px] top-1 w-3 h-3 rounded-full bg-primary/15 ring-2 ring-background flex items-center justify-center">
+                    <Icon className="h-2 w-2 text-primary" strokeWidth={2.5} />
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[11px] text-muted-foreground tabular-nums">{dateStr}</span>
+                    <p className="text-[12.5px] text-foreground leading-snug">{ev.text}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+
+
       {/* ═══ MATH LEVEL SELECTOR ═══ */}
       {isSectionVisible("sys-math") && (
       <div className="card-premium p-5 md:p-6">
