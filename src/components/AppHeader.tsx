@@ -117,6 +117,17 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
             <Bell className="h-4 w-4" strokeWidth={1.5} />
             <span className="absolute top-1.5 start-1.5 w-[6px] h-[6px] bg-primary rounded-full ring-2 ring-card" />
           </button>
+          {user && (
+            <button
+              onClick={handleLogout}
+              title="יציאה מהמערכת"
+              aria-label="יציאה מהמערכת"
+              className="ms-1 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">יציאה</span>
+            </button>
+          )}
         </div>
       </div>
 
