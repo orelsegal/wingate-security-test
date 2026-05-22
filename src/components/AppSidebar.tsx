@@ -141,7 +141,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
       <div className="mx-5 h-px bg-sidebar-border" />
 
       {/* User */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 space-y-3">
         <div className="flex flex-row items-center gap-3 px-2">
           <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
             {user?.name.split(" ").map(n => n[0]).join("") || "?"}
@@ -152,14 +152,14 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               {user ? labels.roleLabels[user.role] : ""}
             </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-1.5 rounded-lg text-sidebar-muted/35 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors duration-150"
-            title="התנתק"
-          >
-            <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
-          </button>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex flex-row items-center justify-center gap-2 px-3 py-2 rounded-xl text-[12.5px] font-medium bg-sidebar-accent/60 text-sidebar-foreground hover:bg-sidebar-accent transition-colors duration-150"
+        >
+          <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
+          <span>יציאה מהמערכת</span>
+        </button>
       </div>
     </aside>
   );
