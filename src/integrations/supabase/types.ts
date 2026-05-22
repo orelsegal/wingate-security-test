@@ -277,11 +277,13 @@ export type Database = {
       students: {
         Row: {
           archived: boolean | null
+          attendance_percent: number | null
           avg_score: number | null
           bagrut_accommodations: string | null
           birth_year: number | null
           book_grade: number | null
           book_name: string | null
+          challenges: string | null
           class_name: string
           coach_sport: string | null
           completion_percent: number
@@ -295,24 +297,34 @@ export type Database = {
           full_name: string
           id: string
           last_name: string | null
+          last_session_date: string | null
           last_updated_at: string | null
           math_level: number | null
           national_id: string | null
+          next_action: string | null
           notes: string | null
+          open_requests: number | null
           overall_status: string
           parent_user_id: string | null
           phone: string | null
+          primary_support_subject: string | null
+          sessions_completed: number | null
           sport: string
+          strengths: string | null
           subject_levels: Json | null
           summative_assessment: string | null
+          timeline: Json | null
+          trend: string | null
         }
         Insert: {
           archived?: boolean | null
+          attendance_percent?: number | null
           avg_score?: number | null
           bagrut_accommodations?: string | null
           birth_year?: number | null
           book_grade?: number | null
           book_name?: string | null
+          challenges?: string | null
           class_name: string
           coach_sport?: string | null
           completion_percent?: number
@@ -326,24 +338,34 @@ export type Database = {
           full_name: string
           id?: string
           last_name?: string | null
+          last_session_date?: string | null
           last_updated_at?: string | null
           math_level?: number | null
           national_id?: string | null
+          next_action?: string | null
           notes?: string | null
+          open_requests?: number | null
           overall_status?: string
           parent_user_id?: string | null
           phone?: string | null
+          primary_support_subject?: string | null
+          sessions_completed?: number | null
           sport: string
+          strengths?: string | null
           subject_levels?: Json | null
           summative_assessment?: string | null
+          timeline?: Json | null
+          trend?: string | null
         }
         Update: {
           archived?: boolean | null
+          attendance_percent?: number | null
           avg_score?: number | null
           bagrut_accommodations?: string | null
           birth_year?: number | null
           book_grade?: number | null
           book_name?: string | null
+          challenges?: string | null
           class_name?: string
           coach_sport?: string | null
           completion_percent?: number
@@ -357,16 +379,24 @@ export type Database = {
           full_name?: string
           id?: string
           last_name?: string | null
+          last_session_date?: string | null
           last_updated_at?: string | null
           math_level?: number | null
           national_id?: string | null
+          next_action?: string | null
           notes?: string | null
+          open_requests?: number | null
           overall_status?: string
           parent_user_id?: string | null
           phone?: string | null
+          primary_support_subject?: string | null
+          sessions_completed?: number | null
           sport?: string
+          strengths?: string | null
           subject_levels?: Json | null
           summative_assessment?: string | null
+          timeline?: Json | null
+          trend?: string | null
         }
         Relationships: []
       }
