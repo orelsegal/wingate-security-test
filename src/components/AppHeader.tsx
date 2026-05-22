@@ -19,8 +19,6 @@ const roleTitles: Record<UserRole, string> = {
   student: "המרחב שלי",
   parent: "התקדמות הילד/ה",
   coach: "מרכז המאמן",
-  coordinator: "מרכז שליטה",
-  staff: "המפגשים שלי",
 };
 
 const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => {

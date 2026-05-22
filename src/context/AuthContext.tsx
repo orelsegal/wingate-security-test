@@ -2,14 +2,12 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student" | "coordinator" | "staff";
+export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student";
 
 export interface AppUser {
   name: string;
   role: UserRole;
   email: string;
-  /** Optional sub-type for "staff" demo role (e.g. "tutor"). */
-  staff_type?: string;
   /** For parent: student IDs. For coach: sport names. For student: own student ID */
   scopeFilter?: string[];
 }
@@ -17,10 +15,6 @@ export interface AppUser {
 interface AuthContextType {
   user: AppUser | null;
   login: (user: AppUser) => void;
-  /** Demo-only: persist a mock user in localStorage and set the session. */
-  demoLogin: (user: AppUser) => void;
-  /** Demo-only: clear the mock user. */
-  demoLogout: () => void;
   logout: () => void;
   isLoggedIn: boolean;
   loading: boolean;
@@ -29,8 +23,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   login: () => {},
-  demoLogin: () => {},
-  demoLogout: () => {},
   logout: () => {},
   isLoggedIn: false,
   loading: true,
@@ -38,16 +30,12 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-const DEMO_USER_KEY = "wingate_demo_user";
-
 export const roleLabels: Record<UserRole, string> = {
   admin: "מנהל",
   teacher: "מורה",
   parent: "הורה",
   coach: "מאמן",
   student: "תלמיד",
-  coordinator: "רכזת",
-  staff: "צוות",
 };
 
 export const roleDescriptions: Record<UserRole, string> = {
@@ -56,8 +44,6 @@ export const roleDescriptions: Record<UserRole, string> = {
   parent: "צפייה בהתקדמות הילד/ה שלי",
   coach: "מעקב אחר ספורטאי הענף שלי",
   student: "צפייה בלוח זמנים, מפת דרכים ולמידה",
-  coordinator: "מרכז שליטה — ניהול כולל של מפגשים, צוות וספורטאים",
-  staff: "המפגשים שלי, אישורים, סיכומים וספורטאים משויכים",
 };
 
 /** Demo users for each role — kept for LoginPage fallback (mock mode) */
@@ -104,25 +90,27 @@ async function buildAppUserFromSession(session: Session): Promise<AppUser | null
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AppUser | null>(() => {
-    // Hydrate demo user synchronously so first paint is already authed
-    try {
-      const raw = localStorage.getItem(DEMO_USER_KEY);
-      if (raw) return JSON.parse(raw) as AppUser;
-    } catch {}
-    return null;
-  });
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Subscribe FIRST, then check the existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) return; // keep any mock/demo user in state
+      if (!session) {
+        setUser((prev) => {
+          // If a mock-login user is in place (no Supabase session), keep it
+          return prev;
+        });
+        return;
+      }
+      // Defer DB calls to avoid deadlock inside the auth callback
       setTimeout(async () => {
         const appUser = await buildAppUserFromSession(session);
         if (appUser) setUser(appUser);
       }, 0);
     });
 
+    // Initial session check
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -135,26 +123,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Mock login (still used by LoginPage demo cards). Sets local user only.
   const login = useCallback((u: AppUser) => setUser(u), []);
 
-  const demoLogin = useCallback((u: AppUser) => {
-    try { localStorage.setItem(DEMO_USER_KEY, JSON.stringify(u)); } catch {}
-    setUser(u);
-  }, []);
-
-  const demoLogout = useCallback(() => {
-    try { localStorage.removeItem(DEMO_USER_KEY); } catch {}
-    setUser(null);
-  }, []);
-
   const logout = useCallback(() => {
-    try { localStorage.removeItem(DEMO_USER_KEY); } catch {}
     setUser(null);
     void supabase.auth.signOut();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, demoLogin, demoLogout, logout, isLoggedIn: !!user, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   );
