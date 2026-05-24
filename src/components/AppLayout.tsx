@@ -3,7 +3,6 @@ import { Outlet } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import AppHeader from "@/components/AppHeader";
 import PageTransition from "@/components/PageTransition";
-import BuilderOverlay from "@/components/builder/BuilderOverlay";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useActivityLogger } from "@/hooks/useActivityLogger";
@@ -40,7 +39,6 @@ const AppLayout = () => {
           </ErrorBoundary>
         </main>
       </div>
-      <BuilderOverlay />
       <MobileBottomNav />
     </div>
   );
