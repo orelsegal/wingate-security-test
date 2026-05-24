@@ -4,15 +4,9 @@ import { useStudents, useAllStudentProgress, useSports, statusConfig, type Statu
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
+import { classToGrade } from "@/lib/schoolUtils";
 
 const grades = ["י׳", "י״א", "י״ב"];
-
-const classToGrade = (className: string): string => {
-  if (className.startsWith("י״ב") || className.startsWith("יב")) return "י״ב";
-  if (className.startsWith("י״א") || className.startsWith("יא")) return "י״א";
-  if (className.startsWith("י׳") || className.startsWith("י")) return "י׳";
-  return className;
-};
 
 interface SubjectRow {
   id: string;

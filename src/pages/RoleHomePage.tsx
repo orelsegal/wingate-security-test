@@ -11,15 +11,7 @@ import {
 import WingateBadge from "@/components/WingateBadge";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
 import DashboardContent from "@/components/DashboardContent";
-
-/* ═══ Role Titles ═══ */
-const roleTitles: Record<UserRole, string> = {
-  admin: "מרכז ניהול",
-  teacher: "מרכז עבודה",
-  student: "המרחב שלי",
-  parent: "התקדמות הילד/ה",
-  coach: "מרכז המאמן",
-};
+import { roleTitles, CURRENT_SEMESTER } from "@/lib/schoolUtils";
 
 /* ═══ Types ═══ */
 interface ActionCard {
@@ -295,10 +287,21 @@ const ParentHome = () => {
   const { user } = useAuth();
   const childId = user?.scopeFilter?.[0] || "";
 
+  // Safety: parent account not linked to a child yet
+  if (!childId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+        <GraduationCap className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.5} />
+        <p className="text-[14px] font-medium text-foreground">החשבון שלך עדיין לא מקושר לתלמיד</p>
+        <p className="text-[12px] text-muted-foreground">פנה/י למנהל המערכת לחיבור החשבון</p>
+      </div>
+    );
+  }
+
   const cards: ActionCard[] = [
-    { id: "child", title: "הילד/ה שלי", description: "פרופיל, ציונים ומצב לימודי עדכני", icon: Heart, color: "bg-[hsl(350,25%,93%)]", iconColor: "text-[hsl(350,40%,50%)]", path: childId ? `/students/${childId}` : "/students" },
-    { id: "roadmap", title: "מפת הדרך לבגרות", description: "התקדמות, חוסרים ושלבים הבאים", icon: Route, color: "bg-primary/10", iconColor: "text-primary", path: childId ? `/students/${childId}` : "/students" },
-    { id: "status", title: "התקדמות לימודית", description: "ציונים, נוכחות וסטטוס לפי מקצוע", icon: TrendingUp, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: childId ? `/students/${childId}` : "/students" },
+    { id: "child", title: "הילד/ה שלי", description: "פרופיל, ציונים ומצב לימודי עדכני", icon: Heart, color: "bg-[hsl(350,25%,93%)]", iconColor: "text-[hsl(350,40%,50%)]", path: `/students/${childId}` },
+    { id: "roadmap", title: "מפת הדרך לבגרות", description: "התקדמות, חוסרים ושלבים הבאים", icon: Route, color: "bg-primary/10", iconColor: "text-primary", path: `/students/${childId}` },
+    { id: "status", title: "התקדמות לימודית", description: "ציונים, נוכחות וסטטוס לפי מקצוע", icon: TrendingUp, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: `/students/${childId}` },
     { id: "calendar", title: "לוח שנה", description: "משימות, מבחנים ומפגשים קרובים", icon: Calendar, color: "bg-secondary", iconColor: "text-foreground/80", path: "/calendar" },
     { id: "messages", title: "הודעות והערות", description: "הערות מצוות החינוך", icon: MessageSquare, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", comingSoon: true },
   ];
@@ -312,8 +315,19 @@ const CoachHome = () => {
   const { user } = useAuth();
   const { data: students = [] } = useStudents();
   const mySport = user?.scopeFilter?.[0] || "";
-  const myStudents = students.filter((s) => s.sport === mySport);
+  const myStudents = mySport ? students.filter((s) => s.sport === mySport) : [];
   const redCount = myStudents.filter((s) => s.overall_status === "red").length;
+
+  // Safety: coach account not linked to a sport yet
+  if (!mySport) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+        <Dumbbell className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.5} />
+        <p className="text-[14px] font-medium text-foreground">החשבון שלך עדיין לא מקושר לענף ספורט</p>
+        <p className="text-[12px] text-muted-foreground">פנה/י למנהל המערכת לחיבור הענף</p>
+      </div>
+    );
+  }
 
   const cards: ActionCard[] = [
     { id: "status", title: "התקדמות לימודית לפי ענף", description: "סקירת התקדמות לימודית של הענף", icon: BookOpen, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/courses" },
@@ -358,7 +372,7 @@ const RoleHomePage = () => {
               שלום, {user?.name}
             </h1>
             <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
-              {user ? roleLabels[user.role] : ""} · סמסטר א׳ תשפ״ה
+              {user ? roleLabels[user.role] : ""} · {CURRENT_SEMESTER}
             </p>
           </div>
         </div>

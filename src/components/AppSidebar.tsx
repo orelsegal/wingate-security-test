@@ -31,8 +31,8 @@ const allMenuItems: MenuItemDef[] = [
   { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels", roles: ["admin"] },
 ];
 
-/* Mock unread messages counter — replace with real query when messaging backend lands */
-const MESSAGES_UNREAD = 1;
+/* Unread messages counter — 0 until messaging backend is live */
+const MESSAGES_UNREAD = 0;
 
 interface AppSidebarProps {
   onNavigate?: () => void;

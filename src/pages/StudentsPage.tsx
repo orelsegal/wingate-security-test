@@ -18,19 +18,9 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import QuickEditDrawer from "@/components/QuickEditDrawer";
 import DataExportTools from "@/components/DataExportTools";
 import * as XLSX from "xlsx";
+import { classToGrade } from "@/lib/schoolUtils";
 
 const grades = ["ט׳", "י׳", "י״א", "י״ב"];
-
-const classToGrade = (className: string): string => {
-  if (className.startsWith("י״ב") || className.startsWith("יב")) return "י״ב";
-  if (className.startsWith("י״א") || className.startsWith("יא")) return "י״א";
-  if (className.startsWith("י׳") || className.startsWith("י'") || className.startsWith("י")) {
-    if (className.startsWith("יא") || className.startsWith("י״א")) return "י״א";
-    return "י׳";
-  }
-  if (className.startsWith("ט")) return "ט׳";
-  return className;
-};
 
 type ViewMode = "cards" | "table";
 

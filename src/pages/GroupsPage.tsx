@@ -5,16 +5,9 @@ import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents"
 import { useAuth } from "@/context/AuthContext";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import DataExportTools from "@/components/DataExportTools";
+import { classToGrade, GRADE_ORDER } from "@/lib/schoolUtils";
 
-const classOrder = ["י״ב", "י״א", "י׳", "ט׳"];
-
-const classToGrade = (className: string): string => {
-  if (className.startsWith("י״ב") || className.startsWith("יב")) return "י״ב";
-  if (className.startsWith("י״א") || className.startsWith("יא")) return "י״א";
-  if (className.startsWith("י׳") || className.startsWith("י'") || (className.startsWith("י") && !className.startsWith("יא") && !className.startsWith("י״א") && !className.startsWith("יב") && !className.startsWith("י״ב"))) return "י׳";
-  if (className.startsWith("ט")) return "ט׳";
-  return className;
-};
+const classOrder = GRADE_ORDER;
 
 const subjectOptions = ["היסטוריה", "אזרחות", "אנגלית", "לשון", "מתמטיקה"];
 const statusOptions = [

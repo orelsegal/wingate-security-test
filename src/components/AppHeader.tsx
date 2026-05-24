@@ -3,6 +3,7 @@ import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import WingateBadge from "@/components/WingateBadge";
+import { roleTitles } from "@/lib/schoolUtils";
 
 interface AppHeaderProps {
   onMenuToggle?: () => void;
@@ -12,14 +13,6 @@ interface Crumb {
   label: string;
   path?: string;
 }
-
-const roleTitles: Record<UserRole, string> = {
-  admin: "מרכז ניהול",
-  teacher: "מרכז עבודה",
-  student: "המרחב שלי",
-  parent: "התקדמות הילד/ה",
-  coach: "מרכז המאמן",
-};
 
 const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => {
   const location = useLocation();
@@ -60,6 +53,56 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
     const label = labels[type] || "תוכן חיצוני";
     crumbs.push({ label });
     title = label;
+  } else if (path.startsWith("/groups")) {
+    crumbs.push({ label: "קבוצות" });
+    title = "קבוצות";
+  } else if (path.startsWith("/calendar")) {
+    crumbs.push({ label: "לוח שנה" });
+    title = "לוח שנה";
+  } else if (path.startsWith("/teacher-course/")) {
+    crumbs.push({ label: "קורסים", path: "/teacher-courses" });
+    crumbs.push({ label: "פרטי קורס" });
+    title = "פרטי קורס";
+  } else if (path.startsWith("/teacher-courses")) {
+    crumbs.push({ label: "הקורסים שלי" });
+    title = "הקורסים שלי";
+  } else if (path.startsWith("/teacher-subjects")) {
+    crumbs.push({ label: "עריכת מקצועות" });
+    title = "עריכת מקצועות";
+  } else if (path.startsWith("/bagrut-grading")) {
+    crumbs.push({ label: "ציוני בגרות" });
+    title = "ציוני בגרות";
+  } else if (path.startsWith("/year-plan")) {
+    crumbs.push({ label: "תכנית שנתית 2026" });
+    title = "תכנית שנתית 2026";
+  } else if (path.startsWith("/user-activity")) {
+    crumbs.push({ label: "פעילות משתמשים" });
+    title = "פעילות משתמשים";
+  } else if (path.startsWith("/admin/labels")) {
+    crumbs.push({ label: "ניהול תוויות" });
+    title = "ניהול תוויות";
+  } else if (path.startsWith("/subjects")) {
+    crumbs.push({ label: "מקצועות", path: "/subjects" });
+    title = "מקצועות";
+    if (path.match(/^\/subjects\/[^/]+\/[^/]+/)) {
+      crumbs.push({ label: "חלק" });
+      title = "חלק בנושא";
+    } else if (path.match(/^\/subjects\/.+/)) {
+      crumbs.push({ label: "נושא" });
+      title = "נושא";
+    }
+  } else if (path.startsWith("/student-learning")) {
+    crumbs.push({ label: "רמזור למידה" });
+    title = "רמזור למידה";
+  } else if (path.startsWith("/student-roadmap")) {
+    crumbs.push({ label: "מפת הדרכים" });
+    title = "מפת הדרכים";
+  } else if (path.startsWith("/science-intro")) {
+    crumbs.push({ label: "מדעים — מבוא" });
+    title = "מדעים — מבוא";
+  } else if (path.startsWith("/history-course")) {
+    crumbs.push({ label: "קורס היסטוריה" });
+    title = "קורס היסטוריה";
   }
 
   return { crumbs, title };
@@ -110,12 +153,23 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
               {roleLabels[user.role]}
             </span>
           )}
-          <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150">
+          {/* Search — inactive until search backend is live */}
+          <button
+            className="p-2 rounded-lg text-muted-foreground/40 cursor-default"
+            title="חיפוש — בקרוב"
+            aria-disabled="true"
+            tabIndex={-1}
+          >
             <Search className="h-4 w-4" strokeWidth={1.5} />
           </button>
-          <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors duration-150 relative">
+          {/* Bell — visible but inactive until notification backend is live */}
+          <button
+            className="p-2 rounded-lg text-muted-foreground/40 cursor-default"
+            title="התראות — בקרוב"
+            aria-disabled="true"
+            tabIndex={-1}
+          >
             <Bell className="h-4 w-4" strokeWidth={1.5} />
-            <span className="absolute top-1.5 start-1.5 w-[6px] h-[6px] bg-primary rounded-full ring-2 ring-card" />
           </button>
           {user && (
             <button

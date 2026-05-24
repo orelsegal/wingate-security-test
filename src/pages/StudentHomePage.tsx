@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import WingateBadge from "@/components/WingateBadge";
 import { Progress } from "@/components/ui/progress";
 import { calculateTrafficLight, getStatusLabel, type TrafficResult } from "@/lib/trafficLight";
+import { CURRENT_SEMESTER } from "@/lib/schoolUtils";
 
 /* ═══ Status Card ═══ */
 const StatusCard = ({ result }: { result: TrafficResult }) => {
@@ -90,6 +91,17 @@ const StudentHomePage = () => {
     );
   }
 
+  // Student account not linked to a student record yet
+  if (!studentId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6" dir="rtl">
+        <AlertCircle className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+        <p className="text-[14px] font-medium text-foreground">החשבון שלך עדיין לא מקושר לפרופיל תלמיד</p>
+        <p className="text-[12px] text-muted-foreground">פנה/י למנהל המערכת לחיבור החשבון</p>
+      </div>
+    );
+  }
+
   const mainCards = [
     { id: "subjects", title: "התחלת למידה", description: "כנס למקצועות ויחידות לימוד", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", action: () => navigate("/subjects") },
     { id: "profile", title: "מפת הדרכים והציונים שלי", description: "התקדמות, שלבים וציונים עדכניים", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary", action: () => navigate(`/students/${studentId}`) },
@@ -106,7 +118,7 @@ const StudentHomePage = () => {
               שלום, {student?.full_name || user?.name}
             </h1>
             <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
-              {student?.sport} · {student?.class_name} · סמסטר א׳ תשפ״ה
+              {student?.sport} · {student?.class_name} · {CURRENT_SEMESTER}
             </p>
           </div>
         </div>
