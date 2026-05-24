@@ -250,7 +250,6 @@ const AdminHome = () => {
         ]}
       />
       <AIInsightsPanel students={students} role="admin" navigate={navigate} />
-      <ContinueCard navigate={navigate} />
       <SubjectsList navigate={navigate} />
       <MainEntryButtons navigate={navigate} />
 
