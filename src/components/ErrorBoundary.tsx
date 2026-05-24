@@ -59,11 +59,9 @@ class ErrorBoundary extends Component<Props, State> {
           <p className="text-[13px] text-muted-foreground leading-relaxed">
             אירעה שגיאה בטעינת הדף. ניתן לנסות שוב או לחזור לדף הבית.
           </p>
-          {import.meta.env.DEV && (
-            <pre className="mt-3 text-[10px] text-destructive/80 bg-destructive/5 border border-destructive/15 rounded-lg p-3 text-start overflow-auto max-h-32">
-              {msg}
-            </pre>
-          )}
+          <pre className="mt-3 text-[10px] text-destructive/80 bg-destructive/5 border border-destructive/15 rounded-lg p-3 text-start overflow-auto max-h-40 w-full max-w-sm">
+            {msg}
+          </pre>
         </div>
 
         <div className="flex items-center gap-3">
