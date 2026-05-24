@@ -210,27 +210,27 @@ const DashboardContent = ({ embedded = false }: Props) => {
           </div>
 
           {/* Wide bar — h-4 for legibility */}
-          <div className="flex h-4 rounded-xl overflow-hidden bg-muted gap-0.5 mb-4">
+          <div className="flex h-3 rounded-xl overflow-hidden bg-muted/60 gap-0.5 mb-4">
             {greenPct > 0 && (
-              <div className="bg-success rounded-s-xl transition-all duration-700" style={{ width: `${greenPct}%` }} />
+              <div className="bg-success/55 rounded-s-xl transition-all duration-700" style={{ width: `${greenPct}%` }} />
             )}
             {yellowPct > 0 && (
-              <div className="bg-warning transition-all duration-700" style={{ width: `${yellowPct}%` }} />
+              <div className="bg-warning/55 transition-all duration-700" style={{ width: `${yellowPct}%` }} />
             )}
             {redPct > 0 && (
-              <div className="bg-destructive rounded-e-xl transition-all duration-700" style={{ width: `${redPct}%` }} />
+              <div className="bg-destructive/50 rounded-e-xl transition-all duration-700" style={{ width: `${redPct}%` }} />
             )}
           </div>
 
           {/* Legend — X/Y format */}
           <div className="flex flex-wrap items-center gap-5">
             {[
-              { label: "במסלול",  count: greenCount,  cls: "bg-success"     },
-              { label: "פערים",   count: yellowCount, cls: "bg-warning"     },
-              { label: "בסיכון",  count: redCount,    cls: "bg-destructive" },
+              { label: "במסלול",  count: greenCount,  cls: "bg-success/60"     },
+              { label: "פערים",   count: yellowCount, cls: "bg-warning/60"     },
+              { label: "בסיכון",  count: redCount,    cls: "bg-destructive/55" },
             ].map(s => (
               <div key={s.label} className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${s.cls} shrink-0`} />
+                <span className={`w-2.5 h-2.5 rounded-full ${s.cls} shrink-0`} />
                 <span className="text-[12px] text-muted-foreground">
                   <span className="font-semibold text-foreground tabular-nums">{s.count}</span>
                   <span className="text-muted-foreground/50">/{totalStudents}</span>
