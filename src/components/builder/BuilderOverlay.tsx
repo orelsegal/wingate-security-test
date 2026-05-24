@@ -394,12 +394,12 @@ const BuilderOverlay = () => {
                           <div>
                             <Label className="text-[10px] text-muted-foreground">משקל</Label>
                             <Select
-                              value={String(current.fontWeight ?? "")}
-                              onValueChange={(v) => update({ fontWeight: v ? Number(v) : undefined })}
+                              value={current.fontWeight ? String(current.fontWeight) : "__default__"}
+                              onValueChange={(v) => update({ fontWeight: v === "__default__" ? undefined : Number(v) })}
                             >
                               <SelectTrigger className="mt-1 h-8 text-[12px]"><SelectValue placeholder="ברירת מחדל" /></SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">ברירת מחדל</SelectItem>
+                                <SelectItem value="__default__">ברירת מחדל</SelectItem>
                                 {[300,400,500,600,700,800].map(w => (
                                   <SelectItem key={w} value={String(w)} style={{ fontWeight: w }}>{w}</SelectItem>
                                 ))}
