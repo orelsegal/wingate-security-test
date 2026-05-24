@@ -7,8 +7,6 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { EditModeProvider } from "@/context/EditModeContext";
 import { BuilderProvider } from "@/context/BuilderContext";
 import { UiLabelsProvider } from "@/context/UiLabelsContext";
-import { BuilderUIProvider } from "@/context/BuilderUIContext";
-import { BuilderOverridesProvider } from "@/context/BuilderOverridesContext";
 import AppLayout from "@/components/AppLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index.tsx";
@@ -61,8 +59,6 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <UiLabelsProvider>
-        <BuilderOverridesProvider>
-        <BuilderUIProvider>
         <EditModeProvider>
         <BuilderProvider>
           <Toaster />
@@ -106,8 +102,6 @@ const App = () => (
           </BrowserRouter>
         </BuilderProvider>
         </EditModeProvider>
-        </BuilderUIProvider>
-        </BuilderOverridesProvider>
         </UiLabelsProvider>
       </AuthProvider>
     </TooltipProvider>

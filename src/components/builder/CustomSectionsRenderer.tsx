@@ -7,7 +7,8 @@ import { CustomFieldRenderer } from "./CustomFieldRenderer";
 /**
  * Renders the admin-defined (non-system) sections on the student profile.
  * Honors role visibility and per-field edit permissions.
- * Builder Mode (admin + edit) shows section/field controls inline via the BuilderPanel.
+ * Admin must be in Edit Mode (EditModeContext) to edit fields; other roles
+ * can edit if their role is listed in the field's editRoles.
  */
 export const CustomSectionsRenderer = ({ studentId }: { studentId: string }) => {
   const { user } = useAuth();
@@ -55,9 +56,10 @@ const CustomSectionBlock = ({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {visibleFields.map((f) => {
-            const editable = f.editRoles.includes(role as any) && (role !== "admin" || canEdit ? f.editRoles.includes(role as any) && (role === "admin" ? canEdit : true) : false);
-            // Simplify: admins must be in edit mode; others may edit if their role is in editRoles.
-            const allowEdit = role === "admin" ? canEdit && f.editRoles.includes("admin") : f.editRoles.includes(role as any);
+            // Admins need edit mode on + "admin" in editRoles; others just need their role in editRoles.
+            const allowEdit = role === "admin"
+              ? canEdit && f.editRoles.includes("admin")
+              : f.editRoles.includes(role as any);
             return (
               <div key={f.id} className="space-y-1.5">
                 <label className="text-[11px] text-muted-foreground font-medium">

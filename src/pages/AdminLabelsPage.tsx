@@ -1,239 +1,233 @@
 /**
- * AdminBuilderPage — "בונה ממשק"
+ * AdminLabelsPage — עורך תוויות ממשק
  *
- * Visual Admin Builder workspace. Every visible element on this page is
- * wrapped in <EditableElement> so the admin can click → select → edit
- * via the floating BuilderOverlay (toolbar + structure + settings panels).
+ * Admin-only page to rename nav items, toggle their visibility, and edit
+ * role titles / status labels. Changes are saved immediately via
+ * UiLabelsContext (localStorage).
  */
-import { Navigate, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useBuilderUI } from "@/context/BuilderUIContext";
-import { useBuilderOverrides } from "@/context/BuilderOverridesContext";
-import EditableElement from "@/components/builder/EditableElement";
+import { useUiLabels } from "@/context/UiLabelsContext";
+import { defaultUiLabels } from "@/config/uiLabels";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
-  Pencil, Layers, Eye, RotateCcw, ArrowLeft, Sparkles, MousePointerClick,
-  Shield, Palette, Info,
+  Home, CalendarRange, Users, Layers, BookOpen, ClipboardEdit,
+  CalendarDays, Activity, Database, SlidersHorizontal, Mail,
+  RotateCcw, CheckCircle2, Type,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import type { UserRole } from "@/context/AuthContext";
 
-const PAGE_KEY = "admin-builder";
-
-const QUICK_LINKS = [
-  { id: "ql-dashboard", label: "תמונת מצב", path: "/" },
-  { id: "ql-students", label: "ספורטאים", path: "/students" },
-  { id: "ql-courses", label: "התקדמות לימודית", path: "/courses" },
-  { id: "ql-data-entry", label: "הזנת נתונים", path: "/data-entry" },
-  { id: "ql-data-mgmt", label: "ניהול נתונים", path: "/data-management" },
-  { id: "ql-activity", label: "פעילות משתמשים", path: "/user-activity" },
+const NAV_META: { key: string; icon: typeof Home; defaultLabel: string; canHide: boolean }[] = [
+  { key: "dashboard",      icon: Home,              defaultLabel: defaultUiLabels.nav.dashboard,      canHide: false },
+  { key: "students",       icon: Users,             defaultLabel: defaultUiLabels.nav.students,       canHide: false },
+  { key: "groups",         icon: Layers,            defaultLabel: defaultUiLabels.nav.groups,         canHide: true  },
+  { key: "courses",        icon: BookOpen,          defaultLabel: defaultUiLabels.nav.courses,        canHide: false },
+  { key: "dataEntry",      icon: ClipboardEdit,     defaultLabel: defaultUiLabels.nav.dataEntry,      canHide: false },
+  { key: "calendar",       icon: CalendarDays,      defaultLabel: defaultUiLabels.nav.calendar,       canHide: true  },
+  { key: "userActivity",   icon: Activity,          defaultLabel: defaultUiLabels.nav.userActivity,   canHide: true  },
+  { key: "dataManagement", icon: Database,          defaultLabel: defaultUiLabels.nav.dataManagement, canHide: false },
+  { key: "messages",       icon: Mail,              defaultLabel: defaultUiLabels.nav.messages,       canHide: true  },
+  { key: "yearPlan",       icon: CalendarRange,     defaultLabel: defaultUiLabels.nav.yearPlan,       canHide: true  },
+  { key: "adminLabels",    icon: SlidersHorizontal, defaultLabel: defaultUiLabels.nav.adminLabels,    canHide: false },
 ];
 
-const FEATURES = [
-  { id: "feat-select", icon: MousePointerClick, title: "בחירה ויזואלית",  body: "לחיצה על כל רכיב — כותרת, כרטיס, פריט תפריט — תפתח חלונית הגדרות." },
-  { id: "feat-content", icon: Pencil, title: "עריכת תוכן",  body: "טקסט, כותרת משנה וטקסט עזרה — הכל נשמר אוטומטית בדפדפן." },
-  { id: "feat-style", icon: Palette, title: "סטייל",  body: "החלפת סגנון כרטיס: נקי / מסגרת / מוגבה / מודגש." },
-  { id: "feat-perms", icon: Shield, title: "הרשאות לפי תפקיד",  body: "בחר אילו תפקידים יראו כל רכיב." },
-  { id: "feat-preview", icon: Eye, title: "צפייה כתפקיד אחר",  body: "פתח את התצוגה בעיני מורה, הורה, מאמן או תלמיד." },
-  { id: "feat-structure", icon: Layers, title: "מבנה העמוד",  body: "עץ כל הרכיבים הניתנים לעריכה בעמוד הנוכחי." },
-];
+const ROLE_KEYS: UserRole[] = ["admin", "teacher", "coach", "parent", "student"];
 
-const AdminBuilderPage = () => {
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="card-premium rounded-xl overflow-hidden">
+      <div className="px-5 py-3 bg-muted/40 border-b border-border">
+        <h2 className="text-[13px] font-semibold text-foreground">{title}</h2>
+      </div>
+      <div className="p-5 space-y-3">{children}</div>
+    </section>
+  );
+}
+
+function LabelRow({
+  label, currentValue, defaultValue, onChange, onReset, modified,
+}: {
+  label: string; currentValue: string; defaultValue: string;
+  onChange: (v: string) => void; onReset: () => void; modified: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-[12px] text-muted-foreground w-40 shrink-0">{label}</span>
+      <Input value={currentValue} onChange={(e) => onChange(e.target.value)}
+        className="h-8 text-[13px] flex-1" placeholder={defaultValue} />
+      {modified ? (
+        <button onClick={onReset} title="החזר לברירת מחדל" className="text-muted-foreground hover:text-destructive transition-colors">
+          <RotateCcw className="h-3.5 w-3.5" />
+        </button>
+      ) : <div className="w-3.5 shrink-0" />}
+    </div>
+  );
+}
+
+const AdminLabelsPage = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const ui = useBuilderUI();
-  const ov = useBuilderOverrides();
+  const { labels, setLabel, resetPath, resetAll, hasOverrides } = useUiLabels();
+  const [flashKey, setFlashKey] = useState(0);
 
   if (user && user.role !== "admin") return <Navigate to="/" replace />;
 
-  const overrideEntries = Object.entries(ov.overrides);
-  const hasOverrides = overrideEntries.length > 0;
+  const flash = () => setFlashKey((k) => k + 1);
+
+  const set = (path: string[], value: string | boolean) => { setLabel(path, value); flash(); };
+  const reset = (path: string[]) => { resetPath(path); flash(); };
 
   return (
-    <div className="p-5 md:p-10 lg:p-12 max-w-[1200px]" dir="rtl">
-      {/* Temporary-changes notice */}
-      {ui.editMode && (
-        <div className="mb-5 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 text-[11.5px]">
-          <Info className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} />
-          שינויים זמניים לתצוגה בלבד — שמירה קבועה תתווסף בשלב הבא.
-        </div>
-      )}
-
-      {/* Hero */}
+    <div className="p-5 md:p-8 max-w-[860px]" dir="rtl">
+      {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8">
-        <div className="min-w-0">
+        <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium mb-3">
-            <Sparkles className="h-3 w-3" strokeWidth={2} />
-            ניסיוני · גרסה 1
+            <Type className="h-3 w-3" strokeWidth={2} />
+            ממשק אדמין
           </div>
-          <EditableElement
-            id={`${PAGE_KEY}.page-title`}
-            type="page-title"
-            pageKey={PAGE_KEY}
-            defaultLabel="בונה ממשק"
-            defaultSubtitle="עריכת מבנה, תצוגה, סטייל והרשאות של רכיבי המערכת — ישירות מעל הממשק החי. הפעל את מצב העריכה, נווט לעמוד שתרצה להתאים, ולחץ על הרכיב הרצוי."
-          >
-            {(r) => (
-              <div>
-                <h1 className="text-[26px] md:text-[30px] font-semibold tracking-tight text-foreground">{r.label}</h1>
-                {r.subtitle && (
-                  <p className="text-[13px] text-muted-foreground mt-2 max-w-[640px] leading-relaxed">{r.subtitle}</p>
-                )}
-              </div>
-            )}
-          </EditableElement>
+          <h1 className="text-[24px] font-semibold tracking-tight text-foreground">עורך תוויות ממשק</h1>
+          <p className="text-[12.5px] text-muted-foreground mt-1.5 max-w-[540px]">
+            שנו שמות פריטי תפריט, תוויות תפקיד וסטטוסים — השינויים נשמרים מיידית בדפדפן.
+          </p>
         </div>
-        <EditableElement
-          id={`${PAGE_KEY}.cta-edit-mode`}
-          type="button"
-          pageKey={PAGE_KEY}
-          defaultLabel={ui.editMode ? "מצב עריכה פעיל" : "הפעל מצב עריכה"}
-        >
-          {(r) => (
-            <Button size="lg" onClick={() => ui.setEditMode(true)} className="gap-2 shrink-0">
-              <Pencil className="h-4 w-4" strokeWidth={1.8} />
-              {r.label}
-            </Button>
+        <div className="flex items-center gap-2 shrink-0 mt-1">
+          {flashKey > 0 && (
+            <span key={flashKey} className="flex items-center gap-1 text-[11px] text-primary animate-in fade-in duration-200">
+              <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+              נשמר
+            </span>
           )}
-        </EditableElement>
-      </div>
-
-      {/* Features grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
-        {FEATURES.map((f) => (
-          <EditableElement
-            key={f.id}
-            id={`${PAGE_KEY}.${f.id}`}
-            type="card"
-            pageKey={PAGE_KEY}
-            defaultLabel={f.title}
-            defaultSubtitle={f.body}
-          >
-            {(r) => (
-              <Card className={cn("p-4 transition-colors", r.stylePresetClass)}>
-                <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <f.icon className="h-4 w-4" strokeWidth={1.7} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">{r.label}</p>
-                    {r.subtitle && (
-                      <p className="text-[11.5px] text-muted-foreground mt-1 leading-relaxed">{r.subtitle}</p>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            )}
-          </EditableElement>
-        ))}
-      </div>
-
-      {/* Quick navigation */}
-      <section className="mb-10">
-        <EditableElement
-          id={`${PAGE_KEY}.section-quick-links-title`}
-          type="title"
-          pageKey={PAGE_KEY}
-          defaultLabel="עמודים זמינים לעריכה"
-          defaultSubtitle="כרגע ניתן לערוך את סרגל הניווט ואת לוח המחוונים הראשי. עמודים נוספים יתווספו בגרסה הבאה."
-        >
-          {(r) => (
-            <div className="mb-4">
-              <h2 className="text-[15px] font-semibold text-foreground mb-1">{r.label}</h2>
-              {r.subtitle && <p className="text-[11.5px] text-muted-foreground">{r.subtitle}</p>}
-            </div>
-          )}
-        </EditableElement>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {QUICK_LINKS.map((l) => (
-            <EditableElement
-              key={l.id}
-              id={`${PAGE_KEY}.${l.id}`}
-              type="nav-item"
-              pageKey={PAGE_KEY}
-              defaultLabel={l.label}
-            >
-              {(r) => (
-                <button
-                  onClick={(e) => {
-                    if (ui.editMode) return; // selection handled by wrapper
-                    e.stopPropagation();
-                    ui.setEditMode(true);
-                    navigate(l.path);
-                  }}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-border bg-card hover:bg-accent transition-colors text-[12.5px]",
-                    r.stylePresetClass,
-                  )}
-                >
-                  <span>{r.label}</span>
-                  <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
-                </button>
-              )}
-            </EditableElement>
-          ))}
-        </div>
-      </section>
-
-      {/* Overrides list */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[15px] font-semibold text-foreground">התאמות פעילות</h2>
           {hasOverrides && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => { if (confirm("לאפס את כל ההתאמות?")) ov.resetAll(); }}
-              className="text-destructive hover:text-destructive gap-1.5"
-            >
+            <Button size="sm" variant="outline"
+              className="text-destructive border-destructive/30 hover:bg-destructive/5 gap-1.5 text-[12px]"
+              onClick={() => { if (confirm("לאפס את כל השינויים לברירות המחדל?")) { resetAll(); flash(); } }}>
               <RotateCcw className="h-3.5 w-3.5" />
               איפוס הכל
             </Button>
           )}
         </div>
-        {!hasOverrides ? (
-          <Card className="p-8 text-center">
-            <p className="text-[12.5px] text-muted-foreground">עדיין לא בוצעו התאמות.</p>
-          </Card>
-        ) : (
-          <Card className="divide-y divide-border">
-            {overrideEntries.map(([id, o]) => (
-              <button
-                key={id}
-                onClick={() => ui.select(id)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent transition-colors text-start"
-              >
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-mono text-foreground truncate">{id}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {[
-                      o.label && `טקסט: "${o.label}"`,
-                      o.visible === false && "מוסתר",
-                      o.stylePreset && o.stylePreset !== "default" && `סטייל: ${o.stylePreset}`,
-                      o.roleVisibility && `${o.roleVisibility.length} תפקידים`,
-                    ].filter(Boolean).join(" · ") || "ללא שינויים"}
-                  </p>
-                </div>
-                <span
-                  role="button"
-                  onClick={(e) => { e.stopPropagation(); ov.resetOverride(id); }}
-                  className="text-[11px] text-muted-foreground hover:text-destructive flex items-center gap-1"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  איפוס
-                </span>
-              </button>
-            ))}
-          </Card>
-        )}
-      </section>
+      </div>
 
-      <p className="text-[10.5px] text-muted-foreground/70 mt-10 leading-relaxed">
-        שינויים נשמרים מקומית בדפדפן זה בלבד. בעתיד הם יסונכרנו אוטומטית למסד הנתונים של המערכת.
+      <div className="space-y-6">
+        {/* Nav items */}
+        <SectionCard title="פריטי תפריט — שם ונראות">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 px-1 pb-1">
+            <span>פריט</span>
+            <div className="flex items-center gap-[72px] ml-auto">
+              <span>שם</span>
+              <span>הצג</span>
+            </div>
+          </div>
+          {NAV_META.map(({ key, icon: Icon, defaultLabel, canHide }) => {
+            const currentLabel = (labels.nav as Record<string, string>)[key] ?? defaultLabel;
+            const visValue = (labels.visibility?.nav as Record<string, boolean | undefined>)?.[key];
+            const visible = visValue !== false;
+            const labelModified = currentLabel !== defaultLabel;
+            return (
+              <div key={key} className="flex items-center gap-3">
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${visible ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/40"}`}>
+                  <Icon className="h-3.5 w-3.5" strokeWidth={1.7} />
+                </div>
+                <Input
+                  value={currentLabel}
+                  onChange={(e) => set(["nav", key], e.target.value)}
+                  className={`h-8 text-[13px] flex-1 ${!visible ? "opacity-50" : ""}`}
+                  placeholder={defaultLabel}
+                />
+                {labelModified ? (
+                  <button onClick={() => reset(["nav", key])} title="החזר לברירת מחדל"
+                    className="text-muted-foreground hover:text-destructive transition-colors">
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                ) : <div className="w-3.5 shrink-0" />}
+                <div className="w-10 flex justify-center shrink-0">
+                  {canHide ? (
+                    <Switch checked={visible} onCheckedChange={(v) => set(["visibility", "nav", key], v)}
+                      className="scale-90" aria-label={visible ? "הסתר" : "הצג"} />
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground/40">קבוע</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </SectionCard>
+
+        {/* Role titles (sidebar heading) */}
+        <SectionCard title="כותרות סרגל לפי תפקיד">
+          {ROLE_KEYS.map((role) => {
+            const current = labels.roleTitles[role];
+            const def = defaultUiLabels.roleTitles[role];
+            const roleNameMap: Record<UserRole, string> = { admin: "מנהל", teacher: "מורה", coach: "מאמן", parent: "הורה", student: "תלמיד" };
+            return (
+              <LabelRow key={role} label={roleNameMap[role]} currentValue={current} defaultValue={def}
+                modified={current !== def}
+                onChange={(v) => set(["roleTitles", role], v)}
+                onReset={() => reset(["roleTitles", role])} />
+            );
+          })}
+        </SectionCard>
+
+        {/* Role labels (user chip) */}
+        <SectionCard title="שמות תפקיד — התג ליד שם המשתמש">
+          {ROLE_KEYS.map((role) => {
+            const current = labels.roleLabels[role];
+            const def = defaultUiLabels.roleLabels[role];
+            const roleNameMap: Record<UserRole, string> = { admin: "מנהל", teacher: "מורה", coach: "מאמן", parent: "הורה", student: "תלמיד" };
+            return (
+              <LabelRow key={role} label={roleNameMap[role]} currentValue={current} defaultValue={def}
+                modified={current !== def}
+                onChange={(v) => set(["roleLabels", role], v)}
+                onReset={() => reset(["roleLabels", role])} />
+            );
+          })}
+        </SectionCard>
+
+        {/* Status labels */}
+        <SectionCard title="תוויות סטטוס — תצוגה בעמוד הספורטאי">
+          {(["green", "yellow", "red"] as const).map((s) => {
+            const current = labels.statuses[s];
+            const def = defaultUiLabels.statuses[s];
+            const dotClass = s === "green" ? "bg-green-500" : s === "yellow" ? "bg-yellow-400" : "bg-red-500";
+            const sLabel = s === "green" ? "ירוק (במסלול)" : s === "yellow" ? "צהוב (פערים)" : "אדום (בסיכון)";
+            return (
+              <div key={s} className="flex items-center gap-3">
+                <span className={`w-3 h-3 rounded-full shrink-0 ${dotClass}`} />
+                <span className="text-[12px] text-muted-foreground w-40 shrink-0">{sLabel}</span>
+                <Input value={current} onChange={(e) => set(["statuses", s], e.target.value)}
+                  className="h-8 text-[13px] flex-1" placeholder={def} />
+                {current !== def ? (
+                  <button onClick={() => reset(["statuses", s])} title="איפוס"
+                    className="text-muted-foreground hover:text-destructive"><RotateCcw className="h-3.5 w-3.5" /></button>
+                ) : <div className="w-3.5" />}
+              </div>
+            );
+          })}
+        </SectionCard>
+
+        {/* Entity nouns */}
+        <SectionCard title="שמות ישויות — יחיד ורבים">
+          {(["student", "students"] as const).map((key) => {
+            const current = labels.entities[key];
+            const def = defaultUiLabels.entities[key];
+            return (
+              <LabelRow key={key} label={key === "student" ? "יחיד (ספורטאי)" : "רבים (ספורטאים)"}
+                currentValue={current} defaultValue={def} modified={current !== def}
+                onChange={(v) => set(["entities", key], v)}
+                onReset={() => reset(["entities", key])} />
+            );
+          })}
+        </SectionCard>
+      </div>
+
+      <p className="text-[10.5px] text-muted-foreground/60 mt-8 leading-relaxed">
+        שינויים נשמרים בדפדפן זה בלבד (localStorage). לניהול פריסת עמוד הספורטאי ושדות מותאמים — עברו ל<strong>בונה עמודים</strong>.
       </p>
     </div>
   );
 };
 
-export default AdminBuilderPage;
+export default AdminLabelsPage;
