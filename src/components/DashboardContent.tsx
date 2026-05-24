@@ -100,7 +100,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
         {/* Title row */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-[26px] md:text-[30px] font-bold text-foreground tracking-tight leading-tight">
+            <h1 className="text-[24px] md:text-[28px] font-semibold text-foreground tracking-tight leading-tight">
               {isTeacher ? labels.pages.adminDashboard.titleTeacher : labels.pages.adminDashboard.titleAdmin}
             </h1>
             <p className="text-[13px] text-muted-foreground mt-1.5">
@@ -151,7 +151,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
               <span className="text-[12px] font-medium text-muted-foreground">ספורטאים</span>
               <Users className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.5} />
             </div>
-            <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
               {totalStudents}
             </p>
             <p className="text-[11px] text-muted-foreground/60 mt-2">פעילים במערכת</p>
@@ -163,7 +163,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
               <span className="text-[12px] font-medium text-muted-foreground">ממוצע כללי</span>
               <TrendingUp className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.5} />
             </div>
-            <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
               {avgScore}
             </p>
             <p className="text-[11px] text-muted-foreground/60 mt-2">ממוצע משוקלל</p>
@@ -175,7 +175,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
               <span className="text-[12px] font-medium text-muted-foreground">במסלול</span>
               <span className="w-2.5 h-2.5 rounded-full bg-success/60" />
             </div>
-            <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
               {greenCount}
             </p>
             <p className="text-[11px] text-muted-foreground/60 mt-2">
@@ -189,7 +189,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
               <span className="text-[12px] font-medium text-muted-foreground">דורשים טיפול</span>
               <span className="w-2.5 h-2.5 rounded-full bg-warning/60" />
             </div>
-            <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
               {yellowCount + redCount}
             </p>
             <p className="text-[11px] text-muted-foreground/60 mt-2">
