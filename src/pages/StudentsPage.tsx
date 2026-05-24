@@ -21,6 +21,7 @@ import * as XLSX from "xlsx";
 import { classToGrade } from "@/lib/schoolUtils";
 import { StudentsPageSkeleton } from "@/components/PageSkeleton";
 import EmptyState from "@/components/EmptyState";
+import EditableElement from "@/components/builder/EditableElement";
 
 const grades = ["ט׳", "י׳", "י״א", "י״ב"];
 
@@ -196,32 +197,41 @@ const StudentsPage = () => {
       </section>
 
       {/* ── KPI CARDS ── */}
-      <section className="mb-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {(["green", "yellow", "red"] as StatusType[]).map((type) => {
-            const config = statusConfig[type];
-            const count = type === "green" ? greenCount : type === "yellow" ? yellowCount : redCount;
-            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-            const isActive = statusFilter === type;
-            return (
-              <button key={type} onClick={() => setStatusFilter(isActive ? null : type)}
-                className={`card-premium p-4 text-start transition-all duration-200 cursor-pointer group relative overflow-hidden ${isActive ? "ring-2 ring-offset-1 " + (type === "green" ? "ring-success/40" : type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : ""}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${config.bgClass}`}>
-                    <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                  </div>
-                  {isActive && <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>פעיל</span>}
-                </div>
-                <p className={`text-[24px] font-bold leading-none tracking-tight ${config.textClass}`}>{count}</p>
-                <div className="flex items-center justify-between mt-1.5">
-                  <p className="text-[11px] text-muted-foreground font-medium">{config.label}</p>
-                  <span className="text-[10px] text-muted-foreground/50">{pct}%</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </section>
+      <EditableElement id="students-kpi-strip" type="section" defaultLabel="רצועת נתוני סטטוס" pageKey="students">
+        {({ inlineStyle }) => (
+          <section className="mb-6" style={inlineStyle}>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(["green", "yellow", "red"] as StatusType[]).map((type) => {
+                const config = statusConfig[type];
+                const count = type === "green" ? greenCount : type === "yellow" ? yellowCount : redCount;
+                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                const isActive = statusFilter === type;
+                return (
+                  <EditableElement key={type} id={`students-kpi-${type}`} type="stat" defaultLabel={`כרטיס ${config.label}`} pageKey="students">
+                    {({ inlineStyle: cardStyle }) => (
+                      <button onClick={() => setStatusFilter(isActive ? null : type)}
+                        className={`card-premium p-4 text-start transition-all duration-200 cursor-pointer group relative overflow-hidden ${isActive ? "ring-2 ring-offset-1 " + (type === "green" ? "ring-success/40" : type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : ""}`}
+                        style={cardStyle}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${config.bgClass}`}>
+                            <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
+                          </div>
+                          {isActive && <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>פעיל</span>}
+                        </div>
+                        <p className={`text-[24px] font-bold leading-none tracking-tight ${config.textClass}`}>{count}</p>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <p className="text-[11px] text-muted-foreground font-medium">{config.label}</p>
+                          <span className="text-[10px] text-muted-foreground/50">{pct}%</span>
+                        </div>
+                      </button>
+                    )}
+                  </EditableElement>
+                );
+              })}
+            </div>
+          </section>
+        )}
+      </EditableElement>
 
       {/* ── FILTERS (collapsible) ── */}
       {showFilters && (

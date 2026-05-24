@@ -5,8 +5,9 @@
  * localStorage; the same JSON shape will later move to a Supabase
  * `builder_overrides` table (Phase 4) without breaking consumers.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { UserRole } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export type StylePreset = "default" | "clean" | "bordered" | "elevated" | "highlighted";
 export type LayoutWidth = "full" | "half" | "third";
@@ -77,6 +78,7 @@ export const FONT_FAMILIES: Record<string, string> = {
 export type OverridesMap = Record<string, ElementOverride>;
 
 const STORAGE_KEY = "wingate_builder_overrides_v1";
+const SUPABASE_PAGE_KEY = "visual_overrides_v1";
 
 interface Ctx {
   overrides: OverridesMap;
@@ -84,6 +86,8 @@ interface Ctx {
   setOverride: (id: string, patch: Partial<ElementOverride>) => void;
   resetOverride: (id: string) => void;
   resetAll: () => void;
+  /** True while syncing with Supabase */
+  syncing: boolean;
 }
 
 const BuilderOverridesContext = createContext<Ctx | null>(null);
@@ -95,7 +99,31 @@ export const BuilderOverridesProvider = ({ children }: { children: ReactNode }) 
       return raw ? (JSON.parse(raw) as OverridesMap) : {};
     } catch { return {}; }
   });
+  const [syncing, setSyncing] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadedFromSupabase = useRef(false);
 
+  // ── On mount: try to pull latest from Supabase (server wins over localStorage) ──
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("builder_layouts" as any)
+          .select("layout")
+          .eq("page_key", SUPABASE_PAGE_KEY)
+          .maybeSingle();
+        if (!error && data && (data as any).layout) {
+          const remote = (data as any).layout as OverridesMap;
+          setOverrides(remote);
+          // Also mirror to localStorage for offline use
+          try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote)); } catch {}
+          loadedFromSupabase.current = true;
+        }
+      } catch { /* Supabase unavailable — use localStorage */ }
+    })();
+  }, []);
+
+  // ── Persist to localStorage immediately on every change ──
   useEffect(() => {
     try {
       if (Object.keys(overrides).length) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
@@ -103,24 +131,46 @@ export const BuilderOverridesProvider = ({ children }: { children: ReactNode }) 
     } catch { /* ignore */ }
   }, [overrides]);
 
+  // ── Debounced Supabase persist (500ms after last change) ──
+  const persistToSupabase = useCallback((map: OverridesMap) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSyncing(true);
+      try {
+        await supabase
+          .from("builder_layouts" as any)
+          .upsert({ page_key: SUPABASE_PAGE_KEY, layout: map as any }, { onConflict: "page_key" });
+      } catch { /* fail silently — localStorage still has the data */ }
+      setSyncing(false);
+    }, 500);
+  }, []);
+
   const getOverride = useCallback((id: string) => overrides[id], [overrides]);
 
   const setOverride = useCallback((id: string, patch: Partial<ElementOverride>) => {
-    setOverrides((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
-  }, []);
+    setOverrides((prev) => {
+      const next = { ...prev, [id]: { ...prev[id], ...patch } };
+      persistToSupabase(next);
+      return next;
+    });
+  }, [persistToSupabase]);
 
   const resetOverride = useCallback((id: string) => {
     setOverrides((prev) => {
       const next = { ...prev };
       delete next[id];
+      persistToSupabase(next);
       return next;
     });
-  }, []);
+  }, [persistToSupabase]);
 
-  const resetAll = useCallback(() => setOverrides({}), []);
+  const resetAll = useCallback(() => {
+    setOverrides({});
+    persistToSupabase({});
+  }, [persistToSupabase]);
 
-  const value = useMemo<Ctx>(() => ({ overrides, getOverride, setOverride, resetOverride, resetAll }),
-    [overrides, getOverride, setOverride, resetOverride, resetAll]);
+  const value = useMemo<Ctx>(() => ({ overrides, getOverride, setOverride, resetOverride, resetAll, syncing }),
+    [overrides, getOverride, setOverride, resetOverride, resetAll, syncing]);
 
   return <BuilderOverridesContext.Provider value={value}>{children}</BuilderOverridesContext.Provider>;
 };
@@ -128,7 +178,7 @@ export const BuilderOverridesProvider = ({ children }: { children: ReactNode }) 
 export const useBuilderOverrides = (): Ctx => {
   const ctx = useContext(BuilderOverridesContext);
   if (!ctx) return {
-    overrides: {}, getOverride: () => undefined, setOverride: () => {}, resetOverride: () => {}, resetAll: () => {},
+    overrides: {}, getOverride: () => undefined, setOverride: () => {}, resetOverride: () => {}, resetAll: () => {}, syncing: false,
   };
   return ctx;
 };

@@ -6,7 +6,19 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import type { UserRole } from "@/context/AuthContext";
 
-export type ElementType = "title" | "section" | "card" | "nav-item" | "button" | "badge" | "field" | "page-title";
+export type ElementType =
+  | "title"
+  | "section"
+  | "card"
+  | "nav-item"
+  | "button"
+  | "badge"
+  | "field"
+  | "page-title"
+  | "heading"
+  | "stat"
+  | "list"
+  | "text";
 
 export const ELEMENT_TYPE_LABEL: Record<ElementType, string> = {
   title: "כותרת",
@@ -17,6 +29,10 @@ export const ELEMENT_TYPE_LABEL: Record<ElementType, string> = {
   badge: "תגית",
   field: "שדה",
   "page-title": "כותרת עמוד",
+  heading: "כותרת משנה",
+  stat: "נתון",
+  list: "רשימה",
+  text: "טקסט",
 };
 
 export interface RegistryEntry {

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { ChevronRight, ChevronLeft, CalendarDays, ListChecks, Plus, Pencil, Trash2 } from "lucide-react";
+import EditableElement from "@/components/builder/EditableElement";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, isToday } from "date-fns";
 import { he } from "date-fns/locale";
 import { useAuth } from "@/context/AuthContext";
@@ -137,13 +138,17 @@ const CalendarPage = () => {
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" strokeWidth={1.5} />
-            לוח שנה
-          </h1>
-          <p className="text-[11px] text-muted-foreground/60 mt-1">משימות, מבחנים ומפגשים</p>
-        </div>
+        <EditableElement id="calendar-page-header" type="page-title" defaultLabel="לוח שנה" pageKey="calendar">
+          {({ label, inlineStyle }) => (
+            <div style={inlineStyle}>
+              <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                {label}
+              </h1>
+              <p className="text-[11px] text-muted-foreground/60 mt-1">משימות, מבחנים ומפגשים</p>
+            </div>
+          )}
+        </EditableElement>
         <div className="flex items-center gap-2">
           {canEdit && (
             <Button size="sm" className="gap-1.5 text-[11px]" onClick={openAddForm}>

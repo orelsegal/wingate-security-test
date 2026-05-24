@@ -87,22 +87,33 @@ const CardGrid = ({ cards, navigate }: { cards: ActionCard[]; navigate: (p: stri
 /* ═══ Insight Strip ═══ */
 const InsightStrip = ({
   items,
+  pageKey = "home",
 }: {
-  items: { label: string; value: string | number; icon: typeof Users; color: string }[];
+  items: { label: string; value: string | number; icon: typeof Users; color: string; id?: string }[];
+  pageKey?: string;
 }) => (
   <div className="grid gap-3 mb-7" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
     {items.map((item, i) => (
-      <div
+      <EditableElement
         key={i}
-        className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
-        style={{ animationDelay: `${i * 40}ms` }}
+        id={item.id ?? `insight-stat-${pageKey}-${i}`}
+        type="stat"
+        defaultLabel={item.label}
+        pageKey={pageKey}
       >
-        <div className="flex items-center justify-center mb-1.5">
-          <item.icon className={`h-4 w-4 ${item.color}`} strokeWidth={1.5} />
-        </div>
-        <p className="text-[18px] font-semibold text-foreground leading-none">{item.value}</p>
-        <p className="text-[10px] text-muted-foreground mt-1 font-medium">{item.label}</p>
-      </div>
+        {({ label, inlineStyle }) => (
+          <div
+            className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+            style={{ ...inlineStyle, animationDelay: `${i * 40}ms` }}
+          >
+            <div className="flex items-center justify-center mb-1.5">
+              <item.icon className={`h-4 w-4 ${item.color}`} strokeWidth={1.5} />
+            </div>
+            <p className="text-[18px] font-semibold text-foreground leading-none">{item.value}</p>
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium">{label}</p>
+          </div>
+        )}
+      </EditableElement>
     ))}
   </div>
 );
@@ -231,10 +242,11 @@ const AdminHome = () => {
   return (
     <>
       <InsightStrip
+        pageKey="home-admin"
         items={[
-          { label: "סה״כ ספורטאים", value: students.length, icon: Users, color: "text-primary" },
-          { label: "דורשים תשומת לב", value: yellowCount, icon: Target, color: "text-[hsl(var(--warning))]" },
-          { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
+          { id: "admin-stat-total", label: "סה״כ ספורטאים", value: students.length, icon: Users, color: "text-primary" },
+          { id: "admin-stat-yellow", label: "דורשים תשומת לב", value: yellowCount, icon: Target, color: "text-[hsl(var(--warning))]" },
+          { id: "admin-stat-red", label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
         ]}
       />
       <AIInsightsPanel students={students} role="admin" navigate={navigate} />
@@ -342,9 +354,10 @@ const CoachHome = () => {
   return (
     <>
       <InsightStrip
+        pageKey="home-coach"
         items={[
-          { label: `ספורטאי ${mySport}`, value: myStudents.length, icon: Dumbbell, color: "text-[hsl(25,50%,45%)]" },
-          { label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
+          { id: "coach-stat-total", label: `ספורטאי ${mySport}`, value: myStudents.length, icon: Dumbbell, color: "text-[hsl(25,50%,45%)]" },
+          { id: "coach-stat-red", label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
         ]}
       />
       <AIInsightsPanel students={myStudents} role="coach" navigate={navigate} />

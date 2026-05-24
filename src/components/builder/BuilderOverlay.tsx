@@ -18,10 +18,12 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, Layers, MousePointerClick, Pencil, RotateCcw, X, Layout, Palette, Shield, Settings2, Type, AlignRight, AlignCenter, AlignLeft } from "lucide-react";
+import { Eye, EyeOff, Layers, MousePointerClick, Pencil, RotateCcw, Layout, Palette, Shield, Settings2, Type, AlignRight, AlignCenter, AlignLeft, CheckCircle2, Filter } from "lucide-react";
 import { useAuth, type UserRole } from "@/context/AuthContext";
 import { useBuilderUI, ELEMENT_TYPE_LABEL } from "@/context/BuilderUIContext";
 import { useBuilderOverrides, type StylePreset, FONT_FAMILIES } from "@/context/BuilderOverridesContext";
+import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 const ROLES: { value: UserRole; label: string }[] = [
@@ -44,6 +46,9 @@ const BuilderOverlay = () => {
   const { user } = useAuth();
   const ui = useBuilderUI();
   const ov = useBuilderOverrides();
+  const location = useLocation();
+  const [savedFlash, setSavedFlash] = useState(false);
+  const [pageFilter, setPageFilter] = useState(false);
 
   if (user?.role !== "admin") return null;
 
@@ -51,7 +56,10 @@ const BuilderOverlay = () => {
   const current = selected ? (ov.overrides[selected.id] ?? {}) : {};
 
   const update = (patch: Parameters<typeof ov.setOverride>[1]) => {
-    if (selected) ov.setOverride(selected.id, patch);
+    if (!selected) return;
+    ov.setOverride(selected.id, patch);
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1800);
   };
 
   const toggleRole = (role: UserRole) => {
@@ -60,16 +68,28 @@ const BuilderOverlay = () => {
     update({ roleVisibility: next });
   };
 
+  // Current page key derived from pathname
+  const currentPageKey = location.pathname === "/" ? "home"
+    : location.pathname.replace(/^\//, "").split("/")[0] || "global";
+
+  const filteredRegistry = pageFilter
+    ? ui.registry.filter((e) => e.pageKey === currentPageKey || e.pageKey === "global")
+    : ui.registry;
+
+  const overridesCount = Object.keys(ov.overrides).length;
+
   return (
     <>
-      {/* Floating toolbar */}
+      {/* Floating toolbar — sits above mobile bottom nav (bottom-20 on mobile, bottom-5 on md+) */}
       <div
         className={cn(
-          "fixed z-[60] bottom-5 start-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl",
-          "bg-card/95 backdrop-blur-md border border-border shadow-2xl",
+          "fixed z-[60] bottom-20 md:bottom-5 start-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-1.5 rounded-2xl",
+          "bg-card/95 backdrop-blur-md border border-border shadow-2xl transition-all duration-200",
+          ui.editMode && "border-primary/30 shadow-primary/10",
         )}
         dir="rtl"
       >
+        {/* Edit mode toggle */}
         <Button
           size="sm"
           variant={ui.editMode ? "default" : "ghost"}
@@ -80,15 +100,30 @@ const BuilderOverlay = () => {
           {ui.editMode ? "סיים עריכה" : "מצב עריכה"}
         </Button>
 
+        {/* Overrides badge — always visible when overrides exist */}
+        {overridesCount > 0 && !ui.editMode && (
+          <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+            {overridesCount} שינויים
+          </span>
+        )}
+
         {ui.editMode && (
           <>
             <div className="h-5 w-px bg-border mx-0.5" />
-            <Button size="sm" variant="ghost" onClick={() => ui.setStructureOpen(true)} className="h-8 gap-1.5 text-[12px]">
+
+            {/* Structure panel */}
+            <Button size="sm" variant="ghost" onClick={() => ui.setStructureOpen(true)} className="h-8 gap-1.5 text-[12px] relative">
               <Layers className="h-3.5 w-3.5" strokeWidth={1.8} />
-              מבנה
+              <span className="hidden sm:inline">מבנה</span>
+              {filteredRegistry.length > 0 && (
+                <span className="absolute -top-1 -end-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[8px] flex items-center justify-center font-bold">
+                  {filteredRegistry.length}
+                </span>
+              )}
             </Button>
 
-            <div className="flex items-center gap-1.5 px-2 text-[11px] text-muted-foreground">
+            {/* Preview-as-role */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2 text-[11px] text-muted-foreground">
               <span>צפייה כ:</span>
               <Select
                 value={ui.previewRole ?? "__edit"}
@@ -102,6 +137,19 @@ const BuilderOverlay = () => {
               </Select>
             </div>
 
+            {/* Sync / saved indicator */}
+            {ov.syncing ? (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground animate-pulse-soft">
+                <span className="h-3 w-3 rounded-full border-2 border-primary/40 border-t-primary animate-spin inline-block" />
+                שומר...
+              </span>
+            ) : savedFlash ? (
+              <span className="flex items-center gap-1 text-[11px] text-[hsl(var(--success))] font-medium animate-fade-in">
+                <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                נשמר
+              </span>
+            ) : null}
+
             <Button
               size="sm"
               variant="ghost"
@@ -109,7 +157,7 @@ const BuilderOverlay = () => {
               className="h-8 gap-1.5 text-[12px] text-destructive hover:text-destructive"
             >
               <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.8} />
-              איפוס הכל
+              <span className="hidden sm:inline">איפוס</span>
             </Button>
           </>
         )}
@@ -117,20 +165,44 @@ const BuilderOverlay = () => {
 
       {/* Structure panel (left) */}
       <Sheet open={ui.structureOpen} onOpenChange={ui.setStructureOpen}>
-        <SheetContent side="left" className="w-[320px] sm:max-w-[320px]" dir="rtl">
+        <SheetContent side="left" className="w-[320px] sm:max-w-[320px] flex flex-col" dir="rtl">
           <SheetHeader>
-            <SheetTitle className="text-[14px] font-semibold flex items-center gap-2">
-              <Layers className="h-4 w-4" strokeWidth={1.5} />
-              מבנה העמוד
-            </SheetTitle>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-[14px] font-semibold flex items-center gap-2">
+                <Layers className="h-4 w-4" strokeWidth={1.5} />
+                מבנה הרכיבים
+              </SheetTitle>
+              <button
+                onClick={() => setPageFilter(!pageFilter)}
+                className={cn(
+                  "flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-full border transition-colors",
+                  pageFilter
+                    ? "bg-primary/10 border-primary/20 text-primary"
+                    : "border-border text-muted-foreground hover:bg-accent"
+                )}
+                title={pageFilter ? "הצג הכל" : "סנן לעמוד נוכחי"}
+              >
+                <Filter className="h-3 w-3" strokeWidth={1.5} />
+                {pageFilter ? "עמוד נוכחי" : "הכל"}
+              </button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {filteredRegistry.length} רכיבים
+              {pageFilter ? ` בעמוד "${currentPageKey}"` : " בסך הכל"}
+            </p>
           </SheetHeader>
-          <div className="mt-4 space-y-1 overflow-y-auto max-h-[calc(100vh-100px)] pr-1">
-            {ui.registry.length === 0 ? (
-              <p className="text-[12px] text-muted-foreground py-4">אין רכיבים רשומים בעמוד זה.</p>
+          <div className="mt-3 space-y-1 overflow-y-auto flex-1 pr-1">
+            {filteredRegistry.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-[12px] text-muted-foreground">אין רכיבים ניתנים לעריכה בעמוד זה.</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">עברי לעמוד אחר או בטלי את הסינון.</p>
+              </div>
             ) : (
-              ui.registry.map((e) => {
+              filteredRegistry.map((e) => {
                 const isSel = ui.selectedId === e.id;
                 const hasOverride = !!ov.overrides[e.id];
+                const override = ov.overrides[e.id];
+                const isHidden = override?.visible === false;
                 return (
                   <button
                     key={e.id}
@@ -138,18 +210,32 @@ const BuilderOverlay = () => {
                     className={cn(
                       "w-full text-start flex items-center gap-2 px-2.5 py-2 rounded-lg text-[12px] transition-colors",
                       isSel ? "bg-primary/10 text-primary font-medium" : "hover:bg-accent text-foreground",
+                      isHidden && "opacity-40",
                     )}
                   >
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0 min-w-fit">
                       {ELEMENT_TYPE_LABEL[e.type]}
                     </span>
                     <span className="flex-1 truncate">{ov.overrides[e.id]?.label ?? e.defaultLabel}</span>
+                    <span className="text-[9px] text-muted-foreground/40 shrink-0 hidden sm:block">{e.pageKey}</span>
                     {hasOverride && <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+                    {isHidden && <EyeOff className="h-3 w-3 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />}
                   </button>
                 );
               })
             )}
           </div>
+          {overridesCount > 0 && (
+            <div className="border-t border-border pt-3 mt-3">
+              <button
+                onClick={() => { if (confirm("לאפס את כל ההתאמות?")) { ov.resetAll(); ui.setStructureOpen(false); } }}
+                className="w-full text-[11px] text-destructive hover:text-destructive/80 flex items-center justify-center gap-1.5 py-1.5 rounded-lg hover:bg-destructive/5 transition-colors"
+              >
+                <RotateCcw className="h-3 w-3" strokeWidth={1.5} />
+                איפוס כל {overridesCount} ההתאמות
+              </button>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
@@ -496,11 +582,14 @@ const BuilderOverlay = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Selection hint */}
+      {/* Selection hint — shown at top, below header */}
       {ui.editMode && !selected && (
-        <div className="fixed z-[55] top-3 start-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-card/90 border border-border shadow text-[11px] text-muted-foreground flex items-center gap-1.5" dir="rtl">
+        <div
+          className="fixed z-[55] top-[72px] start-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow text-[11px] text-primary flex items-center gap-1.5 animate-fade-in-down pointer-events-none"
+          dir="rtl"
+        >
           <MousePointerClick className="h-3 w-3" strokeWidth={1.8} />
-          לחץ על רכיב כדי לערוך אותו
+          לחצי על רכיב כדי לערוך אותו
         </div>
       )}
     </>

@@ -69,14 +69,18 @@ const GroupsPage = () => {
         >
           <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
         </button>
-        <div className="flex-1">
-          <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-tight">
-            {selectedGroup ? `כיתה ${selectedGroup}` : "קבוצות"}
-          </h1>
-          <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">
-            {selectedGroup ? `${selectedStudents.length} תלמידים` : "תצוגה לפי כיתות ושכבות"}
-          </p>
-        </div>
+        <EditableElement id="groups-page-title" type="page-title" defaultLabel="קבוצות" pageKey="groups">
+          {({ inlineStyle }) => (
+            <div className="flex-1" style={inlineStyle}>
+              <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-tight">
+                {selectedGroup ? `כיתה ${selectedGroup}` : "קבוצות"}
+              </h1>
+              <p className="text-[11px] text-muted-foreground/60 mt-1 font-normal">
+                {selectedGroup ? `${selectedStudents.length} תלמידים` : "תצוגה לפי כיתות ושכבות"}
+              </p>
+            </div>
+          )}
+        </EditableElement>
         {selectedGroup && (
           <div className="flex items-center gap-2">
             {canEdit && (
@@ -104,11 +108,12 @@ const GroupsPage = () => {
             const red = group.students.filter(s => s.overall_status === "red").length;
 
             return (
+              <EditableElement key={group.name} id={`group-card-${group.name}`} type="card" defaultLabel={`כרטיס כיתה ${group.name}`} pageKey="groups">
+                {({ inlineStyle: cardStyle, visible }) => !visible ? null : (
               <button
-                key={group.name}
                 onClick={() => setSelectedGroup(group.name)}
-                className="group bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
-                style={{ animationDelay: `${60 + i * 40}ms` }}
+                className="group bg-card rounded-2xl border border-border p-5 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up w-full"
+                style={{ ...cardStyle, animationDelay: `${60 + i * 40}ms` }}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
@@ -137,6 +142,8 @@ const GroupsPage = () => {
                   <ChevronLeft className="h-4 w-4 text-border shrink-0 group-hover:text-primary/50 transition-colors duration-200" strokeWidth={1.5} />
                 </div>
               </button>
+                )}
+              </EditableElement>
             );
           })}
         </div>

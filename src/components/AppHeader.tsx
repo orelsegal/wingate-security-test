@@ -3,6 +3,7 @@ import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import WingateBadge from "@/components/WingateBadge";
+import EditableElement from "@/components/builder/EditableElement";
 import { roleTitles } from "@/lib/schoolUtils";
 
 interface AppHeaderProps {
@@ -141,9 +142,22 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
 
         {/* CENTER: Page title */}
         <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 text-center">
-          <h1 className="text-[14px] md:text-[15px] font-semibold text-foreground tracking-tight leading-tight">
-            {isHome ? (user ? roleTitles[user.role] : "תמונת מצב") : title}
-          </h1>
+          <EditableElement
+            id="header-page-title"
+            type="page-title"
+            defaultLabel={isHome ? (user ? roleTitles[user.role] : "תמונת מצב") : title}
+            pageKey="global"
+            hideWhenInvisible={false}
+          >
+            {({ label, inlineStyle }) => (
+              <h1
+                className="text-[14px] md:text-[15px] font-semibold text-foreground tracking-tight leading-tight"
+                style={inlineStyle}
+              >
+                {isHome ? (user ? roleTitles[user.role] : "תמונת מצב") : title}
+              </h1>
+            )}
+          </EditableElement>
         </div>
 
         {/* LEFT: Icons */}
