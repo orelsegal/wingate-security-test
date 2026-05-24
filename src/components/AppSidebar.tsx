@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -106,6 +106,21 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               </EditableElement>
             );
           })}
+
+          {/* Admin Builder — admin-only visual page builder */}
+          {user?.role === "admin" && (
+            <button
+              onClick={() => { navigate("/admin/builder"); onNavigate?.(); }}
+              className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
+                location.pathname === "/admin/builder"
+                  ? "bg-sidebar-primary/20 font-semibold text-sidebar-foreground shadow-sm ring-1 ring-sidebar-primary/30"
+                  : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              <LayoutTemplate className={`h-[15px] w-[15px] shrink-0 ${location.pathname === "/admin/builder" ? "text-sidebar-primary" : "text-sidebar-muted"}`} strokeWidth={location.pathname === "/admin/builder" ? 2 : 1.5} />
+              <span>בונה עמודים</span>
+            </button>
+          )}
 
           {/* Messages — distinct orange entry with unread badge */}
           {labels.visibility?.nav?.messages !== false && (

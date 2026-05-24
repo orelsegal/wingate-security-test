@@ -38,6 +38,7 @@ import TeacherCourseDetailPage from "./pages/TeacherCourseDetailPage.tsx";
 import UserActivityPage from "./pages/UserActivityPage.tsx";
 import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
+import AdminBuilderPage from "./pages/AdminBuilderPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,8 @@ const App = () => (
           <ErrorBoundary>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            {/* Full-screen builder — no AppLayout wrapper */}
+            <Route path="/admin/builder" element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<DashboardContent />} />

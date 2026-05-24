@@ -12,7 +12,6 @@ import { InlineEdit, InlineSelect, ChipEditor } from "@/components/InlineEdit";
 import { EditModeToggle } from "@/components/EditModeToggle";
 import { useEditMode } from "@/context/EditModeContext";
 import { useBuilder } from "@/context/BuilderContext";
-import { BuilderPanel } from "@/components/builder/BuilderPanel";
 import { CustomSectionsRenderer } from "@/components/builder/CustomSectionsRenderer";
 import { Wrench } from "lucide-react";
 import DataExportTools from "@/components/DataExportTools";
@@ -93,8 +92,7 @@ const StudentProfilePage = () => {
 
   const { canEdit: editModeActive } = useEditMode();
   const { layout: builderLayout } = useBuilder();
-  const [builderOpen, setBuilderOpen] = useState(false);
-  // Admin Builder — Phase 2: admins can edit fields and open the visual builder panel.
+  // Admin Builder — entry point to /admin/builder; edit mode still works inline.
   const isEditable = editModeActive;
   const userRole = (user?.role || "student") as any;
   const isSectionVisible = (id: string) => {
@@ -275,32 +273,28 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* Admin Builder — Phase 2: Edit Mode + Visual Builder */}
+      {/* Admin Builder — entry point */}
       {user?.role === "admin" && (
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             {editModeActive ? (
-              <span className="text-primary font-medium">מצב בנייה פעיל — סקציות ושדות ניתנים לעריכה. פתחו את הבונה לפעולות מתקדמות.</span>
+              <span className="text-primary font-medium">מצב עריכה פעיל — ניתן לערוך שדות ישירות בעמוד.</span>
             ) : (
-              <span>מצב צפייה — הפעילו את מצב הבנייה כדי לערוך פריסה ושדות</span>
+              <span>מצב צפייה — הפעילו עריכה לשינוי ישיר, או פתחו את הבונה לניהול פריסה ושדות.</span>
             )}
           </div>
           <div className="flex items-center gap-2">
-            {editModeActive && (
-              <button
-                onClick={() => setBuilderOpen(true)}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[12px] font-medium hover:bg-primary/90 transition"
-              >
-                <Wrench className="h-3.5 w-3.5" />
-                בונה הפרופיל
-              </button>
-            )}
+            <button
+              onClick={() => navigate("/admin/builder")}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[12px] font-medium hover:bg-primary/15 transition"
+            >
+              <Wrench className="h-3.5 w-3.5" />
+              בונה עמודים
+            </button>
             <EditModeToggle />
           </div>
         </div>
       )}
-
-      <BuilderPanel open={builderOpen} onClose={() => setBuilderOpen(false)} />
 
       {/* ═══ HERO CARD ═══ */}
       {isSectionVisible("sys-hero") && (
