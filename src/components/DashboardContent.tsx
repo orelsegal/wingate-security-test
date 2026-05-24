@@ -130,12 +130,12 @@ const DashboardContent = () => {
                 defaultSubtitle={stat.sub}
               >
                 {({ label, subtitle, stylePresetClass }) => (
-                  <div className={`card-premium p-5 md:p-6 ${stylePresetClass}`}>
+                  <div className={`card-premium card-accent-line p-5 md:p-6 ${stylePresetClass}`}>
                     <div className="flex items-center gap-2.5 mb-4">
                       <stat.icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
                       <span className="text-[12px] text-muted-foreground">{label}</span>
                     </div>
-                    <p className="text-[30px] md:text-[36px] font-semibold text-foreground leading-none tracking-tight">{stat.value}</p>
+                    <p className="text-[30px] md:text-[36px] font-semibold text-foreground leading-none tracking-tight font-stat">{stat.value}</p>
                     <p className="text-[11px] text-muted-foreground/60 mt-2">{subtitle ?? stat.sub}</p>
                   </div>
                 )}

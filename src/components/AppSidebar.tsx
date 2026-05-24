@@ -59,14 +59,14 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   return (
     <aside className="w-[256px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-s border-sidebar-border" dir="rtl">
       {/* Logo & Branding */}
-      <button onClick={() => { navigate(user?.role === "student" ? "/student-home" : "/"); onNavigate?.(); }} className="px-6 pt-6 pb-5 w-full text-start group cursor-pointer">
+      <button onClick={() => { navigate(user?.role === "student" ? "/student-home" : "/"); onNavigate?.(); }} className="px-5 pt-5 pb-4 w-full text-start group cursor-pointer">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-card border border-sidebar-border p-1.5 flex items-center justify-center shrink-0 transition-opacity duration-150 group-hover:opacity-75">
-            <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sidebar-primary/30 to-sidebar-primary/10 border border-sidebar-primary/25 p-1.5 flex items-center justify-center shrink-0 transition-all duration-200 group-hover:from-sidebar-primary/40">
+            <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain brightness-[1.15]" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-[13px] font-semibold tracking-tight text-start leading-tight text-sidebar-foreground">האקדמיה למצוינות</h1>
-            <p className="text-[10px] text-sidebar-muted mt-0.5 text-start">מכון וינגייט</p>
+            <h1 className="text-[13.5px] font-bold tracking-tight text-start leading-tight text-sidebar-foreground font-heading">האקדמיה למצוינות</h1>
+            <p className="text-[9.5px] text-sidebar-muted/70 mt-0.5 text-start font-medium tracking-wide">מכון וינגייט</p>
           </div>
         </div>
       </button>
@@ -93,13 +93,13 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
                 {({ label }) => (
                   <button
                     onClick={() => { navigate(item.path); onNavigate?.(); }}
-                    className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start ${
+                    className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start ${
                       active
-                        ? "bg-sidebar-accent font-semibold text-sidebar-foreground"
-                        : "text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground font-medium"
+                        ? "bg-sidebar-primary/20 font-semibold text-sidebar-foreground shadow-sm ring-1 ring-sidebar-primary/30"
+                        : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground font-medium"
                     }`}
                   >
-                    <item.icon className={`h-[15px] w-[15px] shrink-0 ${active ? "text-primary" : "text-sidebar-muted"}`} strokeWidth={1.5} />
+                    <item.icon className={`h-[15px] w-[15px] shrink-0 transition-colors ${active ? "text-sidebar-primary" : "text-sidebar-muted"}`} strokeWidth={active ? 2 : 1.5} />
                     <span>{label}</span>
                   </button>
                 )}

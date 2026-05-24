@@ -14,7 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Assistant", "sans-serif"],
+        sans: ["Heebo", "Assistant", "sans-serif"],
+        heading: ["Rubik", "Heebo", "sans-serif"],
+        display: ["Rubik", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

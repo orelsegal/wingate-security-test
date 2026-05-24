@@ -103,13 +103,13 @@ const InsightStrip = ({
       >
         {({ label, inlineStyle }) => (
           <div
-            className="bg-card rounded-xl border border-border p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
+            className="bg-card rounded-xl border border-border/60 p-3.5 text-center shadow-[var(--shadow-card)] animate-fade-in-up hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-200"
             style={{ ...inlineStyle, animationDelay: `${i * 40}ms` }}
           >
             <div className="flex items-center justify-center mb-1.5">
               <item.icon className={`h-4 w-4 ${item.color}`} strokeWidth={1.5} />
             </div>
-            <p className="text-[18px] font-semibold text-foreground leading-none">{item.value}</p>
+            <p className="text-[20px] font-bold text-foreground leading-none font-stat">{item.value}</p>
             <p className="text-[10px] text-muted-foreground mt-1 font-medium">{label}</p>
           </div>
         )}
