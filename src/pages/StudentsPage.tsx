@@ -306,11 +306,11 @@ const StudentsPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-10 text-center"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
+                    <TableHead className="w-10 text-center hidden sm:table-cell"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
                     <TableHead className="text-right">שם</TableHead>
-                    <TableHead className="text-right">ענף</TableHead>
-                    <TableHead className="text-right">כיתה</TableHead>
-                    <TableHead className="text-right">ממוצע</TableHead>
+                    <TableHead className="text-right hidden md:table-cell">ענף</TableHead>
+                    <TableHead className="text-right hidden lg:table-cell">כיתה</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">ממוצע</TableHead>
                     <TableHead className="text-right">סטטוס</TableHead>
                     <TableHead className="text-right">פעולות</TableHead>
                   </TableRow>
@@ -321,18 +321,21 @@ const StudentsPage = () => {
                     const config = statusConfig[status];
                     return (
                       <TableRow key={student.id} className={`cursor-pointer hover:bg-accent/30 ${selected.has(student.id) ? "bg-primary/5" : ""}`}>
-                        <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="text-center hidden sm:table-cell" onClick={(e) => e.stopPropagation()}>
                           <Checkbox checked={selected.has(student.id)} onCheckedChange={() => toggleSelect(student.id)} />
                         </TableCell>
                         <TableCell className="font-medium" onClick={() => navigate(`/students/${student.id}`)}>
                           <div className="flex items-center gap-2">
                             <InitialsAvatar name={student.full_name} size="sm" />
-                            <span className="text-[13px]">{student.full_name}</span>
+                            <div className="min-w-0">
+                              <span className="text-[13px] block truncate max-w-[140px]">{student.full_name}</span>
+                              <span className="text-[10px] text-muted-foreground md:hidden">{student.sport}</span>
+                            </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-[12px]">{student.sport}</TableCell>
-                        <TableCell className="text-[12px]">{student.class_name}</TableCell>
-                        <TableCell className="text-[12px] font-semibold">{student.avg_score || "—"}</TableCell>
+                        <TableCell className="text-[12px] hidden md:table-cell">{student.sport}</TableCell>
+                        <TableCell className="text-[12px] hidden lg:table-cell">{student.class_name}</TableCell>
+                        <TableCell className="text-[12px] font-semibold hidden sm:table-cell">{student.avg_score || "—"}</TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${config.bgClass} ${config.textClass}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />

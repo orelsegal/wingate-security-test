@@ -9,6 +9,7 @@ import { useBuilderUI, type ElementType, ELEMENT_TYPE_LABEL } from "@/context/Bu
 import { useBuilderOverrides, STYLE_PRESET_CLASS, type StylePreset } from "@/context/BuilderOverridesContext";
 import { cn } from "@/lib/utils";
 import { Pencil } from "lucide-react";
+import type { CSSProperties } from "react";
 
 export interface ResolvedElement {
   label: string;
@@ -16,6 +17,29 @@ export interface ResolvedElement {
   visible: boolean;
   stylePreset: StylePreset;
   stylePresetClass: string;
+  /** Inline styles derived from builder overrides — spread onto your root element */
+  inlineStyle: CSSProperties;
+}
+
+/** Build a CSSProperties object from an ElementOverride */
+export function buildInlineStyle(override: ReturnType<typeof useBuilderOverrides>["overrides"][string] | undefined): CSSProperties {
+  if (!override) return {};
+  const s: CSSProperties = {};
+  if (override.textColor) s.color = override.textColor;
+  if (override.bgColor) s.backgroundColor = override.bgColor;
+  if (override.borderColor) s.borderColor = override.borderColor;
+  if (override.fontFamily && override.fontFamily !== "inherit") s.fontFamily = override.fontFamily;
+  if (override.fontSize) s.fontSize = `${override.fontSize}px`;
+  if (override.fontWeight) s.fontWeight = override.fontWeight;
+  if (override.lineHeight) s.lineHeight = override.lineHeight;
+  if (override.letterSpacing) s.letterSpacing = `${override.letterSpacing}em`;
+  if (override.textAlign) s.textAlign = override.textAlign;
+  if (override.paddingTop != null) s.paddingTop = `${override.paddingTop}px`;
+  if (override.paddingBottom != null) s.paddingBottom = `${override.paddingBottom}px`;
+  if (override.paddingX != null) { s.paddingLeft = `${override.paddingX}px`; s.paddingRight = `${override.paddingX}px`; }
+  if (override.borderRadius != null) s.borderRadius = `${override.borderRadius}px`;
+  if (override.gap != null) s.gap = `${override.gap}px`;
+  return s;
 }
 
 interface Props {
@@ -58,7 +82,8 @@ const EditableElement = ({ id, type, defaultLabel, defaultSubtitle, pageKey = "g
   // While admin is actively editing (no preview role), never hide so they can re-toggle
   if (isAdmin && editMode && !previewRole) visible = true;
 
-  const resolved: ResolvedElement = { label, subtitle, visible, stylePreset, stylePresetClass };
+  const inlineStyle = buildInlineStyle(override);
+  const resolved: ResolvedElement = { label, subtitle, visible, stylePreset, stylePresetClass, inlineStyle };
 
   if (!visible && hideWhenInvisible) return null;
 

@@ -11,8 +11,47 @@ import type { UserRole } from "@/context/AuthContext";
 export type StylePreset = "default" | "clean" | "bordered" | "elevated" | "highlighted";
 export type LayoutWidth = "full" | "half" | "third";
 export type LayoutDensity = "compact" | "regular" | "expanded";
+export type TextAlign = "right" | "center" | "left";
 
-export interface ElementOverride {
+export interface TypographyOverride {
+  /** Font family — key from FONT_FAMILIES */
+  fontFamily?: string;
+  /** Font size in px (e.g. 13) */
+  fontSize?: number;
+  /** Font weight (e.g. 400, 600, 700) */
+  fontWeight?: number;
+  /** Line height multiplier (e.g. 1.4) */
+  lineHeight?: number;
+  /** Letter spacing in em (e.g. 0.02) */
+  letterSpacing?: number;
+  textAlign?: TextAlign;
+}
+
+export interface ColorOverride {
+  /** CSS color value for text */
+  textColor?: string;
+  /** CSS color value for background */
+  bgColor?: string;
+  /** CSS color value for border */
+  borderColor?: string;
+  /** Icon / accent color */
+  accentColor?: string;
+}
+
+export interface SpacingOverride {
+  /** Padding top in px */
+  paddingTop?: number;
+  /** Padding bottom in px */
+  paddingBottom?: number;
+  /** Padding horizontal in px */
+  paddingX?: number;
+  /** Border radius in px */
+  borderRadius?: number;
+  /** Gap between inner items in px */
+  gap?: number;
+}
+
+export interface ElementOverride extends TypographyOverride, ColorOverride, SpacingOverride {
   label?: string;
   subtitle?: string;
   helper?: string;
@@ -24,6 +63,16 @@ export interface ElementOverride {
   roleVisibility?: UserRole[];
   iconName?: string;
 }
+
+/** Available font families */
+export const FONT_FAMILIES: Record<string, string> = {
+  inherit: "ברירת מחדל",
+  "Rubik, sans-serif": "Rubik",
+  "Assistant, sans-serif": "Assistant",
+  "Heebo, sans-serif": "Heebo",
+  "Inter, sans-serif": "Inter",
+  "monospace": "Monospace",
+};
 
 export type OverridesMap = Record<string, ElementOverride>;
 

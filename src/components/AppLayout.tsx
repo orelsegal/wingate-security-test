@@ -28,9 +28,9 @@ const AppLayout = () => {
         </>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <AppHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 bg-background">
+        <main className="flex-1 bg-background overflow-x-hidden">
           <PageTransition>
             <Outlet />
           </PageTransition>

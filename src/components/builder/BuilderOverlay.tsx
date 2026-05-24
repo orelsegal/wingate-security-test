@@ -18,10 +18,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, Layers, MousePointerClick, Pencil, RotateCcw, X, Layout, Palette, Shield, Settings2, Type } from "lucide-react";
+import { Eye, EyeOff, Layers, MousePointerClick, Pencil, RotateCcw, X, Layout, Palette, Shield, Settings2, Type, AlignRight, AlignCenter, AlignLeft } from "lucide-react";
 import { useAuth, type UserRole } from "@/context/AuthContext";
 import { useBuilderUI, ELEMENT_TYPE_LABEL } from "@/context/BuilderUIContext";
-import { useBuilderOverrides, type StylePreset } from "@/context/BuilderOverridesContext";
+import { useBuilderOverrides, type StylePreset, FONT_FAMILIES } from "@/context/BuilderOverridesContext";
 import { cn } from "@/lib/utils";
 
 const ROLES: { value: UserRole; label: string }[] = [
@@ -216,9 +216,11 @@ const BuilderOverlay = () => {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="style" className="space-y-3 mt-0">
+                  <TabsContent value="style" className="space-y-4 mt-0">
+
+                    {/* ── Card Preset ── */}
                     <div>
-                      <Label className="text-[11px] text-muted-foreground">סגנון כרטיס</Label>
+                      <Label className="text-[11px] text-muted-foreground font-semibold">סגנון כרטיס</Label>
                       <Select
                         value={current.stylePreset ?? "default"}
                         onValueChange={(v) => update({ stylePreset: v as StylePreset })}
@@ -229,9 +231,175 @@ const BuilderOverlay = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      בקרות נוספות (רקע, פינות, צל, צבע אייקון) יתווספו בשלב הבא.
-                    </p>
+
+                    <div className="h-px bg-border" />
+
+                    {/* ── Colors ── */}
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground font-semibold">צבעים</Label>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {[
+                          { label: "טקסט", key: "textColor" as const, val: current.textColor ?? "" },
+                          { label: "רקע", key: "bgColor" as const, val: current.bgColor ?? "" },
+                          { label: "מסגרת", key: "borderColor" as const, val: current.borderColor ?? "" },
+                          { label: "הדגשה", key: "accentColor" as const, val: current.accentColor ?? "" },
+                        ].map(({ label, key, val }) => (
+                          <div key={key} className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={val || "#000000"}
+                              onChange={(e) => update({ [key]: e.target.value })}
+                              className="h-8 w-8 rounded cursor-pointer border border-border shrink-0"
+                              title={label}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[11px] text-muted-foreground">{label}</span>
+                              {val && (
+                                <button
+                                  onClick={() => update({ [key]: undefined })}
+                                  className="text-[9px] text-destructive block leading-none mt-0.5"
+                                >
+                                  נקה
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-border" />
+
+                    {/* ── Typography ── */}
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground font-semibold">טיפוגרפיה</Label>
+                      <div className="mt-2 space-y-2.5">
+                        {/* Font family */}
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">פונט</Label>
+                          <Select
+                            value={current.fontFamily ?? "inherit"}
+                            onValueChange={(v) => update({ fontFamily: v === "inherit" ? undefined : v })}
+                          >
+                            <SelectTrigger className="mt-1 h-8 text-[12px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(FONT_FAMILIES).map(([val, name]) => (
+                                <SelectItem key={val} value={val} style={{ fontFamily: val !== "inherit" ? val : undefined }}>
+                                  {name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Font size + weight in one row */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground">גודל (px)</Label>
+                            <Input
+                              type="number"
+                              min={8} max={64}
+                              value={current.fontSize ?? ""}
+                              placeholder="ברירת מחדל"
+                              onChange={(e) => update({ fontSize: e.target.value ? Number(e.target.value) : undefined })}
+                              className="mt-1 h-8 text-[12px]"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground">משקל</Label>
+                            <Select
+                              value={String(current.fontWeight ?? "")}
+                              onValueChange={(v) => update({ fontWeight: v ? Number(v) : undefined })}
+                            >
+                              <SelectTrigger className="mt-1 h-8 text-[12px]"><SelectValue placeholder="ברירת מחדל" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">ברירת מחדל</SelectItem>
+                                {[300,400,500,600,700,800].map(w => (
+                                  <SelectItem key={w} value={String(w)} style={{ fontWeight: w }}>{w}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* Line height + letter spacing */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground">גובה שורה</Label>
+                            <Input
+                              type="number" min={1} max={3} step={0.1}
+                              value={current.lineHeight ?? ""}
+                              placeholder="1.4"
+                              onChange={(e) => update({ lineHeight: e.target.value ? Number(e.target.value) : undefined })}
+                              className="mt-1 h-8 text-[12px]"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground">ריווח אותיות</Label>
+                            <Input
+                              type="number" min={-0.1} max={0.5} step={0.01}
+                              value={current.letterSpacing ?? ""}
+                              placeholder="0"
+                              onChange={(e) => update({ letterSpacing: e.target.value ? Number(e.target.value) : undefined })}
+                              className="mt-1 h-8 text-[12px]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Text align */}
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">יישור טקסט</Label>
+                          <div className="mt-1 flex gap-1">
+                            {([
+                              { v: "right", icon: AlignRight, label: "ימין" },
+                              { v: "center", icon: AlignCenter, label: "מרכז" },
+                              { v: "left", icon: AlignLeft, label: "שמאל" },
+                            ] as const).map(({ v, icon: Icon, label }) => (
+                              <button
+                                key={v}
+                                onClick={() => update({ textAlign: current.textAlign === v ? undefined : v })}
+                                title={label}
+                                className={cn(
+                                  "flex-1 h-8 rounded border flex items-center justify-center transition-colors",
+                                  current.textAlign === v
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "border-border hover:bg-accent",
+                                )}
+                              >
+                                <Icon className="h-3.5 w-3.5" strokeWidth={1.5} />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-border" />
+
+                    {/* ── Spacing ── */}
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground font-semibold">ריווח ופינות</Label>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {[
+                          { label: "Padding עליון (px)", key: "paddingTop" as const },
+                          { label: "Padding תחתון (px)", key: "paddingBottom" as const },
+                          { label: "Padding אופקי (px)", key: "paddingX" as const },
+                          { label: "פינות עגולות (px)", key: "borderRadius" as const },
+                          { label: "רווח פנימי (px)", key: "gap" as const },
+                        ].map(({ label, key }) => (
+                          <div key={key}>
+                            <Label className="text-[10px] text-muted-foreground">{label}</Label>
+                            <Input
+                              type="number" min={0} max={120}
+                              value={current[key] ?? ""}
+                              placeholder="—"
+                              onChange={(e) => update({ [key]: e.target.value ? Number(e.target.value) : undefined })}
+                              className="mt-1 h-8 text-[12px]"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="layout" className="space-y-3 mt-0">
