@@ -231,39 +231,12 @@ const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
 /* ═══ ADMIN ═══ */
 const AdminHome = () => {
   const navigate = useNavigate();
-  const { data: students = [] } = useStudents();
-  const redCount = students.filter((s) => s.overall_status === "red").length;
-  const yellowCount = students.filter((s) => s.overall_status === "yellow").length;
-
-  const cards: ActionCard[] = [
-    { id: "reports", title: "נתונים ודוחות", description: "ניתוח נתונים ודוחות מתקדמים", icon: BarChart3, color: "bg-muted", iconColor: "text-muted-foreground", comingSoon: true },
-  ];
-
   return (
     <>
-      <InsightStrip
-        pageKey="home-admin"
-        items={[
-          { id: "admin-stat-total", label: "סה״כ ספורטאים", value: students.length, icon: Users, color: "text-primary" },
-          { id: "admin-stat-yellow", label: "דורשים תשומת לב", value: yellowCount, icon: Target, color: "text-[hsl(var(--warning))]" },
-          { id: "admin-stat-red", label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
-        ]}
-      />
-      <AIInsightsPanel students={students} role="admin" navigate={navigate} />
-      <SubjectsList navigate={navigate} />
+      {/* Quick-access navigation strip */}
       <MainEntryButtons navigate={navigate} />
-
-      <EditableElement id="admin-reports-header" type="heading" defaultLabel="כותרת — נתונים ודוחות" pageKey="home">
-        {({ label, inlineStyle }) => (
-          <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight" style={inlineStyle}>{label}</h2>
-        )}
-      </EditableElement>
-      <CardGrid cards={cards} navigate={navigate} />
-
-      {/* Embedded admin dashboard */}
-      <div className="mt-12 -mx-5 md:-mx-10 lg:-mx-14 border-t border-border">
-        <DashboardContent />
-      </div>
+      {/* Full dashboard — no extra padding, parent container provides it */}
+      <DashboardContent embedded />
     </>
   );
 };
@@ -379,7 +352,7 @@ const RoleHomePage = () => {
   const title = user ? roleTitles[user.role] : "תמונת מצב";
 
   return (
-    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
+    <div className={`p-5 md:p-8 lg:p-10 mx-auto ${user?.role === "admin" ? "max-w-[1400px]" : "max-w-[880px]"}`}>
       {/* Welcome */}
       <section className="mb-8">
         <EditableElement
