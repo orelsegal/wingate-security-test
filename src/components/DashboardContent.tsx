@@ -332,10 +332,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
                     {branch.red}
                   </span>
                   {/* Progress bar */}
-                  <div className="flex h-3 rounded-xl overflow-hidden bg-muted gap-0.5">
-                    {gPct > 0 && <div className="bg-success rounded-s-xl transition-all" style={{ width: `${gPct}%` }} />}
-                    {yPct > 0 && <div className="bg-warning transition-all" style={{ width: `${yPct}%` }} />}
-                    {rPct > 0 && <div className="bg-destructive rounded-e-xl transition-all" style={{ width: `${rPct}%` }} />}
+                  <div className="flex h-2.5 rounded-xl overflow-hidden bg-muted/60 gap-0.5">
+                    {gPct > 0 && <div className="bg-success/55 rounded-s-xl transition-all" style={{ width: `${gPct}%` }} />}
+                    {yPct > 0 && <div className="bg-warning/55 transition-all" style={{ width: `${yPct}%` }} />}
+                    {rPct > 0 && <div className="bg-destructive/50 rounded-e-xl transition-all" style={{ width: `${rPct}%` }} />}
                   </div>
                   <div className="flex justify-center">
                     <StatusBadge type={branch.overall} />
