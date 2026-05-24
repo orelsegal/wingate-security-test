@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Users, ChevronLeft, Loader2, Search, Filter, BookOpen } from "lucide-react";
+import { ArrowRight, Users, ChevronLeft, Search, Filter } from "lucide-react";
 import { useStudents, statusConfig, type StatusType } from "@/hooks/useStudents";
 import { useAuth } from "@/context/AuthContext";
 import InitialsAvatar from "@/components/InitialsAvatar";
@@ -8,6 +8,7 @@ import DataExportTools from "@/components/DataExportTools";
 import { classToGrade, GRADE_ORDER } from "@/lib/schoolUtils";
 import { GroupsSkeleton } from "@/components/PageSkeleton";
 import EmptyState from "@/components/EmptyState";
+import EditableElement from "@/components/builder/EditableElement";
 
 const classOrder = GRADE_ORDER;
 
