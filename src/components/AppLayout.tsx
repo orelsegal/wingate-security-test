@@ -5,6 +5,7 @@ import AppHeader from "@/components/AppHeader";
 import PageTransition from "@/components/PageTransition";
 import BuilderOverlay from "@/components/builder/BuilderOverlay";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useActivityLogger } from "@/hooks/useActivityLogger";
 
 const AppLayout = () => {
@@ -32,9 +33,11 @@ const AppLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <AppHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
         <main className="flex-1 bg-background overflow-x-hidden pb-16 md:pb-0">
-          <PageTransition>
-            <Outlet />
-          </PageTransition>
+          <ErrorBoundary>
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </ErrorBoundary>
         </main>
       </div>
       <BuilderOverlay />

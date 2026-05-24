@@ -10,6 +10,7 @@ import { UiLabelsProvider } from "@/context/UiLabelsContext";
 import { BuilderUIProvider } from "@/context/BuilderUIContext";
 import { BuilderOverridesProvider } from "@/context/BuilderOverridesContext";
 import AppLayout from "@/components/AppLayout";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
 import StudentProfilePage from "./pages/StudentProfilePage.tsx";
@@ -66,6 +67,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+          <ErrorBoundary>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -97,6 +99,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ErrorBoundary>
           </BrowserRouter>
         </BuilderProvider>
         </EditModeProvider>
