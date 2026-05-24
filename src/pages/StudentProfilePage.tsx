@@ -20,6 +20,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
+import { ProfileSkeleton } from "@/components/PageSkeleton";
 
 const ProgressRing = ({ value }: { value: number }) => {
   const radius = 40;
@@ -196,11 +197,7 @@ const StudentProfilePage = () => {
   }, [subjectProgress, student]);
 
   if (studentLoading || progressLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!student) {

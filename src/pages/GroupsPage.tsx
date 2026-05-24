@@ -6,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import DataExportTools from "@/components/DataExportTools";
 import { classToGrade, GRADE_ORDER } from "@/lib/schoolUtils";
+import { GroupsSkeleton } from "@/components/PageSkeleton";
+import EmptyState from "@/components/EmptyState";
 
 const classOrder = GRADE_ORDER;
 
@@ -54,7 +56,7 @@ const GroupsPage = () => {
   }, [selectedGroup, groups, search, statusFilter, sportFilter]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
+    return <GroupsSkeleton />;
   }
 
   return (
@@ -213,9 +215,11 @@ const GroupsPage = () => {
               );
             })}
             {selectedStudents.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-[12px] text-muted-foreground">לא נמצאו תלמידים</p>
-              </div>
+              <EmptyState
+                icon={Search}
+                title="לא נמצאו תלמידים"
+                description="נסי לשנות את הסינון"
+              />
             )}
           </div>
         </>

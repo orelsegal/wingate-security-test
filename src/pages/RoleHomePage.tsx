@@ -11,6 +11,7 @@ import {
 import WingateBadge from "@/components/WingateBadge";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
 import DashboardContent from "@/components/DashboardContent";
+import EditableElement from "@/components/builder/EditableElement";
 import { roleTitles, CURRENT_SEMESTER } from "@/lib/schoolUtils";
 
 /* ═══ Types ═══ */
@@ -241,7 +242,11 @@ const AdminHome = () => {
       <SubjectsList navigate={navigate} />
       <MainEntryButtons navigate={navigate} />
 
-      <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">נתונים ודוחות</h2>
+      <EditableElement id="admin-reports-header" type="heading" defaultLabel="כותרת — נתונים ודוחות" pageKey="home">
+        {({ label, inlineStyle }) => (
+          <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight" style={inlineStyle}>{label}</h2>
+        )}
+      </EditableElement>
       <CardGrid cards={cards} navigate={navigate} />
 
       {/* Embedded admin dashboard */}
@@ -365,17 +370,26 @@ const RoleHomePage = () => {
     <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
       {/* Welcome */}
       <section className="mb-8">
-        <div className="flex items-center gap-4 mb-6">
-          <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
-          <div>
-            <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
-              שלום, {user?.name}
-            </h1>
-            <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
-              {user ? roleLabels[user.role] : ""} · {CURRENT_SEMESTER}
-            </p>
-          </div>
-        </div>
+        <EditableElement
+          id="home-greeting"
+          type="section"
+          defaultLabel="ברכת פתיחה"
+          pageKey="home"
+        >
+          {({ inlineStyle }) => (
+            <div className="flex items-center gap-4 mb-6" style={inlineStyle}>
+              <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
+              <div>
+                <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
+                  שלום, {user?.name}
+                </h1>
+                <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
+                  {user ? roleLabels[user.role] : ""} · {CURRENT_SEMESTER}
+                </p>
+              </div>
+            </div>
+          )}
+        </EditableElement>
       </section>
 
       {/* Content */}

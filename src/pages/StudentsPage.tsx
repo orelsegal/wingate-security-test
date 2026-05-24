@@ -19,6 +19,8 @@ import QuickEditDrawer from "@/components/QuickEditDrawer";
 import DataExportTools from "@/components/DataExportTools";
 import * as XLSX from "xlsx";
 import { classToGrade } from "@/lib/schoolUtils";
+import { StudentsPageSkeleton } from "@/components/PageSkeleton";
+import EmptyState from "@/components/EmptyState";
 
 const grades = ["ט׳", "י׳", "י״א", "י״ב"];
 
@@ -150,7 +152,7 @@ const StudentsPage = () => {
   }, [filtered, selected]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return <StudentsPageSkeleton />;
   }
 
   const isAdmin = user?.role === "admin" || user?.role === "teacher";
@@ -296,9 +298,12 @@ const StudentsPage = () => {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="card-premium py-16 text-center">
-            <Search className="h-7 w-7 text-muted-foreground/20 mx-auto mb-3" strokeWidth={1.5} />
-            <p className="text-[13px] text-muted-foreground">לא נמצאו תוצאות</p>
+          <div className="card-premium">
+            <EmptyState
+              icon={Search}
+              title="לא נמצאו תלמידים"
+              description="נסי לשנות את הסינון או חפשי שם אחר"
+            />
           </div>
         ) : viewMode === "table" ? (
           <div className="card-premium overflow-hidden">
