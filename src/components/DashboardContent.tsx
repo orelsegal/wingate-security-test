@@ -324,11 +324,11 @@ const DashboardContent = ({ embedded = false }: Props) => {
                 >
                   <span className="text-[13.5px] font-semibold text-foreground">{branch.name}</span>
                   <span className="text-[13px] text-muted-foreground text-center tabular-nums">{branch.total}</span>
-                  <span className="text-[15px] font-bold text-success text-center tabular-nums">{branch.green}</span>
-                  <span className={`text-[15px] font-bold text-center tabular-nums ${branch.yellow > 0 ? "text-warning" : "text-muted-foreground/20"}`}>
+                  <span className="text-[15px] font-semibold text-success/80 text-center tabular-nums">{branch.green}</span>
+                  <span className={`text-[15px] font-semibold text-center tabular-nums ${branch.yellow > 0 ? "text-warning/80" : "text-muted-foreground/20"}`}>
                     {branch.yellow}
                   </span>
-                  <span className={`text-[15px] font-bold text-center tabular-nums ${branch.red > 0 ? "text-destructive" : "text-muted-foreground/20"}`}>
+                  <span className={`text-[15px] font-semibold text-center tabular-nums ${branch.red > 0 ? "text-destructive/80" : "text-muted-foreground/20"}`}>
                     {branch.red}
                   </span>
                   {/* Progress bar */}
