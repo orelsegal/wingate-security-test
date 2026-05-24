@@ -170,10 +170,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
           </div>
 
           {/* Card 3 — on track (green dot) */}
-          <div className="card-premium card-accent-line p-5 md:p-6 border-success/20">
+          <div className="card-premium card-accent-line p-5 md:p-6 border-success/15">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[12px] font-medium text-muted-foreground">במסלול</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-success shadow-sm" />
+              <span className="w-2.5 h-2.5 rounded-full bg-success/60" />
             </div>
             <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
               {greenCount}
@@ -184,10 +184,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
           </div>
 
           {/* Card 4 — needs attention (orange dot) */}
-          <div className="card-premium card-accent-line p-5 md:p-6 border-warning/25">
+          <div className="card-premium card-accent-line p-5 md:p-6 border-warning/15">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[12px] font-medium text-muted-foreground">דורשים טיפול</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-warning shadow-sm" />
+              <span className="w-2.5 h-2.5 rounded-full bg-warning/60" />
             </div>
             <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
               {yellowCount + redCount}
@@ -210,27 +210,27 @@ const DashboardContent = ({ embedded = false }: Props) => {
           </div>
 
           {/* Wide bar — h-4 for legibility */}
-          <div className="flex h-4 rounded-xl overflow-hidden bg-muted gap-0.5 mb-4">
+          <div className="flex h-3 rounded-xl overflow-hidden bg-muted/60 gap-0.5 mb-4">
             {greenPct > 0 && (
-              <div className="bg-success rounded-s-xl transition-all duration-700" style={{ width: `${greenPct}%` }} />
+              <div className="bg-success/55 rounded-s-xl transition-all duration-700" style={{ width: `${greenPct}%` }} />
             )}
             {yellowPct > 0 && (
-              <div className="bg-warning transition-all duration-700" style={{ width: `${yellowPct}%` }} />
+              <div className="bg-warning/55 transition-all duration-700" style={{ width: `${yellowPct}%` }} />
             )}
             {redPct > 0 && (
-              <div className="bg-destructive rounded-e-xl transition-all duration-700" style={{ width: `${redPct}%` }} />
+              <div className="bg-destructive/50 rounded-e-xl transition-all duration-700" style={{ width: `${redPct}%` }} />
             )}
           </div>
 
           {/* Legend — X/Y format */}
           <div className="flex flex-wrap items-center gap-5">
             {[
-              { label: "במסלול",  count: greenCount,  cls: "bg-success"     },
-              { label: "פערים",   count: yellowCount, cls: "bg-warning"     },
-              { label: "בסיכון",  count: redCount,    cls: "bg-destructive" },
+              { label: "במסלול",  count: greenCount,  cls: "bg-success/60"     },
+              { label: "פערים",   count: yellowCount, cls: "bg-warning/60"     },
+              { label: "בסיכון",  count: redCount,    cls: "bg-destructive/55" },
             ].map(s => (
               <div key={s.label} className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${s.cls} shrink-0`} />
+                <span className={`w-2.5 h-2.5 rounded-full ${s.cls} shrink-0`} />
                 <span className="text-[12px] text-muted-foreground">
                   <span className="font-semibold text-foreground tabular-nums">{s.count}</span>
                   <span className="text-muted-foreground/50">/{totalStudents}</span>
@@ -310,10 +310,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
                       <StatusBadge type={branch.overall} />
                     </div>
                   </div>
-                  <div className="flex h-3 rounded-xl overflow-hidden bg-muted gap-0.5">
-                    {gPct > 0 && <div className="bg-success rounded-s-xl" style={{ width: `${gPct}%` }} />}
-                    {yPct > 0 && <div className="bg-warning" style={{ width: `${yPct}%` }} />}
-                    {rPct > 0 && <div className="bg-destructive rounded-e-xl" style={{ width: `${rPct}%` }} />}
+                  <div className="flex h-2.5 rounded-xl overflow-hidden bg-muted/60 gap-0.5">
+                    {gPct > 0 && <div className="bg-success/55 rounded-s-xl" style={{ width: `${gPct}%` }} />}
+                    {yPct > 0 && <div className="bg-warning/55" style={{ width: `${yPct}%` }} />}
+                    {rPct > 0 && <div className="bg-destructive/50 rounded-e-xl" style={{ width: `${rPct}%` }} />}
                   </div>
                 </div>
 
@@ -332,10 +332,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
                     {branch.red}
                   </span>
                   {/* Progress bar */}
-                  <div className="flex h-3 rounded-xl overflow-hidden bg-muted gap-0.5">
-                    {gPct > 0 && <div className="bg-success rounded-s-xl transition-all" style={{ width: `${gPct}%` }} />}
-                    {yPct > 0 && <div className="bg-warning transition-all" style={{ width: `${yPct}%` }} />}
-                    {rPct > 0 && <div className="bg-destructive rounded-e-xl transition-all" style={{ width: `${rPct}%` }} />}
+                  <div className="flex h-2.5 rounded-xl overflow-hidden bg-muted/60 gap-0.5">
+                    {gPct > 0 && <div className="bg-success/55 rounded-s-xl transition-all" style={{ width: `${gPct}%` }} />}
+                    {yPct > 0 && <div className="bg-warning/55 transition-all" style={{ width: `${yPct}%` }} />}
+                    {rPct > 0 && <div className="bg-destructive/50 rounded-e-xl transition-all" style={{ width: `${rPct}%` }} />}
                   </div>
                   <div className="flex justify-center">
                     <StatusBadge type={branch.overall} />

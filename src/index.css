@@ -145,12 +145,13 @@
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 3px;
+    height: 2px;
     background: linear-gradient(90deg,
-      hsl(112, 62%, 28%) 0%,
-      hsl(92, 62%, 40%) 50%,
-      hsl(75, 60%, 44%) 100%);
+      hsl(152, 45%, 80%) 0%,
+      hsl(112, 40%, 82%) 50%,
+      hsl(75, 45%, 84%) 100%);
     border-radius: var(--radius) var(--radius) 0 0;
+    opacity: 0.85;
   }
 
   .pattern-track {
