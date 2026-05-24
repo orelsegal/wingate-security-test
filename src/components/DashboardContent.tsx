@@ -170,10 +170,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
           </div>
 
           {/* Card 3 — on track (green dot) */}
-          <div className="card-premium card-accent-line p-5 md:p-6 border-success/20">
+          <div className="card-premium card-accent-line p-5 md:p-6 border-success/15">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[12px] font-medium text-muted-foreground">במסלול</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-success shadow-sm" />
+              <span className="w-2.5 h-2.5 rounded-full bg-success/60" />
             </div>
             <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
               {greenCount}
@@ -184,10 +184,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
           </div>
 
           {/* Card 4 — needs attention (orange dot) */}
-          <div className="card-premium card-accent-line p-5 md:p-6 border-warning/25">
+          <div className="card-premium card-accent-line p-5 md:p-6 border-warning/15">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[12px] font-medium text-muted-foreground">דורשים טיפול</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-warning shadow-sm" />
+              <span className="w-2.5 h-2.5 rounded-full bg-warning/60" />
             </div>
             <p className="text-[38px] md:text-[44px] font-bold text-foreground leading-none tracking-tight font-stat">
               {yellowCount + redCount}
