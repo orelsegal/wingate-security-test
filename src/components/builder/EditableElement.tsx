@@ -95,7 +95,13 @@ const EditableElement = ({ id, type, defaultLabel, defaultSubtitle, pageKey = "g
   return (
     <div
       data-builder-id={id}
-      onClick={(e) => { e.stopPropagation(); select(id); }}
+      // Capture phase: intercept ALL clicks before they reach child buttons/links
+      // This prevents navigation/actions when admin is in edit mode (Elementor behaviour)
+      onClickCapture={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        select(id);
+      }}
       className={cn(
         "relative group cursor-pointer transition-shadow",
         "outline outline-1 outline-dashed outline-transparent hover:outline-primary/40 rounded-md",
@@ -103,6 +109,7 @@ const EditableElement = ({ id, type, defaultLabel, defaultSubtitle, pageKey = "g
         override?.visible === false && "opacity-50",
       )}
     >
+      {/* Type label badge */}
       <span className={cn(
         "absolute -top-2 -start-2 z-20 text-[9px] font-medium px-1.5 py-0.5 rounded bg-primary text-primary-foreground shadow",
         "opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
@@ -110,13 +117,16 @@ const EditableElement = ({ id, type, defaultLabel, defaultSubtitle, pageKey = "g
       )}>
         {ELEMENT_TYPE_LABEL[type]}
       </span>
+      {/* Edit pencil icon */}
       <span className={cn(
         "absolute -top-2 -end-2 z-20 h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow",
-        "opacity-0 group-hover:opacity-100 transition-opacity",
+        "opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
         selected && "opacity-100",
       )}>
         <Pencil className="h-3 w-3" strokeWidth={2} />
       </span>
+      {/* Transparent click-blocker overlay — prevents inner links/buttons from firing */}
+      <div className="absolute inset-0 z-10" aria-hidden />
       {inner}
     </div>
   );
