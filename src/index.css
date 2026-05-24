@@ -62,16 +62,16 @@
     --gradient-hero: linear-gradient(140deg, hsl(112, 62%, 26%) 0%, hsl(90, 58%, 38%) 55%, hsl(112, 58%, 31%) 100%);
     --gradient-card-accent: linear-gradient(135deg, hsl(112, 70%, 96%) 0%, hsl(90, 60%, 95%) 100%);
 
-    /* ── Sidebar — dark forest green ── */
-    --sidebar-background: 120 38% 12%;
-    --sidebar-foreground: 120 20% 88%;
-    --sidebar-primary: 100 62% 56%;
+    /* ── Sidebar — light sage green ── */
+    --sidebar-background: 120 22% 95%;
+    --sidebar-foreground: 120 38% 16%;
+    --sidebar-primary: 112 56% 30%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 120 32% 18%;
-    --sidebar-accent-foreground: 120 20% 92%;
-    --sidebar-border: 120 25% 19%;
-    --sidebar-ring: 112 58% 31%;
-    --sidebar-muted: 120 14% 58%;
+    --sidebar-accent: 120 16% 89%;
+    --sidebar-accent-foreground: 120 38% 16%;
+    --sidebar-border: 120 16% 86%;
+    --sidebar-ring: 112 56% 30%;
+    --sidebar-muted: 120 12% 42%;
   }
 }
 

@@ -61,8 +61,8 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
       {/* Logo & Branding */}
       <button onClick={() => { navigate(user?.role === "student" ? "/student-home" : "/"); onNavigate?.(); }} className="px-5 pt-5 pb-4 w-full text-start group cursor-pointer">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sidebar-primary/30 to-sidebar-primary/10 border border-sidebar-primary/25 p-1.5 flex items-center justify-center shrink-0 transition-all duration-200 group-hover:from-sidebar-primary/40">
-            <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain brightness-[1.15]" />
+          <div className="w-11 h-11 rounded-xl bg-white border border-sidebar-border/70 p-1 flex items-center justify-center shrink-0 shadow-sm transition-all duration-200 group-hover:shadow-md">
+            <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
             <h1 className="text-[13.5px] font-bold tracking-tight text-start leading-tight text-sidebar-foreground font-heading">האקדמיה למצוינות</h1>
@@ -95,11 +95,11 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
                     onClick={() => { navigate(item.path); onNavigate?.(); }}
                     className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start ${
                       active
-                        ? "bg-sidebar-primary/20 font-semibold text-sidebar-foreground shadow-sm ring-1 ring-sidebar-primary/30"
+                        ? "bg-sidebar-primary text-white font-semibold shadow-sm"
                         : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground font-medium"
                     }`}
                   >
-                    <item.icon className={`h-[15px] w-[15px] shrink-0 transition-colors ${active ? "text-sidebar-primary" : "text-sidebar-muted"}`} strokeWidth={active ? 2 : 1.5} />
+                    <item.icon className={`h-[15px] w-[15px] shrink-0 transition-colors ${active ? "text-white" : "text-sidebar-muted"}`} strokeWidth={active ? 2 : 1.5} />
                     <span>{label}</span>
                   </button>
                 )}
@@ -113,11 +113,11 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               onClick={() => { navigate("/admin/builder"); onNavigate?.(); }}
               className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
                 location.pathname === "/admin/builder"
-                  ? "bg-sidebar-primary/20 font-semibold text-sidebar-foreground shadow-sm ring-1 ring-sidebar-primary/30"
+                  ? "bg-sidebar-primary text-white font-semibold shadow-sm"
                   : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
               }`}
             >
-              <LayoutTemplate className={`h-[15px] w-[15px] shrink-0 ${location.pathname === "/admin/builder" ? "text-sidebar-primary" : "text-sidebar-muted"}`} strokeWidth={location.pathname === "/admin/builder" ? 2 : 1.5} />
+              <LayoutTemplate className={`h-[15px] w-[15px] shrink-0 ${location.pathname === "/admin/builder" ? "text-white" : "text-sidebar-muted"}`} strokeWidth={location.pathname === "/admin/builder" ? 2 : 1.5} />
               <span>בונה עמודים</span>
             </button>
           )}
@@ -158,7 +158,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
       {/* User */}
       <div className="px-4 py-4 space-y-3">
         <div className="flex flex-row items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
+          <div className="w-8 h-8 rounded-full bg-sidebar-primary/15 border border-sidebar-primary/25 flex items-center justify-center text-[11px] font-semibold text-sidebar-primary shrink-0">
             {user?.name.split(" ").map(n => n[0]).join("") || "?"}
           </div>
           <div className="flex-1 min-w-0">
