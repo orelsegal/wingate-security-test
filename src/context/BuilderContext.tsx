@@ -58,6 +58,8 @@ export interface BuilderSection {
   fields: BuilderField[];
   tabs?: BuilderTab[];
   visibleRoles: UserRole[];
+  image?: string;                      // optional header image (base64 or URL)
+  description?: string;               // optional section description/subtitle
 }
 
 export interface BuilderLayout {
@@ -90,6 +92,10 @@ interface Ctx {
   setSectionRoleVisibility: (id: string, roles: UserRole[]) => void;
   removeSection: (id: string) => void;
   reorderSections: (orderedIds: string[]) => void;
+
+  // section media / meta ops
+  setSectionImage: (id: string, image: string | undefined) => void;
+  setSectionDescription: (id: string, description: string) => void;
 
   // field ops
   addField: (sectionId: string, field: Omit<BuilderField, "id">) => void;
@@ -178,6 +184,14 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     else toast.success("נשמר");
   }, []);
 
+  // ---- section media / meta ops
+  const setSectionImage = (id: string, image: string | undefined) => mutate((l) => ({
+    sections: l.sections.map((s) => (s.id === id ? { ...s, image } : s)),
+  }));
+  const setSectionDescription = (id: string, description: string) => mutate((l) => ({
+    sections: l.sections.map((s) => (s.id === id ? { ...s, description } : s)),
+  }));
+
   // ---- section ops
   const addSection = (title: string) => mutate((l) => ({
     sections: [...l.sections, { id: uid(), title, visible: true, fields: [], visibleRoles: [...ALL_ROLES] }],
@@ -241,6 +255,7 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<Ctx>(() => ({
     layout, loading, values, setValue, loadValues,
+    setSectionImage, setSectionDescription,
     addSection, renameSection, toggleSectionVisible, setSectionRoleVisibility, removeSection, reorderSections,
     addField, updateField, removeField, reorderFields,
     addTab, removeTab, reorderTabs,
