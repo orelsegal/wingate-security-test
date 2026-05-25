@@ -18,31 +18,32 @@ const OlympicLoader = ({ message = "הגוף מתאמן לניצחון. הראש
       role="status"
       aria-label="טוען"
     >
-      <div className="flex items-center gap-3 md:gap-4">
+      <div className="flex items-center gap-2">
         {rings.map((r, i) => (
           <span
             key={i}
-            className="block rounded-full border-[5px] md:border-[6px] animate-olympic-pop"
+            className="block rounded-full border-[3px] animate-olympic-wave"
             style={{
-              width: 64,
-              height: 64,
+              width: 28,
+              height: 28,
               borderColor: r.color,
-              animationDelay: `${r.delay}s`,
+              animationDelay: `${i * 0.14}s`,
             }}
           />
         ))}
       </div>
-      <p className="mt-8 text-[13px] md:text-[14px] text-foreground/70 font-medium tracking-tight">
+      <p className="mt-6 text-[12px] md:text-[13px] text-foreground/60 font-medium tracking-tight">
         {message}
       </p>
       <style>{`
-        @keyframes olympic-pop {
-          0%   { transform: scale(0.4); opacity: 0; }
-          45%  { transform: scale(1.08); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes olympic-wave {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.85; }
+          25%      { transform: translateY(-10px) scale(1.12); opacity: 1; }
+          50%      { transform: translateY(0) scale(1); opacity: 0.9; }
         }
-        .animate-olympic-pop {
-          animation: olympic-pop 0.9s cubic-bezier(.2,.7,.3,1) both;
+        .animate-olympic-wave {
+          animation: olympic-wave 1.4s ease-in-out infinite;
+          will-change: transform, opacity;
         }
       `}</style>
     </div>
