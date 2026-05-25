@@ -164,12 +164,26 @@ export const courseContent: Record<string, SubjectDef> = {
             id: "math-1-1", title: "משוואות ואי-שוויונות",
             items: [
               {
+                id: "math-1-1-0", title: "חוקי חזקות",
+                explanation: "חוקי החזקות הבסיסיים:\n\n• aⁿ · aᵐ = aⁿ⁺ᵐ  (מכפלת חזקות עם אותו בסיס)\n• aⁿ / aᵐ = aⁿ⁻ᵐ  (חילוק חזקות עם אותו בסיס)\n• (aⁿ)ᵐ = aⁿ·ᵐ  (חזקה של חזקה)\n• (a·b)ⁿ = aⁿ · bⁿ\n• a⁰ = 1  (לכל a ≠ 0)\n• a⁻ⁿ = 1/aⁿ",
+                example: "2³ · 2⁴ = 2⁷ = 128\n(3²)³ = 3⁶ = 729\n5⁻² = 1/25",
+                practice: "פשט: x⁵ · x³ / x²",
+                videos: [
+                  { url: "https://www.youtube.com/watch?v=9V7yiXYLGlk", label: "חוקי חזקות — ההסבר המובן ביותר" },
+                  { url: "https://www.youtube.com/watch?v=0usdWrTb1sA", label: "חוקי חזקות — סרטון נוסף" }
+                ],
+                tip: "כשהבסיסים שונים — אי אפשר לחבר/לחסר את החזקות ישירות"
+              },
+              {
                 id: "math-1-1-1", title: "משוואות ממעלה ראשונה",
                 explanation: "משוואה ממעלה ראשונה היא משוואה מהצורה ax + b = 0\n\nשלבי פתרון:\n1. העבר את כל האיברים עם x לצד אחד\n2. העבר את המספרים לצד השני\n3. חלק ב-a\n\nזכור: מה שעושים לצד אחד — עושים גם לצד השני!",
                 example: "3x + 5 = 20\n3x = 20 - 5\n3x = 15\nx = 5\n\nבדיקה: 3(5) + 5 = 15 + 5 = 20 ✓",
                 practice: "פתור: 4x - 8 = 12",
                 quiz: [
                   { question: "מהו הפתרון של 2x + 6 = 14?", options: ["x = 3", "x = 4", "x = 10", "x = 8"], correct: 1 },
+                ],
+                videos: [
+                  { url: "https://www.youtube.com/watch?v=61VM3rMjY9w", label: "נוסחאות הכפל המקוצר" }
                 ],
                 tip: "תמיד בדוק את התשובה על ידי הצבה חזרה במשוואה המקורית"
               },
