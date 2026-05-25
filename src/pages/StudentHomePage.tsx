@@ -1,38 +1,39 @@
 import { useAuth } from "@/context/AuthContext";
-import { useStudent, useStudentProgress, useStudentRoadmap } from "@/hooks/useStudents";
-import { BookOpen, Loader2, ChevronLeft, Target, CalendarDays, GraduationCap, BarChart3, Sparkles, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { useStudent, useStudentProgress } from "@/hooks/useStudents";
+import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe, Scale, Feather, Calculator, Activity, Landmark, Languages } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import WingateBadge from "@/components/WingateBadge";
-import { Progress } from "@/components/ui/progress";
-import { calculateTrafficLight, getStatusLabel, type TrafficResult } from "@/lib/trafficLight";
-import { CURRENT_SEMESTER } from "@/lib/schoolUtils";
 
-/* ═══ Status Card ═══ */
-const StatusCard = ({ result }: { result: TrafficResult }) => {
-  const bg = result.status === "green" ? "bg-[hsl(var(--success))]/8 border-[hsl(var(--success))]/15"
-    : result.status === "yellow" ? "bg-[hsl(var(--warning))]/8 border-[hsl(var(--warning))]/15"
-    : "bg-destructive/5 border-destructive/10";
-  const dot = result.status === "green" ? "bg-[hsl(var(--success))]"
-    : result.status === "yellow" ? "bg-[hsl(var(--warning))]"
-    : "bg-destructive";
-  const textColor = result.status === "green" ? "text-[hsl(var(--success))]"
-    : result.status === "yellow" ? "text-[hsl(var(--warning))]"
-    : "text-destructive";
+/* ═══ Subject color/icon map ═══ */
+const subjectMeta: Record<string, { icon: any; bg: string; fg: string; pill: string }> = {
+  "תנ״ך":      { icon: BookOpen, bg: "bg-amber-50",   fg: "text-amber-700",   pill: "bg-amber-100 text-amber-800" },
+  "היסטוריה":  { icon: Landmark, bg: "bg-rose-50",    fg: "text-rose-700",    pill: "bg-rose-100 text-rose-800" },
+  "ספרות":     { icon: Feather,  bg: "bg-violet-50",  fg: "text-violet-700",  pill: "bg-violet-100 text-violet-800" },
+  "לשון והבעה":{ icon: Languages,bg: "bg-emerald-50", fg: "text-emerald-700", pill: "bg-emerald-100 text-emerald-800" },
+  "לשון":      { icon: Languages,bg: "bg-emerald-50", fg: "text-emerald-700", pill: "bg-emerald-100 text-emerald-800" },
+  "אזרחות":    { icon: Scale,    bg: "bg-teal-50",    fg: "text-teal-700",    pill: "bg-teal-100 text-teal-800" },
+  "אנגלית":    { icon: Globe,    bg: "bg-sky-50",     fg: "text-sky-700",     pill: "bg-sky-100 text-sky-800" },
+  "מתמטיקה":   { icon: Calculator,bg:"bg-green-50",   fg: "text-green-700",   pill: "bg-green-100 text-green-800" },
+  "חינוך גופני":{ icon: Activity, bg:"bg-yellow-50",  fg: "text-yellow-700",  pill: "bg-yellow-100 text-yellow-800" },
+};
+const metaFor = (name: string) => subjectMeta[name] || { icon: BookOpen, bg: "bg-slate-50", fg: "text-slate-700", pill: "bg-slate-100 text-slate-800" };
 
+/* ═══ Animated donut ═══ */
+const Donut = ({ percent, total, completed }: { percent: number; total: number; completed: number }) => {
+  const R = 70;
+  const C = 2 * Math.PI * R;
+  const off = C - (percent / 100) * C;
   return (
-    <div className={`rounded-2xl border ${bg} p-4 mb-6 animate-fade-in-up`}>
-      <div className="flex items-center gap-2.5 mb-2">
-        <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
-        <span className={`text-[13px] font-semibold ${textColor}`}>{getStatusLabel(result.status)}</span>
-      </div>
-      <div className="space-y-1">
-        {result.reasons.map((r, i) => (
-          <p key={i} className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-2">
-            <AlertCircle className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground/50" strokeWidth={1.5} />
-            {r}
-          </p>
-        ))}
+    <div className="relative w-[180px] h-[180px] shrink-0">
+      <svg viewBox="0 0 160 160" className="w-full h-full -rotate-90">
+        <circle cx="80" cy="80" r={R} fill="none" stroke="hsl(var(--muted))" strokeWidth="14" />
+        <circle cx="80" cy="80" r={R} fill="none" stroke="hsl(var(--success))" strokeWidth="14" strokeLinecap="round"
+          strokeDasharray={C} strokeDashoffset={off} className="transition-all duration-700" />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <p className="text-[28px] font-bold text-foreground leading-none tabular-nums">{percent}%</p>
+        <p className="text-[10px] text-muted-foreground mt-1.5">בדרך לתעודה</p>
+        <p className="text-[10px] text-muted-foreground tabular-nums mt-0.5">{completed} / {total} יח״ל</p>
       </div>
     </div>
   );
@@ -44,204 +45,210 @@ const StudentHomePage = () => {
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: student, isLoading } = useStudent(studentId);
   const { data: progress = [] } = useStudentProgress(studentId);
-  const { data: roadmap = [] } = useStudentRoadmap(studentId, student?.math_level ?? 3);
 
-  const completedRoadmapCount = useMemo(() => roadmap.filter((r: any) => r.completed).length, [roadmap]);
-  const totalRoadmapCount = roadmap.length;
-  const progressPct = totalRoadmapCount > 0 ? Math.round((completedRoadmapCount / totalRoadmapCount) * 100) : 0;
-
-  const avgGrade = useMemo(() => {
-    const graded = progress.filter((p: any) => p.grade != null && p.grade > 0);
-    return graded.length > 0 ? Math.round(graded.reduce((s: number, p: any) => s + p.grade, 0) / graded.length) : 0;
+  // Derive metrics
+  const { totalUnits, completedUnits, remainingUnits, avgGrade, openTasks, perSubject } = useMemo(() => {
+    const subs = progress.map((p: any) => {
+      const name = p.subjects?.subject_name || "";
+      const units = parseInt((name.match(/(\d+)/) || ["0"])[1]) || (metaFor(name).icon === Calculator ? 5 : 2);
+      const pct = p.completion_percent || 0;
+      return {
+        name,
+        pct,
+        grade: p.grade ?? null,
+        status: p.status as string,
+        units,
+        completed: +(units * pct / 100).toFixed(1),
+        missing: (p.missing_items || []).length,
+      };
+    });
+    const tot = subs.reduce((s, x) => s + x.units, 0) || 25;
+    const done = +subs.reduce((s, x) => s + x.completed, 0).toFixed(1);
+    const graded = subs.filter(s => s.grade != null && s.grade > 0);
+    return {
+      totalUnits: tot,
+      completedUnits: done,
+      remainingUnits: +(tot - done).toFixed(1),
+      avgGrade: graded.length ? Math.round(graded.reduce((s, x) => s + (x.grade as number), 0) / graded.length) : 0,
+      openTasks: subs.reduce((s, x) => s + x.missing, 0),
+      perSubject: subs,
+    };
   }, [progress]);
 
-  // Auto traffic light
-  const trafficResult = useMemo(() => {
-    if (progress.length === 0) return { status: "green" as const, reasons: ["אין נתונים עדיין"] };
-    return calculateTrafficLight(progress.map((p: any) => ({
-      grade: p.grade,
-      completionPercent: p.completion_percent || 0,
-      missingItems: p.missing_items || [],
-      absences: p.absences || 0,
-    })));
-  }, [progress]);
-
-  // Missing tasks
-  const missingTasks = useMemo(() => {
-    return progress
-      .filter((p: any) => p.missing_items && p.missing_items.length > 0)
-      .flatMap((p: any) => (p.missing_items || []).map((item: string) => ({
-        subject: (p as any).subjects?.subject_name || "",
-        task: item,
-      })))
-      .slice(0, 5);
-  }, [progress]);
-
-  // AI suggestion — weakest subject
-  const weakSubject = useMemo(() => {
-    const sorted = [...progress].filter((p: any) => p.grade != null && p.grade > 0).sort((a: any, b: any) => a.grade - b.grade);
-    return sorted[0] as any;
-  }, [progress]);
+  const overallPct = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
+  const targetPct = 14;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="flex items-center justify-center h-64"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
   }
 
-  // Student account not linked to a student record yet
   if (!studentId) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-center px-6" dir="rtl">
         <AlertCircle className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
         <p className="text-[14px] font-medium text-foreground">החשבון שלך עדיין לא מקושר לפרופיל תלמיד</p>
-        <p className="text-[12px] text-muted-foreground">פנה/י למנהל המערכת לחיבור החשבון</p>
       </div>
     );
   }
 
-  const mainCards = [
-    { id: "subjects", title: "התחלת למידה", description: "כנס למקצועות ויחידות לימוד", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", action: () => navigate("/subjects") },
-    { id: "profile", title: "מפת הדרכים והציונים שלי", description: "התקדמות, שלבים וציונים עדכניים", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary", action: () => navigate(`/students/${studentId}`) },
-  ];
-
   return (
-    <div className="p-5 md:p-10 lg:p-14 max-w-[880px] mx-auto">
-      {/* Welcome */}
-      <section className="mb-6">
-        <div className="flex items-center gap-4 mb-5">
-          <WingateBadge size="md" className="shadow-[var(--shadow-card-hover)]" />
-          <div>
-            <h1 className="text-[17px] md:text-[21px] font-medium text-foreground tracking-tight leading-tight">
-              שלום, {student?.full_name || user?.name}
-            </h1>
-            <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-normal">
-              {student?.sport} · {student?.class_name} · {CURRENT_SEMESTER}
-            </p>
+    <div className="p-5 md:p-8 lg:p-10 max-w-[1200px] mx-auto" dir="rtl">
+      {/* Title bar */}
+      <div className="flex items-baseline justify-between mb-4">
+        <h1 className="text-[20px] font-semibold text-foreground tracking-tight">
+          המסלול של <span className="text-primary">{student?.full_name || user?.name}</span>
+          <span className="text-[12px] text-muted-foreground font-normal mr-2">תלמיד/ה</span>
+        </h1>
+      </div>
+
+      {/* Subjects pills row */}
+      <div className="flex items-center justify-end gap-2 mb-5 flex-wrap">
+        <span className="text-[11px] text-muted-foreground font-medium ml-2">המקצועות שלך</span>
+        {perSubject.map((s, i) => {
+          const m = metaFor(s.name);
+          const Icon = m.icon;
+          return (
+            <button key={i} onClick={() => navigate(`/subjects/${encodeURIComponent(s.name)}`)}
+              className={`inline-flex items-center gap-1.5 ${m.pill} rounded-full px-2.5 py-1 text-[10.5px] font-medium hover:scale-105 transition-transform`}>
+              <span className="tabular-nums opacity-70">{s.pct}%</span>
+              <span>{s.name}</span>
+              <Icon className="h-3 w-3" strokeWidth={2} />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Donut + Stat cards */}
+      <div className="bg-card rounded-3xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)] mb-5">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+          <div className="flex justify-center md:justify-start">
+            <Donut percent={overallPct} total={totalUnits} completed={completedUnits} />
           </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-2.5 mb-5">
           {[
-            { icon: Target, color: "text-primary", value: `${progressPct}%`, label: "התקדמות" },
-            { icon: BarChart3, color: "text-[hsl(var(--success))]", value: avgGrade || "—", label: "ממוצע" },
-            { icon: Clock, color: "text-[hsl(var(--warning))]", value: missingTasks.length, label: "חסרות" },
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className="bg-card rounded-xl border border-border p-3 text-center shadow-[var(--shadow-card)] animate-fade-in-up"
-              style={{ animationDelay: `${i * 40}ms` }}
-            >
-              <div className="flex items-center justify-center mb-1">
-                <stat.icon className={`h-3.5 w-3.5 ${stat.color}`} strokeWidth={1.5} />
-              </div>
-              <p className="text-[16px] font-semibold text-foreground leading-none">{stat.value}</p>
-              <p className="text-[9px] text-muted-foreground mt-0.5 font-medium">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Traffic Light Status — student sees WHY */}
-      <StatusCard result={trafficResult} />
-
-      {/* Missing Tasks */}
-      {missingTasks.length > 0 && (
-        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
-          <h2 className="text-[11.5px] font-medium text-destructive/70 mb-3 tracking-tight">משימות חסרות</h2>
-          <div className="bg-card rounded-2xl border border-border divide-y divide-border shadow-[var(--shadow-card)]">
-            {missingTasks.map((t, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11.5px] font-medium text-foreground truncate">{t.task}</p>
-                  <p className="text-[10px] text-muted-foreground">{t.subject}</p>
+            { icon: Target,       label: "סך הכל", value: totalUnits,     unit: "יח״ל", bg: "bg-sky-50",     fg: "text-sky-600",     ring: "ring-sky-100" },
+            { icon: Hourglass,    label: "נשארו",  value: remainingUnits, unit: "יח״ל", bg: "bg-orange-50",  fg: "text-orange-600",  ring: "ring-orange-100" },
+            { icon: CheckCircle2, label: "הושלמו", value: completedUnits, unit: "יח״ל", bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100" },
+          ].map((s, i) => (
+            <div key={i} className={`${s.bg} ring-1 ${s.ring} rounded-2xl p-5 text-center animate-fade-in-up`} style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="flex justify-end mb-3">
+                <div className="w-9 h-9 rounded-full bg-white/70 flex items-center justify-center">
+                  <s.icon className={`h-4 w-4 ${s.fg}`} strokeWidth={2} />
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* AI Feedback */}
-      {weakSubject && (
-        <section className="mb-6 animate-fade-in-up" style={{ animationDelay: "160ms" }}>
-          <div className="bg-primary/5 rounded-2xl border border-primary/10 p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.5} />
-              </div>
-              <div className="flex-1">
-                <p className="text-[10px] text-primary/60 font-medium mb-0.5">המלצה אישית</p>
-                <p className="text-[11.5px] text-foreground leading-relaxed">
-                  כדאי לחזק את <strong>{weakSubject.subjects?.subject_name}</strong> (ציון {weakSubject.grade}) — שיפור יפה אפשרי עם תרגול ממוקד
-                </p>
-              </div>
+              <p className={`text-[11px] font-semibold ${s.fg} mb-1`}>{s.label}</p>
+              <p className="text-[26px] font-bold text-foreground leading-none tabular-nums">{s.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{s.unit}</p>
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Subject Progress */}
-      {progress.length > 0 && (
-        <section className="mb-7">
-          <h2 className="text-[11.5px] font-medium text-primary/60 mb-3 tracking-tight">התקדמות לימודית לפי מקצוע</h2>
-          <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)]">
-            <div className="flex flex-col gap-3">
-              {progress.slice(0, 6).map((sp: any, i: number) => {
-                const name = sp.subjects?.subject_name || "";
-                const pct = sp.completion_percent ?? 0;
-                const grade = sp.grade;
-                const st = sp.status;
-                const dotColor = st === "green" ? "bg-[hsl(var(--success))]" : st === "yellow" ? "bg-[hsl(var(--warning))]" : st === "red" ? "bg-destructive" : "bg-muted-foreground/30";
-                return (
-                  <button
-                    key={i}
-                    onClick={() => navigate(`/subjects/${encodeURIComponent(name)}`)}
-                    className="flex items-center gap-3 group cursor-pointer hover:bg-accent/30 rounded-lg p-1 -m-1 transition-colors"
-                  >
-                    <div className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
-                    <span className="text-[11px] font-medium text-foreground w-16 truncate text-start">{name}</span>
-                    <Progress value={pct} className="h-1.5 flex-1 bg-muted/50" />
-                    <span className="text-[10px] font-semibold text-muted-foreground tabular-nums w-8 text-end">{grade ?? "—"}</span>
-                    <ChevronLeft className="h-3 w-3 text-border group-hover:text-primary/50 transition-colors shrink-0" strokeWidth={1.5} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Action Cards — המרחב שלי */}
-      <section>
-        <h2 className="text-[11.5px] font-medium text-primary/60 mb-4 tracking-tight">המרחב שלי</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {mainCards.map((card, i) => (
-            <button
-              key={card.id}
-              onClick={card.action}
-              className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
-              style={{ animationDelay: `${80 + i * 50}ms` }}
-            >
-              <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center mb-2.5 transition-transform duration-300 group-hover:scale-105`}>
-                <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} strokeWidth={1.5} />
-              </div>
-              <h3 className="text-[12.5px] font-semibold text-foreground leading-tight mb-0.5">{card.title}</h3>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">{card.description}</p>
-            </button>
           ))}
+        </div>
+      </div>
+
+      {/* Secondary KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-5">
+        <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)] flex items-center justify-between">
+          <div>
+            <p className="text-[10.5px] text-muted-foreground font-medium">ממוצע ציונים</p>
+            <p className="text-[22px] font-bold text-foreground tabular-nums leading-none mt-1">{avgGrade || "—"}</p>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Target className="h-5 w-5 text-primary" strokeWidth={2} />
+          </div>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-4 shadow-[var(--shadow-card)] flex items-center justify-between">
+          <div>
+            <p className="text-[10.5px] text-muted-foreground font-medium">מטלות פתוחות להגשה</p>
+            <p className="text-[22px] font-bold text-foreground tabular-nums leading-none mt-1">{openTasks}</p>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+            <Hourglass className="h-5 w-5 text-orange-600" strokeWidth={2} />
+          </div>
+        </div>
+      </div>
+
+      {/* Progress chart */}
+      <div className="bg-gradient-to-b from-sky-50/40 to-card rounded-3xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)] mb-7">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[10px] text-rose-500 font-medium">מסלול הריצה</span>
+          <h2 className="text-[13px] font-semibold text-foreground">מהזינוק לקו הסיום</h2>
+        </div>
+        <div className="space-y-2.5 relative">
+          {/* Target dashed line */}
+          <div className="absolute top-0 bottom-8 right-[calc(28%+8rem)] border-r-2 border-dashed border-rose-400/60 pointer-events-none">
+            <span className="absolute -top-2 -right-12 bg-rose-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">יעד שבועי {targetPct}%</span>
+          </div>
+          {perSubject.map((s, i) => {
+            const m = metaFor(s.name);
+            const Icon = m.icon;
+            const onTrack = s.pct >= targetPct;
+            return (
+              <div key={i} className="flex items-center gap-3">
+                <div className={`w-5 h-5 rounded-full ${m.pill} flex items-center justify-center text-[9px] font-bold shrink-0`}>{i + 1}</div>
+                <div className="flex items-center gap-2 w-32 shrink-0">
+                  <Icon className={`h-3.5 w-3.5 ${m.fg}`} strokeWidth={2} />
+                  <span className="text-[11px] font-medium text-foreground truncate">{s.name}</span>
+                </div>
+                <div className="flex-1 h-6 bg-sky-50 rounded-md overflow-hidden relative">
+                  <div className={`h-full rounded-md transition-all duration-700 ${onTrack ? "bg-sky-400" : "bg-rose-300"}`}
+                    style={{ width: `${Math.max(s.pct, 2)}%` }} />
+                  <span className="absolute inset-y-0 right-2 flex items-center text-[10px] font-semibold text-foreground/80 tabular-nums">{s.pct}%</span>
+                </div>
+              </div>
+            );
+          })}
+          <div className="flex items-center justify-between pt-3 mt-2 border-t border-border/40">
+            <span className="text-[10px] text-rose-500 font-medium">זינוק</span>
+            <span className="text-[10px] text-muted-foreground">קו הסיום</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Subjects in one view */}
+      <section>
+        <div className="flex items-baseline justify-between mb-3">
+          <p className="text-[10.5px] text-muted-foreground">לחץ על מקצוע כדי להיכנס למסלול הלמידה</p>
+          <h2 className="text-[15px] font-semibold text-foreground">המקצועות במבט אחד</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {perSubject.map((s, i) => {
+            const m = metaFor(s.name);
+            const Icon = m.icon;
+            const statusLabel = s.pct === 0 ? "טרם החל" : s.pct === 100 ? "הושלם" : "בתהליך";
+            const statusBg = s.pct === 0 ? "bg-violet-100 text-violet-700" : s.pct === 100 ? "bg-emerald-100 text-emerald-700" : "bg-sky-100 text-sky-700";
+            return (
+              <button key={i} onClick={() => navigate(`/subjects/${encodeURIComponent(s.name)}`)}
+                className={`group ${m.bg} rounded-2xl border border-border/60 p-4 text-right shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up`}
+                style={{ animationDelay: `${i * 40}ms` }}>
+                <div className="flex items-start justify-between mb-3">
+                  <span className={`text-[9.5px] font-medium px-2 py-0.5 rounded-full ${statusBg}`}>{statusLabel}</span>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <h3 className="text-[14px] font-semibold text-foreground leading-tight">{s.name}</h3>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{s.units} יח״ל</p>
+                    </div>
+                    <div className={`w-9 h-9 rounded-xl bg-white/70 flex items-center justify-center`}>
+                      <Icon className={`h-4 w-4 ${m.fg}`} strokeWidth={2} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[14px] font-bold text-foreground tabular-nums">{s.pct}%</span>
+                  <span className="text-[10px] text-muted-foreground">התקדמות</span>
+                </div>
+                <div className="h-1.5 bg-white/70 rounded-full overflow-hidden mb-3">
+                  <div className={`h-full rounded-full ${m.fg.replace("text-", "bg-")} transition-all duration-700`} style={{ width: `${s.pct}%` }} />
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-border/40 text-[10px]">
+                  <span className="text-muted-foreground">{s.grade != null ? `ציון: ${s.grade}` : "אין ציון עדיין"}</span>
+                  <span className="text-muted-foreground">{s.missing > 0 ? `${s.missing} מטלות` : "לא נקבע מועד"}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
 
-      {/* Branding */}
-      <div className="mt-16 text-center">
-        <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
-          האקדמיה למצוינות · מכון וינגייט
-        </span>
+      <div className="mt-12 text-center">
+        <span className="text-[8.5px] text-muted-foreground/30 tracking-wider">האקדמיה למצוינות · מכון וינגייט</span>
       </div>
     </div>
   );
