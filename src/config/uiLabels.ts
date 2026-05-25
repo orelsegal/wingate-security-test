@@ -21,6 +21,7 @@ export interface UiLabels {
     courses: string;
     dataEntry: string;
     gradeEntry: string;
+    roadmaps: string;
     calendar: string;
     userActivity: string;
     dataManagement: string;
@@ -88,6 +89,7 @@ export const defaultUiLabels: UiLabels = {
     courses: "התקדמות לימודית",
     dataEntry: "הזנת נתונים",
     gradeEntry: "הזנת ציונים",
+    roadmaps: "מפות דרכים",
     calendar: "לוח שנה",
     userActivity: "פעילות משתמשים",
     dataManagement: "ניהול מערכת",
