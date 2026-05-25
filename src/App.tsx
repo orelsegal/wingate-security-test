@@ -39,6 +39,7 @@ import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
 import AdminBuilderPage from "./pages/AdminBuilderPage.tsx";
 import RoadmapsPage from "./pages/RoadmapsPage.tsx";
+import MathRoadmapPage from "./pages/MathRoadmapPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -99,6 +100,7 @@ const App = () => (
               <Route path="/year-plan-2026" element={<YearPlan2026Page />} />
               <Route path="/admin/labels" element={<AdminLabelsPage />} />
               <Route path="/roadmaps" element={<RoadmapsPage />} />
+              <Route path="/roadmaps/math" element={<MathRoadmapPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

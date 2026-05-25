@@ -29,6 +29,7 @@ const buildTrail = (
   if (p === "/year-plan-2026") return [adminHub, { label: "שנת 2026" }];
   if (p === "/admin/labels") return [adminHub, { label: "עורך תוויות" }];
   if (p === "/roadmaps") return [adminHub, { label: "מפות דרכים" }];
+  if (p === "/roadmaps/math") return [adminHub, roadmapsHub, { label: "מתמטיקה — יחידות לימוד" }];
 
   // Subject view (student-facing)
   if (p.startsWith("/subjects/") && params.partId) {
