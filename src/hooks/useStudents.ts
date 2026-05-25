@@ -219,3 +219,20 @@ export const useAllStudentProgress = () => {
     enabled: !!user,
   });
 };
+
+export const useClassLeaderboard = (className: string) => {
+  return useQuery({
+    queryKey: ["class-leaderboard", className],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, full_name, avg_score, overall_status, completion_percent")
+        .eq("class_name", className)
+        .order("avg_score", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as { id: string; full_name: string; avg_score: number | null; overall_status: string; completion_percent: number | null }[];
+    },
+    enabled: !!className,
+  });
+};

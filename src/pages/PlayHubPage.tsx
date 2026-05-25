@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useStudent } from "@/hooks/useStudents";
+import { useStudent, useStudentProgress, useClassLeaderboard } from "@/hooks/useStudents";
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
 import {
@@ -9,7 +9,6 @@ import {
   Brain, FileText, MessageSquare, Gamepad2, Lock, Star, Gift,
 } from "lucide-react";
 
-/* ── Mock open tasks (would come from Supabase) ──────────── */
 type Task = {
   id: string;
   title: string;
@@ -17,29 +16,45 @@ type Task = {
   type: "quiz" | "video" | "practice" | "challenge";
   questions?: number;
   minutes: number;
-  dueInDays: number; // days until deadline
+  dueInDays: number;
   xp: number;
 };
 
-const MOCK_OPEN_TASKS: Task[] = [
-  { id: "t1", title: "קרב החזקות",       subject: "מתמטיקה", type: "challenge", questions: 10, minutes: 7,  dueInDays: 2, xp: 150 },
-  { id: "t2", title: "הבנת הנקרא",       subject: "לשון",     type: "quiz",      questions: 12, minutes: 7,  dueInDays: 5, xp: 100 },
-  { id: "t3", title: "מלחמת העולם הראשונה", subject: "היסטוריה", type: "video",     minutes: 8,                  dueInDays: 1, xp: 80 },
-  { id: "t4", title: "Present Perfect",  subject: "אנגלית",   type: "practice",  questions: 15, minutes: 10, dueInDays: 7, xp: 120 },
-];
+const taskTitleByStatus: Record<string, (subject: string) => string> = {
+  red:    (s) => `אתגר — ${s}`,
+  yellow: (s) => `תרגול — ${s}`,
+  green:  (s) => `חזרה — ${s}`,
+};
 
-const MOCK_LEADERBOARD = [
-  { name: "ו'1 האלופים",        xp: 4820, rank: 1 },
-  { name: "ו'2 המצוינים",        xp: 4610, rank: 2 },
-  { name: "הכיתה שלך – ו'3",     xp: 4340, rank: 3, isMe: true },
-  { name: "ו'4 לוחמים",          xp: 4060, rank: 4 },
-  { name: "ו'5 חדים",            xp: 3720, rank: 5 },
-];
+const studentXp = (avgScore: number, completionPct: number) =>
+  Math.round(avgScore * 8 + completionPct * 5 + 100);
 
-const ACHIEVEMENTS = [
-  { icon: Flame,  label: "רצף 7 ימים",   color: "from-rose-400 to-orange-400",   ring: "ring-rose-100" },
-  { icon: Star,   label: "אלוף הדיוק",   color: "from-violet-400 to-indigo-400", ring: "ring-violet-100" },
-  { icon: Trophy, label: "שיפור אישי",   color: "from-amber-400 to-yellow-400",  ring: "ring-amber-100" },
+// Achievements defined as conditions checked at render time
+const buildAchievements = (student: any, completedSubjects: number) => [
+  {
+    icon: Star,   label: "אלוף הדיוק",   color: "from-violet-400 to-indigo-400", ring: "ring-violet-100",
+    unlocked: (student?.avg_score || 0) >= 85,
+  },
+  {
+    icon: Trophy, label: "מסיים מקצועות", color: "from-amber-400 to-yellow-400",  ring: "ring-amber-100",
+    unlocked: completedSubjects >= 3,
+  },
+  {
+    icon: TrendingUp, label: "בסטטוס ירוק", color: "from-emerald-400 to-teal-400", ring: "ring-emerald-100",
+    unlocked: (student?.overall_status) === "green",
+  },
+  {
+    icon: Zap, label: "90+ ממוצע", color: "from-rose-400 to-orange-400", ring: "ring-rose-100",
+    unlocked: (student?.avg_score || 0) >= 90,
+  },
+  {
+    icon: Crown, label: "מקום ראשון", color: "from-amber-300 to-yellow-500", ring: "ring-yellow-100",
+    unlocked: false, // future: when leaderboard rank === 1
+  },
+  {
+    icon: Gift, label: "בונוס מצוינות", color: "from-pink-400 to-rose-400", ring: "ring-pink-100",
+    unlocked: (student?.avg_score || 0) >= 95,
+  },
 ];
 
 const typeIcon = (t: Task["type"]) => {
@@ -70,14 +85,49 @@ const PlayHubPage = () => {
   const { user } = useAuth();
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: student } = useStudent(studentId);
+  const { data: progress = [] } = useStudentProgress(studentId);
+  const { data: classmates = [] } = useClassLeaderboard(student?.class_name || "");
   const [tab, setTab] = useState<Tab>("home");
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [urgentPopup, setUrgentPopup] = useState<Task | null>(null);
   const [popupDismissed, setPopupDismissed] = useState(false);
 
-  const openTasks = useMemo(() => MOCK_OPEN_TASKS.filter((t) => !completed.has(t.id)), [completed]);
+  // Derive tasks from real progress data
+  const allTasks = useMemo<Task[]>(() => {
+    return (progress as any[])
+      .filter((p) => p.status === "red" || p.status === "yellow")
+      .map((p) => ({
+        id: p.subject_id || p.id,
+        title: (taskTitleByStatus[p.status] || taskTitleByStatus.green)(p.subjects?.subject_name || ""),
+        subject: p.subjects?.subject_name || "",
+        type: (p.status === "red" ? "challenge" : "practice") as Task["type"],
+        minutes: p.status === "red" ? 10 : 7,
+        dueInDays: p.status === "red" ? 2 : 5,
+        xp: Math.round((100 - (p.completion_percent || 0)) * 1.5 + 50),
+      }));
+  }, [progress]);
+
+  const openTasks = useMemo(() => allTasks.filter((t) => !completed.has(t.id)), [allTasks, completed]);
   const urgentTasks = useMemo(() => openTasks.filter((t) => t.dueInDays <= 3), [openTasks]);
-  const allDone = openTasks.length === 0;
+  const allDone = allTasks.length > 0 && openTasks.length === 0;
+
+  // Compute XP and stats from real data
+  const xp = studentXp(student?.avg_score || 0, student?.completion_percent || 0);
+  const completedSubjects = (progress as any[]).filter((p) => p.status === "green").length;
+  const totalSubjects = (progress as any[]).length;
+
+  // Leaderboard with real data — find current student's rank
+  const leaderboard = useMemo(() => {
+    return classmates
+      .map((c, i) => ({
+        name: c.full_name,
+        xp: studentXp(c.avg_score || 0, c.completion_percent || 0),
+        rank: i + 1,
+        isMe: c.id === studentId,
+      }));
+  }, [classmates, studentId]);
+
+  const myRank = leaderboard.find((p) => p.isMe);
 
   /* Show urgent popup once on mount */
   useEffect(() => {
@@ -91,8 +141,6 @@ const PlayHubPage = () => {
     setCompleted((s) => new Set(s).add(id));
     fireConfetti();
   };
-
-  const myRank = MOCK_LEADERBOARD.find((p) => p.isMe);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50/50 via-white to-violet-50/30" dir="rtl">
@@ -158,10 +206,11 @@ const PlayHubPage = () => {
                   <div className="relative w-[68px] h-[68px]">
                     <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                       <circle cx="18" cy="18" r="15" fill="none" className="stroke-muted/40" strokeWidth="3" />
-                      <circle cx="18" cy="18" r="15" fill="none" className="stroke-violet-500" strokeWidth="3" strokeDasharray="72, 100" strokeLinecap="round" />
+                      <circle cx="18" cy="18" r="15" fill="none" className="stroke-violet-500" strokeWidth="3"
+                        strokeDasharray={`${Math.round((student?.completion_percent || 0) * 0.94)}, 100`} strokeLinecap="round" />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[14px] font-bold text-foreground">72%</span>
+                      <span className="text-[14px] font-bold text-foreground">{Math.round(student?.completion_percent || 0)}%</span>
                     </div>
                   </div>
                   <p className="text-[10.5px] text-muted-foreground">השלמה<br/>ביחידה</p>
@@ -169,30 +218,31 @@ const PlayHubPage = () => {
                 {/* xp */}
                 <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
                   <div className="inline-flex items-baseline gap-1.5">
-                    <span className="text-[20px] font-bold tabular-nums">820</span>
+                    <span className="text-[20px] font-bold tabular-nums">{xp.toLocaleString()}</span>
                     <span className="text-[9px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full">XP</span>
                   </div>
                   <p className="text-[10.5px] text-muted-foreground mt-1">נקודות ניסיון</p>
                 </div>
-                {/* streak */}
+                {/* avg grade */}
                 <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
-                  <span className="text-[20px] font-bold tabular-nums">6 <Flame className="inline h-4 w-4 text-rose-500" strokeWidth={2.2} /></span>
-                  <p className="text-[10.5px] text-muted-foreground mt-1">רצף ימים<br/><span className="text-amber-500 font-semibold">אלוף!</span></p>
+                  <span className="text-[20px] font-bold tabular-nums">{Math.round(student?.avg_score || 0)}</span>
+                  <p className="text-[10.5px] text-muted-foreground mt-1">ממוצע ציונים<br/><span className="text-amber-500 font-semibold">כולל!</span></p>
                 </div>
                 {/* completed */}
                 <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
-                  <span className="text-[20px] font-bold tabular-nums">5/9 <CheckCircle2 className="inline h-4 w-4 text-emerald-500" strokeWidth={2.2} /></span>
+                  <span className="text-[20px] font-bold tabular-nums">{completedSubjects}/{totalSubjects} <CheckCircle2 className="inline h-4 w-4 text-emerald-500" strokeWidth={2.2} /></span>
                   <p className="text-[10.5px] text-muted-foreground mt-1">נושאים הושלמו</p>
                 </div>
                 {/* rank */}
                 <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
                   <div className="inline-flex items-baseline gap-1.5">
-                    <span className="text-[20px] font-bold tabular-nums">{myRank?.rank || 3}</span>
+                    <span className="text-[20px] font-bold tabular-nums">{myRank?.rank || "—"}</span>
                     <Trophy className="h-4 w-4 text-amber-500" strokeWidth={2.2} />
                   </div>
-                  <p className="text-[10.5px] text-muted-foreground mt-1">דירוג נוכחי</p>
+                  <p className="text-[10.5px] text-muted-foreground mt-1">דירוג בכיתה</p>
                   <div className="w-full h-1 bg-muted/50 rounded-full mt-1.5 overflow-hidden">
-                    <div className="h-full bg-violet-500 rounded-full" style={{ width: "65%" }} />
+                    <div className="h-full bg-violet-500 rounded-full"
+                      style={{ width: myRank && leaderboard.length > 1 ? `${Math.round((1 - (myRank.rank - 1) / leaderboard.length) * 100)}%` : "50%" }} />
                   </div>
                 </div>
               </div>
@@ -214,18 +264,24 @@ const PlayHubPage = () => {
                   <Trophy className="h-4 w-4 text-violet-500" strokeWidth={2} />
                   <h3 className="text-[14px] font-semibold text-foreground">דירוג כיתתי</h3>
                 </div>
-                <div className="bg-violet-50 ring-1 ring-violet-100 rounded-2xl p-3 mb-3">
-                  <div className="flex items-center justify-between">
-                    <Trophy className="h-5 w-5 text-violet-500" strokeWidth={2} />
-                    <div className="text-end">
-                      <p className="text-[13px] font-bold text-violet-700">הכיתה שלך במקום 3</p>
-                      <p className="text-[10.5px] text-muted-foreground">הסרות 280 נקודות כדי לעקוף את ו'2</p>
+                {myRank && (
+                  <div className="bg-violet-50 ring-1 ring-violet-100 rounded-2xl p-3 mb-3">
+                    <div className="flex items-center justify-between">
+                      <Trophy className="h-5 w-5 text-violet-500" strokeWidth={2} />
+                      <div className="text-end">
+                        <p className="text-[13px] font-bold text-violet-700">את/ה במקום {myRank.rank} בכיתה</p>
+                        {myRank.rank > 1 && leaderboard[myRank.rank - 2] && (
+                          <p className="text-[10.5px] text-muted-foreground">
+                            עוד {(leaderboard[myRank.rank - 2].xp - myRank.xp).toLocaleString()} XP לעקוף את {leaderboard[myRank.rank - 2].name.split(" ")[0]}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
                 <div className="space-y-1.5">
-                  {MOCK_LEADERBOARD.map((p) => {
-                    const max = MOCK_LEADERBOARD[0].xp;
+                  {leaderboard.slice(0, 5).map((p) => {
+                    const max = leaderboard[0]?.xp || 1;
                     const w = Math.round((p.xp / max) * 100);
                     return (
                       <div key={p.rank} className={`flex items-center gap-2 rounded-xl px-2.5 py-2 ${p.isMe ? "bg-violet-50 ring-1 ring-violet-200" : ""}`}>
@@ -244,10 +300,12 @@ const PlayHubPage = () => {
                     );
                   })}
                 </div>
-                <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2 w-full justify-center">
-                  <Zap className="h-3 w-3" />
-                  הסרות 280 נקודות כדי לעקוף את ו'2
-                </div>
+                {myRank && myRank.rank > 1 && leaderboard[myRank.rank - 2] && (
+                  <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2 w-full justify-center">
+                    <Zap className="h-3 w-3" />
+                    עוד {(leaderboard[myRank.rank - 2].xp - myRank.xp).toLocaleString()} XP לעקוף את {leaderboard[myRank.rank - 2].name.split(" ")[0]}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -261,7 +319,7 @@ const PlayHubPage = () => {
                   <h3 className="text-[14px] font-semibold text-foreground">היעדים שלי להיום</h3>
                 </div>
                 <div className="space-y-2">
-                  {MOCK_OPEN_TASKS.slice(0, 3).map((t) => {
+                  {allTasks.slice(0, 3).map((t) => {
                     const done = completed.has(t.id);
                     return (
                       <div key={t.id} className="flex items-center gap-3 bg-muted/20 rounded-xl px-3 py-2.5">
@@ -284,9 +342,10 @@ const PlayHubPage = () => {
                 </div>
                 <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
                   <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                    <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${(completed.size / MOCK_OPEN_TASKS.length) * 100}%` }} />
+                    <div className="h-full bg-violet-500 rounded-full transition-all"
+                      style={{ width: allTasks.length > 0 ? `${Math.round((completed.size / allTasks.length) * 100)}%` : "0%" }} />
                   </div>
-                  <span>{completed.size} מתוך {MOCK_OPEN_TASKS.length} הושלמו 🎁</span>
+                  <span>{completed.size} מתוך {allTasks.length} הושלמו 🎁</span>
                 </div>
               </div>
 
@@ -298,9 +357,9 @@ const PlayHubPage = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { icon: Flame,      val: "6",    sub: "ימים ברצף 🔥",       fg: "text-rose-500",    bg: "bg-rose-50" },
-                    { icon: TrendingUp, val: "+120", sub: "XP השבוע 👥",        fg: "text-violet-500",  bg: "bg-violet-50" },
-                    { icon: Target,     val: "72%",  sub: "דיוק ממוצע 📊",      fg: "text-emerald-500", bg: "bg-emerald-50" },
+                    { icon: Trophy,     val: myRank?.rank ? `#${myRank.rank}` : "—", sub: "דירוג בכיתה 🏆", fg: "text-amber-500",   bg: "bg-amber-50" },
+                    { icon: TrendingUp, val: xp.toLocaleString(),                     sub: "נקודות XP 👥",   fg: "text-violet-500", bg: "bg-violet-50" },
+                    { icon: Target,     val: `${Math.round(student?.avg_score || 0)}`, sub: "ממוצע ציונים 📊", fg: "text-emerald-500", bg: "bg-emerald-50" },
                   ].map((s, i) => (
                     <div key={i} className={`${s.bg} rounded-2xl p-3 text-center`}>
                       <p className="text-[10px] text-muted-foreground mb-1">{s.sub.split(" ")[0]}<br/>{s.sub.split(" ").slice(1).join(" ")}</p>
@@ -376,27 +435,32 @@ const PlayHubPage = () => {
           <div className="space-y-4 max-w-[720px] mx-auto">
             <div className="bg-white rounded-3xl ring-1 ring-border p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-[16px] font-semibold text-foreground text-center mb-6">הדירוג הכיתתי</h2>
-              <div className="grid grid-cols-3 items-end gap-3 mb-6">
-                {[
-                  { ...MOCK_LEADERBOARD[1], h: "h-20", from: "from-slate-300", to: "to-slate-400", chip: "bg-slate-200 text-slate-700" },
-                  { ...MOCK_LEADERBOARD[0], h: "h-28", from: "from-amber-300", to: "to-amber-500", chip: "bg-amber-200 text-amber-800" },
-                  { ...MOCK_LEADERBOARD[2], h: "h-16", from: "from-orange-300", to: "to-orange-500", chip: "bg-orange-200 text-orange-800" },
-                ].map((p, i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <p className={`text-[11px] font-semibold ${p.isMe ? "text-emerald-600" : "text-muted-foreground"}`}>{p.name}</p>
-                    <p className="text-[13px] font-bold tabular-nums mb-2">{p.xp.toLocaleString()}</p>
-                    <div className={`w-full ${p.h} rounded-t-2xl bg-gradient-to-b ${p.from} ${p.to} flex items-start justify-center pt-2 shadow-md`}>
-                      <div className={`w-7 h-7 rounded-full ${p.chip} flex items-center justify-center text-[12px] font-bold`}>{p.rank}</div>
+              {leaderboard.length >= 3 && (
+                <div className="grid grid-cols-3 items-end gap-3 mb-6">
+                  {[
+                    { ...leaderboard[1], h: "h-20", from: "from-slate-300", to: "to-slate-400", chip: "bg-slate-200 text-slate-700" },
+                    { ...leaderboard[0], h: "h-28", from: "from-amber-300", to: "to-amber-500", chip: "bg-amber-200 text-amber-800" },
+                    { ...leaderboard[2], h: "h-16", from: "from-orange-300", to: "to-orange-500", chip: "bg-orange-200 text-orange-800" },
+                  ].map((p, i) => p && (
+                    <div key={i} className="flex flex-col items-center">
+                      <p className={`text-[11px] font-semibold truncate max-w-full ${p.isMe ? "text-emerald-600" : "text-muted-foreground"}`}>{p.name.split(" ")[0]}</p>
+                      <p className="text-[13px] font-bold tabular-nums mb-2">{p.xp.toLocaleString()}</p>
+                      <div className={`w-full ${p.h} rounded-t-2xl bg-gradient-to-b ${p.from} ${p.to} flex items-start justify-center pt-2 shadow-md`}>
+                        <div className={`w-7 h-7 rounded-full ${p.chip} flex items-center justify-center text-[12px] font-bold`}>{p.rank}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+              {leaderboard.length === 0 && (
+                <p className="text-[13px] text-muted-foreground text-center py-6">אין נתוני כיתה עדיין</p>
+              )}
               <div className="space-y-2">
-                {MOCK_LEADERBOARD.slice(3).map((p) => (
-                  <div key={p.rank} className="flex items-center gap-3 bg-muted/30 rounded-xl px-3 py-2.5">
+                {leaderboard.slice(leaderboard.length >= 3 ? 3 : 0).map((p) => (
+                  <div key={p.rank} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${p.isMe ? "bg-violet-50 ring-1 ring-violet-200" : "bg-muted/30"}`}>
                     <span className="text-[12px] font-bold text-muted-foreground w-5">{p.rank}</span>
-                    <span className="flex-1 text-[12.5px] text-foreground">{p.name}</span>
-                    <span className="text-[12px] font-semibold tabular-nums text-foreground/80">{p.xp.toLocaleString()}</span>
+                    <span className={`flex-1 text-[12.5px] truncate ${p.isMe ? "text-violet-700 font-semibold" : "text-foreground"}`}>{p.name}</span>
+                    <span className="text-[12px] font-semibold tabular-nums text-foreground/80">{p.xp.toLocaleString()} XP</span>
                   </div>
                 ))}
               </div>
@@ -412,12 +476,16 @@ const PlayHubPage = () => {
               ההישגים שלי
             </h2>
             <div className="grid grid-cols-3 gap-3">
-              {ACHIEVEMENTS.map((a, i) => (
-                <div key={i} className={`bg-white ring-1 ${a.ring} rounded-2xl p-4 flex flex-col items-center text-center shadow-[var(--shadow-card)]`}>
+              {buildAchievements(student, completedSubjects).map((a, i) => (
+                <div key={i} className={`bg-white ring-1 ${a.ring} rounded-2xl p-4 flex flex-col items-center text-center shadow-[var(--shadow-card)] ${!a.unlocked ? "opacity-35 grayscale" : ""}`}>
                   <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${a.color} flex items-center justify-center shadow-md mb-2`}>
-                    <a.icon className="h-6 w-6 text-white" strokeWidth={2} />
+                    {a.unlocked
+                      ? <a.icon className="h-6 w-6 text-white" strokeWidth={2} />
+                      : <Lock className="h-6 w-6 text-white" strokeWidth={2} />
+                    }
                   </div>
                   <p className="text-[12px] font-semibold text-foreground">{a.label}</p>
+                  <p className="text-[9.5px] text-muted-foreground mt-0.5">{a.unlocked ? "🏅 הושג" : "🔒 נעול"}</p>
                 </div>
               ))}
             </div>
