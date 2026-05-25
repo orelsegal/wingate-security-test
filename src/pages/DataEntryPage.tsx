@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Save, UserPlus, BookOpen, ClipboardEdit, Route, Loader2, CheckCircle2, Upload, History, FileSpreadsheet, Download, AlertCircle } from "lucide-react";
+import { Save, UserPlus, BookOpen, ClipboardEdit, Route, Loader2, CheckCircle2, Upload, History, FileSpreadsheet, Download, AlertCircle, Users } from "lucide-react";
 import * as XLSX from "xlsx";
 
 const CLASSES = ["ט'1", "ט'2", "ט'3", "ט-1", "י'1", "י'2", "י'3", "י-1", "יא'1", "יא'2", "יא'3", "י\"א-1"];
@@ -52,6 +52,24 @@ const DataEntryPageInner = () => {
       return data || [];
     },
   });
+
+  // === Add Staff State (teacher / coach) ===
+  const [staffRole, setStaffRole] = useState<"teacher" | "coach">("teacher");
+  const [staffFirstName, setStaffFirstName] = useState("");
+  const [staffLastName, setStaffLastName] = useState("");
+  const [staffEmail, setStaffEmail] = useState("");
+  const [staffNationalId, setStaffNationalId] = useState("");
+  const [staffPhone, setStaffPhone] = useState("");
+  const [staffNotes, setStaffNotes] = useState("");
+  const [staffSubjects, setStaffSubjects] = useState<string[]>([]);
+  const [staffClasses, setStaffClasses] = useState<string[]>([]);
+  const [savingStaff, setSavingStaff] = useState(false);
+  const [staffSuccess, setStaffSuccess] = useState(false);
+
+  const toggleInArray = (arr: string[], val: string) =>
+    arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+
+
 
   // === Grade Entry State ===
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -156,6 +174,46 @@ const DataEntryPageInner = () => {
       setSavingAthlete(false);
     }
   };
+
+  // === Add Staff Handler (teacher/coach) ===
+  const handleAddStaff = async () => {
+    if (!staffFirstName.trim()) {
+      toast.error("יש למלא שם פרטי");
+      return;
+    }
+    setSavingStaff(true);
+    setStaffSuccess(false);
+    try {
+      const fullName = `${staffFirstName.trim()}${staffLastName.trim() ? " " + staffLastName.trim() : ""}`;
+      const emailVal = staffEmail.trim() || `${(staffNationalId.trim() || Date.now().toString())}@placeholder.local`;
+      const payload: any = {
+        full_name: fullName,
+        email: emailVal,
+        role: staffRole,
+        national_id: staffNationalId.trim() || null,
+        phone: staffPhone.trim() || null,
+        notes: staffNotes.trim() || null,
+        subjects: staffSubjects,
+      };
+      if (staffRole === "teacher") payload.classes = staffClasses;
+      const { error } = await supabase.from("app_users").insert(payload);
+      if (error) throw error;
+      toast.success(`${staffRole === "teacher" ? "המורה" : "המאמן"} "${fullName}" נוסף/ה בהצלחה!`);
+      setStaffSuccess(true);
+      setStaffFirstName(""); setStaffLastName(""); setStaffEmail("");
+      setStaffNationalId(""); setStaffPhone(""); setStaffNotes("");
+      setStaffSubjects([]); setStaffClasses([]);
+      queryClient.invalidateQueries({ queryKey: ["coaches-list"] });
+      queryClient.invalidateQueries({ queryKey: ["app_users"] });
+      setTimeout(() => setStaffSuccess(false), 3000);
+    } catch (err: any) {
+      toast.error("שגיאה בהוספת איש צוות: " + err.message);
+    } finally {
+      setSavingStaff(false);
+    }
+  };
+
+
 
   // === Grade Entry Handler ===
   const handleSaveProgress = async () => {
@@ -356,7 +414,12 @@ const DataEntryPageInner = () => {
       </div>
 
       <Tabs defaultValue="add-athlete" dir="rtl">
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
+          <TabsTrigger value="add-staff" className="gap-1 text-xs md:text-sm">
+            <Users className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">הוספת איש צוות</span>
+            <span className="md:hidden">צוות</span>
+          </TabsTrigger>
           <TabsTrigger value="add-athlete" className="gap-1 text-xs md:text-sm">
             <UserPlus className="h-3.5 w-3.5" />
             <span className="hidden md:inline">הוספת ספורטאי</span>
@@ -734,6 +797,137 @@ const DataEntryPageInner = () => {
                   </Table>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ====== TAB: ADD STAFF (teacher/coach) ====== */}
+        <TabsContent value="add-staff" className="space-y-4 mt-4">
+          <Card className="card-premium">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                פרטי איש צוות חדש
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Role toggle */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={staffRole === "teacher" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStaffRole("teacher")}
+                >
+                  מורה
+                </Button>
+                <Button
+                  type="button"
+                  variant={staffRole === "coach" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStaffRole("coach")}
+                >
+                  מאמן
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">שם פרטי</Label>
+                  <Input value={staffFirstName} onChange={(e) => setStaffFirstName(e.target.value)} placeholder="לדוגמה: רונית" dir="rtl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">שם משפחה</Label>
+                  <Input value={staffLastName} onChange={(e) => setStaffLastName(e.target.value)} placeholder="לדוגמה: לוי" dir="rtl" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">תעודת זהות</Label>
+                  <Input value={staffNationalId} onChange={(e) => setStaffNationalId(e.target.value)} placeholder="9 ספרות" dir="rtl" inputMode="numeric" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">טלפון</Label>
+                  <Input value={staffPhone} onChange={(e) => setStaffPhone(e.target.value)} placeholder="05X-XXXXXXX" dir="rtl" inputMode="tel" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">אימייל (אופציונלי)</Label>
+                  <Input value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} placeholder="name@example.com" dir="ltr" />
+                </div>
+              </div>
+
+              {/* Subjects multi-select */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  מקצועות {staffSubjects.length > 0 && <span className="text-primary">({staffSubjects.length})</span>}
+                </Label>
+                <div className="flex flex-wrap gap-2 p-3 rounded-md border bg-muted/30 max-h-44 overflow-y-auto">
+                  {(subjects || []).length === 0 && <span className="text-xs text-muted-foreground">אין מקצועות מוגדרים</span>}
+                  {(subjects || []).map((s) => {
+                    const selected = staffSubjects.includes(s.subject_name);
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setStaffSubjects((prev) => toggleInArray(prev, s.subject_name))}
+                        className={`px-3 py-1 text-xs rounded-full border transition-all ${
+                          selected
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-muted border-border"
+                        }`}
+                      >
+                        {s.subject_name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Classes multi-select — teachers only */}
+              {staffRole === "teacher" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    כיתות {staffClasses.length > 0 && <span className="text-primary">({staffClasses.length})</span>}
+                  </Label>
+                  <div className="flex flex-wrap gap-2 p-3 rounded-md border bg-muted/30">
+                    {CLASSES.map((c) => {
+                      const selected = staffClasses.includes(c);
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setStaffClasses((prev) => toggleInArray(prev, c))}
+                          className={`px-3 py-1 text-xs rounded-full border transition-all ${
+                            selected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background hover:bg-muted border-border"
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">הערות</Label>
+                <Textarea value={staffNotes} onChange={(e) => setStaffNotes(e.target.value)} placeholder="הערות חופשיות..." dir="rtl" rows={3} />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <Button onClick={handleAddStaff} disabled={savingStaff} className="gap-2" size="lg">
+                  {savingStaff ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  שמור {staffRole === "teacher" ? "מורה" : "מאמן"}
+                </Button>
+                {staffSuccess && (
+                  <span className="flex items-center gap-1.5 text-sm text-success animate-fade-in-up">
+                    <CheckCircle2 className="h-4 w-4" /> נשמר בהצלחה!
+                  </span>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

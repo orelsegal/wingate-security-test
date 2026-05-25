@@ -46,28 +46,43 @@ export type Database = {
       }
       app_users: {
         Row: {
+          classes: string[] | null
           email: string
           full_name: string
           id: string
           linked_sport: string | null
           linked_student_id: string | null
+          national_id: string | null
+          notes: string | null
+          phone: string | null
           role: string
+          subjects: string[] | null
         }
         Insert: {
+          classes?: string[] | null
           email: string
           full_name: string
           id?: string
           linked_sport?: string | null
           linked_student_id?: string | null
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
           role: string
+          subjects?: string[] | null
         }
         Update: {
+          classes?: string[] | null
           email?: string
           full_name?: string
           id?: string
           linked_sport?: string | null
           linked_student_id?: string | null
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
           role?: string
+          subjects?: string[] | null
         }
         Relationships: [
           {
