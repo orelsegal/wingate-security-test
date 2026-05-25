@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { UnitDef } from "@/lib/courseContent";
 import {
   ChevronDown, ChevronUp, CheckCircle2, BookOpen,
-  Lightbulb, PenLine, HelpCircle, Sparkles
+  Lightbulb, PenLine, HelpCircle, Sparkles, PlayCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
