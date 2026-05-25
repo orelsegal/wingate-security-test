@@ -32,18 +32,29 @@ const SubjectDetailPage = () => {
   const grade = subjectProgress?.grade;
   const coveredTopics: string[] = subjectProgress?.covered_topics || [];
 
-  // Build roadmap nodes from parts/units
+  // Build roadmap nodes from individual UNITS (not parts) — each unit is a step,
+  // gated so the next opens only after the previous one is fully completed.
   const nodes = useMemo(() => {
-    const out: { id: string; index: number; title: string; subtitle?: string; partId: string; status: "done" | "current" | "locked" }[] = [];
+    const out: { id: string; index: number; title: string; subtitle?: string; partId: string; unitId: string; status: "done" | "current" | "locked" }[] = [];
     let i = 1;
     let foundCurrent = false;
     parts.forEach(part => {
-      const partTopics = part.units.flatMap(u => u.items.map(it => it.title));
-      const allDone = partTopics.length > 0 && partTopics.every(t => coveredTopics.includes(t));
-      let status: "done" | "current" | "locked" = "locked";
-      if (allDone) status = "done";
-      else if (!foundCurrent) { status = "current"; foundCurrent = true; }
-      out.push({ id: part.id, index: i++, title: part.title, subtitle: part.weight, partId: part.id, status });
+      part.units.forEach(unit => {
+        const unitTopics = unit.items.map(it => it.title);
+        const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
+        let status: "done" | "current" | "locked" = "locked";
+        if (allDone) status = "done";
+        else if (!foundCurrent) { status = "current"; foundCurrent = true; }
+        out.push({
+          id: `${part.id}-${unit.id}`,
+          index: i++,
+          title: unit.title,
+          subtitle: part.title,
+          partId: part.id,
+          unitId: unit.id,
+          status,
+        });
+      });
     });
     return out;
   }, [parts, coveredTopics]);
@@ -163,7 +174,7 @@ const SubjectDetailPage = () => {
                 <div key={n.id} className={`relative flex items-center gap-3 z-10 ${offset}`}>
                   <button
                     disabled={isLocked}
-                    onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}`)}
+                    onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`)}
                     className={`w-14 h-14 rounded-full flex items-center justify-center text-[14px] font-bold shadow-lg transition-all duration-300 hover:scale-110 ${
                       isDone ? "bg-emerald-400 text-white" :
                       isCurrent ? "bg-violet-500 text-white ring-4 ring-violet-200 animate-pulse" :
@@ -187,7 +198,7 @@ const SubjectDetailPage = () => {
             <span className="text-[10px] text-muted-foreground">{doneCount === 0 ? "כאן מתחילים" : "ההתחלה"}</span>
             <button onClick={() => {
               const next = nodes.find(n => n.status === "current") || nodes[0];
-              if (next) navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}`);
+              if (next) navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}#${next.unitId}`);
             }} className="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[11.5px] font-semibold px-5 py-2.5 rounded-2xl shadow-lg transition-colors">
               המשך למסלול
               <ArrowRight className="h-3.5 w-3.5 rotate-180" strokeWidth={2} />

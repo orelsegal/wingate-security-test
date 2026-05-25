@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowRight, CheckCircle2, Clock, BookOpen, FileText, Plus,
-  ClipboardList, Sparkles, Trash2, Pencil,
+  ClipboardList, Sparkles, Trash2, Pencil, Lock,
   Link as LinkIcon, Upload, Save, GraduationCap, Award
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -24,6 +24,7 @@ interface AssignmentItem { id: string; title: string; grade?: number; dueDate?: 
 
 const SubjectPartPage = () => {
   const { subjectName, partId } = useParams<{ subjectName: string; partId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher" || user?.role === "admin";
@@ -47,6 +48,18 @@ const SubjectPartPage = () => {
       saveLastVisited(`/subjects/${encodeURIComponent(decoded)}/${part.id}`, `${decoded} — ${part.title}`);
     }
   }, [decoded, part]);
+
+  // Scroll to a specific unit when arriving from the roadmap (#unit-id)
+  useEffect(() => {
+    const id = location.hash?.replace(/^#/, "");
+    if (!id || !part) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(`unit-${id}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [location.hash, part]);
+
 
   const subjectProgress = useMemo(
     () => progress.find((p: any) => p.subjects?.subject_name === decoded),
@@ -140,16 +153,47 @@ const SubjectPartPage = () => {
           לימוד אינטראקטיבי
         </h2>
         <div className="space-y-5">
-          {part.units.map(unit => (
-            <InteractiveLearningUnit
-              key={unit.id}
-              unit={unit}
-              coveredTopics={coveredTopics}
-              onTopicComplete={(title) => {
-                toast({ title: "יפה — שלטת היטב במושג הזה", description: `הנושא "${title}" סומן כהושלם` });
-              }}
-            />
-          ))}
+          {(() => {
+            let foundLocked = false;
+            return part.units.map((unit, idx) => {
+              const unitTopics = unit.items.map(i => i.title);
+              const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
+              const isLocked = !allDone && foundLocked;
+              if (!allDone && !foundLocked) foundLocked = true; // first not-done = current; rest locked
+              if (isLocked) {
+                return (
+                  <div
+                    key={unit.id}
+                    id={`unit-${unit.id}`}
+                    className="relative rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center"
+                  >
+                    <div className="flex flex-col items-center gap-2 opacity-70">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <Lock className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
+                      </div>
+                      <p className="text-[12.5px] font-semibold text-foreground">
+                        יחידה {idx + 1} · {unit.title}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground max-w-xs">
+                        תיפתח אחרי שתסיים את היחידה הקודמת
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={unit.id} id={`unit-${unit.id}`} className="scroll-mt-6">
+                  <InteractiveLearningUnit
+                    unit={unit}
+                    coveredTopics={coveredTopics}
+                    onTopicComplete={(title) => {
+                      toast({ title: "יפה — שלטת היטב במושג הזה", description: `הנושא "${title}" סומן כהושלם` });
+                    }}
+                  />
+                </div>
+              );
+            });
+          })()}
         </div>
       </section>
 
