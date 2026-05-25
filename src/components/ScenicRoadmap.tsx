@@ -199,7 +199,7 @@ const ScenicRoadmap = ({
       </div>
 
       {/* Start chip */}
-      <div className="absolute bottom-5 right-5 z-20 flex items-center gap-2">
+      <div className="absolute top-16 right-5 z-20 flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center shadow">
           <Lock className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
         </div>
