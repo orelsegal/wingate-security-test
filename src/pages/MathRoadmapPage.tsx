@@ -311,8 +311,8 @@ const MathRoadmapPage = () => {
         </div>
       </header>
 
-      {/* Roadmap (half-screen) + Units list */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 mb-7">
+      {/* Roadmap (full width) */}
+      <div className="mb-7">
         {/* Scenic winding roadmap */}
         <div className="relative rounded-3xl border border-border bg-gradient-to-b from-violet-50/70 via-sky-50/40 to-white shadow-[var(--shadow-card)] overflow-hidden h-[calc(100vh-220px)] min-h-[640px] max-h-[920px]">
           {/* Top-left badge */}
