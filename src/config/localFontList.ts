@@ -1,13 +1,5 @@
-/**
- * Auto-generated list of locally available font families.
- * Usage: import { LOCAL_FONTS } from '@/config/localFontList';
- */
-
-export interface LocalFont {
-  family: string;
-  weights: number[];
-}
-
+/** Auto-generated local font list */
+export interface LocalFont { family: string; weights: number[]; }
 export const LOCAL_FONTS: LocalFont[] = [
   { family: "AbrilFatface", weights: [400] },
   { family: "Acetone", weights: [400] },
@@ -194,10 +186,9 @@ export const LOCAL_FONTS: LocalFont[] = [
   { family: "ganclm", weights: [700] },
   { family: "migdalfontwin", weights: [400] },
   { family: "paskol", weights: [400] },
-  { family: "santafeletplain1.0", weights: [400] },
+  { family: "santafeletplain10", weights: [400] },
   { family: "shofarregular", weights: [400] },
   { family: "trashimclm", weights: [700] },
   { family: "unicorn", weights: [300] },
 ];
-
 export const LOCAL_FONT_NAMES = LOCAL_FONTS.map(f => f.family);
