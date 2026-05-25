@@ -46,23 +46,33 @@ const StudentHomePage = () => {
   const { data: student, isLoading } = useStudent(studentId);
   const { data: progress = [] } = useStudentProgress(studentId);
 
-  // Derive metrics
+  // Derive metrics — show ALL canonical subjects, merging progress where it exists
+  const ALL_SUBJECTS = ["תנ״ך", "לשון", "היסטוריה", "אנגלית", "מתמטיקה", "חינוך גופני", "ספרות", "אזרחות"];
+  const UNITS_BY_SUBJECT: Record<string, number> = {
+    "תנ״ך": 2, "לשון": 2, "היסטוריה": 2, "אנגלית": 5,
+    "מתמטיקה": 5, "חינוך גופני": 1, "ספרות": 2, "אזרחות": 2,
+  };
   const { totalUnits, completedUnits, remainingUnits, avgGrade, openTasks, perSubject } = useMemo(() => {
-    const subs = progress.map((p: any) => {
-      const name = p.subjects?.subject_name || "";
-      const units = parseInt((name.match(/(\d+)/) || ["0"])[1]) || (metaFor(name).icon === Calculator ? 5 : 2);
-      const pct = p.completion_percent || 0;
+    const byName = new Map<string, any>();
+    progress.forEach((p: any) => {
+      const n = p.subjects?.subject_name || "";
+      if (n) byName.set(n, p);
+    });
+    const subs = ALL_SUBJECTS.map((name) => {
+      const p = byName.get(name) || (name === "לשון" ? byName.get("לשון והבעה") : undefined);
+      const units = UNITS_BY_SUBJECT[name] ?? 2;
+      const pct = p?.completion_percent || 0;
       return {
         name,
         pct,
-        grade: p.grade ?? null,
-        status: p.status as string,
+        grade: p?.grade ?? null,
+        status: p?.status as string,
         units,
         completed: +(units * pct / 100).toFixed(1),
-        missing: (p.missing_items || []).length,
+        missing: (p?.missing_items || []).length,
       };
     });
-    const tot = subs.reduce((s, x) => s + x.units, 0) || 25;
+    const tot = subs.reduce((s, x) => s + x.units, 0);
     const done = +subs.reduce((s, x) => s + x.completed, 0).toFixed(1);
     const graded = subs.filter(s => s.grade != null && s.grade > 0);
     return {
