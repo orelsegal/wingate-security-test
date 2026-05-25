@@ -80,6 +80,42 @@ const fireConfetti = () => {
 
 type Tab = "home" | "tasks" | "leaderboard" | "achievements";
 
+/* ─── Streak helpers (localStorage-based, no DB needed) ─────────────── */
+const STREAK_KEY = "wingate_streak";
+
+const todayStr = () => new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+const yesterdayStr = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+};
+
+const loadStreak = (): number => {
+  try {
+    const raw = localStorage.getItem(STREAK_KEY);
+    if (!raw) return 0;
+    const { date, count } = JSON.parse(raw);
+    if (date === todayStr()) return count;            // already counted today
+    if (date === yesterdayStr()) return count;        // yesterday → still alive
+    return 0;                                        // broke the streak
+  } catch { return 0; }
+};
+
+const bumpStreak = (): number => {
+  try {
+    const raw = localStorage.getItem(STREAK_KEY);
+    const today = todayStr();
+    let count = 1;
+    if (raw) {
+      const { date, count: prev } = JSON.parse(raw);
+      if (date === today) return prev;               // already bumped today
+      if (date === yesterdayStr()) count = prev + 1; // consecutive day
+    }
+    localStorage.setItem(STREAK_KEY, JSON.stringify({ date: today, count }));
+    return count;
+  } catch { return 1; }
+};
+
 const PlayHubPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -91,6 +127,12 @@ const PlayHubPage = () => {
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [urgentPopup, setUrgentPopup] = useState<Task | null>(null);
   const [popupDismissed, setPopupDismissed] = useState(false);
+  const [streak, setStreak] = useState<number>(loadStreak);
+
+  // Bump streak on first meaningful render (student data arrived)
+  useEffect(() => {
+    if (studentId) setStreak(bumpStreak());
+  }, [studentId]);
 
   // Derive tasks from real progress data
   const allTasks = useMemo<Task[]>(() => {
@@ -163,9 +205,9 @@ const PlayHubPage = () => {
                   : "כל הכבוד! סיימת הכל. הגיע הזמן לחזרה חכמה ✨"}
               </p>
             </div>
-            <div className="flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 ring-1 ring-violet-100 shadow-sm">
-              <Flame className="h-4 w-4 text-rose-500" strokeWidth={2.2} />
-              <span className="text-[13px] font-bold text-foreground">7</span>
+            <div className={`flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 ring-1 shadow-sm ${streak >= 7 ? "ring-rose-200" : streak >= 3 ? "ring-orange-100" : "ring-violet-100"}`}>
+              <Flame className={`h-4 w-4 ${streak >= 7 ? "text-rose-500" : streak >= 3 ? "text-orange-400" : "text-muted-foreground"}`} strokeWidth={2.2} />
+              <span className="text-[13px] font-bold text-foreground">{streak}</span>
               <span className="text-[10.5px] text-muted-foreground">רצף ימים</span>
             </div>
           </div>

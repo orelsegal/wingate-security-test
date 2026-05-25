@@ -3,7 +3,7 @@
  * Shows 4-5 role-aware shortcuts so users can navigate without opening the sidebar.
  */
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Users, CalendarDays, Layers, BookOpen, ClipboardEdit, LayoutDashboard } from "lucide-react";
+import { Home, Users, CalendarDays, Layers, BookOpen, ClipboardEdit, LayoutDashboard, Gamepad2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +37,7 @@ const navByRole: Record<string, BottomNavItem[]> = {
   student: [
     { label: "בית",       icon: Home,         path: "/student-home" },
     { label: "מקצועות",  icon: BookOpen,     path: "/subjects" },
+    { label: "משחק",     icon: Gamepad2,     path: "/play" },
     { label: "לוח שנה",  icon: CalendarDays, path: "/calendar" },
   ],
   parent: [
