@@ -149,192 +149,85 @@ const SubjectDetailPage = () => {
         </div>
       </div>
 
-      {/* Main 2-col layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 mb-6">
-        {/* Roadmap visual — winding scenic path */}
-        <div className="bg-gradient-to-b from-violet-50/60 via-sky-50/40 to-emerald-50/30 rounded-3xl border border-border p-5 shadow-[var(--shadow-card)] relative overflow-hidden min-h-[820px]">
-          <div className="flex items-center justify-between mb-3 relative z-20">
-            <span className="inline-flex items-center gap-1.5 bg-white rounded-full px-3 py-1 text-[10.5px] text-violet-700 font-medium border border-violet-100 shadow-sm">
-              <MapIcon className="h-3 w-3" strokeWidth={2} />
-              המסלול שלך
-            </span>
-          </div>
+      {/* Scenic roadmap + Units list */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 mb-6">
+        <ScenicRoadmap
+          nodes={nodes.map(n => ({
+            id: n.id,
+            title: n.title,
+            subtitle: n.subtitle,
+            status: n.status,
+          }))}
+          onSelect={(i) => {
+            const n = nodes[i];
+            if (n) navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`);
+          }}
+          onContinue={() => {
+            const next = nodes.find(n => n.status === "current") || nodes[0];
+            if (next) navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}#${next.unitId}`);
+          }}
+        />
 
-          {/* Scenic SVG layer: winding road + mountains + clouds + trees */}
-          <div className="absolute inset-0 pointer-events-none">
-            <svg viewBox="0 0 400 900" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
-              {/* Sky clouds */}
-              <g fill="hsl(220 30% 96%)" opacity="0.9">
-                <ellipse cx="80" cy="70" rx="34" ry="10" />
-                <ellipse cx="310" cy="120" rx="40" ry="11" />
-                <ellipse cx="150" cy="200" rx="28" ry="8" />
-                <ellipse cx="340" cy="330" rx="32" ry="9" />
-                <ellipse cx="60" cy="430" rx="30" ry="9" />
-              </g>
-              {/* Mountains back */}
-              <path d="M 220 180 L 260 110 L 300 180 Z" fill="hsl(220 25% 88%)" />
-              <path d="M 260 200 L 310 130 L 360 200 Z" fill="hsl(220 22% 82%)" />
-              {/* Far hills */}
-              <path d="M 0 760 Q 100 700 200 740 T 400 720 L 400 900 L 0 900 Z" fill="hsl(150 30% 90%)" opacity="0.7" />
-
-              {/* Winding road — white with soft shadow */}
-              <path d="M 200 60 C 100 140, 300 220, 200 300 S 100 460, 200 540 S 300 680, 200 780 L 200 860"
-                stroke="hsl(0 0% 100%)" strokeWidth="48" fill="none" strokeLinecap="round"
-                filter="url(#roadShadow)" />
-              <path d="M 200 60 C 100 140, 300 220, 200 300 S 100 460, 200 540 S 300 680, 200 780 L 200 860"
-                stroke="hsl(270 60% 92%)" strokeWidth="2" strokeDasharray="6 8" fill="none" />
-
-              <defs>
-                <filter id="roadShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="4" />
-                  <feOffset dy="2" />
-                  <feComponentTransfer><feFuncA type="linear" slope="0.25" /></feComponentTransfer>
-                  <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-              </defs>
-
-              {/* Trees scattered */}
-              <g>
-                {[
-                  [40, 720], [90, 760], [350, 780], [20, 820], [380, 840],
-                  [40, 500], [360, 540], [30, 340], [370, 420], [50, 600],
-                ].map(([x, y], i) => (
-                  <g key={i} transform={`translate(${x} ${y})`}>
-                    <path d="M 0 0 L 8 -16 L 16 0 Z" fill="hsl(150 35% 55%)" />
-                    <rect x="6" y="0" width="4" height="6" fill="hsl(25 40% 40%)" />
-                  </g>
-                ))}
-              </g>
-            </svg>
-          </div>
-
-          {/* Nodes positioned along path */}
-          <div className="relative z-10" style={{ minHeight: 800 }}>
-            {nodes.map((n, i) => {
-              const total = nodes.length;
-              // Distribute vertically from top (start) to bottom; alternate horizontal sway
-              const topPct = total === 1 ? 50 : 8 + (i * (84 / Math.max(1, total - 1)));
-              const sway = i % 3 === 0 ? 0 : i % 3 === 1 ? -18 : 18;
-              const leftPct = 50 + sway;
-              const isDone = n.status === "done";
-              const isCurrent = n.status === "current";
-              const isLocked = n.status === "locked";
-              const labelSide = i % 2 === 0 ? "right" : "left";
-              return (
-                <div key={n.id} className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-2"
-                  style={{ top: `${topPct}%`, left: `${leftPct}%` }}>
-                  {labelSide === "left" && (
-                    <div className="text-end">
-                      <p className="text-[11.5px] font-bold text-foreground leading-tight whitespace-nowrap">{n.title}</p>
-                      {n.subtitle && <p className="text-[9.5px] text-muted-foreground mt-0.5">{n.subtitle}</p>}
-                    </div>
-                  )}
-                  <div className="relative">
-                    {isDone && (
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex gap-0.5">
-                        {[1,2,3].map(s => <Star key={s} className="h-3 w-3 fill-amber-400 text-amber-400" strokeWidth={0} />)}
-                      </div>
-                    )}
-                    <button
-                      disabled={isLocked}
-                      onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`)}
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-[14px] font-bold shadow-lg transition-all duration-300 hover:scale-110 ${
-                        isDone ? "bg-emerald-400 text-white" :
-                        isCurrent ? "bg-violet-500 text-white ring-4 ring-violet-200 animate-pulse" :
-                        "bg-muted text-muted-foreground border border-border"
-                      } ${isLocked ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}>
-                      {isLocked ? <Lock className="h-4 w-4" strokeWidth={2} /> : n.index}
-                    </button>
-                    {isDone && (
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center">
-                        <CheckCircle2 className="h-3 w-3 text-white" strokeWidth={3} />
-                      </div>
-                    )}
-                  </div>
-                  {labelSide === "right" && (
-                    <div className="text-start">
-                      <p className="text-[11.5px] font-bold text-foreground leading-tight whitespace-nowrap">{n.title}</p>
-                      {n.subtitle && <p className="text-[9.5px] text-muted-foreground mt-0.5">{n.subtitle}</p>}
-                    </div>
-                  )}
+        {/* Units list */}
+        <div className="bg-card rounded-3xl border border-border p-4 shadow-[var(--shadow-card)] lg:max-h-[calc(100vh-220px)] lg:overflow-auto">
+          <h2 className="text-[13px] font-bold text-foreground mb-3 px-2 flex items-center gap-2 justify-end">
+            רשימת יחידות הלימוד
+            <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+          </h2>
+          <div className="space-y-4">
+            {parts.map((part) => (
+              <div key={part.id}>
+                <p className="text-[10.5px] font-bold text-violet-700 mb-2 px-2 text-end">{part.title}</p>
+                <div className="space-y-1.5">
+                  {part.units.map((unit) => {
+                    const unitTopics = unit.items.map(it => it.title);
+                    const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
+                    const someDone = unitTopics.some(t => coveredTopics.includes(t));
+                    const node = nodes.find(nn => nn.unitId === unit.id && nn.partId === part.id);
+                    const isLocked = node?.status === "locked";
+                    const isCurrent = node?.status === "current";
+                    return (
+                      <button
+                        key={unit.id}
+                        disabled={isLocked}
+                        onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${part.id}#${unit.id}`)}
+                        className={[
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-end",
+                          isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-accent cursor-pointer",
+                          isCurrent && "bg-violet-50 ring-1 ring-violet-200",
+                        ].filter(Boolean).join(" ")}
+                      >
+                        <span className={[
+                          "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold",
+                          allDone ? "bg-emerald-400 text-white" :
+                          isCurrent ? "bg-violet-500 text-white" :
+                          someDone ? "bg-violet-200 text-violet-700" :
+                          "bg-muted text-muted-foreground",
+                        ].join(" ")}>
+                          {isLocked ? <Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> : (node?.index ?? "")}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12.5px] font-semibold text-foreground leading-tight">{unit.title}</p>
+                          {unit.items.length > 0 && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug line-clamp-1">
+                              {unit.items.slice(0, 3).map(it => it.title).join(" · ")}
+                              {unit.items.length > 3 && ` · +${unit.items.length - 3}`}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-              );
-            })}
-
-            {/* Start marker */}
-            <div className="absolute bottom-2 left-3 flex items-center gap-1.5 z-10">
-              <div className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center shadow">
-                <Lock className="h-3 w-3 text-muted-foreground" strokeWidth={2} />
               </div>
-              <div className="text-start">
-                <p className="text-[10px] font-bold text-violet-700">התחלה</p>
-                <p className="text-[9px] text-muted-foreground">כאן מתחילים</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Continue CTA */}
-          <div className="relative z-10 mt-4 flex justify-center">
-            <button onClick={() => {
-              const next = nodes.find(n => n.status === "current") || nodes[0];
-              if (next) navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}#${next.unitId}`);
-            }} className="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[12px] font-semibold px-6 py-3 rounded-2xl shadow-lg transition-colors">
-              המשך למסלול
-              <ArrowRight className="h-3.5 w-3.5 rotate-180" strokeWidth={2} />
-            </button>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Side panel */}
-        <div className="space-y-5">
-          {/* Units & topics */}
-          <div className="bg-card rounded-3xl border border-border p-5 shadow-[var(--shadow-card)]">
-            <h2 className="text-[13px] font-bold text-foreground mb-4 flex items-center gap-2 justify-end">
-              רכיבי היחידה
-              <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-            </h2>
-            <div className="space-y-4">
-              {parts.map((part) => (
-                <div key={part.id}>
-                  <p className="text-[10.5px] font-bold text-violet-700 mb-2 text-end">{part.title}</p>
-                  <div className="space-y-2">
-                    {part.units.map((unit) => {
-                      const unitTopics = unit.items.map(it => it.title);
-                      const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
-                      const someDone = unitTopics.some(t => coveredTopics.includes(t));
-                      const node = nodes.find(nn => nn.unitId === unit.id && nn.partId === part.id);
-                      const isLocked = node?.status === "locked";
-                      return (
-                        <button
-                          key={unit.id}
-                          disabled={isLocked}
-                          onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${part.id}#${unit.id}`)}
-                          className={`w-full flex items-start justify-between gap-2 py-2 px-2.5 rounded-xl transition-colors text-end ${
-                            isLocked ? "opacity-60 cursor-not-allowed" : "hover:bg-accent cursor-pointer"
-                          }`}>
-                          <div className="shrink-0 mt-0.5">
-                            {isLocked ? <Lock className="h-4 w-4 text-muted-foreground/50" strokeWidth={2} /> :
-                             allDone ? <CheckCircle2 className="h-5 w-5 text-emerald-500 fill-emerald-50" strokeWidth={2} /> :
-                             someDone ? <div className="w-5 h-5 rounded-full border-2 border-violet-400 bg-violet-100" /> :
-                             <div className="w-5 h-5 rounded-full border-2 border-border" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[11.5px] font-semibold text-foreground leading-tight">{unit.title}</p>
-                            {unit.items.length > 0 && (
-                              <p className="text-[9.5px] text-muted-foreground mt-1 leading-snug line-clamp-2">
-                                {unit.items.slice(0, 4).map(it => it.title).join(" · ")}
-                                {unit.items.length > 4 && ` · +${unit.items.length - 4}`}
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Secondary panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+
 
           {/* Motivation */}
           <div className="bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 rounded-3xl border border-amber-100 p-5">
