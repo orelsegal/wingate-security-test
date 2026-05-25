@@ -90,9 +90,9 @@ const DashboardContent = ({ embedded = false }: Props) => {
       <section className="mb-8 md:mb-10">
         {/* Live date */}
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success/60 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success/60" />
           </span>
           <span>{new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}</span>
         </div>
@@ -146,53 +146,53 @@ const DashboardContent = ({ embedded = false }: Props) => {
       {!isTeacher && (
         <section className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {/* Card 1 — total students */}
-          <div className="card-premium card-accent-line p-5 md:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[12px] font-medium text-muted-foreground">ספורטאים</span>
-              <Users className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.5} />
+          <div className="card-premium p-5 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11.5px] font-medium text-muted-foreground">ספורטאים</span>
+              <Users className="h-3.5 w-3.5 text-muted-foreground/30" strokeWidth={1.5} />
             </div>
-            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
               {totalStudents}
             </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-2">פעילים במערכת</p>
+            <p className="text-[11px] text-muted-foreground/50 mt-2.5">פעילים במערכת</p>
           </div>
 
           {/* Card 2 — average score */}
-          <div className="card-premium card-accent-line p-5 md:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[12px] font-medium text-muted-foreground">ממוצע כללי</span>
-              <TrendingUp className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.5} />
+          <div className="card-premium p-5 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11.5px] font-medium text-muted-foreground">ממוצע כללי</span>
+              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/30" strokeWidth={1.5} />
             </div>
-            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
               {avgScore}
             </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-2">ממוצע משוקלל</p>
+            <p className="text-[11px] text-muted-foreground/50 mt-2.5">ממוצע משוקלל</p>
           </div>
 
           {/* Card 3 — on track (green dot) */}
-          <div className="card-premium card-accent-line p-5 md:p-6 border-success/15">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[12px] font-medium text-muted-foreground">במסלול</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-success/60" />
+          <div className="card-premium p-5 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11.5px] font-medium text-muted-foreground">במסלול</span>
+              <span className="w-2 h-2 rounded-full bg-success/60 ring-1 ring-success/20" />
             </div>
-            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
               {greenCount}
             </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-2">
+            <p className="text-[11px] text-muted-foreground/50 mt-2.5">
               {totalStudents ? Math.round((greenCount / totalStudents) * 100) : 0}% מהספורטאים
             </p>
           </div>
 
           {/* Card 4 — needs attention (orange dot) */}
-          <div className="card-premium card-accent-line p-5 md:p-6 border-warning/15">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[12px] font-medium text-muted-foreground">דורשים טיפול</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-warning/60" />
+          <div className="card-premium p-5 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11.5px] font-medium text-muted-foreground">דורשים טיפול</span>
+              <span className="w-2 h-2 rounded-full bg-warning/60 ring-1 ring-warning/20" />
             </div>
-            <p className="text-[34px] md:text-[40px] font-medium text-foreground leading-none tracking-tight font-stat">
+            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
               {yellowCount + redCount}
             </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-2">
+            <p className="text-[11px] text-muted-foreground/50 mt-2.5">
               {yellowCount} פערים · {redCount} בסיכון
             </p>
           </div>
@@ -205,20 +205,20 @@ const DashboardContent = ({ embedded = false }: Props) => {
       {!isTeacher && totalStudents > 0 && (
         <section className="card-premium p-5 md:p-6 mb-8 md:mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[14px] font-semibold text-foreground">התפלגות סטטוס כולל</h2>
-            <span className="text-[12px] text-muted-foreground font-medium">{totalStudents} ספורטאים</span>
+            <h2 className="text-[13px] font-medium text-foreground/70">התפלגות סטטוס כולל</h2>
+            <span className="text-[11px] text-muted-foreground/60">{totalStudents} ספורטאים</span>
           </div>
 
-          {/* Wide bar — h-4 for legibility */}
-          <div className="flex h-3 rounded-xl overflow-hidden bg-muted/60 gap-0.5 mb-4">
+          {/* Slim bar with light track and soft pastel segments */}
+          <div className="flex h-2 rounded-full overflow-hidden bg-muted/60 gap-px mb-4">
             {greenPct > 0 && (
-              <div className="bg-success/55 rounded-s-xl transition-all duration-700" style={{ width: `${greenPct}%` }} />
+              <div className="bg-success/55 rounded-s-full transition-all duration-700" style={{ width: `${greenPct}%` }} />
             )}
             {yellowPct > 0 && (
               <div className="bg-warning/55 transition-all duration-700" style={{ width: `${yellowPct}%` }} />
             )}
             {redPct > 0 && (
-              <div className="bg-destructive/50 rounded-e-xl transition-all duration-700" style={{ width: `${redPct}%` }} />
+              <div className="bg-destructive/45 rounded-e-full transition-all duration-700" style={{ width: `${redPct}%` }} />
             )}
           </div>
 
@@ -227,13 +227,13 @@ const DashboardContent = ({ embedded = false }: Props) => {
             {[
               { label: "במסלול",  count: greenCount,  cls: "bg-success/60"     },
               { label: "פערים",   count: yellowCount, cls: "bg-warning/60"     },
-              { label: "בסיכון",  count: redCount,    cls: "bg-destructive/55" },
+              { label: "בסיכון",  count: redCount,    cls: "bg-destructive/50" },
             ].map(s => (
-              <div key={s.label} className="flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${s.cls} shrink-0`} />
-                <span className="text-[12px] text-muted-foreground">
-                  <span className="font-semibold text-foreground tabular-nums">{s.count}</span>
-                  <span className="text-muted-foreground/50">/{totalStudents}</span>
+              <div key={s.label} className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${s.cls} shrink-0`} />
+                <span className="text-[11.5px] text-muted-foreground">
+                  <span className="font-medium text-foreground/80 tabular-nums">{s.count}</span>
+                  <span className="text-muted-foreground/40">/{totalStudents}</span>
                   {" "}{s.label}
                 </span>
               </div>
@@ -255,7 +255,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
       <section className="mb-10 md:mb-12">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-[18px] font-semibold text-foreground">
+            <h2 className="text-[15px] font-medium text-foreground/80">
               {isTeacher ? "מעקב אקדמי לפי ענף" : "סטטוס לפי ענף"}
             </h2>
             <p className="text-[12px] text-muted-foreground mt-0.5">התפלגות מצב אקדמי לפי ענף ספורט</p>
@@ -278,13 +278,13 @@ const DashboardContent = ({ embedded = false }: Props) => {
             {[
               { label: "ענף",        cls: "text-start" },
               { label: 'סה"כ',      cls: "text-center" },
-              { label: "במסלול",    cls: "text-center text-success" },
-              { label: "פערים",     cls: "text-center text-warning" },
-              { label: "בסיכון",    cls: "text-center text-destructive" },
+              { label: "במסלול",    cls: "text-center" },
+              { label: "פערים",     cls: "text-center" },
+              { label: "בסיכון",    cls: "text-center" },
               { label: "התפלגות",   cls: "" },
               { label: "סטטוס",     cls: "text-center" },
             ].map(col => (
-              <span key={col.label} className={`text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ${col.cls}`}>
+              <span key={col.label} className={`text-[11px] font-medium text-muted-foreground ${col.cls}`}>
                 {col.label}
               </span>
             ))}
@@ -310,10 +310,10 @@ const DashboardContent = ({ embedded = false }: Props) => {
                       <StatusBadge type={branch.overall} />
                     </div>
                   </div>
-                  <div className="flex h-2.5 rounded-xl overflow-hidden bg-muted/60 gap-0.5">
-                    {gPct > 0 && <div className="bg-success/55 rounded-s-xl" style={{ width: `${gPct}%` }} />}
+                  <div className="flex h-2 rounded-full overflow-hidden bg-muted/60 gap-px">
+                    {gPct > 0 && <div className="bg-success/55 rounded-s-full" style={{ width: `${gPct}%` }} />}
                     {yPct > 0 && <div className="bg-warning/55" style={{ width: `${yPct}%` }} />}
-                    {rPct > 0 && <div className="bg-destructive/50 rounded-e-xl" style={{ width: `${rPct}%` }} />}
+                    {rPct > 0 && <div className="bg-destructive/45 rounded-e-full" style={{ width: `${rPct}%` }} />}
                   </div>
                 </div>
 
@@ -324,18 +324,18 @@ const DashboardContent = ({ embedded = false }: Props) => {
                 >
                   <span className="text-[13.5px] font-semibold text-foreground">{branch.name}</span>
                   <span className="text-[13px] text-muted-foreground text-center tabular-nums">{branch.total}</span>
-                  <span className="text-[15px] font-semibold text-success/80 text-center tabular-nums">{branch.green}</span>
-                  <span className={`text-[15px] font-semibold text-center tabular-nums ${branch.yellow > 0 ? "text-warning/80" : "text-muted-foreground/20"}`}>
+                  <span className="text-[13px] font-semibold text-success/75 text-center tabular-nums">{branch.green}</span>
+                  <span className={`text-[13px] font-semibold text-center tabular-nums ${branch.yellow > 0 ? "text-warning/75" : "text-muted-foreground/20"}`}>
                     {branch.yellow}
                   </span>
-                  <span className={`text-[15px] font-semibold text-center tabular-nums ${branch.red > 0 ? "text-destructive/80" : "text-muted-foreground/20"}`}>
+                  <span className={`text-[13px] font-semibold text-center tabular-nums ${branch.red > 0 ? "text-destructive/75" : "text-muted-foreground/20"}`}>
                     {branch.red}
                   </span>
                   {/* Progress bar */}
-                  <div className="flex h-2.5 rounded-xl overflow-hidden bg-muted/60 gap-0.5">
-                    {gPct > 0 && <div className="bg-success/55 rounded-s-xl transition-all" style={{ width: `${gPct}%` }} />}
+                  <div className="flex h-2 rounded-full overflow-hidden bg-muted/60 gap-px">
+                    {gPct > 0 && <div className="bg-success/55 rounded-s-full transition-all" style={{ width: `${gPct}%` }} />}
                     {yPct > 0 && <div className="bg-warning/55 transition-all" style={{ width: `${yPct}%` }} />}
-                    {rPct > 0 && <div className="bg-destructive/50 rounded-e-xl transition-all" style={{ width: `${rPct}%` }} />}
+                    {rPct > 0 && <div className="bg-destructive/45 rounded-e-full transition-all" style={{ width: `${rPct}%` }} />}
                   </div>
                   <div className="flex justify-center">
                     <StatusBadge type={branch.overall} />
@@ -353,7 +353,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
       <section>
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-[18px] font-semibold text-foreground">ספורטאים לטיפול</h2>
+            <h2 className="text-[15px] font-medium text-foreground/80">ספורטאים לטיפול</h2>
             <p className="text-[12px] text-muted-foreground mt-0.5">
               {statusFilter === "all"
                 ? "דורשים התייחסות של הצוות החינוכי"
@@ -379,7 +379,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
               <div
                 key={alert.id}
                 onClick={() => navigate(`/students/${alert.id}`)}
-                className="flex items-center justify-between px-5 md:px-6 py-4 cursor-pointer hover:bg-accent/30 transition-colors duration-100"
+                className="flex items-center justify-between px-5 md:px-6 py-3.5 cursor-pointer hover:bg-accent/30 transition-colors duration-100"
               >
                 <div className="flex items-center gap-3">
                   <InitialsAvatar name={alert.name} size="sm" />
