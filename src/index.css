@@ -83,14 +83,15 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'FbMatritsa', 'Heebo', 'Assistant', sans-serif;
+    font-family: 'FbGazoz', 'Heebo', 'Assistant', sans-serif;
+    font-weight: 300;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4 {
-    font-family: 'FbMatritsa', 'Rubik', 'Heebo', sans-serif;
-    font-weight: 500;
+    font-family: 'FbGazoz', 'Rubik', 'Heebo', sans-serif;
+    font-weight: 400;
   }
 
   /* Numbers and stats get Rubik for punchy look */
