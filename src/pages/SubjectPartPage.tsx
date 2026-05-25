@@ -24,6 +24,7 @@ interface AssignmentItem { id: string; title: string; grade?: number; dueDate?: 
 
 const SubjectPartPage = () => {
   const { subjectName, partId } = useParams<{ subjectName: string; partId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher" || user?.role === "admin";
