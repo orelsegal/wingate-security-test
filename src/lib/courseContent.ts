@@ -10,6 +10,7 @@ export interface LearningItem {
   practice?: string;
   quiz?: { question: string; options: string[]; correct: number }[];
   tip?: string;
+  videos?: { url: string; label: string }[];
 }
 
 export interface UnitDef {
