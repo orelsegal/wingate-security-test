@@ -32,18 +32,29 @@ const SubjectDetailPage = () => {
   const grade = subjectProgress?.grade;
   const coveredTopics: string[] = subjectProgress?.covered_topics || [];
 
-  // Build roadmap nodes from parts/units
+  // Build roadmap nodes from individual UNITS (not parts) — each unit is a step,
+  // gated so the next opens only after the previous one is fully completed.
   const nodes = useMemo(() => {
-    const out: { id: string; index: number; title: string; subtitle?: string; partId: string; status: "done" | "current" | "locked" }[] = [];
+    const out: { id: string; index: number; title: string; subtitle?: string; partId: string; unitId: string; status: "done" | "current" | "locked" }[] = [];
     let i = 1;
     let foundCurrent = false;
     parts.forEach(part => {
-      const partTopics = part.units.flatMap(u => u.items.map(it => it.title));
-      const allDone = partTopics.length > 0 && partTopics.every(t => coveredTopics.includes(t));
-      let status: "done" | "current" | "locked" = "locked";
-      if (allDone) status = "done";
-      else if (!foundCurrent) { status = "current"; foundCurrent = true; }
-      out.push({ id: part.id, index: i++, title: part.title, subtitle: part.weight, partId: part.id, status });
+      part.units.forEach(unit => {
+        const unitTopics = unit.items.map(it => it.title);
+        const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
+        let status: "done" | "current" | "locked" = "locked";
+        if (allDone) status = "done";
+        else if (!foundCurrent) { status = "current"; foundCurrent = true; }
+        out.push({
+          id: `${part.id}-${unit.id}`,
+          index: i++,
+          title: unit.title,
+          subtitle: part.title,
+          partId: part.id,
+          unitId: unit.id,
+          status,
+        });
+      });
     });
     return out;
   }, [parts, coveredTopics]);
