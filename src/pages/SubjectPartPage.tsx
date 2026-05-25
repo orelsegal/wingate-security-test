@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowRight, CheckCircle2, Clock, BookOpen, FileText, Plus,
-  ClipboardList, Sparkles, Trash2, Pencil,
+  ClipboardList, Sparkles, Trash2, Pencil, Lock,
   Link as LinkIcon, Upload, Save, GraduationCap, Award
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
