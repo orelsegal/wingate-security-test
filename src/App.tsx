@@ -39,6 +39,7 @@ import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
 import AdminBuilderPage from "./pages/AdminBuilderPage.tsx";
 import RoadmapsPage from "./pages/RoadmapsPage.tsx";
+import MathRoadmapPage from "./pages/MathRoadmapPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
