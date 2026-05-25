@@ -21,6 +21,7 @@ export interface UiLabels {
     courses: string;
     dataEntry: string;
     gradeEntry: string;
+    roadmaps: string;
     calendar: string;
     userActivity: string;
     dataManagement: string;
