@@ -111,12 +111,21 @@ const TeacherCourseDetailPage = () => {
       </button>
 
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-[28px]">{course.icon}</span>
-        <div>
-          <h1 className="text-[20px] md:text-[24px] font-semibold text-foreground tracking-tight">{course.name}</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">{courseStudents.length} תלמידים</p>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <span className="text-[28px]">{course.icon}</span>
+          <div>
+            <h1 className="text-[20px] md:text-[24px] font-semibold text-foreground tracking-tight">{course.name}</h1>
+            <p className="text-[12px] text-muted-foreground mt-0.5">{courseStudents.length} תלמידים</p>
+          </div>
         </div>
+        <button
+          onClick={() => navigate("/grade-entry")}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-white text-[11.5px] font-semibold hover:bg-primary/90 transition-colors shadow-sm shrink-0"
+        >
+          <BarChart3 className="h-3.5 w-3.5" strokeWidth={1.5} />
+          הזן ציונים
+        </button>
       </div>
 
       {/* Tabs: הקורס · ניהול תלמידים · קבוצות · עדכון ציונים */}

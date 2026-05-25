@@ -57,13 +57,17 @@ const TeacherCoursesPage = () => {
         </p>
       </div>
 
-      {/* Course Cards — ONLY courses, nothing else */}
+      {/* Active courses first, then empty */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {courseStats.map((course, i) => (
+        {[...courseStats].sort((a, b) => b.studentCount - a.studentCount).map((course, i) => (
           <button
             key={course.id}
             onClick={() => navigate(`/teacher-course/${course.id}`)}
-            className="group bg-card rounded-2xl border border-border p-5 text-start transition-all duration-200 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
+            className={`group bg-card rounded-2xl border p-5 text-start transition-all duration-200 shadow-[var(--shadow-card)] animate-fade-in-up ${
+              course.studentCount > 0
+                ? "border-border hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
+                : "border-border/40 opacity-50 cursor-default"
+            }`}
             style={{ animationDelay: `${i * 50}ms` }}
           >
             <div className="flex items-start justify-between mb-4">
