@@ -166,8 +166,8 @@ const SubjectDetailPage = () => {
         </div>
       </div>
 
-      {/* Scenic roadmap + Units list */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 mb-6">
+      {/* Scenic roadmap (full width) */}
+      <div className="mb-6">
         <ScenicRoadmap
           nodes={nodes.map(n => ({
             id: n.id,
@@ -175,72 +175,61 @@ const SubjectDetailPage = () => {
             subtitle: n.subtitle,
             status: n.status,
           }))}
-          onSelect={(i) => {
-            const n = nodes[i];
-            if (n) navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`);
-          }}
+          onSelect={handleNodeSelect}
           onContinue={() => {
             const next = nodes.find(n => n.status === "current") || nodes[0];
             if (next) navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}#${next.unitId}`);
           }}
         />
-
-        {/* Units list */}
-        <div className="bg-card rounded-3xl border border-border p-4 shadow-[var(--shadow-card)] lg:max-h-[calc(100vh-220px)] lg:overflow-auto">
-          <h2 className="text-[13px] font-bold text-foreground mb-3 px-2 flex items-center gap-2 justify-end">
-            רשימת יחידות הלימוד
-            <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-          </h2>
-          <div className="space-y-4">
-            {parts.map((part) => (
-              <div key={part.id}>
-                <p className="text-[10.5px] font-bold text-violet-700 mb-2 px-2 text-end">{part.title}</p>
-                <div className="space-y-1.5">
-                  {part.units.map((unit) => {
-                    const unitTopics = unit.items.map(it => it.title);
-                    const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
-                    const someDone = unitTopics.some(t => coveredTopics.includes(t));
-                    const node = nodes.find(nn => nn.unitId === unit.id && nn.partId === part.id);
-                    const isLocked = node?.status === "locked";
-                    const isCurrent = node?.status === "current";
-                    return (
-                      <button
-                        key={unit.id}
-                        disabled={isLocked}
-                        onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${part.id}#${unit.id}`)}
-                        className={[
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-end",
-                          isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-accent cursor-pointer",
-                          isCurrent && "bg-violet-50 ring-1 ring-violet-200",
-                        ].filter(Boolean).join(" ")}
-                      >
-                        <span className={[
-                          "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold",
-                          allDone ? "bg-emerald-400 text-white" :
-                          isCurrent ? "bg-violet-500 text-white" :
-                          someDone ? "bg-violet-200 text-violet-700" :
-                          "bg-muted text-muted-foreground",
-                        ].join(" ")}>
-                          {isLocked ? <Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> : (node?.index ?? "")}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12.5px] font-semibold text-foreground leading-tight">{unit.title}</p>
-                          {unit.items.length > 0 && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug line-clamp-1">
-                              {unit.items.slice(0, 3).map(it => it.title).join(" · ")}
-                              {unit.items.length > 3 && ` · +${unit.items.length - 3}`}
-                            </p>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
+
+      {/* Active unit detail (appears on node click) */}
+      {activeNode && activeUnit && activePart && (
+        <div ref={unitDetailRef} className="mb-6 bg-card rounded-3xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)] scroll-mt-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3 text-end">
+              <div>
+                <p className="text-[10.5px] font-semibold text-violet-700">{activePart.title}</p>
+                <h2 className="text-[17px] font-bold text-foreground tracking-tight mt-0.5">{activeUnit.title}</h2>
+                <p className="text-[11px] text-muted-foreground mt-1">{activeUnit.items.length} תתי-יחידות</p>
+              </div>
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-violet-500 text-white text-[14px] font-bold shrink-0 shadow-sm">
+                {activeNode.index}
+              </span>
+            </div>
+            <button
+              onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${activePart.id}#${activeUnit.id}`)}
+              className="inline-flex items-center gap-1.5 bg-violet-500 hover:bg-violet-600 text-white text-[11.5px] font-semibold px-3.5 py-2 rounded-full transition-colors"
+            >
+              כניסה ליחידה
+              <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
+          </div>
+
+          {activeUnit.items.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {activeUnit.items.map((it, i) => {
+                const done = coveredTopics.includes(it.title);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${activePart.id}#${activeUnit.id}`)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border bg-background hover:bg-accent transition-colors text-end"
+                  >
+                    <span className={[
+                      "shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold",
+                      done ? "bg-emerald-400 text-white" : "bg-muted text-muted-foreground",
+                    ].join(" ")}>
+                      {done ? <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.2} /> : i + 1}
+                    </span>
+                    <span className="flex-1 text-[12px] font-medium text-foreground leading-snug">{it.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Motivation */}
       <div className="mb-6 bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 rounded-3xl border border-amber-100 p-5">
