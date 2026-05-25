@@ -46,6 +46,7 @@ const YearPlan2026Page           = lazy(() => import("./pages/YearPlan2026Page")
 const AdminLabelsPage            = lazy(() => import("./pages/AdminLabelsPage"));
 const AdminBuilderPage           = lazy(() => import("./pages/AdminBuilderPage"));
 const UserManagementPage         = lazy(() => import("./pages/UserManagementPage"));
+const DevSettingsPage            = lazy(() => import("./pages/DevSettingsPage"));
 const StylePickerPage            = lazy(() => import("./pages/StylePickerPage"));
 const FontLabPage                = lazy(() => import("./pages/FontLabPage"));
 const RoadmapsPage               = lazy(() => import("./pages/RoadmapsPage"));
@@ -119,6 +120,7 @@ const App = () => (
               <Route path="/year-plan-2026"                     element={<YearPlan2026Page />} />
               <Route path="/admin/labels"                       element={<AdminLabelsPage />} />
               <Route path="/admin/users"                        element={<UserManagementPage />} />
+              <Route path="/admin/settings"                     element={<DevSettingsPage />} />
               <Route path="/roadmaps"                           element={<RoadmapsPage />} />
               <Route path="/roadmaps/math"                      element={<MathRoadmapPage />} />
              <Route path="/play"                               element={<PlayHubPage />} />

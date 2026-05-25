@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Gamepad2 } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Gamepad2, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -29,8 +29,9 @@ const allMenuItems: MenuItemDef[] = [
   { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher"] },
   { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["developer", "admin"] },
   { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["developer", "admin"] },
-  { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels", roles: ["developer", "admin"] },
-  { key: "adminUsers",     icon: UserCog,           path: "/admin/users",  roles: ["developer", "admin"] },
+  { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels",    roles: ["developer", "admin"] },
+  { key: "adminUsers",     icon: UserCog,           path: "/admin/users",     roles: ["developer", "admin"] },
+  { key: "adminSettings",  icon: Settings,          path: "/admin/settings",  roles: ["developer", "admin"] },
 ];
 
 /* Unread messages counter — 0 until messaging backend is live */
