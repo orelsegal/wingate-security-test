@@ -272,7 +272,7 @@ const MathRoadmapPage = () => {
     const total = UNITS.length;
     return UNITS.map((u, i) => {
       const t = total > 1 ? i / (total - 1) : 0.5;
-      const y = 94 - t * 88; // 94% bottom → 6% top
+      const y = 6 + t * 88; // 6% top → 94% bottom (#1 at top)
       const x = 50 + Math.sin(i * 1.35) * 22; // serpentine sway
       return { ...u, idx: i, x, y };
     });
