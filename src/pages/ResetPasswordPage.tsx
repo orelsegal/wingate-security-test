@@ -17,10 +17,15 @@ const ResetPasswordPage = () => {
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(false);
 
-  // Supabase sends the token in the URL hash — wait for the session to resolve
+  // Supabase sends the token in the URL hash — wait for the session to resolve.
+  // With lazy-loaded routes the PASSWORD_RECOVERY event can fire before the
+  // listener is registered, so we also check getSession() immediately.
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") setReady(true);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
     return () => subscription.unsubscribe();
   }, []);
