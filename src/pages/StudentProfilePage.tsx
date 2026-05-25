@@ -113,7 +113,6 @@ const StudentProfilePage = () => {
   const saveField = useCallback(async (field: string, value: any) => {
     if (!student) return;
     try {
-      console.log(`[SaveField] ${field} =`, value);
       await updateStudent.mutateAsync({ id: student.id, data: { [field]: value } });
       toast.success("נשמר בהצלחה");
       setSavedMsg(true);
@@ -225,7 +224,6 @@ const StudentProfilePage = () => {
 
   const handleToggleRoadmapItem = async (itemId: string, currentCompleted: boolean) => {
     try {
-      console.log(`[RoadmapToggle] itemId: ${itemId}, currently: ${currentCompleted}`);
       if (currentCompleted) {
         const { error } = await supabase.from("student_roadmap_progress").delete().eq("student_id", student.id).eq("roadmap_item_id", itemId);
         if (error) throw error;
@@ -250,7 +248,6 @@ const StudentProfilePage = () => {
 
   const handleSubjectFieldSave = async (progressId: string, field: string, value: any) => {
     try {
-      console.log(`[SubjectFieldSave] ${field} =`, value, "progressId:", progressId);
       const { error } = await supabase.from("student_subject_progress").update({ [field]: value } as any).eq("id", progressId);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["student-progress", student.id] });
