@@ -53,11 +53,8 @@ const PlayHubPage                = lazy(() => import("./pages/PlayHubPage"));
 const NotFound                   = lazy(() => import("./pages/NotFound"));
 
 // ── Shared route-level loading fallback ─────────────────────────────────────
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
-    <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-  </div>
-);
+import OlympicLoader from "@/components/OlympicLoader";
+const PageLoader = () => <OlympicLoader message="טוען..." />;
 
 const queryClient = new QueryClient();
 
