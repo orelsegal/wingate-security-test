@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import AppHeader from "@/components/AppHeader";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PageTransition from "@/components/PageTransition";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -31,6 +32,7 @@ const AppLayout = () => {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <AppHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <Breadcrumbs />
         <main className="flex-1 bg-background overflow-x-hidden pb-16 md:pb-0">
           <ErrorBoundary>
             <PageTransition>
