@@ -123,6 +123,45 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             </button>
           )}
 
+          {/* Subjects list — visible to students between dashboard and messages */}
+          {user?.role === "student" && (() => {
+            const subjects: { name: string; icon: typeof Home; path: string }[] = [
+              { name: "תנ״ך",        icon: BookOpen,   path: "/subjects/" + encodeURIComponent("תנ״ך") },
+              { name: "לשון",        icon: Languages,  path: "/subjects/" + encodeURIComponent("לשון") },
+              { name: "היסטוריה",    icon: Scroll,     path: "/subjects/" + encodeURIComponent("היסטוריה") },
+              { name: "אנגלית",      icon: Globe,      path: "/subjects/" + encodeURIComponent("אנגלית") },
+              { name: "מתמטיקה",     icon: Calculator, path: "/roadmaps/math" },
+              { name: "חינוך גופני", icon: Dumbbell,   path: "/subjects/" + encodeURIComponent("חינוך גופני") },
+              { name: "ספרות",       icon: Feather,    path: "/subjects/" + encodeURIComponent("ספרות") },
+              { name: "אזרחות",      icon: Scale,      path: "/subjects/" + encodeURIComponent("אזרחות") },
+            ];
+            return (
+              <div className="pt-2 mt-1 border-t border-sidebar-border/60">
+                <p className="text-[9px] font-semibold text-sidebar-muted/40 tracking-[0.12em] uppercase px-3 mt-3 mb-2">
+                  מקצועות
+                </p>
+                {subjects.map((s) => {
+                  const active = decodeURIComponent(location.pathname) === decodeURIComponent(s.path);
+                  return (
+                    <button
+                      key={s.name}
+                      onClick={() => { navigate(s.path); onNavigate?.(); }}
+                      className={`w-full flex flex-row items-center gap-3 px-3 py-2 rounded-xl text-[12.5px] transition-all duration-200 text-start ${
+                        active
+                          ? "bg-sidebar-primary text-white font-semibold shadow-sm"
+                          : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground font-medium"
+                      }`}
+                    >
+                      <s.icon className={`h-[15px] w-[15px] shrink-0 ${active ? "text-white" : "text-sidebar-muted"}`} strokeWidth={active ? 2 : 1.5} />
+                      <span>{s.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+
           {/* Messages — distinct orange entry with unread badge */}
           {labels.visibility?.nav?.messages !== false && (
             <button
