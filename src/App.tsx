@@ -48,6 +48,7 @@ const StylePickerPage            = lazy(() => import("./pages/StylePickerPage"))
 const FontLabPage                = lazy(() => import("./pages/FontLabPage"));
 const RoadmapsPage               = lazy(() => import("./pages/RoadmapsPage"));
 const MathRoadmapPage            = lazy(() => import("./pages/MathRoadmapPage"));
+const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
 const NotFound                   = lazy(() => import("./pages/NotFound"));
 
 // ── Shared route-level loading fallback ─────────────────────────────────────
