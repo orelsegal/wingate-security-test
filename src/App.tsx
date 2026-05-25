@@ -121,6 +121,7 @@ const App = () => (
               <Route path="/admin/users"                        element={<UserManagementPage />} />
               <Route path="/roadmaps"                           element={<RoadmapsPage />} />
               <Route path="/roadmaps/math"                      element={<MathRoadmapPage />} />
+              <Route path="/play"                               element={<PlayArenaPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
