@@ -108,7 +108,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setPreviewRoleState(role);
   }, []);
 
-  const effectiveUser = user && previewRole ? { ...user, role: previewRole } : user;
+  const previewScopeFilter = previewRole
+    ? demoUsers.find(d => d.role === previewRole)?.scopeFilter
+    : undefined;
+
+  const effectiveUser = user && previewRole
+    ? { ...user, role: previewRole, scopeFilter: previewScopeFilter }
+    : user;
 
   useEffect(() => {
     // Clear any leftover legacy demo auth keys — real auth is Supabase only.
