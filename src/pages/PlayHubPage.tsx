@@ -295,7 +295,11 @@ const PlayHubPage = () => {
 
               {/* Featured open task */}
               {openTasks[0] ? (
-                <FeaturedTaskCard task={openTasks[0]} onPlay={() => completeTask(openTasks[0].id)} />
+                <FeaturedTaskCard
+                  task={openTasks[0]}
+                  onPlay={() => completeTask(openTasks[0].id)}
+                  onLearn={() => navigate(`/play/${encodeURIComponent(openTasks[0].subject)}`)}
+                />
               ) : (
                 <AllDoneCard />
               )}
@@ -458,13 +462,22 @@ const PlayHubPage = () => {
                         {t.questions ? `${t.questions} שאלות · ` : ""}{t.minutes} דקות · {t.xp} XP
                       </p>
                     </div>
-                    <button
-                      onClick={() => completeTask(t.id)}
-                      className="inline-flex items-center gap-1.5 bg-violet-500 hover:bg-violet-600 text-white text-[12px] font-semibold px-3.5 py-2 rounded-full shadow-sm transition-colors"
-                    >
-                      <Play className="h-3 w-3 fill-white" strokeWidth={0} />
-                      התחל
-                    </button>
+                    <div className="flex flex-col gap-1.5 shrink-0">
+                      <button
+                        onClick={() => navigate(`/play/${encodeURIComponent(t.subject)}`)}
+                        className="inline-flex items-center gap-1.5 bg-violet-500 hover:bg-violet-600 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-sm transition-colors"
+                      >
+                        <Play className="h-3 w-3 fill-white" strokeWidth={0} />
+                        כנס
+                      </button>
+                      <button
+                        onClick={() => completeTask(t.id)}
+                        className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-full border border-border/60 hover:bg-muted/40 transition-colors"
+                      >
+                        <CheckCircle2 className="h-3 w-3" strokeWidth={1.5} />
+                        עשיתי
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -540,7 +553,7 @@ const PlayHubPage = () => {
         <UrgentPopup
           task={urgentPopup}
           onClose={() => { setUrgentPopup(null); setPopupDismissed(true); }}
-          onStart={() => { completeTask(urgentPopup.id); setUrgentPopup(null); setPopupDismissed(true); }}
+          onStart={() => { setUrgentPopup(null); setPopupDismissed(true); navigate(`/play/${encodeURIComponent(urgentPopup.subject)}`); }}
         />
       )}
     </div>
@@ -548,7 +561,7 @@ const PlayHubPage = () => {
 };
 
 /* ── Featured task card (matches reference image) ───────── */
-const FeaturedTaskCard = ({ task, onPlay }: { task: Task; onPlay: () => void }) => {
+const FeaturedTaskCard = ({ task, onPlay, onLearn }: { task: Task; onPlay: () => void; onLearn: () => void }) => {
   const Icon = typeIcon(task.type);
   return (
     <div className="bg-gradient-to-br from-violet-50 via-white to-violet-50/60 rounded-3xl ring-1 ring-violet-100 p-5 md:p-6 shadow-[var(--shadow-card)] relative overflow-hidden">
@@ -570,15 +583,24 @@ const FeaturedTaskCard = ({ task, onPlay }: { task: Task; onPlay: () => void }) 
           <span className="text-[10px] font-semibold text-violet-700 bg-white/80 px-2 py-0.5 rounded-full">{task.subject}</span>
           <h3 className="text-[28px] md:text-[32px] font-bold text-foreground mt-2 leading-tight">{task.title}</h3>
           <p className="text-[12px] text-muted-foreground mt-1.5">
-            {task.questions ? `${task.questions} שאלות · ` : ""}{task.minutes} דקות
+            {task.questions ? `${task.questions} שאלות · ` : ""}{task.minutes} דקות · {task.xp} XP
           </p>
-          <button
-            onClick={onPlay}
-            className="mt-5 inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[14px] font-semibold px-6 py-3 rounded-2xl shadow-[0_10px_24px_-10px_rgba(120,80,200,0.6)] transition-all hover:scale-[1.02]"
-          >
-            <Play className="h-4 w-4 fill-white" strokeWidth={0} />
-            התחל לשחק
-          </button>
+          <div className="flex items-center gap-2 mt-5">
+            <button
+              onClick={onLearn}
+              className="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[14px] font-semibold px-6 py-3 rounded-2xl shadow-[0_10px_24px_-10px_rgba(120,80,200,0.6)] transition-all hover:scale-[1.02]"
+            >
+              <Play className="h-4 w-4 fill-white" strokeWidth={0} />
+              כנס לזירה
+            </button>
+            <button
+              onClick={onPlay}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground px-3 py-3 rounded-2xl border border-border hover:bg-muted/40 transition-colors"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+              סימנתי כ-עשיתי
+            </button>
+          </div>
         </div>
 
         {/* trophy illustration */}
