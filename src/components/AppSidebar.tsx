@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
