@@ -161,7 +161,7 @@ const AdminLabelsPage = () => {
           {ROLE_KEYS.map((role) => {
             const current = labels.roleTitles[role];
             const def = defaultUiLabels.roleTitles[role];
-            const roleNameMap: Record<UserRole, string> = { admin: "מנהל", teacher: "מורה", coach: "מאמן", parent: "הורה", student: "תלמיד" };
+            const roleNameMap: Record<UserRole, string> = { developer: "מפתח", admin: "מנהל", teacher: "מורה", coach: "מאמן", parent: "הורה", student: "תלמיד" };
             return (
               <LabelRow key={role} label={roleNameMap[role]} currentValue={current} defaultValue={def}
                 modified={current !== def}
@@ -176,7 +176,7 @@ const AdminLabelsPage = () => {
           {ROLE_KEYS.map((role) => {
             const current = labels.roleLabels[role];
             const def = defaultUiLabels.roleLabels[role];
-            const roleNameMap: Record<UserRole, string> = { admin: "מנהל", teacher: "מורה", coach: "מאמן", parent: "הורה", student: "תלמיד" };
+            const roleNameMap: Record<UserRole, string> = { developer: "מפתח", admin: "מנהל", teacher: "מורה", coach: "מאמן", parent: "הורה", student: "תלמיד" };
             return (
               <LabelRow key={role} label={roleNameMap[role]} currentValue={current} defaultValue={def}
                 modified={current !== def}

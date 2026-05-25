@@ -27,6 +27,7 @@ export const GRADE_ORDER = ["י״ב", "י״א", "י׳", "ט׳"] as const;
 
 /** Human-readable titles per role, shown in home pages and header */
 export const roleTitles: Record<UserRole, string> = {
+  developer: "מרכז פיתוח",
   admin: "מרכז ניהול",
   teacher: "מרכז עבודה",
   student: "המרחב שלי",

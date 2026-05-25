@@ -50,7 +50,7 @@ const SECTION_ICONS: Record<string, React.ElementType> = {
 };
 
 const ROLE_EMOJI: Record<UserRole, string> = {
-  admin: "⚙️", teacher: "📚", parent: "👨‍👩‍👦", coach: "🏃", student: "🎓",
+  developer: "🛠️", admin: "⚙️", teacher: "📚", parent: "👨‍👩‍👦", coach: "🏃", student: "🎓",
 };
 
 // ─── Preset Widget Templates ──────────────────────────────────────────────────
