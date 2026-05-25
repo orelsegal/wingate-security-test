@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress } from "@/hooks/useStudents";
-import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe, Scale, Feather, Calculator, Activity, Landmark, Languages } from "lucide-react";
+import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe, Scale, Feather, Calculator, Activity, Landmark, Languages, Sparkles, Trophy, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 
