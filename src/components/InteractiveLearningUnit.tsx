@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { UnitDef } from "@/lib/courseContent";
 import {
   ChevronDown, ChevronUp, CheckCircle2, BookOpen,
-  Lightbulb, PenLine, HelpCircle, Sparkles
+  Lightbulb, PenLine, HelpCircle, Sparkles, PlayCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -115,6 +115,43 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                     {item.explanation}
                   </p>
                 </div>
+
+                {/* Videos */}
+                {item.videos && item.videos.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <PlayCircle className="h-3 w-3 text-primary/60" strokeWidth={1.5} />
+                      <span className="text-[10px] font-semibold text-primary/60">סרטוני הסבר ({item.videos.length})</span>
+                    </div>
+                    {item.videos.map((v, vi) => {
+                      const m = v.url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+                      const id = m?.[1];
+                      return (
+                        <div key={vi} className="bg-card rounded-xl border border-border overflow-hidden">
+                          {id ? (
+                            <div className="aspect-video w-full bg-black">
+                              <iframe
+                                className="w-full h-full"
+                                src={`https://www.youtube.com/embed/${id}`}
+                                title={v.label}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          ) : null}
+                          <a
+                            href={v.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block px-3 py-2 text-[11px] text-foreground hover:bg-muted/30 transition-colors"
+                          >
+                            {v.label}
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Example */}
                 {item.example && (
