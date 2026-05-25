@@ -581,6 +581,7 @@ const RoleHomePage = () => {
   const { user } = useAuth();
 
   const roleContent: Record<string, JSX.Element> = {
+    developer: <AdminHome />,
     admin: <AdminHome />,
     teacher: <TeacherHome />,
     parent: <ParentHome />,
@@ -588,9 +589,10 @@ const RoleHomePage = () => {
   };
 
   const title = user ? roleTitles[user.role] : "תמונת מצב";
+  const isAdminLike = user?.role === "admin" || user?.role === "developer";
 
   return (
-    <div className={`p-5 md:p-8 lg:p-10 mx-auto ${user?.role === "admin" ? "max-w-[1400px]" : "max-w-[880px]"}`}>
+    <div className={`p-5 md:p-8 lg:p-10 mx-auto ${isAdminLike ? "max-w-[1400px]" : "max-w-[880px]"}`}>
       {/* Welcome */}
       <section className="mb-8">
         <EditableElement
