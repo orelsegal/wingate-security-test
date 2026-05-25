@@ -175,6 +175,46 @@ const DataEntryPageInner = () => {
     }
   };
 
+  // === Add Staff Handler (teacher/coach) ===
+  const handleAddStaff = async () => {
+    if (!staffFirstName.trim()) {
+      toast.error("יש למלא שם פרטי");
+      return;
+    }
+    setSavingStaff(true);
+    setStaffSuccess(false);
+    try {
+      const fullName = `${staffFirstName.trim()}${staffLastName.trim() ? " " + staffLastName.trim() : ""}`;
+      const emailVal = staffEmail.trim() || `${(staffNationalId.trim() || Date.now().toString())}@placeholder.local`;
+      const payload: any = {
+        full_name: fullName,
+        email: emailVal,
+        role: staffRole,
+        national_id: staffNationalId.trim() || null,
+        phone: staffPhone.trim() || null,
+        notes: staffNotes.trim() || null,
+        subjects: staffSubjects,
+      };
+      if (staffRole === "teacher") payload.classes = staffClasses;
+      const { error } = await supabase.from("app_users").insert(payload);
+      if (error) throw error;
+      toast.success(`${staffRole === "teacher" ? "המורה" : "המאמן"} "${fullName}" נוסף/ה בהצלחה!`);
+      setStaffSuccess(true);
+      setStaffFirstName(""); setStaffLastName(""); setStaffEmail("");
+      setStaffNationalId(""); setStaffPhone(""); setStaffNotes("");
+      setStaffSubjects([]); setStaffClasses([]);
+      queryClient.invalidateQueries({ queryKey: ["coaches-list"] });
+      queryClient.invalidateQueries({ queryKey: ["app_users"] });
+      setTimeout(() => setStaffSuccess(false), 3000);
+    } catch (err: any) {
+      toast.error("שגיאה בהוספת איש צוות: " + err.message);
+    } finally {
+      setSavingStaff(false);
+    }
+  };
+
+
+
   // === Grade Entry Handler ===
   const handleSaveProgress = async () => {
     if (!selectedStudentId || !selectedSubjectId) {
