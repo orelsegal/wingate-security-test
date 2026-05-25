@@ -414,7 +414,12 @@ const DataEntryPageInner = () => {
       </div>
 
       <Tabs defaultValue="add-athlete" dir="rtl">
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
+          <TabsTrigger value="add-staff" className="gap-1 text-xs md:text-sm">
+            <Users className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">הוספת איש צוות</span>
+            <span className="md:hidden">צוות</span>
+          </TabsTrigger>
           <TabsTrigger value="add-athlete" className="gap-1 text-xs md:text-sm">
             <UserPlus className="h-3.5 w-3.5" />
             <span className="hidden md:inline">הוספת ספורטאי</span>
