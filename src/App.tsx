@@ -38,6 +38,7 @@ import UserActivityPage from "./pages/UserActivityPage.tsx";
 import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
 import AdminBuilderPage from "./pages/AdminBuilderPage.tsx";
+import RoadmapsPage from "./pages/RoadmapsPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -97,6 +98,7 @@ const App = () => (
               <Route path="/user-activity" element={<UserActivityPage />} />
               <Route path="/year-plan-2026" element={<YearPlan2026Page />} />
               <Route path="/admin/labels" element={<AdminLabelsPage />} />
+              <Route path="/roadmaps" element={<RoadmapsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
