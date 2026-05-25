@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "teacher" | "parent" | "coach" | "student";
+export type UserRole = "developer" | "admin" | "teacher" | "parent" | "coach" | "student";
 
 export interface AppUser {
   name: string;
@@ -31,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const roleLabels: Record<UserRole, string> = {
+  developer: "מפתח",
   admin: "מנהל",
   teacher: "מורה",
   parent: "הורה",
@@ -39,6 +40,7 @@ export const roleLabels: Record<UserRole, string> = {
 };
 
 export const roleDescriptions: Record<UserRole, string> = {
+  developer: "פיתוח ועיצוב המערכת — גישה מלאה לכלי הבנייה",
   admin: "ניהול מלא — ספורטאים, ציונים, דוחות והגדרות",
   teacher: "מעקב אחר כל הספורטאים והמקצועות",
   parent: "צפייה בהתקדמות הילד/ה שלי",
@@ -70,9 +72,11 @@ async function buildAppUserFromSession(session: Session): Promise<AppUser | null
     return null;
   }
 
-  // Prefer admin if multiple roles exist, otherwise pick the first
+  // Priority: developer > admin > others
   const roleList = roles.map((r) => r.role as UserRole);
-  const role: UserRole = roleList.includes("admin") ? "admin" : roleList[0];
+  const role: UserRole = roleList.includes("developer") ? "developer"
+    : roleList.includes("admin") ? "admin"
+    : roleList[0];
 
   let scopeFilter: string[] | undefined;
   if (role === "parent" || role === "student") {

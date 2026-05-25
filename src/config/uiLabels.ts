@@ -32,6 +32,7 @@ export interface UiLabels {
   };
   /** Sidebar role-titled section header */
   roleTitles: {
+    developer: string;
     admin: string;
     teacher: string;
     student: string;
@@ -40,6 +41,7 @@ export interface UiLabels {
   };
   /** Friendly role names shown in user chip */
   roleLabels: {
+    developer: string;
     admin: string;
     teacher: string;
     student: string;
@@ -100,6 +102,7 @@ export const defaultUiLabels: UiLabels = {
     adminUsers: "ניהול משתמשים",
   },
   roleTitles: {
+    developer: "סביבת פיתוח",
     admin: "מרכז ניהול",
     teacher: "מרכז עבודה",
     student: "המרחב שלי",
@@ -107,6 +110,7 @@ export const defaultUiLabels: UiLabels = {
     coach: "מרכז המאמן",
   },
   roleLabels: {
+    developer: "מפתח",
     admin: "מנהל",
     teacher: "מורה",
     parent: "הורה",

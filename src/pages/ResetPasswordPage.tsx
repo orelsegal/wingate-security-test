@@ -17,17 +17,31 @@ const ResetPasswordPage = () => {
   const [done, setDone] = useState(false);
   const [ready, setReady] = useState(false);
 
-  // Supabase sends the token in the URL hash — wait for the session to resolve.
-  // With lazy-loaded routes the PASSWORD_RECOVERY event can fire before the
-  // listener is registered, so we also check getSession() immediately.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Supabase fires PASSWORD_RECOVERY when the recovery hash is processed.
+    // We also catch INITIAL_SESSION (replayed immediately to new listeners)
+    // and SIGNED_IN so we cover every timing scenario.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        event === "PASSWORD_RECOVERY" ||
+        event === "SIGNED_IN" ||
+        (event === "INITIAL_SESSION" && session !== null)
+      ) {
+        setReady(true);
+      }
+    });
+
+    // Fallback: if the token was already exchanged before we mounted,
+    // poll once with a short delay.
+    const timer = setTimeout(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) setReady(true);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
-    });
-    return () => subscription.unsubscribe();
+    }, 800);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {

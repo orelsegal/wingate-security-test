@@ -15,7 +15,9 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 const Index                      = lazy(() => import("./pages/Index"));
 const LoginPage                  = lazy(() => import("./pages/LoginPage"));
 const OnboardingPage             = lazy(() => import("./pages/OnboardingPage"));
-const ResetPasswordPage          = lazy(() => import("./pages/ResetPasswordPage"));
+// ResetPasswordPage must NOT be lazy — Supabase fires PASSWORD_RECOVERY on page
+// load and a lazy component would miss the event before it mounts.
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 const StudentsPage               = lazy(() => import("./pages/StudentsPage"));
 const StudentProfilePage         = lazy(() => import("./pages/StudentProfilePage"));
 const CoursesPage                = lazy(() => import("./pages/CoursesPage"));

@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import InitialsAvatar from "@/components/InitialsAvatar";
 
-type AppRole = "admin" | "teacher" | "student" | "parent" | "coach";
+type AppRole = "developer" | "admin" | "teacher" | "student" | "parent" | "coach";
 
 interface UserRow {
   id: string;
@@ -21,6 +21,7 @@ interface UserRow {
 }
 
 const ROLE_LABELS: Record<AppRole, string> = {
+  developer: "מפתח",
   admin: "מנהל",
   teacher: "מורה",
   student: "ספורטאי",
@@ -50,7 +51,7 @@ const UserManagementPage = () => {
 
   // Redirect non-admins
   useEffect(() => {
-    if (user && user.role !== "admin") navigate("/");
+    if (user && user.role !== "admin" && user.role !== "developer") navigate("/");
   }, [user, navigate]);
 
   const loadUsers = async () => {
@@ -127,7 +128,7 @@ const UserManagementPage = () => {
     (u.role ?? "").includes(query.toLowerCase())
   );
 
-  if (user?.role !== "admin") return null;
+  if (user?.role !== "admin" && user?.role !== "developer") return null;
 
   return (
     <div className="p-5 md:p-8 max-w-[1000px]" dir="rtl">

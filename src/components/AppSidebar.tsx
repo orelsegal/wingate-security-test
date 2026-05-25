@@ -17,20 +17,20 @@ interface MenuItemDef {
 }
 
 const allMenuItems: MenuItemDef[] = [
-  { key: "dashboard",      icon: Home,         path: "/",                roles: ["admin", "teacher", "parent", "coach"] },
+  { key: "dashboard",      icon: Home,         path: "/",                roles: ["developer", "admin", "teacher", "parent", "coach"] },
   { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"] },
-  { key: "yearPlan",       icon: CalendarRange, path: "/year-plan-2026", roles: ["admin"] },
+  { key: "yearPlan",       icon: CalendarRange, path: "/year-plan-2026", roles: ["developer", "admin"] },
   { key: "teacherCourses", icon: BookOpen,     path: "/teacher-courses", roles: ["teacher"] },
-  { key: "students",       icon: Users,        path: "/students",        roles: ["admin", "teacher", "coach"] },
-  { key: "groups",         icon: Layers,       path: "/groups",          roles: ["admin", "teacher", "coach"] },
-  { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["admin", "teacher"] },
-  { key: "dataEntry",      icon: ClipboardEdit, path: "/data-entry",     roles: ["admin", "teacher", "coach"] },
-  { key: "gradeEntry",     icon: BookOpen,     path: "/grade-entry",     roles: ["admin", "teacher"] },
-  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["admin", "teacher"] },
-  { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["admin"] },
-  { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["admin"] },
-  { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels", roles: ["admin"] },
-  { key: "adminUsers",     icon: UserCog,           path: "/admin/users",  roles: ["admin"] },
+  { key: "students",       icon: Users,        path: "/students",        roles: ["developer", "admin", "teacher", "coach"] },
+  { key: "groups",         icon: Layers,       path: "/groups",          roles: ["developer", "admin", "teacher", "coach"] },
+  { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["developer", "admin", "teacher"] },
+  { key: "dataEntry",      icon: ClipboardEdit, path: "/data-entry",     roles: ["developer", "admin", "teacher", "coach"] },
+  { key: "gradeEntry",     icon: BookOpen,     path: "/grade-entry",     roles: ["developer", "admin", "teacher"] },
+  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher"] },
+  { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["developer", "admin"] },
+  { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["developer", "admin"] },
+  { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels", roles: ["developer", "admin"] },
+  { key: "adminUsers",     icon: UserCog,           path: "/admin/users",  roles: ["developer", "admin"] },
 ];
 
 /* Unread messages counter — 0 until messaging backend is live */
@@ -109,19 +109,28 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             );
           })}
 
-          {/* Admin Builder — admin-only visual page builder */}
-          {user?.role === "admin" && (
-            <button
-              onClick={() => { navigate("/admin/builder"); onNavigate?.(); }}
-              className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
-                location.pathname === "/admin/builder"
-                  ? "bg-sidebar-primary text-white font-semibold shadow-sm"
-                  : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              }`}
-            >
-              <LayoutTemplate className={`h-[15px] w-[15px] shrink-0 ${location.pathname === "/admin/builder" ? "text-white" : "text-sidebar-muted"}`} strokeWidth={location.pathname === "/admin/builder" ? 2 : 1.5} />
-              <span>בונה עמודים</span>
-            </button>
+          {/* Dev tools — developer only */}
+          {user?.role === "developer" && (
+            <>
+              {[
+                { path: "/admin/builder", label: "בונה עמודים" },
+                { path: "/style-preview", label: "בחירת סגנון" },
+                { path: "/font-lab",      label: "מעבדת פונטים" },
+              ].map(({ path, label }) => (
+                <button
+                  key={path}
+                  onClick={() => { navigate(path); onNavigate?.(); }}
+                  className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
+                    location.pathname === path
+                      ? "bg-sidebar-primary text-white font-semibold shadow-sm"
+                      : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  }`}
+                >
+                  <LayoutTemplate className={`h-[15px] w-[15px] shrink-0 ${location.pathname === path ? "text-white" : "text-sidebar-muted"}`} strokeWidth={location.pathname === path ? 2 : 1.5} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </>
           )}
 
           {/* Play Arena — students only */}
