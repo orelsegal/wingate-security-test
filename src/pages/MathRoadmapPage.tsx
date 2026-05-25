@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { ChevronDown, PlayCircle, Sigma, Dumbbell, BookOpen, ExternalLink } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { ChevronDown, PlayCircle, Sigma, Dumbbell, BookOpen, ExternalLink, Map as MapIcon, Star, Lock, Flag, Trophy, ArrowRight } from "lucide-react";
 import unitsData from "@/lib/mathRoadmap.json";
 
 type VideoLink = { url: string; label: string };
