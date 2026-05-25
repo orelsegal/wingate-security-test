@@ -153,16 +153,47 @@ const SubjectPartPage = () => {
           לימוד אינטראקטיבי
         </h2>
         <div className="space-y-5">
-          {part.units.map(unit => (
-            <InteractiveLearningUnit
-              key={unit.id}
-              unit={unit}
-              coveredTopics={coveredTopics}
-              onTopicComplete={(title) => {
-                toast({ title: "יפה — שלטת היטב במושג הזה", description: `הנושא "${title}" סומן כהושלם` });
-              }}
-            />
-          ))}
+          {(() => {
+            let foundLocked = false;
+            return part.units.map((unit, idx) => {
+              const unitTopics = unit.items.map(i => i.title);
+              const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
+              const isLocked = !allDone && foundLocked;
+              if (!allDone && !foundLocked) foundLocked = true; // first not-done = current; rest locked
+              if (isLocked) {
+                return (
+                  <div
+                    key={unit.id}
+                    id={`unit-${unit.id}`}
+                    className="relative rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center"
+                  >
+                    <div className="flex flex-col items-center gap-2 opacity-70">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <Lock className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
+                      </div>
+                      <p className="text-[12.5px] font-semibold text-foreground">
+                        יחידה {idx + 1} · {unit.title}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground max-w-xs">
+                        תיפתח אחרי שתסיים את היחידה הקודמת
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={unit.id} id={`unit-${unit.id}`} className="scroll-mt-6">
+                  <InteractiveLearningUnit
+                    unit={unit}
+                    coveredTopics={coveredTopics}
+                    onTopicComplete={(title) => {
+                      toast({ title: "יפה — שלטת היטב במושג הזה", description: `הנושא "${title}" סומן כהושלם` });
+                    }}
+                  />
+                </div>
+              );
+            });
+          })()}
         </div>
       </section>
 
