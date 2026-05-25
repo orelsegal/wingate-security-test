@@ -277,6 +277,7 @@ export type Database = {
       students: {
         Row: {
           archived: boolean | null
+          assigned_coach: string | null
           attendance_percent: number | null
           avg_score: number | null
           bagrut_accommodations: string | null
@@ -318,6 +319,7 @@ export type Database = {
         }
         Insert: {
           archived?: boolean | null
+          assigned_coach?: string | null
           attendance_percent?: number | null
           avg_score?: number | null
           bagrut_accommodations?: string | null
@@ -359,6 +361,7 @@ export type Database = {
         }
         Update: {
           archived?: boolean | null
+          assigned_coach?: string | null
           attendance_percent?: number | null
           avg_score?: number | null
           bagrut_accommodations?: string | null
