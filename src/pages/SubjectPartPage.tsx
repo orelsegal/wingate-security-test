@@ -49,6 +49,18 @@ const SubjectPartPage = () => {
     }
   }, [decoded, part]);
 
+  // Scroll to a specific unit when arriving from the roadmap (#unit-id)
+  useEffect(() => {
+    const id = location.hash?.replace(/^#/, "");
+    if (!id || !part) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(`unit-${id}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [location.hash, part]);
+
+
   const subjectProgress = useMemo(
     () => progress.find((p: any) => p.subjects?.subject_name === decoded),
     [progress, decoded]
