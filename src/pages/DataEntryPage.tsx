@@ -119,21 +119,35 @@ const DataEntryPageInner = () => {
     setSavingAthlete(true);
     setAthleteSuccess(false);
     try {
+      const fullName = `${athleteName.trim()}${athleteLastName.trim() ? " " + athleteLastName.trim() : ""}`;
       const { error } = await supabase.from("students").insert({
-        full_name: athleteName.trim(),
+        full_name: fullName,
+        first_name: athleteName.trim() || null,
+        last_name: athleteLastName.trim() || null,
         sport: athleteSport,
         class_name: athleteClass,
         math_level: parseInt(athleteMathLevel) || 3,
+        national_id: athleteNationalId.trim() || null,
+        phone: athletePhone.trim() || null,
+        emergency_contact: athleteEmergency.trim() || null,
+        assigned_coach: athleteCoach.trim() || null,
+        notes: athleteNotes.trim() || null,
         overall_status: "green",
         completion_percent: 0,
       });
       if (error) throw error;
-      toast.success(`הספורטאי "${athleteName.trim()}" נוסף בהצלחה!`);
+      toast.success(`הספורטאי "${fullName}" נוסף בהצלחה!`);
       setAthleteSuccess(true);
       setAthleteName("");
+      setAthleteLastName("");
       setAthleteSport("");
       setAthleteClass("");
       setAthleteMathLevel("3");
+      setAthleteNationalId("");
+      setAthletePhone("");
+      setAthleteEmergency("");
+      setAthleteCoach("");
+      setAthleteNotes("");
       queryClient.invalidateQueries({ queryKey: ["students"] });
       setTimeout(() => setAthleteSuccess(false), 3000);
     } catch (err: any) {
