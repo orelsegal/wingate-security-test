@@ -336,6 +336,30 @@ const SubjectDetailPage = () => {
             </div>
           </div>
 
+          {/* Motivation */}
+          <div className="bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 rounded-3xl border border-amber-100 p-5">
+            <h2 className="text-[13px] font-bold text-foreground mb-4 flex items-center gap-2 justify-end">
+              מוטיבציה והישגים
+              <Flame className="h-3.5 w-3.5 text-rose-500" strokeWidth={2} />
+            </h2>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: BarChart3, label: "התקדמות כללית ביחידה", value: `${pct}%`, color: "text-emerald-600" },
+                { icon: Gift,      label: `תגמול הבא · ברמה ${nextLevel}`, value: `+120 XP`, color: "text-violet-600" },
+                { icon: Flame,     label: "ימים ברצף", value: streak, color: "text-rose-500" },
+              ].map((m, i) => (
+                <div key={i} className="bg-white/70 rounded-2xl p-2.5 text-center">
+                  <p className={`text-[16px] font-bold ${m.color} tabular-nums leading-none`}>{m.value}</p>
+                  <p className="text-[9px] text-muted-foreground mt-1.5 leading-tight">{m.label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10.5px] text-muted-foreground text-center mt-3">👏 כל צעד מקרב אותך להצלחה!</p>
+          </div>
+        </div>
+      </div>
+
+
       {/* Bagrut grading shortcut */}
       <button onClick={() => navigate(`/bagrut-grading?subject=${encodeURIComponent(decoded)}`)}
         className="w-full bg-gradient-to-l from-primary/8 to-primary/[0.03] rounded-2xl border border-primary/12 p-4 text-start hover:from-primary/12 transition-all mb-5">
