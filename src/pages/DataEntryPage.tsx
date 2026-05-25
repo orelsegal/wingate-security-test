@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { useStudents, useSubjects, useStudentProgress, useStudentRoadmap, useSports } from "@/hooks/useStudents";
 import { useUiLabels } from "@/context/UiLabelsContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +21,13 @@ import * as XLSX from "xlsx";
 const CLASSES = ["ט'1", "ט'2", "ט'3", "ט-1", "י'1", "י'2", "י'3", "י-1", "יא'1", "יא'2", "יא'3", "י\"א-1"];
 
 const DataEntryPageInner = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { labels } = useUiLabels();
+
+  useEffect(() => {
+    if (user && (user.role === "parent" || user.role === "student")) navigate("/", { replace: true });
+  }, [user, navigate]);
   const { data: students, isLoading: loadingStudents } = useStudents();
   const { data: subjects, isLoading: loadingSubjects } = useSubjects();
   const { data: sportsData = [] } = useSports();

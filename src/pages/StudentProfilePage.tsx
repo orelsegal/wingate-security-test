@@ -274,7 +274,7 @@ const StudentProfilePage = () => {
       )}
 
       {/* Admin Builder — entry point */}
-      {user?.role === "admin" && (
+      {(user?.role === "developer" || user?.role === "admin" || user?.role === "teacher") && (
         <div className="flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             {editModeActive ? (

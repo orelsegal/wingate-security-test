@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { useStudents, useSubjects, useAllStudentProgress } from "@/hooks/useStudents";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,7 +35,14 @@ const statusLabel: Record<string, string> = {
 };
 
 const GradeEntryPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: students = [], isLoading: ls } = useStudents();
+
+  useEffect(() => {
+    if (user && (user.role === "coach" || user.role === "parent" || user.role === "student"))
+      navigate("/", { replace: true });
+  }, [user, navigate]);
   const { data: subjects = [], isLoading: lsub } = useSubjects();
   const { data: allProgress = [] } = useAllStudentProgress();
   const queryClient = useQueryClient();

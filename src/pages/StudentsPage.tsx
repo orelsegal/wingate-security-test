@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, BookOpen, ChevronLeft, TrendingUp, TrendingDown, Minus, CalendarCheck, Activity, MessageCircle,
@@ -32,6 +32,10 @@ const StudentsPage = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (user && (user.role === "parent" || user.role === "student")) navigate("/", { replace: true });
+  }, [user, navigate]);
   const { data: students = [], isLoading } = useStudents();
   const { data: allProgress = [] } = useAllStudentProgress();
   const deleteStudent = useDeleteStudent();
@@ -77,6 +81,8 @@ const StudentsPage = () => {
     const statusOrder: Record<string, number> = { red: 0, yellow: 1, green: 2 };
     const list = students.filter((s) => {
       if ((s as any).archived) return false;
+      // Coach sees only their own sport
+      if (user?.role === "coach" && user.scopeFilter && !user.scopeFilter.includes(s.sport)) return false;
       if (search && !s.full_name.includes(search) && !s.sport.includes(search) && !s.class_name.includes(search)) return false;
       if (statusFilter && s.overall_status !== statusFilter) return false;
       if (branchFilters.length > 0 && !branchFilters.includes(s.sport)) return false;
@@ -156,7 +162,8 @@ const StudentsPage = () => {
     return <StudentsPageSkeleton />;
   }
 
-  const isAdmin = user?.role === "admin" || user?.role === "teacher";
+  const canEdit = user?.role === "developer" || user?.role === "admin" || user?.role === "teacher";
+  const isAdmin = canEdit; // alias kept for JSX below
 
   return (
     <div className="p-4 md:p-8 lg:p-10 max-w-[1400px]">
