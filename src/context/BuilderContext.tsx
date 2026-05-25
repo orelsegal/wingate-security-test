@@ -66,11 +66,32 @@ export interface BuilderLayout {
   sections: BuilderSection[];
 }
 
+const ROADMAP_SUBJECTS: { id: string; title: string }[] = [
+  { id: "sys-rm-tanach",   title: "תנ״ך" },
+  { id: "sys-rm-lashon",   title: "לשון" },
+  { id: "sys-rm-math",     title: "מתמטיקה" },
+  { id: "sys-rm-english",  title: "אנגלית" },
+  { id: "sys-rm-history",  title: "היסטוריה" },
+  { id: "sys-rm-pe",       title: "חינוך גופני" },
+  { id: "sys-rm-lit",      title: "ספרות" },
+  { id: "sys-rm-civics",   title: "אזרחות" },
+];
+
 const DEFAULT_SYSTEM_SECTIONS: BuilderSection[] = [
   { id: "sys-hero",     title: "כרטיס ספורטאי",    visible: true, system: true, fields: [], visibleRoles: [...ALL_ROLES] },
   { id: "sys-math",     title: "רמת מתמטיקה",      visible: true, system: true, fields: [], visibleRoles: [...ALL_ROLES] },
   { id: "sys-subjects", title: "פירוט מקצועות",    visible: true, system: true, fields: [], visibleRoles: [...ALL_ROLES] },
   { id: "sys-roadmap",  title: "מפת דרכים",        visible: true, system: true, fields: [], visibleRoles: [...ALL_ROLES] },
+  // Per-subject roadmap permissions (from "מפות דרכים").
+  // Default: admin + teacher can manage; student sees only their own subject view.
+  ...ROADMAP_SUBJECTS.map(s => ({
+    id: s.id,
+    title: `מפת דרכים — ${s.title}`,
+    visible: true,
+    system: true as const,
+    fields: [],
+    visibleRoles: ["admin", "teacher", "student", "parent"] as UserRole[],
+  })),
 ];
 
 const PAGE_KEY = "student-profile";
