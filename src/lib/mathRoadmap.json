@@ -1,893 +1,527 @@
 [
- {
-  "title": "יחידה 1 — תחום אלגברי — טכניקה אלגברית",
-  "topics": [
-   {
-    "sub": "1.1",
-    "topic": "חזקות",
-    "klasus": "חלק א, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק א, עמ' 118–12 כ י ת ה ט | ה ה ס ב ר ה מ ו ב ן ב י ו ת ר ע ל ח ו ק י ה ח ז ק ו ת ל ק ר א ת מ ב ח ן 0, 141–145",
-    "submit": "עמ' 6, תרגילים עמ' 18 תרגילים: 32 (א-ד),33 (א-ד), 34 (א-ג), עמ' 23 תרגילים: 42 (א-ד), 43 (א-ד), עמ' 26 תרגילים: 53 (א-ד), 57 (א-ד), עמ' 28 תרגילים: 59 (א-ד), 60 (א-ד) עמ' 33 תרגילים: 69 (א-ד), 74 (א-ד), 77 (א-ד) עמ' 41 תרגילים: 87 (א-ד), 88 (א-ד)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=9V7yiXYLGlk",
-      "label": "כיתה ט | ההסבר המובן ביותר על חוקי החזקות לקראת מבחן"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=0usdWrTb1sA",
-      "label": "חוקי חזקות - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "1.2",
-    "topic": "נוסחאות הכפל המקוצר: a² − b²), (a + b)², (a − b)²)",
-    "klasus": "חלק א, עמ' 63–98",
-    "extra_source": "אפשר גם אחרת, חלק א, עמ' 122–129, 146–151",
-    "submit": "עמ' 70 תרגילים: 1 (א-ד), 2 (א-ג), 4 (א-ד), 10 (א-ד), 19 (א-ד) עמ' 88 תרגילים: 36 (א-ד), 37 (א-ד), 41 (א-ד), 49 (א-ד), 58 (א-ד), 59 (א-ד)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=61VM3rMjY9w",
-      "label": "נוסחאות הכפל המקוצר"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=Q0GOahwn_AI",
-      "label": "נוסחאות הכפל המקוצר - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "1.3",
-    "topic": "פירוק לגורמים בעזרת הוצאת גורם משותף (לפי קבוצות)",
-    "klasus": "חלק א, עמ' 99–104",
-    "extra_source": "אפשר גם אחרת, חלק א, עמ' 135–140",
-    "submit": "עמ' 103 תרגילים: 70 (א-ד), 71 (א-ג), 72 (א-ד), 73 (א-ד),",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=wTJL94xBoWs",
-      "label": "פירוק לגורמים: הוצאת גורם משותף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=DoCZ5BhkKYY",
-      "label": "פירוק לגורמים: הוצאת גורם משותף - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "1.4",
-    "topic": "פירוק של תלת-איבר ריבועי (טרינום ריבועי כאשר המקדם 1)",
-    "klasus": "חלק א, עמ' 105–115",
-    "extra_source": "אפשר גם אחרת, חלק א, עמ' 152–159",
-    "submit": "עמ' 111 תרגילים: 76, 77 (א-ד), 78 (א-ג), 85 (א-ד),",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=JK6CC2AbC6k",
-      "label": "פירוק לגורמים: טרינום"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=b6mD_WHSo6A",
-      "label": "פירוק לגורמים: טרינום - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=SJ6NhfMXCAU",
-      "label": "פירוק לגורמים: טרינום (עוד סרטון נוסף)"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=DeGuuw8Bdcw",
-      "label": "פירוק לגורמים: טרינום (כולל טרינום ארוך)"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "",
-    "topic": "",
-    "klasus": "",
-    "extra_source": "",
-    "submit": "",
-    "videos": [],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 2 — תחום גאומטרי — משולש, דלתון",
-  "topics": [
-   {
-    "sub": "2.1",
-    "topic": "תיכון ליתר במשולש ישר זווית",
-    "klasus": "—",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 281–290",
-    "submit": "אפשר גם אחרת, חלק ב, עמ' 285, תרגילים 23, 24, 25, 26",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?reload=9&v=AH7er9dG0H4",
-      "label": "תיכון ליתר במשולש ישר זווית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=5bMuNcwqzf0",
-      "label": "תיכון ליתר במשולש ישר זווית - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=_gKEcl_vMn8",
-      "label": "תיכון ליתר במשולש ישר זווית ומשפט הפוך"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "2.1",
-    "topic": "משפט הפוך (תיכון לצלע שווה למחצית הצלע)",
-    "klasus": "—",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 283–290",
-    "submit": "אפשר גם אחרת, חלק ב, עמ' 287, תרגילים 28, 29, 30",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=kENd4ytPhAs",
-      "label": "משפט הכוך - תיכון לצלע…"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=z-aG_887NGo",
-      "label": "משפט הכוך (תיכון לצלע…) - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "2.1",
-    "topic": "משולש ישר זווית 30⁰,60⁰,90⁰ (ניצב מול זווית בת 30⁰, משפט הפוך)",
-    "klasus": "—",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 284",
-    "submit": "אפשר גם אחרת, חלק ב, עמ' 287, תרגילים 31, 33, 35",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=kyO9bjy9W34",
-      "label": "משולש ישר זווית 30⁰ 60⁰ 90⁰"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=XepdF1ooye8",
-      "label": "משולש ישר זווית 30⁰ 60⁰ 90⁰ - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "2.2",
-    "topic": "קווים מיוחדים במשולש שווה שוקיים: גובה, תיכון, חוצה זווית היוצאים מזווית הראש, משפטים הפוכים",
-    "klasus": "—",
-    "extra_source": "אפשר גם אחרת, חלק א, עמ' 201-206 ארכימדס, עמ' 237–245",
-    "submit": "אפשר גם אחרת, חלק א, עמ' 205, תרגילים 2, 3, 5",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=qaUtfQay_DI",
-      "label": "משולש שווה שוקיים קווים מאוחדים"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=ZhNMzAJZhsQ",
-      "label": "קטעים מאוחדים במשולש: גובה, חוצה זווית, תיכון"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=6KN7kkwfdFs",
-      "label": "משולש שווה שוקיים - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "2.3",
-    "topic": "זוויות בדלתון, האלכסון הראשי בדלתון, שטח של דלתון",
-    "klasus": "חלק א, עמ' 291–302",
-    "extra_source": "אפשר גם אחרת, חלק א, עמ' 207–220; ארכימדס, עמ' 246–249",
-    "submit": "עמ' 294 תרגילים: 2, 3, 4, 5",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=5TtVwwzDETg",
-      "label": "דלתון"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=R4sWo1o-HVw",
-      "label": "דלתון - פתרון תרגיל"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=gC0fqG7jOaE",
-      "label": "דלתון - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "",
-    "topic": "",
-    "klasus": "",
-    "extra_source": "",
-    "submit": "",
-    "videos": [],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 3 — תחום אלגברי — שברים אלגבריים",
-  "topics": [
-   {
-    "sub": "3.1",
-    "topic": "חיבור וחיסור שברים אלגבריים; משוואות",
-    "klasus": "חלק א, עמ' 127–137",
-    "extra_source": "ארכימדס, עמ' 38–41",
-    "submit": "עמ' 127 תרגילים: 96 (א, ב, ח, יב), 100 (א, ב), 101 (א, ב), 102 (ח, ט)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=GbvXe2yWpzc",
-      "label": "חיבור וחיסור שברים אלגבריים"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=fOvoi2ZTrZ0",
-      "label": "חיבור וחיסור שברים אלגבריים - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "3.2",
-    "topic": "כפל וחילוק שברים אלגבריים",
-    "klasus": "חלק א, עמ' 116–120",
-    "extra_source": "ארכימדס, עמ' 42–46",
-    "submit": "עמ' 118 תרגילים: 89 (יא, יב, יג, יד), 90 (ד, ה, ו), 91 (ב, ז, יב), 92 (א, ב, ג), 93 (א, ב, ג), 94 (א, ב, ג)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=SDAJJ8VGHhs",
-      "label": "כפל וחילוק שברים אלגבריים"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=W_QGvYWiY2E",
-      "label": "כפל וחילוק שברים אלגבריים - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "",
-    "topic": "",
-    "klasus": "",
-    "extra_source": "",
-    "submit": "",
-    "videos": [],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 4 — תחום אלגברי — פונקציה ריבועית",
-  "topics": [
-   {
-    "sub": "4.1",
-    "topic": "משמעות ערכו של a (כאשר a≠0) בפונקציה f(x)=ax² לצורך קביעת סוג הקיצון",
-    "klasus": "חלק ב, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 3–10",
-    "submit": "עמ' 11 I א, עמ' 13 II א, עמ' 17 תרגילים: 4. אפשר גם אחרת: עמ' 7, תרגילים 4, 5, 6, 7, 8",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=N-OjLm-8KOc",
-      "label": "פרבולה - מבוא"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=GWq1VP5fMF4",
-      "label": "פרבולה - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=ZVyEAbUqcdY",
-      "label": "פרבולה - עוד סרטון נוסף"
-     }
-    ],
-    "other_links": [
-     {
-      "url": "https://www.m-math.co.il/analytic-geometry/parabola/parabola-introducing/",
-      "label": "פרבולה"
-     }
+  {
+    "title": "יחידה 1 — תחום אלגברי — טכניקה אלגברית",
+    "topics": [
+      {
+        "sub": "1.1",
+        "topic": "חזקות",
+        "klasus": "חלק א, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק א, עמ' 118–120, 141–145",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=9V7yiXYLGlk", "label": "חוקי חזקות — ההסבר המובן ביותר לקראת מבחן" },
+          { "url": "https://www.youtube.com/watch?v=0usdWrTb1sA", "label": "חוקי חזקות — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 6, תרגילים\nעמ' 18 תרגילים: 32 (א-ד), 33 (א-ד), 34 (א-ג)\nעמ' 23 תרגילים: 42 (א-ד), 43 (א-ד)\nעמ' 26 תרגילים: 53 (א-ד), 57 (א-ד)\nעמ' 28 תרגילים: 59 (א-ד), 60 (א-ד)\nעמ' 33 תרגילים: 69 (א-ד), 74 (א-ד), 77 (א-ד)\nעמ' 41 תרגילים: 87 (א-ד), 88 (א-ד)"
+      },
+      {
+        "sub": "1.2",
+        "topic": "נוסחאות הכפל המקוצר: a² − b², (a + b)², (a − b)²",
+        "klasus": "חלק א, עמ' 63–98",
+        "extra_source": "אפשר גם אחרת, חלק א, עמ' 122–129, 146–151",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=61VM3rMjY9w", "label": "נוסחאות הכפל המקוצר" },
+          { "url": "https://www.youtube.com/watch?v=Q0GOahwn_AI", "label": "נוסחאות הכפל המקוצר — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 70 תרגילים: 1 (א-ד), 2 (א-ג), 4 (א-ד), 10 (א-ד), 19 (א-ד)\nעמ' 88 תרגילים: 36 (א-ד), 37 (א-ד), 41 (א-ד), 49 (א-ד), 58 (א-ד), 59 (א-ד)"
+      },
+      {
+        "sub": "1.3",
+        "topic": "פירוק לגורמים בעזרת הוצאת גורם משותף (לפי קבוצות)",
+        "klasus": "חלק א, עמ' 99–104",
+        "extra_source": "אפשר גם אחרת, חלק א, עמ' 135–140",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=wTJL94xBoWs", "label": "פירוק לגורמים: הוצאת גורם משותף" },
+          { "url": "https://www.youtube.com/watch?v=DoCZ5BhkKYY", "label": "פירוק לגורמים: הוצאת גורם משותף — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 103 תרגילים: 70 (א-ד), 71 (א-ג), 72 (א-ד), 73 (א-ד)"
+      },
+      {
+        "sub": "1.4",
+        "topic": "פירוק של תלת-איבר ריבועי (טרינום ריבועי כאשר המקדם 1)",
+        "klasus": "חלק א, עמ' 105–115",
+        "extra_source": "אפשר גם אחרת, חלק א, עמ' 152–159",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=JK6CC2AbC6k", "label": "פירוק לגורמים: טרינום" },
+          { "url": "https://www.youtube.com/watch?v=b6mD_WHSo6A", "label": "פירוק לגורמים: טרינום — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=SJ6NhfMXCAU", "label": "פירוק לגורמים: טרינום (עוד סרטון נוסף)" },
+          { "url": "https://www.youtube.com/watch?v=DeGuuw8Bdcw", "label": "פירוק לגורמים: טרינום (כולל טרינום ארוך)" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 111 תרגילים: 76, 77 (א-ד), 78 (א-ג), 85 (א-ד)"
+      }
     ]
-   },
-   {
-    "sub": "4.2",
-    "topic": "f(x)=ax²+k - הזזה אנכית של פונקציה ריבועית, a=1",
-    "klasus": "חלק ב, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 11–31",
-    "submit": "אפשר גם אחרת: עמ' 26, תרגילים 29, 32, 33",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=BrYHxllPueA",
-      "label": "פרבולה: הזזה אנכית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=BSaAJO6Vvbo",
-      "label": "פרבולה: הזזה אנכית - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.3",
-    "topic": "שיקוף של פונקציה ריבועית",
-    "klasus": "חלק ב, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 4–8; ארכימדס, עמ' 126–131",
-    "submit": "ארכימדס, עמ' 127, תרגילים 5, 6, 7, 9",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=GWq1VP5fMF4",
-      "label": "פונקציה הריבועית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=Sk-S6090eKg",
-      "label": "פונקציה ריבועית - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.4",
-    "topic": "f(x)=a(x-p)² - הזזה אופקית של פונקציה ריבועית, a=1",
-    "klasus": "חלק ב, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 32–42",
-    "submit": "אפשר גם אחרת: עמ' 38, תרגילים 52, 53 אפשר גם אחרת: עמ' 40, תרגילים 65, 66",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=tPASc45CeoQ",
-      "label": "פרבולה: הזזה אופקית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=giZ_BKsSoLE",
-      "label": "פרבולה: הזזה אופקית - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.5",
-    "topic": "f(x)=a(x-p)²+k - שילוב הזזה אופקית ואנכית, a=1",
-    "klasus": "חלק ב, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 43–55",
-    "submit": "אפשר גם אחרת: עמ' 46, תרגילים 73, 74, 75",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=ffPXJ5Ifp8c",
-      "label": "פרבולה: שילוב הזזה אופקית ואנכית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=dKTm7NVvPio",
-      "label": "פרבולה: שילוב הזזה אופקית ואנכית - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.6",
-    "topic": "פונקציה ריבועית – ייצוג קודקודי",
-    "klasus": "חלק ב, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 43–50",
-    "submit": "אפשר גם אחרת: עמ' 48, תרגילים 81 (1-4), 82",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=waHsivjWFkg",
-      "label": "פונקציה ריבועית: ייצוג קודקודי"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=ghDKfPrSxcE",
-      "label": "פונקציה ריבועית: ייצוג קודקודי - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.7",
-    "topic": "פונקציה ריבועית – ייצוג סטנדרטי",
-    "klasus": "חלק ב, עמ' 1–57",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 56–63",
-    "submit": "אפשר גם אחרת: עמ' 59, תרגילים 120 (5,6), 121 (5,6), 122 (5-8)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=Tzl1drGvrZ8",
-      "label": "פונקציה ריבועית – ייצוג סטנדרטי"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.8",
-    "topic": "מתיחה וכיווץ של פרבולה",
-    "klasus": "חלק ב, עמ' 1–19",
-    "extra_source": "ארכימדס, עמ' 141–146",
-    "submit": "ארכימדס, עמ' 143, תרגילים 8, 9, 10, 11, 12",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=GWq1VP5fMF4",
-      "label": "מתיחה וכיווץ של פרבולה"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.9",
-    "topic": "פתרון משוואות ריבועיות בעזרת נוסחת השורשים",
-    "klasus": "חלק ב, עמ' 58–73",
-    "extra_source": "אפשר גם אחרת, חלק ב, עמ' 92–102",
-    "submit": "עמ' 69, תרגילים: 2 (יג, יד, טו, טז), 3 (ז, ח), 4 (ב, ד, ו, ז), 5 (יא, יב)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=PqJx1u7juG0",
-      "label": "פתרון משוואה ריבועית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=3fLMrt6PHWg",
-      "label": "פתרון משוואה ריבועית - נוסחת השורשים"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=PXmbg-oFMBM",
-      "label": "נוסחת השורשים - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=sW4B8P2HM2U",
-      "label": "פתרון משוואה ריבועית - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.10",
-    "topic": "חקירת פונקציה ריבועית מלאה",
-    "klasus": "חלק ב, עמ' 83-74",
-    "extra_source": "–",
-    "submit": "עמ' 74, תרגילים: 16, 17",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=Tzl1drGvrZ8",
-      "label": "חקירת פרבולה בייצוג סטנדרטי"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=VNCmFl7r7KA",
-      "label": "חקירת פונקציה ריבועית מלאה – סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.11",
-    "topic": "שלושת הייצוגים של פונקציה ריבועית - סיכום",
-    "klasus": "חלק ב, עמ' 57-20",
-    "extra_source": "\"ארכימדס\", עמ' 147 – 153",
-    "submit": "עמ' 35, תרגילים: 10, 11, 16",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=XAd1NYUtLD4",
-      "label": "שלושת הייצוגים של פונקציה ריבועית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=ghDKfPrSxcE",
-      "label": "פרבולה בייצוג קודקודי"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=t7F33cHaDUY",
-      "label": "ייצוג כפלי של פרבולה"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=eQtGX_Tei4o",
-      "label": "מעבר מייצוג סטנדרטי לייצוג מכפלה"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.12",
-    "topic": "קודקוד הפרבולה",
-    "klasus": "חלק ב, עמ' 27-23",
-    "extra_source": "\"ארכימדס\", עמ' 154 – 160",
-    "submit": "אפשר גם אחרת: ב, 125, 127",
-    "videos": [],
-    "other_links": [
-     {
-      "url": "https://www.m-math.co.il/analytic-geometry/parabola/parabola-vertex",
-      "label": "מציאת קודקוד הפרבולה"
-     }
+  },
+  {
+    "title": "יחידה 2 — תחום גאומטרי — משולש, דלתון",
+    "topics": [
+      {
+        "sub": "2.1",
+        "topic": "תיכון ליתר במשולש ישר זווית",
+        "klasus": "—",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 281–290",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=AH7er9dG0H4", "label": "תיכון ליתר במשולש ישר זווית" },
+          { "url": "https://www.youtube.com/watch?v=5bMuNcwqzf0", "label": "תיכון ליתר — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=_gKEcl_vMn8", "label": "תיכון ליתר ומשפט הפוך" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת, חלק ב, עמ' 285, תרגילים 23, 24, 25, 26"
+      },
+      {
+        "sub": "2.1",
+        "topic": "משפט הפוך (תיכון לצלע שווה למחצית הצלע)",
+        "klasus": "—",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 283–290",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=kENd4ytPhAs", "label": "משפט הפוך — תיכון לצלע" },
+          { "url": "https://www.youtube.com/watch?v=z-aG_887NGo", "label": "משפט הפוך — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת, חלק ב, עמ' 287, תרגילים 28, 29, 30"
+      },
+      {
+        "sub": "2.1",
+        "topic": "משולש ישר זווית 30°, 60°, 90° (ניצב מול זווית בת 30°, משפט הפוך)",
+        "klasus": "—",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 284",
+        "videos": [],
+        "other_links": [],
+        "submit": "אפשר גם אחרת, חלק ב, עמ' 287, תרגילים 31, 33, 35"
+      },
+      {
+        "sub": "2.2",
+        "topic": "קווים מיוחדים במשולש שווה שוקיים: גובה, תיכון, חוצה זווית היוצאים מזווית הראש, משפטים הפוכים",
+        "klasus": "—",
+        "extra_source": "אפשר גם אחרת, חלק א, עמ' 201–206; ארכימדס, עמ' 237–245",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=qaUtfQay_DI", "label": "משולש שווה שוקיים — קווים מאוחדים" },
+          { "url": "https://www.youtube.com/watch?v=ZhNMzAJZhsQ", "label": "קטעים מאוחדים במשולש: גובה, חוצה זווית, תיכון" },
+          { "url": "https://www.youtube.com/watch?v=6KN7kkwfdFs", "label": "משולש שווה שוקיים — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת, חלק א, עמ' 205, תרגילים 2, 3, 5"
+      },
+      {
+        "sub": "2.3",
+        "topic": "זוויות בדלתון, האלכסון הראשי בדלתון, שטח של דלתון",
+        "klasus": "חלק א, עמ' 291–302",
+        "extra_source": "אפשר גם אחרת, חלק א, עמ' 207–220; ארכימדס, עמ' 246–249",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=5TtVwwzDETg", "label": "דלתון" },
+          { "url": "https://www.youtube.com/watch?v=R4sWo1o-HVw", "label": "דלתון — פתרון תרגיל" },
+          { "url": "https://www.youtube.com/watch?v=gC0fqG7jOaE", "label": "דלתון — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 294 תרגילים: 2, 3, 4, 5"
+      }
     ]
-   },
-   {
-    "sub": "4.13",
-    "topic": "חישובי אורכים ושטחים",
-    "klasus": "פרבולה אחת פרבולה וקו ישר שתי פרבולות חלק ב, עמ' 133-111",
-    "extra_source": "\"ארכימדס\", עמ' 161 – 173",
-    "submit": "עמ' 120, תרגילים 7, 8, 9",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=xotWTcVurl8",
-      "label": "חישובי אורכים ושטחים: פרבולה וקו ישר"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=BsKpZhnYWnk",
-      "label": "חישובי אורכים ושטחים: שתי פרבולות"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=QA7ILO1lzAI",
-      "label": "חישובי אורכים ושטחים: שתי פרבולות - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=6vxp7Gtg47g",
-      "label": "חישובי אורכים ושטחים - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "4.14",
-    "topic": "אי שוויון ריבועי",
-    "klasus": "פתרון גיאומטרי פתרון אלגברי חלק ב, עמ' 152-134",
-    "extra_source": "\"אפשר גם אחרת \", חלק ב, עמ' 147 – 161",
-    "submit": "עמ' 145, תרגילים: 1 (א-ו), 3, 4",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=X77EDluvhKI",
-      "label": "פתרון אי שוויון ריבועי (גיאומטרי ואלגברי)"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=tPgm5ODEXLQ",
-      "label": "פתרון אי שוויון ריבועי (גיאומטרי)"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=cxz3RSTQBYQ",
-      "label": "פתרון אי שוויון ריבועי - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 5 — תחום גאומטרי — מרובעים",
-  "topics": [
-   {
-    "sub": "5.1",
-    "topic": "ישרים מקבילים ישרים מקבילים, זוויות שנוצרות כששני ישרים מקבילים נחתכים ע''י ישר שלישי",
-    "klasus": "חלק א, עמ' 220-205",
-    "extra_source": "–",
-    "submit": "עמ' 212, תרגילים 5, 6, 7, 9, 12",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=cZxFnw6-KUQ",
-      "label": "ישרים מקבילים, זוויות"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=gJS58WiGFqc",
-      "label": "ישרים מקבילים, חישובי זוויות"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=QGk9U4owE2o",
-      "label": "ישרים מקבילים - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=1FdStUXBB6Q",
-      "label": "זוויות בין ישרים"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "5.2",
-    "topic": "טרפז הכרות טרפז – הגדרה, מושגים בסיסיים איך להוכיח שמרובע הוא טרפז שטח והיקף טרפז טרפז שווה שוקיים",
-    "klasus": "חלק א, עמ' 323-303",
-    "extra_source": "\"ארכימדס\", עמ' 250 – 255",
-    "submit": "עמ' 305, תרגילים 3, 4, 5, 8, 9",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=K99ykqDIwbU",
-      "label": "טרפז"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=8OYeKC3t_2w",
-      "label": "טרפז - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=Lnrmqvab6Ao",
-      "label": "טרפז - שטח והיקף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=JkNsos_2Jz8",
-      "label": "טרפז שווה שוקיים: תכונות"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=W7vqABTQ0FM",
-      "label": "טרפז שווה שוקיים: תכונות - המשך"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=kXQC2W0mvks",
-      "label": "טרפז שווה שוקיים: פתרון תרגיל"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=6ELBwTuW0sI",
-      "label": "תכונות של טרפז שווה שוקיים - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "5.3",
-    "topic": "מקבילית הגדרה, תכונות צלעות, זוויות ואלכסונים משפטים הפוכים",
-    "klasus": "חלק א, עמ' 221-246",
-    "extra_source": "\"ארכימדס\", עמ' 256 –261",
-    "submit": "עמ' 228, תרגילים 7, 8, 9, 10, 12",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=7E6cNhibZm0",
-      "label": "מקבילית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=QUL2cxTgryM",
-      "label": "מקבילית - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=Sz8j9wI724Y",
-      "label": "מקבילית - עוד סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=H4RtIN6gDPs",
-      "label": "מקבילית - הוכחה"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=7fg9li-17EA",
-      "label": "מקבילית - הוכחה נוספת"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=AMQu9eFzOA8",
-      "label": "מקבילית - עוד הוכחה נוספת"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "5.4",
-    "topic": "מלבן הגדרה, תכונות הצלעות, תכונות הזוויות, תכונות האלכסונים, משפטים הפוכים",
-    "klasus": "חלק א, עמ' 247-262",
-    "extra_source": "\"ארכימדס\", עמ' 262 – 267",
-    "submit": "עמ' 252, תרגילים 5, 6, 7, 8, 9",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=04wjgzwpf4g",
-      "label": "מלבן: צלעות, זוויות, אלכסונים"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=cDLY_skcjPk",
-      "label": "מלבן, תכונות המלבן"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=UVXIQsXpY6w",
-      "label": "מלבן, תכונות המלבן - סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "5.5",
-    "topic": "מעוין הגדרה, תכונות הצלעות, תכונות הזוויות, תכונות האלכסונים, משפטים הפוכים",
-    "klasus": "חלק א, עמ' 263-276",
-    "extra_source": "\"ארכימדס\", עמ' 272 – 278",
-    "submit": "עמ' 266, תרגילים 3, 4, 5, 6, 7, 8",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=cwU7B3DJsmg",
-      "label": "מעוין"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=8F0OBnYm9rI",
-      "label": "מעוין, תכונות המעוין"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=mfK-MxbG6dQ",
-      "label": "מעוין, תכונות המעוין - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=BAVG0Ig_nnQ",
-      "label": "מעוין פתרון שאלה"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=v8YaAnYXlWQ",
-      "label": "מעוין פתרון עוד שאלה"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "5.6",
-    "topic": "ריבוע הגדרה, תכונות הצלעות, תכונות הזוויות, תכונות האלכסונים, משפטים הפוכים",
-    "klasus": "חלק א, עמ' 277-290",
-    "extra_source": "\"ארכימדס\", עמ' 279 – 283",
-    "submit": "עמ' 280, תרגילים 4, 5, 6, 7, 8",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=XCFqB9tkdjo",
-      "label": "ריבוע"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=A7aUqdq-hLg",
-      "label": "ריבוע - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=OCYONrugaZc",
-      "label": "ריבוע, תכונות הריבוע"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=ENsrioxM_Pw",
-      "label": "ריבוע, פתרון שאלה בריבוע"
-     }
-    ],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 6 — תחום אלגברי — משוואות ריבועיות",
-  "topics": [
-   {
-    "sub": "6.1",
-    "topic": "המשוואה הריבועית",
-    "klasus": "משוואה ריבועית חסרה משוואה ריבועית מלאה משוואה ריבועית עם סוגריים משוואה ריבועית עם שברים ופירוקים משוואה ריבועית הכוללת שימוש בנוסחאות הכפל המקוצר משוואה ריבועית הכוללת שימוש בפירוק טרינום משוואה ריבועית הכוללת צמצום מקדים חלק ב, עמ' 110-58 חלק א, עמ' 97, 104",
-    "extra_source": "\"ארכימדס\", עמ' 47 – 52",
-    "submit": "חסרה - חלק ב, עמ' 70, תרגיל 4 (א, ב, ג, ו, ז, ח) מלאה - חלק ב, עמ' 70, תרגיל 5 (א-ה) עם סוגריים - חלק ב, עמ' 96, תרגילים 5 (ב, ג), 6 (א, ב) עם שברים ופירוקים - חלק ב, עמ' 102, תרגיל 26 (ט, י) נוסחאות הכפל המקוצר - חלק ב, עמ' 107, תרגיל 44 (א, ו, ז) פירוק טרינום - חלק ב, עמ' 107, תרגיל 44 (יא, יב) צמצום מקדים - חלק א, עמ' 97, תרגיל 68 (הכל)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=bPvp0cK2LWU",
-      "label": "פתרון משוואה ריבועית חסרה"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=nGJyrMpSxx8",
-      "label": "פתרון משוואה ריבועית חסרה - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=GZfWIyycoEo",
-      "label": "פתרון משוואה ריבועית רמת המתקדמים"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=cOClIVCZk68",
-      "label": "פתרון משוואות ריבועיות (3 סוגים)"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=2n4i4PQL8HQ",
-      "label": "פתרון משוואות ריבועיות באמצעות נוסחאות הכפל המקוצר"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=wXFVsTqBj5M",
-      "label": "פתרון משוואה ריבועית בעזרת טרינום"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=fvT18cTBzLg",
-      "label": "פתרון משוואות ממעלה שניה עם נעלם במכנה"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=LErTMX-u-d4",
-      "label": "פתרון משוואות ממעלה שניה עם נעלם במכנה - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=JGgeQ5IGH40",
-      "label": "פתרון משוואות ממעלה שניה עם נעלם במכנה הכולל צמצום מקדים"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "6.2",
-    "topic": "מערכת משוואות ממעלה ראשונה (חזרה על חומר לימוד כיתה ח')",
-    "klasus": "–",
-    "extra_source": "\"ארכימדס\", עמ' 53 \"אפשר גם אחרת\", חלק ב, עמ' 124 – 125",
-    "submit": "אפשר גם אחרת, חלק ב, עמ' 125, תרגילים 1 (5, 6), 2 (3, 4), 3 (5, 6)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=BOIB86Eez1Q",
-      "label": "פתרון מערכת משוואות ממעלה ראשונה שני נעלמים (חזרה לכיתה ח')"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=lLU8EcC2Ix4",
-      "label": "פתרון מערכת משוואות ממעלה ראשונה שני נעלמים - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=IQ-Jucd-zXQ",
-      "label": "פתרון מערכת משוואות ממעלה ראשונה שני נעלמים - עוד סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   },
-   {
-    "sub": "6.3",
-    "topic": "מערכת משוואות ריבועיות (ממעלה שניה)",
-    "klasus": "חלק ב, עמ' 110-84",
-    "extra_source": "\"ארכימדס\", עמ' 54 – 58 \"אפשר גם אחרת \", חלק ב, עמ' 126 – 143",
-    "submit": "עמ' 118, תרגיל 4 (ה, ו, ז, ח), תרגיל 5 (א, ב)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=TKGJPmegfBU",
-      "label": "מערכת משוואות ממעלה שניה"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=r4rWVX7MSpg",
-      "label": "מערכת משוואות ממעלה שניה - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=4Or4xHwo1Bc",
-      "label": "עוד שתי דוגמאות (מערכת משוואות ממעלה שניה)"
-     }
-    ],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 7 — תחום גאומטרי — דמיון משולשים",
-  "topics": [
-   {
-    "sub": "",
-    "topic": "משולשים דומים (לא כולל משפטי דמיון)",
-    "klasus": "–",
-    "extra_source": "\"בני גורן\" ספר הנדסה חלק ב, עמ' 457 - 460",
-    "submit": "בני גורן, עמ' 460' ,תרגיל 5",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=Ea_MHxbJiUo",
-      "label": "דמיון משולשים"
-     }
-    ],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 8 — תחום אלגברי — הסתברות",
-  "topics": [
-   {
-    "sub": "",
-    "topic": "הסתברות",
-    "klasus": "חלק ב, עמ' 153 - 231",
-    "extra_source": "\"ארכימדס\", עמ' 208 – 227 \"אפשר גם אחרת \", חלק א, עמ' 67 – 114",
-    "submit": "עמ' 162, תרגילים 1, 2 (II,I)",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=rNhUHWhASYU",
-      "label": "הסתברות: מושגים בסיסיים"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=-vHyuTOALSk",
-      "label": "פתרון תרגיל בהסתברות (עם בניית דיאגרמת עץ)"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=FxFrVyvb0K4",
-      "label": "פתרון תרגיל נוסף בהסתברות"
-     }
-    ],
-    "other_links": []
-   }
-  ]
- },
- {
-  "title": "יחידה 9 — תחום אלגברי — בעיות מילוליות",
-  "topics": [
-   {
-    "sub": "",
-    "topic": "בעיות מילוליות",
-    "klasus": "–",
-    "extra_source": "\"ארכימדס\", עמ' 174 – 207",
-    "submit": "ארכימדס, עמ' 175, תרגילים 9, 10.",
-    "videos": [
-     {
-      "url": "https://www.youtube.com/watch?v=k96rwZfQXbA",
-      "label": "פתרון בעיה מילולית"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=Jbtip2z0gnw",
-      "label": "פתרון בעיה מילולית - סרטון נוסף"
-     },
-     {
-      "url": "https://www.youtube.com/watch?v=TzHb0R-eRaE",
-      "label": "פתרון בעיה מילולית - עוד סרטון נוסף"
-     }
-    ],
-    "other_links": []
-   }
-  ]
- }
+  },
+  {
+    "title": "יחידה 3 — תחום אלגברי — שברים אלגבריים",
+    "topics": [
+      {
+        "sub": "3.1",
+        "topic": "חיבור וחיסור שברים אלגבריים; משוואות",
+        "klasus": "חלק א, עמ' 127–137",
+        "extra_source": "ארכימדס, עמ' 38–41",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=GbvXe2yWpzc", "label": "חיבור וחיסור שברים אלגבריים" },
+          { "url": "https://www.youtube.com/watch?v=fOvoi2ZTrZ0", "label": "חיבור וחיסור שברים אלגבריים — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 127 תרגילים: 96 (א, ב, ח, יב), 100 (א, ב), 101 (א, ב), 102 (ח, ט)"
+      },
+      {
+        "sub": "3.2",
+        "topic": "כפל וחילוק שברים אלגבריים",
+        "klasus": "חלק א, עמ' 116–120",
+        "extra_source": "ארכימדס, עמ' 42–46",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=SDAJJ8VGHhs", "label": "כפל וחילוק שברים אלגבריים" },
+          { "url": "https://www.youtube.com/watch?v=W_QGvYWiY2E", "label": "כפל וחילוק שברים אלגבריים — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 118 תרגילים: 89 (יא, יב, יג, יד), 90 (ד, ה, ו), 91 (ב, ז, יב), 92 (א, ב, ג), 93 (א, ב, ג), 94 (א, ב, ג)"
+      }
+    ]
+  },
+  {
+    "title": "יחידה 4 — תחום אלגברי — פונקציה ריבועית",
+    "topics": [
+      {
+        "sub": "4.1",
+        "topic": "משמעות ערכו של a (כאשר a≠0) בפונקציה f(x)=ax² לצורך קביעת סוג הקיצון",
+        "klasus": "חלק ב, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 3–10",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=N-OjLm-8KOc", "label": "פרבולה — מבוא" },
+          { "url": "https://www.youtube.com/watch?v=GWq1VP5fMF4", "label": "פרבולה — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=ZVyEAbUqcdY", "label": "פרבולה — עוד סרטון נוסף" }
+        ],
+        "other_links": [
+          { "url": "https://www.m-math.co.il/analytic-geometry/parabola/parabola-introducing/", "label": "פרבולה — m-math" }
+        ],
+        "submit": "עמ' 11 I א, עמ' 13 II א, עמ' 17 תרגילים: 4\nאפשר גם אחרת: עמ' 7, תרגילים 4, 5, 6, 7, 8"
+      },
+      {
+        "sub": "4.2",
+        "topic": "f(x)=ax²+k — הזזה אנכית של פונקציה ריבועית, a=1",
+        "klasus": "חלק ב, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 11–31",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=BrYHxllPueA", "label": "פרבולה: הזזה אנכית" },
+          { "url": "https://www.youtube.com/watch?v=BSaAJO6Vvbo", "label": "פרבולה: הזזה אנכית — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת: עמ' 26, תרגילים 29, 32, 33"
+      },
+      {
+        "sub": "4.3",
+        "topic": "שיקוף של פונקציה ריבועית",
+        "klasus": "חלק ב, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 4–8; ארכימדס, עמ' 126–131",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=GWq1VP5fMF4", "label": "פונקציה ריבועית" },
+          { "url": "https://www.youtube.com/watch?v=Sk-S6090eKg", "label": "פונקציה ריבועית — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "ארכימדס, עמ' 127, תרגילים 5, 6, 7, 9"
+      },
+      {
+        "sub": "4.4",
+        "topic": "f(x)=a(x-p)² — הזזה אופקית של פונקציה ריבועית, a=1",
+        "klasus": "חלק ב, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 32–42",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=tPASc45CeoQ", "label": "פרבולה: הזזה אופקית" },
+          { "url": "https://www.youtube.com/watch?v=giZ_BKsSoLE", "label": "פרבולה: הזזה אופקית — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת: עמ' 38, תרגילים 52, 53\nאפשר גם אחרת: עמ' 40, תרגילים 65, 66"
+      },
+      {
+        "sub": "4.5",
+        "topic": "f(x)=a(x-p)²+k — שילוב הזזה אופקית ואנכית, a=1",
+        "klasus": "חלק ב, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 43–55",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=ffPXJ5Ifp8c", "label": "פרבולה: שילוב הזזה אופקית ואנכית" },
+          { "url": "https://www.youtube.com/watch?v=dKTm7NVvPio", "label": "שילוב הזזות — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת: עמ' 46, תרגילים 73, 74, 75"
+      },
+      {
+        "sub": "4.6",
+        "topic": "פונקציה ריבועית – ייצוג קודקודי",
+        "klasus": "חלק ב, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 43–50",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=waHsivjWFkg", "label": "ייצוג קודקודי" },
+          { "url": "https://www.youtube.com/watch?v=ghDKfPrSxcE", "label": "ייצוג קודקודי — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת: עמ' 48, תרגילים 81 (1-4), 82"
+      },
+      {
+        "sub": "4.7",
+        "topic": "פונקציה ריבועית – ייצוג סטנדרטי",
+        "klasus": "חלק ב, עמ' 1–57",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 56–63",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=Tzl1drGvrZ8", "label": "ייצוג סטנדרטי" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת: עמ' 59, תרגילים 120 (5,6), 121 (5,6), 122 (5-8)"
+      },
+      {
+        "sub": "4.8",
+        "topic": "מתיחה וכיווץ של פרבולה",
+        "klasus": "חלק ב, עמ' 1–19",
+        "extra_source": "ארכימדס, עמ' 141–146",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=GWq1VP5fMF4", "label": "מתיחה וכיווץ של פרבולה" }
+        ],
+        "other_links": [],
+        "submit": "ארכימדס, עמ' 143, תרגילים 8, 9, 10, 11, 12"
+      },
+      {
+        "sub": "4.9",
+        "topic": "פתרון משוואות ריבועיות בעזרת נוסחת השורשים",
+        "klasus": "חלק ב, עמ' 58–73",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 92–102",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=PqJx1u7juG0", "label": "פתרון משוואה ריבועית" },
+          { "url": "https://www.youtube.com/watch?v=3fLMrt6PHWg", "label": "נוסחת השורשים" },
+          { "url": "https://www.youtube.com/watch?v=PXmbg-oFMBM", "label": "נוסחת השורשים — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=sW4B8P2HM2U", "label": "פתרון משוואה ריבועית — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 69, תרגילים: 2 (יג, יד, טו, טז), 3 (ז, ח), 4 (ב, ד, ו, ז), 5 (יא, יב)"
+      },
+      {
+        "sub": "4.10",
+        "topic": "חקירת פונקציה ריבועית מלאה",
+        "klasus": "חלק ב, עמ' 74–83",
+        "extra_source": "—",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=Tzl1drGvrZ8", "label": "חקירת פרבולה בייצוג סטנדרטי" },
+          { "url": "https://www.youtube.com/watch?v=VNCmFl7r7KA", "label": "חקירת פונקציה ריבועית מלאה — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 74, תרגילים: 16, 17"
+      },
+      {
+        "sub": "4.11",
+        "topic": "שלושת הייצוגים של פונקציה ריבועית — סיכום",
+        "klasus": "חלק ב, עמ' 20–57",
+        "extra_source": "ארכימדס, עמ' 147–153",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=XAd1NYUtLD4", "label": "שלושת הייצוגים של פונקציה ריבועית" },
+          { "url": "https://www.youtube.com/watch?v=ghDKfPrSxcE", "label": "פרבולה בייצוג קודקודי" },
+          { "url": "https://www.youtube.com/watch?v=t7F33cHaDUY", "label": "ייצוג כפלי של פרבולה" },
+          { "url": "https://www.youtube.com/watch?v=eQtGX_Tei4o", "label": "מעבר מייצוג סטנדרטי לייצוג מכפלה" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 35, תרגילים: 10, 11, 16"
+      },
+      {
+        "sub": "4.12",
+        "topic": "קודקוד הפרבולה",
+        "klasus": "חלק ב, עמ' 23–27",
+        "extra_source": "ארכימדס, עמ' 154–160",
+        "videos": [],
+        "other_links": [
+          { "url": "https://www.m-math.co.il/analytic-geometry/parabola/parabola-vertex", "label": "מציאת קודקוד הפרבולה — m-math" }
+        ],
+        "submit": "אפשר גם אחרת: ב, 125, 127"
+      },
+      {
+        "sub": "4.13",
+        "topic": "חישובי אורכים ושטחים (פרבולה אחת / פרבולה וקו ישר / שתי פרבולות)",
+        "klasus": "חלק ב, עמ' 111–133",
+        "extra_source": "ארכימדס, עמ' 161–173",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=xotWTcVurl8", "label": "חישובי אורכים ושטחים: פרבולה וקו ישר" },
+          { "url": "https://www.youtube.com/watch?v=BsKpZhnYWnk", "label": "שתי פרבולות" },
+          { "url": "https://www.youtube.com/watch?v=QA7ILO1lzAI", "label": "שתי פרבולות — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=6vxp7Gtg47g", "label": "חישובי אורכים ושטחים — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 120, תרגילים 7, 8, 9"
+      },
+      {
+        "sub": "4.14",
+        "topic": "אי שוויון ריבועי (פתרון גיאומטרי ואלגברי)",
+        "klasus": "חלק ב, עמ' 134–152",
+        "extra_source": "אפשר גם אחרת, חלק ב, עמ' 147–161",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=X77EDluvhKI", "label": "פתרון אי שוויון ריבועי (גיאומטרי ואלגברי)" },
+          { "url": "https://www.youtube.com/watch?v=tPgm5ODEXLQ", "label": "פתרון אי שוויון ריבועי (גיאומטרי)" },
+          { "url": "https://www.youtube.com/watch?v=cxz3RSTQBYQ", "label": "פתרון אי שוויון ריבועי — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 145, תרגילים: 1 (א-ו), 3, 4"
+      }
+    ]
+  },
+  {
+    "title": "יחידה 5 — תחום גאומטרי — מרובעים",
+    "topics": [
+      {
+        "sub": "5.1",
+        "topic": "ישרים מקבילים — זוויות שנוצרות כששני ישרים מקבילים נחתכים ע״י ישר שלישי",
+        "klasus": "חלק א, עמ' 205–220",
+        "extra_source": "—",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=cZxFnw6-KUQ", "label": "ישרים מקבילים, זוויות" },
+          { "url": "https://www.youtube.com/watch?v=gJS58WiGFqc", "label": "ישרים מקבילים, חישובי זוויות" },
+          { "url": "https://www.youtube.com/watch?v=QGk9U4owE2o", "label": "ישרים מקבילים — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=1FdStUXBB6Q", "label": "זוויות בין ישרים" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 212, תרגילים 5, 6, 7, 9, 12"
+      },
+      {
+        "sub": "5.2",
+        "topic": "טרפז — הגדרה, מושגים בסיסיים, איך להוכיח שמרובע הוא טרפז, שטח והיקף, טרפז שווה שוקיים",
+        "klasus": "חלק א, עמ' 303–323",
+        "extra_source": "ארכימדס, עמ' 250–255",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=K99ykqDIwbU", "label": "טרפז" },
+          { "url": "https://www.youtube.com/watch?v=8OYeKC3t_2w", "label": "טרפז — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=Lnrmqvab6Ao", "label": "טרפז — שטח והיקף" },
+          { "url": "https://www.youtube.com/watch?v=JkNsos_2Jz8", "label": "טרפז שווה שוקיים: תכונות" },
+          { "url": "https://www.youtube.com/watch?v=W7vqABTQ0FM", "label": "טרפז שווה שוקיים: תכונות — המשך" },
+          { "url": "https://www.youtube.com/watch?v=kXQC2W0mvks", "label": "טרפז שווה שוקיים: פתרון תרגיל" },
+          { "url": "https://www.youtube.com/watch?v=6ELBwTuW0sI", "label": "טרפז שווה שוקיים — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 305, תרגילים 3, 4, 5, 8, 9"
+      },
+      {
+        "sub": "5.3",
+        "topic": "מקבילית — הגדרה, תכונות צלעות, זוויות ואלכסונים, משפטים הפוכים",
+        "klasus": "חלק א, עמ' 221–246",
+        "extra_source": "ארכימדס, עמ' 256–261",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=7E6cNhibZm0", "label": "מקבילית" },
+          { "url": "https://www.youtube.com/watch?v=QUL2cxTgryM", "label": "מקבילית — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=Sz8j9wI724Y", "label": "מקבילית — עוד סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=H4RtIN6gDPs", "label": "מקבילית — הוכחה" },
+          { "url": "https://www.youtube.com/watch?v=7fg9li-17EA", "label": "מקבילית — הוכחה נוספת" },
+          { "url": "https://www.youtube.com/watch?v=AMQu9eFzOA8", "label": "מקבילית — עוד הוכחה" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 228, תרגילים 7, 8, 9, 10, 12"
+      },
+      {
+        "sub": "5.4",
+        "topic": "מלבן — הגדרה, תכונות הצלעות, הזוויות, האלכסונים, משפטים הפוכים",
+        "klasus": "חלק א, עמ' 247–262",
+        "extra_source": "ארכימדס, עמ' 262–267",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=04wjgzwpf4g", "label": "מלבן: צלעות, זוויות, אלכסונים" },
+          { "url": "https://www.youtube.com/watch?v=cDLY_skcjPk", "label": "מלבן, תכונות המלבן" },
+          { "url": "https://www.youtube.com/watch?v=UVXIQsXpY6w", "label": "מלבן — סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 252, תרגילים 5, 6, 7, 8, 9"
+      },
+      {
+        "sub": "5.5",
+        "topic": "מעוין — הגדרה, תכונות הצלעות, הזוויות, האלכסונים, משפטים הפוכים",
+        "klasus": "חלק א, עמ' 263–276",
+        "extra_source": "ארכימדס, עמ' 272–278",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=cwU7B3DJsmg", "label": "מעוין" },
+          { "url": "https://www.youtube.com/watch?v=8F0OBnYm9rI", "label": "מעוין, תכונות המעוין" },
+          { "url": "https://www.youtube.com/watch?v=mfK-MxbG6dQ", "label": "מעוין — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=BAVG0Ig_nnQ", "label": "מעוין — פתרון שאלה" },
+          { "url": "https://www.youtube.com/watch?v=v8YaAnYXlWQ", "label": "מעוין — פתרון עוד שאלה" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 266, תרגילים 3, 4, 5, 6, 7, 8"
+      },
+      {
+        "sub": "5.6",
+        "topic": "ריבוע — הגדרה, תכונות הצלעות, הזוויות, האלכסונים, משפטים הפוכים",
+        "klasus": "חלק א, עמ' 277–290",
+        "extra_source": "ארכימדס, עמ' 279–283",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=XCFqB9tkdjo", "label": "ריבוע" },
+          { "url": "https://www.youtube.com/watch?v=A7aUqdq-hLg", "label": "ריבוע — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=OCYONrugaZc", "label": "ריבוע — תכונות הריבוע" },
+          { "url": "https://www.youtube.com/watch?v=ENsrioxM_Pw", "label": "ריבוע — פתרון שאלה" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 280, תרגילים 4, 5, 6, 7, 8"
+      }
+    ]
+  },
+  {
+    "title": "יחידה 6 — תחום אלגברי — משוואות ריבועיות",
+    "topics": [
+      {
+        "sub": "6.1",
+        "topic": "המשוואה הריבועית (חסרה, מלאה, עם סוגריים, עם שברים ופירוקים, נוסחאות הכפל המקוצר, פירוק טרינום, צמצום מקדים)",
+        "klasus": "חלק ב, עמ' 58–110; חלק א, עמ' 97, 104",
+        "extra_source": "ארכימדס, עמ' 47–52",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=bPvp0cK2LWU", "label": "פתרון משוואה ריבועית חסרה" },
+          { "url": "https://www.youtube.com/watch?v=nGJyrMpSxx8", "label": "משוואה ריבועית חסרה — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=GZfWIyycoEo", "label": "פתרון משוואה ריבועית — רמת המתקדמים" },
+          { "url": "https://www.youtube.com/watch?v=cOClIVCZk68", "label": "פתרון משוואות ריבועיות (3 סוגים)" },
+          { "url": "https://www.youtube.com/watch?v=2n4i4PQL8HQ", "label": "באמצעות נוסחאות הכפל המקוצר" },
+          { "url": "https://www.youtube.com/watch?v=wXFVsTqBj5M", "label": "בעזרת טרינום" },
+          { "url": "https://www.youtube.com/watch?v=fvT18cTBzLg", "label": "ממעלה שניה עם נעלם במכנה" },
+          { "url": "https://www.youtube.com/watch?v=LErTMX-u-d4", "label": "נעלם במכנה — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=JGgeQ5IGH40", "label": "נעלם במכנה הכולל צמצום מקדים" }
+        ],
+        "other_links": [],
+        "submit": "חסרה — חלק ב, עמ' 70, תרגיל 4 (א, ב, ג, ו, ז, ח)\nמלאה — חלק ב, עמ' 70, תרגיל 5 (א-ה)\nעם סוגריים — חלק ב, עמ' 96, תרגילים 5 (ב, ג), 6 (א, ב)\nעם שברים ופירוקים — חלק ב, עמ' 102, תרגיל 26 (ט, י)\nנוסחאות הכפל המקוצר — חלק ב, עמ' 107, תרגיל 44 (א, ו, ז)\nפירוק טרינום — חלק ב, עמ' 107, תרגיל 44 (יא, יב)\nצמצום מקדים — חלק א, עמ' 97, תרגיל 68 (הכל)"
+      },
+      {
+        "sub": "6.2",
+        "topic": "מערכת משוואות ממעלה ראשונה (חזרה על חומר לימוד כיתה ח')",
+        "klasus": "—",
+        "extra_source": "ארכימדס, עמ' 53; אפשר גם אחרת, חלק ב, עמ' 124–125",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=BOIB86Eez1Q", "label": "מערכת משוואות ממעלה ראשונה — שני נעלמים" },
+          { "url": "https://www.youtube.com/watch?v=lLU8EcC2Ix4", "label": "מערכת משוואות — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=IQ-Jucd-zXQ", "label": "מערכת משוואות — עוד סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "אפשר גם אחרת, חלק ב, עמ' 125, תרגילים 1 (5, 6), 2 (3, 4), 3 (5, 6)"
+      },
+      {
+        "sub": "6.3",
+        "topic": "מערכת משוואות ריבועיות (ממעלה שניה)",
+        "klasus": "חלק ב, עמ' 84–110",
+        "extra_source": "ארכימדס, עמ' 54–58; אפשר גם אחרת, חלק ב, עמ' 126–143",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=TKGJPmegfBU", "label": "מערכת משוואות ממעלה שניה" },
+          { "url": "https://www.youtube.com/watch?v=r4rWVX7MSpg", "label": "ממעלה שניה — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=4Or4xHwo1Bc", "label": "עוד שתי דוגמאות" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 118, תרגיל 4 (ה, ו, ז, ח), תרגיל 5 (א, ב)"
+      }
+    ]
+  },
+  {
+    "title": "יחידה 7 — תחום גאומטרי — דמיון משולשים",
+    "topics": [
+      {
+        "sub": "7.1",
+        "topic": "משולשים דומים (לא כולל משפטי דמיון)",
+        "klasus": "—",
+        "extra_source": "בני גורן, ספר הנדסה חלק ב, עמ' 457–460",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=Ea_MHxbJiUo", "label": "דמיון משולשים" }
+        ],
+        "other_links": [],
+        "submit": "בני גורן, עמ' 460, תרגיל 5"
+      }
+    ]
+  },
+  {
+    "title": "יחידה 8 — תחום אלגברי — הסתברות",
+    "topics": [
+      {
+        "sub": "8.1",
+        "topic": "הסתברות",
+        "klasus": "חלק ב, עמ' 153–231",
+        "extra_source": "ארכימדס, עמ' 208–227; אפשר גם אחרת, חלק א, עמ' 67–114",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=rNhUHWhASYU", "label": "הסתברות: מושגים בסיסיים" },
+          { "url": "https://www.youtube.com/watch?v=-vHyuTOALSk", "label": "פתרון תרגיל בהסתברות (עם דיאגרמת עץ)" },
+          { "url": "https://www.youtube.com/watch?v=FxFrVyvb0K4", "label": "פתרון תרגיל נוסף בהסתברות" }
+        ],
+        "other_links": [],
+        "submit": "עמ' 162, תרגילים 1, 2 (I, II)"
+      }
+    ]
+  },
+  {
+    "title": "יחידה 9 — תחום אלגברי — בעיות מילוליות",
+    "topics": [
+      {
+        "sub": "9.1",
+        "topic": "בעיות מילוליות",
+        "klasus": "—",
+        "extra_source": "ארכימדס, עמ' 174–207",
+        "videos": [
+          { "url": "https://www.youtube.com/watch?v=k96rwZfQXbA", "label": "פתרון בעיה מילולית" },
+          { "url": "https://www.youtube.com/watch?v=Jbtip2z0gnw", "label": "בעיה מילולית — סרטון נוסף" },
+          { "url": "https://www.youtube.com/watch?v=TzHb0R-eRaE", "label": "בעיה מילולית — עוד סרטון נוסף" }
+        ],
+        "other_links": [],
+        "submit": "ארכימדס, עמ' 175, תרגילים 9, 10"
+      }
+    ]
+  }
 ]
