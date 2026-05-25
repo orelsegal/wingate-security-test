@@ -565,11 +565,11 @@ const CoachHome = () => {
           onClick={() => navigate("/data-entry")}
           className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
         >
-          <div className="w-10 h-10 rounded-xl bg-[hsl(0,35%,94%)] flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-105">
-            <AlertTriangle className="h-[18px] w-[18px] text-destructive" strokeWidth={1.5} />
+          <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-105">
+            <ClipboardEdit className="h-[18px] w-[18px] text-violet-700" strokeWidth={1.5} />
           </div>
-          <h3 className="text-[13px] font-semibold text-foreground leading-tight">דורשים תשומת לב</h3>
-          <p className="text-[10.5px] text-muted-foreground mt-1">הזנת נתוני ענף</p>
+          <h3 className="text-[13px] font-semibold text-foreground leading-tight">הזנת נתונים</h3>
+          <p className="text-[10.5px] text-muted-foreground mt-1">עדכון נתוני ספורטאי הענף</p>
         </button>
       </div>
     </>
