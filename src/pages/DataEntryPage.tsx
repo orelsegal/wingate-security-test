@@ -53,6 +53,24 @@ const DataEntryPageInner = () => {
     },
   });
 
+  // === Add Staff State (teacher / coach) ===
+  const [staffRole, setStaffRole] = useState<"teacher" | "coach">("teacher");
+  const [staffFirstName, setStaffFirstName] = useState("");
+  const [staffLastName, setStaffLastName] = useState("");
+  const [staffEmail, setStaffEmail] = useState("");
+  const [staffNationalId, setStaffNationalId] = useState("");
+  const [staffPhone, setStaffPhone] = useState("");
+  const [staffNotes, setStaffNotes] = useState("");
+  const [staffSubjects, setStaffSubjects] = useState<string[]>([]);
+  const [staffClasses, setStaffClasses] = useState<string[]>([]);
+  const [savingStaff, setSavingStaff] = useState(false);
+  const [staffSuccess, setStaffSuccess] = useState(false);
+
+  const toggleInArray = (arr: string[], val: string) =>
+    arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+
+
+
   // === Grade Entry State ===
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
