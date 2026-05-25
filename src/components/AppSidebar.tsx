@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Gamepad2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -121,6 +121,21 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             >
               <LayoutTemplate className={`h-[15px] w-[15px] shrink-0 ${location.pathname === "/admin/builder" ? "text-white" : "text-sidebar-muted"}`} strokeWidth={location.pathname === "/admin/builder" ? 2 : 1.5} />
               <span>בונה עמודים</span>
+            </button>
+          )}
+
+          {/* Play Arena — students only */}
+          {user?.role === "student" && (
+            <button
+              onClick={() => { navigate("/play"); onNavigate?.(); }}
+              className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
+                location.pathname.startsWith("/play")
+                  ? "bg-sidebar-primary text-white font-semibold shadow-sm"
+                  : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              <Gamepad2 className={`h-[15px] w-[15px] shrink-0 ${location.pathname.startsWith("/play") ? "text-white" : "text-violet-500"}`} strokeWidth={location.pathname.startsWith("/play") ? 2 : 1.6} />
+              <span>אזור המשחקים</span>
             </button>
           )}
 

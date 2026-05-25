@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress } from "@/hooks/useStudents";
-import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe, Scale, Feather, Calculator, Activity, Landmark, Languages, Sparkles, Trophy, Play } from "lucide-react";
+import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe, Scale, Feather, Calculator, Activity, Landmark, Languages } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 
@@ -137,59 +137,6 @@ const StudentHomePage = () => {
         </div>
       </div>
 
-      {/* ── מוכנים לשחק? גו! — Play Arena teaser ─────────── */}
-      <button
-        onClick={() => navigate("/play")}
-        className="group relative w-full text-right mb-5 overflow-hidden rounded-3xl border border-violet-200/70 bg-gradient-to-l from-violet-100/80 via-pink-50 to-emerald-50/70 p-5 md:p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300"
-        dir="rtl"
-      >
-        {/* soft scenic bg */}
-        <svg viewBox="0 0 600 200" className="absolute inset-0 w-full h-full opacity-60 pointer-events-none" preserveAspectRatio="xMidYMid slice">
-          <ellipse cx="80" cy="50" rx="38" ry="11" fill="white" opacity="0.7" />
-          <ellipse cx="500" cy="40" rx="44" ry="12" fill="white" opacity="0.7" />
-          <ellipse cx="280" cy="80" rx="30" ry="9" fill="white" opacity="0.6" />
-          <path d="M 0 170 Q 150 130 300 160 T 600 150 L 600 200 L 0 200 Z" fill="hsl(150 30% 88%)" opacity="0.55" />
-          <path d="M 420 160 L 470 100 L 520 160 Z" fill="hsl(270 25% 86%)" opacity="0.6" />
-        </svg>
-
-        <div className="relative flex items-center justify-between gap-5">
-          <div className="flex-1 min-w-0">
-            <p className="text-[10.5px] font-semibold text-violet-700 mb-1.5 inline-flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3" strokeWidth={2.2} />
-              תחרות בין תלמידי הכיתה
-            </p>
-            <h2 className="text-[22px] md:text-[26px] font-bold text-foreground tracking-tight leading-tight">
-              מוכנים לשחק? <span className="text-violet-600">גו!</span>
-            </h2>
-            <p className="text-[12px] text-muted-foreground mt-1.5 leading-relaxed">
-              אתגר יומי, מסלול חכם ולוח דירוג כיתתי — כל תשובה נכונה מקרבת אותך לראש הטבלה.
-            </p>
-
-            {/* leaderboard mini-preview */}
-            <div className="mt-3 flex items-center gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-700 bg-amber-100 rounded-full px-2.5 py-1">
-                <Trophy className="h-3 w-3" strokeWidth={2.2} /> מקום 3 בכיתה
-              </span>
-              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-rose-700 bg-rose-100 rounded-full px-2.5 py-1">
-                🔥 רצף 7 ימים
-              </span>
-              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-emerald-700 bg-emerald-100 rounded-full px-2.5 py-1">
-                +120 XP השבוע
-              </span>
-            </div>
-
-            <div className="mt-4 inline-flex items-center gap-2 bg-violet-500 group-hover:bg-violet-600 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full shadow-[0_8px_20px_-6px_rgba(120,80,200,0.55)] transition-colors">
-              <Play className="h-3.5 w-3.5 fill-white" strokeWidth={0} />
-              התחל לשחק
-            </div>
-          </div>
-
-          {/* trophy */}
-          <div className="hidden sm:flex w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-white/70 items-center justify-center shrink-0 shadow-inner">
-            <Trophy className="h-12 w-12 md:h-14 md:w-14 text-violet-500" strokeWidth={1.4} />
-          </div>
-        </div>
-      </button>
 
 
       {/* Secondary KPIs */}
