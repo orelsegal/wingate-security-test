@@ -60,6 +60,22 @@ const SubjectDetailPage = () => {
     return out;
   }, [parts, coveredTopics]);
 
+  // Active unit shown below roadmap (default: current node, fallback to first)
+  const [activeUnitIdx, setActiveUnitIdx] = useState(0);
+  const unitDetailRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const currentIdx = nodes.findIndex(n => n.status === "current");
+    if (currentIdx >= 0) setActiveUnitIdx(currentIdx);
+  }, [nodes.length]);
+  const activeNode = nodes[activeUnitIdx];
+  const activePart = activeNode ? parts.find(p => p.id === activeNode.partId) : undefined;
+  const activeUnit = activePart?.units.find(u => u.id === activeNode?.unitId);
+
+  const handleNodeSelect = (i: number) => {
+    setActiveUnitIdx(i);
+    setTimeout(() => unitDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  };
+
   const doneCount = nodes.filter(n => n.status === "done").length;
   const totalCount = nodes.length || 1;
   const xp = Math.round(pct * 11.4);
