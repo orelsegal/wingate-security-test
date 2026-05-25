@@ -135,7 +135,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               }`}
             >
               <Gamepad2 className={`h-[15px] w-[15px] shrink-0 ${location.pathname.startsWith("/play") ? "text-white" : "text-violet-500"}`} strokeWidth={location.pathname.startsWith("/play") ? 2 : 1.6} />
-              <span>אזור המשחקים</span>
+              <span>שנעלה על המסלול? גו!</span>
             </button>
           )}
 
