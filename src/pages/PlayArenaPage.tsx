@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress } from "@/hooks/useStudents";
 import { useMemo } from "react";
@@ -31,21 +31,27 @@ const DAILY_GOALS = [
 
 const PlayArenaPage = () => {
   const navigate = useNavigate();
+  const { subject: subjectParam } = useParams<{ subject?: string }>();
+  const subjectName = subjectParam ? decodeURIComponent(subjectParam) : null;
   const { user } = useAuth();
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: student } = useStudent(studentId);
   const { data: progress = [] } = useStudentProgress(studentId);
 
-  // Derive a focus subject (highest non-zero pct) + headline stats
+  // Pick the subject from URL when given, otherwise highest-progress fallback
   const focus = useMemo(() => {
     const arr = progress.map((p: any) => ({
-      name: p.subjects?.subject_name || "מתמטיקה",
+      name: p.subjects?.subject_name || "",
       pct: p.completion_percent || 0,
       grade: p.grade,
     }));
+    if (subjectName) {
+      const match = arr.find((a) => a.name === subjectName || (subjectName === "לשון" && a.name === "לשון והבעה"));
+      return match || { name: subjectName, pct: 0, grade: null };
+    }
     const best = arr.sort((a, b) => b.pct - a.pct)[0];
     return best || { name: "מתמטיקה", pct: 0, grade: null };
-  }, [progress]);
+  }, [progress, subjectName]);
 
   const pct = focus.pct;
   const xp = Math.round(pct * 11.4 + 320);
