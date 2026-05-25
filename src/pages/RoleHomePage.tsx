@@ -477,9 +477,17 @@ const CoachHome = () => {
   const { data: students = [] } = useStudents();
   const mySport = user?.scopeFilter?.[0] || "";
   const myStudents = mySport ? students.filter((s) => s.sport === mySport) : [];
-  const redCount = myStudents.filter((s) => s.overall_status === "red").length;
+  const redStudents    = myStudents.filter(s => s.overall_status === "red");
+  const yellowStudents = myStudents.filter(s => s.overall_status === "yellow");
+  const greenStudents  = myStudents.filter(s => s.overall_status === "green");
 
-  // Safety: coach account not linked to a sport yet
+  const atRisk = redStudents.length > 0 ? redStudents : yellowStudents;
+  const atRiskColor = redStudents.length > 0
+    ? { dot: "bg-destructive", card: "bg-destructive/5 border-destructive/10", chevron: "group-hover:text-destructive/40" }
+    : { dot: "bg-warning",     card: "bg-warning/5 border-warning/10",         chevron: "group-hover:text-warning/40" };
+  const atRiskLabel  = redStudents.length > 0 ? "ספורטאים בסיכון" : "ספורטאים עם פערים";
+  const atRiskFilter = redStudents.length > 0 ? "red" : "yellow";
+
   if (!mySport) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
@@ -490,22 +498,80 @@ const CoachHome = () => {
     );
   }
 
-  const cards: ActionCard[] = [
-    { id: "status", title: "התקדמות לימודית לפי ענף", description: "סקירת התקדמות לימודית של הענף", icon: BookOpen, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/courses" },
-    { id: "risk", title: "דורשים תשומת לב", description: "ספורטאים עם סטטוס אדום או צהוב", icon: AlertTriangle, color: "bg-[hsl(0,35%,94%)]", iconColor: "text-destructive", path: "/students?status=red" },
-  ];
-
   return (
     <>
       <InsightStrip
         pageKey="home-coach"
         items={[
-          { id: "coach-stat-total", label: `ספורטאי ${mySport}`, value: myStudents.length, icon: Dumbbell, color: "text-[hsl(25,50%,45%)]" },
-          { id: "coach-stat-red", label: "בסיכון", value: redCount, icon: AlertTriangle, color: "text-destructive" },
+          { id: "coach-stat-total",  label: `ספורטאי ${mySport}`, value: myStudents.length,   icon: Dumbbell,      color: "text-[hsl(25,50%,45%)]" },
+          { id: "coach-stat-red",    label: "בסיכון",              value: redStudents.length,  icon: AlertTriangle, color: "text-destructive" },
+          { id: "coach-stat-green",  label: "במסלול",              value: greenStudents.length, icon: TrendingUp,    color: "text-success" },
         ]}
       />
+
+      {/* At-risk quick list */}
+      {atRisk.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => navigate(`/students?status=${atRiskFilter}`)}
+              className="text-[11px] text-primary/70 hover:text-primary transition-colors"
+            >
+              הצג הכל ←
+            </button>
+            <h3 className="text-[13px] font-semibold text-foreground">{atRiskLabel}</h3>
+          </div>
+          <div className="space-y-2">
+            {atRisk.slice(0, 3).map(s => (
+              <button
+                key={s.id}
+                onClick={() => navigate(`/students/${s.id}`)}
+                className={`w-full group ${atRiskColor.card} rounded-xl border p-3 flex items-center gap-3 text-start hover:opacity-90 transition-all`}
+              >
+                <span className={`w-2 h-2 rounded-full ${atRiskColor.dot} shrink-0`} />
+                <span className="text-[13px] font-medium text-foreground flex-1">{s.full_name}</span>
+                {s.class_name && <span className="text-[10px] text-muted-foreground">{s.class_name}</span>}
+                <ChevronLeft className={`h-3.5 w-3.5 text-border ${atRiskColor.chevron} transition-colors`} strokeWidth={1.5} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {atRisk.length === 0 && myStudents.length > 0 && (
+        <div className="mb-6 bg-success/5 rounded-2xl border border-success/15 p-4 flex items-center gap-3">
+          <span className="text-xl">🏆</span>
+          <div>
+            <p className="text-[13px] font-semibold text-foreground">כל ספורטאי הענף במסלול!</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">כל {myStudents.length} הספורטאים עם סטטוס ירוק</p>
+          </div>
+        </div>
+      )}
+
       <AIInsightsPanel students={myStudents} role="coach" navigate={navigate} />
-      <CardGrid cards={cards} navigate={navigate} />
+
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate("/students")}
+          className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-[hsl(210,40%,93%)] flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-105">
+            <Users className="h-[18px] w-[18px] text-[hsl(210,45%,48%)]" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-[13px] font-semibold text-foreground leading-tight">כל הספורטאים</h3>
+          <p className="text-[10.5px] text-muted-foreground mt-1">פרופילים וסטטוסים</p>
+        </button>
+        <button
+          onClick={() => navigate("/data-entry")}
+          className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-[hsl(0,35%,94%)] flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-105">
+            <AlertTriangle className="h-[18px] w-[18px] text-destructive" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-[13px] font-semibold text-foreground leading-tight">דורשים תשומת לב</h3>
+          <p className="text-[10.5px] text-muted-foreground mt-1">הזנת נתוני ענף</p>
+        </button>
+      </div>
     </>
   );
 };
