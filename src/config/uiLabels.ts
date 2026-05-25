@@ -28,6 +28,7 @@ export interface UiLabels {
     messages: string;
     semester: string;
     adminLabels: string;
+    adminUsers: string;
   };
   /** Sidebar role-titled section header */
   roleTitles: {
@@ -96,6 +97,7 @@ export const defaultUiLabels: UiLabels = {
     messages: "הודעות",
     semester: "סמסטר א׳ תשפ״ה",
     adminLabels: "עורך תוויות",
+    adminUsers: "ניהול משתמשים",
   },
   roleTitles: {
     admin: "מרכז ניהול",

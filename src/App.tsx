@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,52 +10,58 @@ import { BuilderProvider } from "@/context/BuilderContext";
 import { UiLabelsProvider } from "@/context/UiLabelsContext";
 import AppLayout from "@/components/AppLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import Index from "./pages/Index.tsx";
-import StudentsPage from "./pages/StudentsPage.tsx";
-import StudentProfilePage from "./pages/StudentProfilePage.tsx";
-import LoginPage from "./pages/LoginPage.tsx";
-import CoursesPage from "./pages/CoursesPage.tsx";
-import DataEntryPage from "./pages/DataEntryPage.tsx";
-import GradeEntryPage from "./pages/GradeEntryPage.tsx";
-import DataManagementPage from "./pages/DataManagementPage.tsx";
-import StudentHomePage from "./pages/StudentHomePage.tsx";
-import StudentLearningTrafficLight from "./pages/StudentLearningTrafficLight.tsx";
-import StudentRoadmapTrafficLight from "./pages/StudentRoadmapTrafficLight.tsx";
-import RoleHomePage from "./pages/RoleHomePage.tsx";
-import DashboardContent from "./components/DashboardContent.tsx";
-import ExternalWrapperPage from "./pages/ExternalWrapperPage.tsx";
-import SubjectSelectionPage from "./pages/SubjectSelectionPage.tsx";
-import SubjectDetailPage from "./pages/SubjectDetailPage.tsx";
-import TeacherSubjectEditorPage from "./pages/TeacherSubjectEditorPage.tsx";
-import SubjectPartPage from "./pages/SubjectPartPage.tsx";
-import HistoryCoursePage from "./pages/HistoryCoursePage.tsx";
-import GroupsPage from "./pages/GroupsPage.tsx";
-import CalendarPage from "./pages/CalendarPage.tsx";
-import ScienceIntroPage from "./pages/ScienceIntroPage.tsx";
-import BagrutGradingPage from "./pages/BagrutGradingPage.tsx";
-import TeacherCoursesPage from "./pages/TeacherCoursesPage.tsx";
-import TeacherCourseDetailPage from "./pages/TeacherCourseDetailPage.tsx";
-import UserActivityPage from "./pages/UserActivityPage.tsx";
-import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
-import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
-import AdminBuilderPage from "./pages/AdminBuilderPage.tsx";
-import StylePickerPage from "./pages/StylePickerPage.tsx";
-import FontLabPage from "./pages/FontLabPage.tsx";
-import RoadmapsPage from "./pages/RoadmapsPage.tsx";
-import MathRoadmapPage from "./pages/MathRoadmapPage.tsx";
-import NotFound from "./pages/NotFound.tsx";
+
+// ── Lazy-loaded pages (one chunk per route) ──────────────────────────────────
+const Index                      = lazy(() => import("./pages/Index"));
+const LoginPage                  = lazy(() => import("./pages/LoginPage"));
+const OnboardingPage             = lazy(() => import("./pages/OnboardingPage"));
+const ResetPasswordPage          = lazy(() => import("./pages/ResetPasswordPage"));
+const StudentsPage               = lazy(() => import("./pages/StudentsPage"));
+const StudentProfilePage         = lazy(() => import("./pages/StudentProfilePage"));
+const CoursesPage                = lazy(() => import("./pages/CoursesPage"));
+const DataEntryPage              = lazy(() => import("./pages/DataEntryPage"));
+const GradeEntryPage             = lazy(() => import("./pages/GradeEntryPage"));
+const DataManagementPage         = lazy(() => import("./pages/DataManagementPage"));
+const StudentHomePage            = lazy(() => import("./pages/StudentHomePage"));
+const StudentLearningTrafficLight = lazy(() => import("./pages/StudentLearningTrafficLight"));
+const StudentRoadmapTrafficLight  = lazy(() => import("./pages/StudentRoadmapTrafficLight"));
+const RoleHomePage               = lazy(() => import("./pages/RoleHomePage"));
+const DashboardContent           = lazy(() => import("./components/DashboardContent"));
+const ExternalWrapperPage        = lazy(() => import("./pages/ExternalWrapperPage"));
+const SubjectSelectionPage       = lazy(() => import("./pages/SubjectSelectionPage"));
+const SubjectDetailPage          = lazy(() => import("./pages/SubjectDetailPage"));
+const TeacherSubjectEditorPage   = lazy(() => import("./pages/TeacherSubjectEditorPage"));
+const SubjectPartPage            = lazy(() => import("./pages/SubjectPartPage"));
+const HistoryCoursePage          = lazy(() => import("./pages/HistoryCoursePage"));
+const GroupsPage                 = lazy(() => import("./pages/GroupsPage"));
+const CalendarPage               = lazy(() => import("./pages/CalendarPage"));
+const ScienceIntroPage           = lazy(() => import("./pages/ScienceIntroPage"));
+const BagrutGradingPage          = lazy(() => import("./pages/BagrutGradingPage"));
+const TeacherCoursesPage         = lazy(() => import("./pages/TeacherCoursesPage"));
+const TeacherCourseDetailPage    = lazy(() => import("./pages/TeacherCourseDetailPage"));
+const UserActivityPage           = lazy(() => import("./pages/UserActivityPage"));
+const YearPlan2026Page           = lazy(() => import("./pages/YearPlan2026Page"));
+const AdminLabelsPage            = lazy(() => import("./pages/AdminLabelsPage"));
+const AdminBuilderPage           = lazy(() => import("./pages/AdminBuilderPage"));
+const UserManagementPage         = lazy(() => import("./pages/UserManagementPage"));
+const StylePickerPage            = lazy(() => import("./pages/StylePickerPage"));
+const FontLabPage                = lazy(() => import("./pages/FontLabPage"));
+const RoadmapsPage               = lazy(() => import("./pages/RoadmapsPage"));
+const MathRoadmapPage            = lazy(() => import("./pages/MathRoadmapPage"));
+const NotFound                   = lazy(() => import("./pages/NotFound"));
+
+// ── Shared route-level loading fallback ─────────────────────────────────────
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+    <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLoggedIn, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
-        <div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoader />;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
@@ -70,44 +77,54 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
           <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            {/* Full-screen — no AppLayout wrapper */}
-            <Route path="/admin/builder" element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />
-            <Route path="/style-preview" element={<ProtectedRoute><StylePickerPage /></ProtectedRoute>} />
-            <Route path="/font-lab" element={<ProtectedRoute><FontLabPage /></ProtectedRoute>} />
+            {/* ── Public routes ──────────────────────────────── */}
+            <Route path="/login"          element={<LoginPage />} />
+            <Route path="/onboarding"     element={<OnboardingPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            {/* ── Full-screen protected (no AppLayout) ───────── */}
+            <Route path="/admin/builder"  element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />
+            <Route path="/style-preview"  element={<ProtectedRoute><StylePickerPage /></ProtectedRoute>} />
+            <Route path="/font-lab"       element={<ProtectedRoute><FontLabPage /></ProtectedRoute>} />
+
+            {/* ── Main app (with AppLayout sidebar) ──────────── */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<DashboardContent />} />
-              <Route path="/students" element={<StudentsPage />} />
-              <Route path="/students/:id" element={<StudentProfilePage />} />
-              <Route path="/courses" element={<CoursesPage />} />
-              <Route path="/data-entry" element={<DataEntryPage />} />
-              <Route path="/grade-entry" element={<GradeEntryPage />} />
-              <Route path="/data-management" element={<DataManagementPage />} />
-              <Route path="/student-home" element={<StudentHomePage />} />
-              <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
-              <Route path="/student-roadmap" element={<StudentRoadmapTrafficLight />} />
-              <Route path="/external" element={<ExternalWrapperPage />} />
-              <Route path="/subjects" element={<SubjectSelectionPage />} />
-              <Route path="/subjects/:subjectName" element={<SubjectDetailPage />} />
-              <Route path="/subjects/:subjectName/:partId" element={<SubjectPartPage />} />
-              <Route path="/teacher-subjects" element={<TeacherSubjectEditorPage />} />
-              <Route path="/history-course" element={<HistoryCoursePage />} />
-              <Route path="/groups" element={<GroupsPage />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/science-intro" element={<ScienceIntroPage />} />
-              <Route path="/bagrut-grading" element={<BagrutGradingPage />} />
-              <Route path="/teacher-courses" element={<TeacherCoursesPage />} />
-              <Route path="/teacher-course/:courseId" element={<TeacherCourseDetailPage />} />
-              <Route path="/user-activity" element={<UserActivityPage />} />
-              <Route path="/year-plan-2026" element={<YearPlan2026Page />} />
-              <Route path="/admin/labels" element={<AdminLabelsPage />} />
-              <Route path="/roadmaps" element={<RoadmapsPage />} />
-              <Route path="/roadmaps/math" element={<MathRoadmapPage />} />
+              <Route path="/"                                   element={<Index />} />
+              <Route path="/dashboard"                          element={<DashboardContent />} />
+              <Route path="/students"                           element={<StudentsPage />} />
+              <Route path="/students/:id"                       element={<StudentProfilePage />} />
+              <Route path="/courses"                            element={<CoursesPage />} />
+              <Route path="/data-entry"                         element={<DataEntryPage />} />
+              <Route path="/grade-entry"                        element={<GradeEntryPage />} />
+              <Route path="/data-management"                    element={<DataManagementPage />} />
+              <Route path="/student-home"                       element={<StudentHomePage />} />
+              <Route path="/student-learning"                   element={<StudentLearningTrafficLight />} />
+              <Route path="/student-roadmap"                    element={<StudentRoadmapTrafficLight />} />
+              <Route path="/external"                           element={<ExternalWrapperPage />} />
+              <Route path="/subjects"                           element={<SubjectSelectionPage />} />
+              <Route path="/subjects/:subjectName"              element={<SubjectDetailPage />} />
+              <Route path="/subjects/:subjectName/:partId"      element={<SubjectPartPage />} />
+              <Route path="/teacher-subjects"                   element={<TeacherSubjectEditorPage />} />
+              <Route path="/history-course"                     element={<HistoryCoursePage />} />
+              <Route path="/groups"                             element={<GroupsPage />} />
+              <Route path="/calendar"                           element={<CalendarPage />} />
+              <Route path="/science-intro"                      element={<ScienceIntroPage />} />
+              <Route path="/bagrut-grading"                     element={<BagrutGradingPage />} />
+              <Route path="/teacher-courses"                    element={<TeacherCoursesPage />} />
+              <Route path="/teacher-course/:courseId"           element={<TeacherCourseDetailPage />} />
+              <Route path="/user-activity"                      element={<UserActivityPage />} />
+              <Route path="/year-plan-2026"                     element={<YearPlan2026Page />} />
+              <Route path="/admin/labels"                       element={<AdminLabelsPage />} />
+              <Route path="/admin/users"                        element={<UserManagementPage />} />
+              <Route path="/roadmaps"                           element={<RoadmapsPage />} />
+              <Route path="/roadmaps/math"                      element={<MathRoadmapPage />} />
             </Route>
+
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           </ErrorBoundary>
           </BrowserRouter>
         </BuilderProvider>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -30,6 +30,7 @@ const allMenuItems: MenuItemDef[] = [
   { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["admin"] },
   { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["admin"] },
   { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels", roles: ["admin"] },
+  { key: "adminUsers",     icon: UserCog,           path: "/admin/users",  roles: ["admin"] },
 ];
 
 /* Unread messages counter — 0 until messaging backend is live */

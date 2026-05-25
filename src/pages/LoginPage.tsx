@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+type View = "login" | "forgot" | "forgot-sent";
+
 const LoginPage = () => {
   useAuth(); // ensure context is mounted
   const navigate = useNavigate();
@@ -18,6 +20,22 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [view, setView] = useState<View>("login");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const handleForgot = async (e: FormEvent) => {
+    e.preventDefault();
+    setResetError(null);
+    setResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetLoading(false);
+    if (error) { setResetError("לא הצלחנו לשלוח. בדוק/י שהאימייל נכון."); return; }
+    setView("forgot-sent");
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -171,16 +189,47 @@ const LoginPage = () => {
             disabled={loading || !email || !password}
             className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 text-[14px] font-medium transition-all duration-200 hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                מתחבר...
-              </>
-            ) : (
-              "התחבר"
-            )}
+            {loading ? (<><Loader2 className="h-4 w-4 animate-spin" />מתחבר...</>) : "התחבר"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setView("forgot"); setResetEmail(email); }}
+            className="w-full text-[12px] text-muted-foreground hover:text-foreground transition-colors pt-1"
+          >
+            שכחתי סיסמה
           </button>
         </form>
+
+        {/* ── Forgot password panel ── */}
+        {(view === "forgot" || view === "forgot-sent") && (
+          <div className="mt-4 bg-card rounded-2xl border border-border/50 shadow-[var(--shadow-card)] p-6 animate-fade-in-up">
+            {view === "forgot-sent" ? (
+              <div className="text-center space-y-2">
+                <p className="text-[22px]">📬</p>
+                <p className="text-[14px] font-medium text-foreground">נשלח! בדוק/י את האימייל</p>
+                <p className="text-[12px] text-muted-foreground">לחץ/י על הקישור שקיבלת לאיפוס הסיסמה</p>
+                <button onClick={() => setView("login")} className="text-[12px] text-primary hover:underline mt-2">חזרה להתחברות</button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgot} className="space-y-4">
+                <p className="text-[13px] font-medium text-foreground">שכחת סיסמה?</p>
+                <p className="text-[12px] text-muted-foreground">נשלח לך קישור לאיפוס באימייל</p>
+                <div className="space-y-2">
+                  <Label className="text-[13px]">אימייל</Label>
+                  <Input type="email" dir="ltr" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required placeholder="name@wingate.ac.il" className="text-left" />
+                </div>
+                {resetError && <Alert variant="destructive"><AlertDescription className="text-[12px]">{resetError}</AlertDescription></Alert>}
+                <div className="flex gap-2">
+                  <button type="submit" disabled={resetLoading || !resetEmail} className="flex-1 bg-primary text-primary-foreground rounded-xl py-2.5 text-[13px] font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+                    {resetLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "שלח קישור"}
+                  </button>
+                  <button type="button" onClick={() => setView("login")} className="px-4 rounded-xl border border-border text-[13px] text-muted-foreground hover:text-foreground">ביטול</button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* Footer */}
         <div className="text-center mt-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
