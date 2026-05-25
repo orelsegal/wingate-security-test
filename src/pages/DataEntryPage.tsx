@@ -28,11 +28,30 @@ const DataEntryPageInner = () => {
 
   // === Add Athlete State ===
   const [athleteName, setAthleteName] = useState("");
+  const [athleteLastName, setAthleteLastName] = useState("");
   const [athleteSport, setAthleteSport] = useState("");
   const [athleteClass, setAthleteClass] = useState("");
   const [athleteMathLevel, setAthleteMathLevel] = useState("3");
+  const [athleteNationalId, setAthleteNationalId] = useState("");
+  const [athletePhone, setAthletePhone] = useState("");
+  const [athleteEmergency, setAthleteEmergency] = useState("");
+  const [athleteCoach, setAthleteCoach] = useState("");
+  const [athleteNotes, setAthleteNotes] = useState("");
   const [savingAthlete, setSavingAthlete] = useState(false);
   const [athleteSuccess, setAthleteSuccess] = useState(false);
+
+  // Coaches list for "assigned coach" selector
+  const { data: coachesList = [] } = useQuery({
+    queryKey: ["coaches-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_users")
+        .select("id, full_name, linked_sport")
+        .eq("role", "coach");
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   // === Grade Entry State ===
   const [selectedStudentId, setSelectedStudentId] = useState("");
