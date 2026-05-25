@@ -198,7 +198,7 @@ const SubjectDetailPage = () => {
             <span className="text-[10px] text-muted-foreground">{doneCount === 0 ? "כאן מתחילים" : "ההתחלה"}</span>
             <button onClick={() => {
               const next = nodes.find(n => n.status === "current") || nodes[0];
-              if (next) navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}`);
+              if (next) navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}#${next.unitId}`);
             }} className="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[11.5px] font-semibold px-5 py-2.5 rounded-2xl shadow-lg transition-colors">
               המשך למסלול
               <ArrowRight className="h-3.5 w-3.5 rotate-180" strokeWidth={2} />
