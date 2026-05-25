@@ -1,120 +1,133 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useStudent, useStudentProgress } from "@/hooks/useStudents";
-import { useMemo, useState } from "react";
+import { useStudent } from "@/hooks/useStudents";
+import { useEffect, useMemo, useState } from "react";
+import confetti from "canvas-confetti";
 import {
-  Play, Trophy, Sparkles, Flame, BookOpen, Globe, Scale, Feather,
-  Calculator, Activity, Landmark, Languages, Crown, Medal, Target,
-  CheckCircle2, Clock, Users, Award, Star, Zap, TrendingUp, ChevronLeft,
+  Play, Trophy, Sparkles, Flame, BookOpen, Crown, Medal, Target,
+  CheckCircle2, Clock, Zap, TrendingUp, Map, AlertTriangle, X,
+  Brain, FileText, MessageSquare, Gamepad2, Lock, Star, Gift,
 } from "lucide-react";
 
-/* ── Subject visual map ─────────────────────────────── */
-const subjectMeta: Record<string, { icon: any; bg: string; fg: string; ring: string; accent: string; soft: string }> = {
-  "תנ״ך":       { icon: BookOpen,   bg: "bg-amber-50",   fg: "text-amber-600",   ring: "ring-amber-100",   accent: "bg-amber-500",   soft: "from-amber-100 to-amber-50" },
-  "היסטוריה":   { icon: Landmark,   bg: "bg-rose-50",    fg: "text-rose-600",    ring: "ring-rose-100",    accent: "bg-rose-500",    soft: "from-rose-100 to-rose-50" },
-  "ספרות":      { icon: Feather,    bg: "bg-violet-50",  fg: "text-violet-600",  ring: "ring-violet-100",  accent: "bg-violet-500",  soft: "from-violet-100 to-violet-50" },
-  "לשון":       { icon: Languages,  bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100", accent: "bg-emerald-500", soft: "from-emerald-100 to-emerald-50" },
-  "אזרחות":     { icon: Scale,      bg: "bg-teal-50",    fg: "text-teal-600",    ring: "ring-teal-100",    accent: "bg-teal-500",    soft: "from-teal-100 to-teal-50" },
-  "אנגלית":     { icon: Globe,      bg: "bg-sky-50",     fg: "text-sky-600",     ring: "ring-sky-100",     accent: "bg-sky-500",     soft: "from-sky-100 to-sky-50" },
-  "מתמטיקה":    { icon: Calculator, bg: "bg-green-50",   fg: "text-green-600",   ring: "ring-green-100",   accent: "bg-green-500",   soft: "from-green-100 to-green-50" },
-  "חינוך גופני":{ icon: Activity,   bg: "bg-yellow-50",  fg: "text-yellow-600",  ring: "ring-yellow-100",  accent: "bg-yellow-500",  soft: "from-yellow-100 to-yellow-50" },
+/* ── Mock open tasks (would come from Supabase) ──────────── */
+type Task = {
+  id: string;
+  title: string;
+  subject: string;
+  type: "quiz" | "video" | "practice" | "challenge";
+  questions?: number;
+  minutes: number;
+  dueInDays: number; // days until deadline
+  xp: number;
 };
-const metaFor = (n: string) => subjectMeta[n] || { icon: BookOpen, bg: "bg-slate-50", fg: "text-slate-600", ring: "ring-slate-100", accent: "bg-slate-500", soft: "from-slate-100 to-slate-50" };
 
-const ALL_SUBJECTS = ["תנ״ך", "לשון", "היסטוריה", "אנגלית", "מתמטיקה", "חינוך גופני", "ספרות", "אזרחות"];
+const MOCK_OPEN_TASKS: Task[] = [
+  { id: "t1", title: "קרב החזקות",       subject: "מתמטיקה", type: "challenge", questions: 10, minutes: 7,  dueInDays: 2, xp: 150 },
+  { id: "t2", title: "הבנת הנקרא",       subject: "לשון",     type: "quiz",      questions: 12, minutes: 7,  dueInDays: 5, xp: 100 },
+  { id: "t3", title: "מלחמת העולם הראשונה", subject: "היסטוריה", type: "video",     minutes: 8,                  dueInDays: 1, xp: 80 },
+  { id: "t4", title: "Present Perfect",  subject: "אנגלית",   type: "practice",  questions: 15, minutes: 10, dueInDays: 7, xp: 120 },
+];
 
-/* ── Mocks ─────────────────────────── */
 const MOCK_LEADERBOARD = [
-  { name: "ו'1",        xp: 4820, rank: 1 },
-  { name: "ו'2",        xp: 4540, rank: 2 },
-  { name: "ו'3 (אנחנו)", xp: 4260, rank: 3, isMe: true },
-  { name: "ו'4",        xp: 3980, rank: 4 },
-  { name: "ו'5",        xp: 3240, rank: 5 },
-  { name: "ו'6",        xp: 2890, rank: 6 },
+  { name: "ו'1 האלופים",        xp: 4820, rank: 1 },
+  { name: "ו'2 המצוינים",        xp: 4610, rank: 2 },
+  { name: "הכיתה שלך – ו'3",     xp: 4340, rank: 3, isMe: true },
+  { name: "ו'4 לוחמים",          xp: 4060, rank: 4 },
+  { name: "ו'5 חדים",            xp: 3720, rank: 5 },
 ];
 
 const ACHIEVEMENTS = [
   { icon: Flame,  label: "רצף 7 ימים",   color: "from-rose-400 to-orange-400",   ring: "ring-rose-100" },
   { icon: Star,   label: "אלוף הדיוק",   color: "from-violet-400 to-indigo-400", ring: "ring-violet-100" },
   { icon: Trophy, label: "שיפור אישי",   color: "from-amber-400 to-yellow-400",  ring: "ring-amber-100" },
-  { icon: Award,  label: "10 ימים רצופים", color: "from-emerald-400 to-teal-400", ring: "ring-emerald-100" },
-  { icon: Zap,    label: "סופר מהיר",    color: "from-sky-400 to-blue-400",      ring: "ring-sky-100" },
-  { icon: Crown,  label: "מלך הכיתה",    color: "from-pink-400 to-rose-400",     ring: "ring-pink-100" },
 ];
 
-const DAILY_GOALS = [
-  { txt: "ענה נכון על 80% מהשאלות", xp: 100 },
-  { txt: "שפר ציון מהפעם הקודמת",   xp: 100 },
-  { txt: "סיים תוך 7 דקות",          xp: 50 },
-];
+const typeIcon = (t: Task["type"]) => {
+  switch (t) {
+    case "quiz":      return FileText;
+    case "video":     return Play;
+    case "practice":  return Brain;
+    case "challenge": return Trophy;
+  }
+};
 
-type Tab = "home" | "leaderboard" | "daily" | "achievements";
+const fireConfetti = () => {
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999, scalar: 0.9 };
+  const count = 200;
+  const fire = (ratio: number, opts: confetti.Options) =>
+    confetti({ ...defaults, ...opts, particleCount: Math.floor(count * ratio) });
+  fire(0.25, { spread: 26, startVelocity: 55, colors: ["#a78bfa", "#f472b6", "#fbbf24"] });
+  fire(0.2,  { spread: 60, colors: ["#34d399", "#60a5fa", "#a78bfa"] });
+  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8, colors: ["#fbbf24", "#fb7185", "#a78bfa"] });
+  fire(0.1,  { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+  fire(0.1,  { spread: 120, startVelocity: 45 });
+};
+
+type Tab = "home" | "tasks" | "leaderboard" | "achievements";
 
 const PlayHubPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: student } = useStudent(studentId);
-  const { data: progress = [] } = useStudentProgress(studentId);
   const [tab, setTab] = useState<Tab>("home");
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [urgentPopup, setUrgentPopup] = useState<Task | null>(null);
+  const [popupDismissed, setPopupDismissed] = useState(false);
 
-  const perSubject = useMemo(() => {
-    const byName = new Map<string, any>();
-    progress.forEach((p: any) => {
-      const n = p.subjects?.subject_name || "";
-      if (n) byName.set(n, p);
-    });
-    return ALL_SUBJECTS.map((name) => {
-      const p = byName.get(name) || (name === "לשון" ? byName.get("לשון והבעה") : undefined);
-      const pct = p?.completion_percent || 0;
-      const xp = Math.round(pct * 12 + (p?.grade || 0) * 5);
-      return { name, pct, xp };
-    });
-  }, [progress]);
+  const openTasks = useMemo(() => MOCK_OPEN_TASKS.filter((t) => !completed.has(t.id)), [completed]);
+  const urgentTasks = useMemo(() => openTasks.filter((t) => t.dueInDays <= 3), [openTasks]);
+  const allDone = openTasks.length === 0;
 
-  const totalXp = perSubject.reduce((s, x) => s + x.xp, 0) || 4340;
+  /* Show urgent popup once on mount */
+  useEffect(() => {
+    if (!popupDismissed && urgentTasks.length > 0) {
+      const t = setTimeout(() => setUrgentPopup(urgentTasks[0]), 600);
+      return () => clearTimeout(t);
+    }
+  }, [urgentTasks, popupDismissed]);
+
+  const completeTask = (id: string) => {
+    setCompleted((s) => new Set(s).add(id));
+    fireConfetti();
+  };
+
   const myRank = MOCK_LEADERBOARD.find((p) => p.isMe);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50/60 via-white to-emerald-50/40" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-b from-violet-50/50 via-white to-violet-50/30" dir="rtl">
       <div className="relative p-5 md:p-8 lg:p-10 max-w-[1200px] mx-auto">
 
         {/* ── Header ─────────────────────────────────────── */}
-        <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10.5px] font-semibold text-violet-600 mb-1.5 inline-flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3" strokeWidth={2.2} />
-              שנעלה על המסלול? גו!
-            </p>
-            <h1 className="text-[26px] md:text-[32px] font-bold text-foreground tracking-tight leading-tight">
-              היי <span className="text-violet-600">{student?.full_name || user?.name}</span>, הכיתה צריכה אותך היום
-            </h1>
-            <p className="text-[13px] text-muted-foreground mt-2 max-w-xl">
-              עוד 280 נקודות ואנחנו עוקפים את ו'2 🌙
-            </p>
-          </div>
-
-          {/* mini me badge */}
-          <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 ring-1 ring-violet-100 shadow-[var(--shadow-card)]">
-            <div className="text-end">
-              <p className="text-[10px] text-muted-foreground">רמה</p>
-              <p className="text-[18px] font-bold text-violet-600 leading-none">12</p>
+        <div className="mb-6">
+          <p className="text-[10.5px] font-semibold text-violet-600 mb-1.5 inline-flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3" strokeWidth={2.2} />
+            שנעלה על המסלול? גו!
+          </p>
+          <div className="flex items-end justify-between gap-3 flex-wrap">
+            <div>
+              <h1 className="text-[24px] md:text-[30px] font-bold text-foreground tracking-tight leading-tight">
+                המסלול של <span className="text-violet-600">{student?.full_name || user?.name}</span>
+              </h1>
+              <p className="text-[13px] text-muted-foreground mt-1.5">
+                {openTasks.length > 0
+                  ? `${openTasks.length} משימות פתוחות מחכות לך — קדימה!`
+                  : "כל הכבוד! סיימת הכל. הגיע הזמן לחזרה חכמה ✨"}
+              </p>
             </div>
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white text-[12px] font-bold shadow-md">
-              {(student?.full_name || user?.name || "?").charAt(0)}
-            </div>
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-rose-500">
-              <Flame className="h-3.5 w-3.5" strokeWidth={2.2} />
-              7
+            <div className="flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 ring-1 ring-violet-100 shadow-sm">
+              <Flame className="h-4 w-4 text-rose-500" strokeWidth={2.2} />
+              <span className="text-[13px] font-bold text-foreground">7</span>
+              <span className="text-[10.5px] text-muted-foreground">רצף ימים</span>
             </div>
           </div>
         </div>
 
         {/* ── Tabs ─────────────────────────────────────── */}
-        <div className="inline-flex items-center gap-1 bg-white rounded-2xl p-1 ring-1 ring-border shadow-sm mb-6">
+        <div className="inline-flex items-center gap-1 bg-white rounded-2xl p-1 ring-1 ring-border shadow-sm mb-5">
           {([
             { id: "home",         label: "בית",          icon: Target },
-            { id: "daily",        label: "האתגר היומי",  icon: Zap },
+            { id: "tasks",        label: "המשימות שלי",  icon: Zap },
             { id: "leaderboard",  label: "דירוג כיתתי",  icon: Trophy },
             { id: "achievements", label: "הישגים",       icon: Medal },
           ] as { id: Tab; label: string; icon: any }[]).map((t) => {
@@ -136,229 +149,233 @@ const PlayHubPage = () => {
 
         {/* ─── HOME tab ───────────────────────────────── */}
         {tab === "home" && (
-          <div className="space-y-6">
-            {/* Stats strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { icon: Trophy, label: "מקום בכיתה", value: `${myRank?.rank || "—"}`, sub: "מתוך 28",   fg: "text-amber-600",   bg: "bg-amber-50",   ring: "ring-amber-100" },
-                { icon: Sparkles, label: "סה״כ XP",   value: totalXp,                 sub: "השבוע +120", fg: "text-violet-600",  bg: "bg-violet-50",  ring: "ring-violet-100" },
-                { icon: Flame,    label: "רצף ימים",  value: 7,                       sub: "המשך כך!",   fg: "text-rose-600",    bg: "bg-rose-50",    ring: "ring-rose-100" },
-                { icon: Medal,    label: "מדליות",    value: 12,                      sub: "3 חדשות",    fg: "text-emerald-600", bg: "bg-emerald-50", ring: "ring-emerald-100" },
-              ].map((s, i) => (
-                <div key={i} className={`bg-white ring-1 ${s.ring} rounded-2xl p-4 shadow-[var(--shadow-card)] animate-fade-in-up`} style={{ animationDelay: `${i * 60}ms` }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10.5px] font-semibold text-muted-foreground">{s.label}</p>
-                    <div className={`w-8 h-8 rounded-full ${s.bg} flex items-center justify-center`}>
-                      <s.icon className={`h-3.5 w-3.5 ${s.fg}`} strokeWidth={2} />
+          <div className="space-y-5">
+            {/* KPI strip (from reference image) */}
+            <div className="bg-white rounded-3xl ring-1 ring-border p-5 md:p-6 shadow-[var(--shadow-card)]">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-2 items-center">
+                {/* completion ring */}
+                <div className="flex items-center gap-3">
+                  <div className="relative w-[68px] h-[68px]">
+                    <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                      <circle cx="18" cy="18" r="15" fill="none" className="stroke-muted/40" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="15" fill="none" className="stroke-violet-500" strokeWidth="3" strokeDasharray="72, 100" strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[14px] font-bold text-foreground">72%</span>
                     </div>
                   </div>
-                  <p className="text-[22px] font-bold text-foreground leading-none tabular-nums">{s.value}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">{s.sub}</p>
+                  <p className="text-[10.5px] text-muted-foreground">השלמה<br/>ביחידה</p>
                 </div>
-              ))}
+                {/* xp */}
+                <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
+                  <div className="inline-flex items-baseline gap-1.5">
+                    <span className="text-[20px] font-bold tabular-nums">820</span>
+                    <span className="text-[9px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full">XP</span>
+                  </div>
+                  <p className="text-[10.5px] text-muted-foreground mt-1">נקודות ניסיון</p>
+                </div>
+                {/* streak */}
+                <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
+                  <span className="text-[20px] font-bold tabular-nums">6 <Flame className="inline h-4 w-4 text-rose-500" strokeWidth={2.2} /></span>
+                  <p className="text-[10.5px] text-muted-foreground mt-1">רצף ימים<br/><span className="text-amber-500 font-semibold">אלוף!</span></p>
+                </div>
+                {/* completed */}
+                <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
+                  <span className="text-[20px] font-bold tabular-nums">5/9 <CheckCircle2 className="inline h-4 w-4 text-emerald-500" strokeWidth={2.2} /></span>
+                  <p className="text-[10.5px] text-muted-foreground mt-1">נושאים הושלמו</p>
+                </div>
+                {/* rank */}
+                <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
+                  <div className="inline-flex items-baseline gap-1.5">
+                    <span className="text-[20px] font-bold tabular-nums">{myRank?.rank || 3}</span>
+                    <Trophy className="h-4 w-4 text-amber-500" strokeWidth={2.2} />
+                  </div>
+                  <p className="text-[10.5px] text-muted-foreground mt-1">דירוג נוכחי</p>
+                  <div className="w-full h-1 bg-muted/50 rounded-full mt-1.5 overflow-hidden">
+                    <div className="h-full bg-violet-500 rounded-full" style={{ width: "65%" }} />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Daily missions + Start playing */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4">
-              <div className="bg-white rounded-3xl ring-1 ring-border p-5 md:p-6 shadow-[var(--shadow-card)]">
-                <div className="flex items-baseline justify-between mb-4">
-                  <button onClick={() => setTab("daily")} className="text-[10.5px] text-violet-600 inline-flex items-center gap-0.5 hover:underline">
-                    ראה הכל <ChevronLeft className="h-3 w-3" />
-                  </button>
-                  <h2 className="text-[15px] font-semibold text-foreground">המשימות היומיות שלך</h2>
-                </div>
+            {/* Featured task + Leaderboard side by side */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-4">
 
-                <div className="grid grid-cols-3 gap-3 mb-5">
-                  {[
-                    { val: "1", lbl: "צפייה ביחידה",  done: true,  ring: "stroke-emerald-400", fg: "text-emerald-600" },
-                    { val: "2", lbl: "מתוך 3 משחקים", done: false, ring: "stroke-violet-500",  fg: "text-violet-600" },
-                    { val: "3", lbl: "חיזוק טעויות",  done: false, ring: "stroke-sky-400",     fg: "text-sky-600" },
-                  ].map((c, i) => (
-                    <div key={i} className="flex flex-col items-center text-center">
-                      <div className="relative w-[72px] h-[72px]">
-                        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                          <circle cx="18" cy="18" r="15" fill="none" className="stroke-muted/40" strokeWidth="3" />
-                          <circle cx="18" cy="18" r="15" fill="none" className={c.ring} strokeWidth="3" strokeDasharray={`${c.done ? 94 : 50}, 100`} strokeLinecap="round" />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          {c.done ? (
-                            <CheckCircle2 className={`h-5 w-5 ${c.fg}`} strokeWidth={2.2} />
-                          ) : (
-                            <span className={`text-[18px] font-bold ${c.fg}`}>{c.val}</span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-[10.5px] text-muted-foreground mt-2">{c.lbl}</p>
+              {/* Featured open task */}
+              {openTasks[0] ? (
+                <FeaturedTaskCard task={openTasks[0]} onPlay={() => completeTask(openTasks[0].id)} />
+              ) : (
+                <AllDoneCard />
+              )}
+
+              {/* Leaderboard */}
+              <div className="bg-white rounded-3xl ring-1 ring-border p-5 shadow-[var(--shadow-card)]">
+                <div className="flex items-baseline justify-between mb-3">
+                  <Trophy className="h-4 w-4 text-violet-500" strokeWidth={2} />
+                  <h3 className="text-[14px] font-semibold text-foreground">דירוג כיתתי</h3>
+                </div>
+                <div className="bg-violet-50 ring-1 ring-violet-100 rounded-2xl p-3 mb-3">
+                  <div className="flex items-center justify-between">
+                    <Trophy className="h-5 w-5 text-violet-500" strokeWidth={2} />
+                    <div className="text-end">
+                      <p className="text-[13px] font-bold text-violet-700">הכיתה שלך במקום 3</p>
+                      <p className="text-[10.5px] text-muted-foreground">הסרות 280 נקודות כדי לעקוף את ו'2</p>
                     </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setTab("daily")}
-                  className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-l from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white text-[13px] font-semibold px-4 py-3 rounded-2xl shadow-[0_10px_24px_-10px_rgba(120,80,200,0.55)] transition-all"
-                >
-                  <Zap className="h-4 w-4 fill-white" strokeWidth={0} />
-                  התחל לשחק
-                </button>
-              </div>
-
-              {/* Class race card */}
-              <div className="bg-white rounded-3xl ring-1 ring-border p-5 md:p-6 shadow-[var(--shadow-card)] flex flex-col">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-[10.5px] text-muted-foreground">נגמר בעוד 05:42:18</p>
-                    <h3 className="text-[15px] font-semibold text-foreground mt-0.5">הקרב הכיתתי</h3>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-md">
-                    <span className="text-white text-[13px] font-bold">#3</span>
                   </div>
                 </div>
-
-                <div className="space-y-1.5 mt-2">
-                  {MOCK_LEADERBOARD.slice(0, 4).map((p) => {
+                <div className="space-y-1.5">
+                  {MOCK_LEADERBOARD.map((p) => {
                     const max = MOCK_LEADERBOARD[0].xp;
                     const w = Math.round((p.xp / max) * 100);
-                    const bar =
-                      p.rank === 1 ? "bg-violet-400" :
-                      p.rank === 2 ? "bg-sky-400" :
-                      p.isMe       ? "bg-emerald-400" :
-                                     "bg-muted-foreground/40";
                     return (
-                      <div key={p.rank} className="flex items-center gap-2">
-                        <span className={`text-[11px] w-14 ${p.isMe ? "font-semibold text-emerald-600" : "text-muted-foreground"}`}>{p.name}</span>
-                        <div className="flex-1 h-2 bg-muted/40 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${bar}`} style={{ width: `${w}%` }} />
+                      <div key={p.rank} className={`flex items-center gap-2 rounded-xl px-2.5 py-2 ${p.isMe ? "bg-violet-50 ring-1 ring-violet-200" : ""}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          p.rank === 1 ? "bg-amber-200 text-amber-800" :
+                          p.rank === 2 ? "bg-slate-200 text-slate-700" :
+                          p.rank === 3 ? "bg-orange-200 text-orange-800" :
+                          "bg-muted text-muted-foreground"
+                        }`}>{p.rank}</div>
+                        <span className={`flex-1 text-[11.5px] truncate ${p.isMe ? "font-semibold text-violet-700" : "text-foreground"}`}>{p.name}</span>
+                        <div className="hidden md:block w-16 h-1 bg-muted/50 rounded-full overflow-hidden">
+                          <div className="h-full bg-violet-400 rounded-full" style={{ width: `${w}%` }} />
                         </div>
-                        <span className="text-[10.5px] tabular-nums text-foreground/80 w-12 text-end">{p.xp.toLocaleString()}</span>
+                        <span className="text-[10.5px] font-semibold tabular-nums text-foreground/80">{p.xp.toLocaleString()} XP</span>
                       </div>
                     );
                   })}
                 </div>
-
-                <div className="mt-auto pt-4 text-center text-[11px] text-muted-foreground">
-                  עוד 3 תלמידים עונים ואתם עולים מקום 🚀
+                <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2 w-full justify-center">
+                  <Zap className="h-3 w-3" />
+                  הסרות 280 נקודות כדי לעקוף את ו'2
                 </div>
               </div>
             </div>
 
-            {/* Subjects to play */}
-            <div>
-              <div className="flex items-baseline justify-between mb-3">
-                <p className="text-[10.5px] text-muted-foreground">בחר מקצוע ולחץ "שחק"</p>
-                <h2 className="text-[15px] font-semibold text-foreground">המשחקים לפי מקצוע</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {perSubject.map((s, i) => {
-                  const m = metaFor(s.name);
-                  const Icon = m.icon;
-                  return (
-                    <div
-                      key={s.name}
-                      className={`bg-white rounded-2xl ring-1 ${m.ring} border border-border/40 p-4 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up`}
-                      style={{ animationDelay: `${i * 40}ms` }}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${m.fg} ${m.bg} rounded-full px-2 py-0.5`}>
-                          <Sparkles className="h-2.5 w-2.5" strokeWidth={2.2} />
-                          {s.xp} XP
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-[14px] font-semibold text-foreground">{s.name}</h3>
-                          <div className={`w-9 h-9 rounded-xl ${m.bg} flex items-center justify-center`}>
-                            <Icon className={`h-4 w-4 ${m.fg}`} strokeWidth={2} />
-                          </div>
+            {/* Goals today + personal progress */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4">
+
+              {/* Today's goals = open tasks */}
+              <div className="bg-white rounded-3xl ring-1 ring-border p-5 shadow-[var(--shadow-card)]">
+                <div className="flex items-baseline justify-between mb-3">
+                  <Target className="h-4 w-4 text-violet-500" strokeWidth={2} />
+                  <h3 className="text-[14px] font-semibold text-foreground">היעדים שלי להיום</h3>
+                </div>
+                <div className="space-y-2">
+                  {MOCK_OPEN_TASKS.slice(0, 3).map((t) => {
+                    const done = completed.has(t.id);
+                    return (
+                      <div key={t.id} className="flex items-center gap-3 bg-muted/20 rounded-xl px-3 py-2.5">
+                        <button
+                          onClick={() => !done && completeTask(t.id)}
+                          className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                            done ? "bg-emerald-500 text-white" : "ring-1 ring-muted-foreground/30 hover:ring-violet-400"
+                          }`}
+                        >
+                          {done && <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-semibold text-foreground truncate">{t.title}</p>
+                          <p className="text-[10.5px] text-muted-foreground">{t.subject} · {t.minutes} דק׳</p>
                         </div>
+                        {(() => { const Icon = typeIcon(t.type); return <Icon className="h-4 w-4 text-violet-500" strokeWidth={2} />; })()}
                       </div>
-
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[14px] font-bold text-foreground tabular-nums">{s.pct}%</span>
-                        <span className="text-[10px] text-muted-foreground">התקדמות במשחק</span>
-                      </div>
-                      <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden mb-4">
-                        <div className={`h-full rounded-full ${m.accent} transition-all duration-700`} style={{ width: `${Math.max(s.pct, 3)}%` }} />
-                      </div>
-
-                      <button
-                        onClick={() => navigate(`/play/${encodeURIComponent(s.name)}`)}
-                        className="w-full inline-flex items-center justify-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[12.5px] font-semibold px-4 py-2.5 rounded-full shadow-[0_6px_16px_-6px_rgba(120,80,200,0.55)] transition-colors"
-                      >
-                        <Play className="h-3.5 w-3.5 fill-white" strokeWidth={0} />
-                        שחק
-                      </button>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                    <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${(completed.size / MOCK_OPEN_TASKS.length) * 100}%` }} />
+                  </div>
+                  <span>{completed.size} מתוך {MOCK_OPEN_TASKS.length} הושלמו 🎁</span>
+                </div>
               </div>
+
+              {/* Personal progress */}
+              <div className="bg-white rounded-3xl ring-1 ring-border p-5 shadow-[var(--shadow-card)]">
+                <div className="flex items-baseline justify-between mb-3">
+                  <TrendingUp className="h-4 w-4 text-violet-500" strokeWidth={2} />
+                  <h3 className="text-[14px] font-semibold text-foreground">ההתקדמות אישית</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { icon: Flame,      val: "6",    sub: "ימים ברצף 🔥",       fg: "text-rose-500",    bg: "bg-rose-50" },
+                    { icon: TrendingUp, val: "+120", sub: "XP השבוע 👥",        fg: "text-violet-500",  bg: "bg-violet-50" },
+                    { icon: Target,     val: "72%",  sub: "דיוק ממוצע 📊",      fg: "text-emerald-500", bg: "bg-emerald-50" },
+                  ].map((s, i) => (
+                    <div key={i} className={`${s.bg} rounded-2xl p-3 text-center`}>
+                      <p className="text-[10px] text-muted-foreground mb-1">{s.sub.split(" ")[0]}<br/>{s.sub.split(" ").slice(1).join(" ")}</p>
+                      <p className="text-[18px] font-bold tabular-nums">{s.val}</p>
+                    </div>
+                  ))}
+                </div>
+                {allDone && <AiReviewBanner />}
+                {!allDone && (
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50 rounded-xl px-3 py-2 w-full justify-center">
+                    💪 כל הכבוד! אתה בדרך הנכונה לניצחון!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tip footer */}
+            <div className="bg-amber-50/60 rounded-2xl ring-1 ring-amber-100 p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-amber-200 flex items-center justify-center shrink-0">
+                <Star className="h-4 w-4 text-amber-700 fill-amber-700" strokeWidth={0} />
+              </div>
+              <p className="text-[12px] text-amber-900/80">
+                <span className="font-semibold">טיפ להצלחה:</span> כל שאלה מקרבת אותך לניצחון אישי וכיתתי. תשובות נכונות היום = פותחות לך דלתות מחר.
+              </p>
             </div>
           </div>
         )}
 
-        {/* ─── DAILY tab ───────────────────────────────── */}
-        {tab === "daily" && (
-          <div className="space-y-5 max-w-[640px] mx-auto">
-            {/* Featured challenge */}
-            <div className="bg-white rounded-3xl ring-1 ring-border p-6 shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10.5px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">לשון</span>
-                <span className="text-[11px] text-muted-foreground">האתגר היומי</span>
-              </div>
-              <h3 className="text-[24px] font-bold text-foreground mb-1">הבנת הנקרא</h3>
-              <div className="flex items-center gap-4 text-[11.5px] text-muted-foreground mt-3">
-                <span className="inline-flex items-center gap-1"><Target className="h-3.5 w-3.5 text-amber-500" /> בינוני</span>
-                <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-amber-500" /> 7 דקות</span>
-                <span className="inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 text-amber-500" /> 12 שאלות</span>
-              </div>
-            </div>
-
-            {/* Social proof */}
-            <div className="bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)] text-center">
-              <p className="text-[13px] font-semibold text-violet-600 mb-1">כולם משחקים עכשיו!</p>
-              <p className="text-[11px] text-muted-foreground mb-3">78% מהכיתה השתתפו</p>
-              <div className="flex items-center justify-center -space-x-2 rtl:space-x-reverse">
-                {["נ","מ","י","ת","ע","ד"].map((c, i) => (
-                  <div key={i} className={`w-9 h-9 rounded-full ring-2 ring-white flex items-center justify-center text-[11px] font-bold text-white shadow-sm`}
-                    style={{ backgroundColor: ["#a78bfa","#f472b6","#34d399","#fbbf24","#60a5fa","#fb7185"][i] }}>
-                    {c}
+        {/* ─── TASKS tab ───────────────────────────────── */}
+        {tab === "tasks" && (
+          <div className="space-y-3 max-w-[720px] mx-auto">
+            {allDone ? (
+              <AllDoneCard expanded />
+            ) : (
+              openTasks.map((t) => {
+                const Icon = typeIcon(t.type);
+                const urgent = t.dueInDays <= 3;
+                return (
+                  <div key={t.id} className={`bg-white rounded-2xl ring-1 ${urgent ? "ring-rose-200" : "ring-border"} p-4 shadow-[var(--shadow-card)] flex items-center gap-3`}>
+                    <div className={`w-12 h-12 rounded-2xl ${urgent ? "bg-rose-50" : "bg-violet-50"} flex items-center justify-center shrink-0`}>
+                      <Icon className={`h-5 w-5 ${urgent ? "text-rose-500" : "text-violet-500"}`} strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full">{t.subject}</span>
+                        {urgent && (
+                          <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                            <Clock className="h-2.5 w-2.5" /> {t.dueInDays} ימים
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[13px] font-semibold text-foreground truncate">{t.title}</p>
+                      <p className="text-[10.5px] text-muted-foreground">
+                        {t.questions ? `${t.questions} שאלות · ` : ""}{t.minutes} דקות · {t.xp} XP
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => completeTask(t.id)}
+                      className="inline-flex items-center gap-1.5 bg-violet-500 hover:bg-violet-600 text-white text-[12px] font-semibold px-3.5 py-2 rounded-full shadow-sm transition-colors"
+                    >
+                      <Play className="h-3 w-3 fill-white" strokeWidth={0} />
+                      התחל
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Goals */}
-            <div className="bg-white rounded-3xl ring-1 ring-border p-5 shadow-[var(--shadow-card)]">
-              <h4 className="text-[14px] font-semibold text-foreground text-center mb-4">מטרות האתגר</h4>
-              <div className="space-y-2.5">
-                {DAILY_GOALS.map((g, i) => (
-                  <div key={i} className="flex items-center justify-between bg-muted/30 rounded-xl px-3 py-2.5">
-                    <span className="text-[11.5px] font-semibold text-emerald-600 tabular-nums">{g.xp} נק׳</span>
-                    <span className="text-[12px] text-foreground">{g.txt}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate(`/play/${encodeURIComponent("לשון")}`)}
-              className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-l from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white text-[14px] font-semibold px-4 py-3.5 rounded-2xl shadow-[0_10px_24px_-10px_rgba(120,80,200,0.55)] transition-all"
-            >
-              <Play className="h-4 w-4 fill-white" strokeWidth={0} />
-              התחל לשחק
-            </button>
-
-            <p className="text-[11px] text-center text-muted-foreground inline-flex items-center justify-center gap-1.5 w-full">
-              <Sparkles className="h-3 w-3 text-amber-500" />
-              טיפ: קרא בעיון, שים לב לפרטים הקטנים
-            </p>
+                );
+              })
+            )}
           </div>
         )}
 
         {/* ─── LEADERBOARD tab ───────────────────────────────── */}
         {tab === "leaderboard" && (
-          <div className="space-y-5 max-w-[720px] mx-auto">
+          <div className="space-y-4 max-w-[720px] mx-auto">
             <div className="bg-white rounded-3xl ring-1 ring-border p-6 shadow-[var(--shadow-card)]">
               <h2 className="text-[16px] font-semibold text-foreground text-center mb-6">הדירוג הכיתתי</h2>
-
-              {/* Podium */}
               <div className="grid grid-cols-3 items-end gap-3 mb-6">
                 {[
                   { ...MOCK_LEADERBOARD[1], h: "h-20", from: "from-slate-300", to: "to-slate-400", chip: "bg-slate-200 text-slate-700" },
@@ -374,73 +391,163 @@ const PlayHubPage = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Rest */}
               <div className="space-y-2">
                 {MOCK_LEADERBOARD.slice(3).map((p) => (
                   <div key={p.rank} className="flex items-center gap-3 bg-muted/30 rounded-xl px-3 py-2.5">
                     <span className="text-[12px] font-bold text-muted-foreground w-5">{p.rank}</span>
-                    <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-[11px] font-bold">{p.name.charAt(0)}</div>
                     <span className="flex-1 text-[12.5px] text-foreground">{p.name}</span>
                     <span className="text-[12px] font-semibold tabular-nums text-foreground/80">{p.xp.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="bg-violet-50 ring-1 ring-violet-100 rounded-2xl px-4 py-3 text-center">
-              <p className="text-[12px] text-violet-700">
-                🌙 חסרות 280 נקודות ואנחנו עוקפים את ו'2!
-              </p>
-            </div>
           </div>
         )}
 
         {/* ─── ACHIEVEMENTS tab ───────────────────────────────── */}
         {tab === "achievements" && (
-          <div className="space-y-5 max-w-[720px] mx-auto">
-            <div className="bg-white rounded-3xl ring-1 ring-border p-6 shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-[11px] text-muted-foreground">6 מתוך 24</span>
-                <h2 className="text-[16px] font-semibold text-foreground inline-flex items-center gap-2">
-                  <Medal className="h-4 w-4 text-amber-500" />
-                  ההישגים שלי
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {ACHIEVEMENTS.map((a, i) => (
-                  <div key={i} className={`bg-white ring-1 ${a.ring} rounded-2xl p-4 flex flex-col items-center text-center hover:-translate-y-0.5 transition-all animate-fade-in-up shadow-[var(--shadow-card)]`} style={{ animationDelay: `${i * 50}ms` }}>
-                    <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${a.color} flex items-center justify-center shadow-md mb-2`}>
-                      <a.icon className="h-6 w-6 text-white" strokeWidth={2} />
-                    </div>
-                    <p className="text-[12px] font-semibold text-foreground">{a.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* My stats */}
+          <div className="max-w-[720px] mx-auto bg-white rounded-3xl ring-1 ring-border p-6 shadow-[var(--shadow-card)]">
+            <h2 className="text-[16px] font-semibold text-foreground text-center mb-5 inline-flex items-center gap-2 w-full justify-center">
+              <Medal className="h-4 w-4 text-amber-500" />
+              ההישגים שלי
+            </h2>
             <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: Flame,    val: "7",   lbl: "רצף ימים",      fg: "text-rose-500",    bg: "bg-rose-50" },
-                { icon: Trophy,   val: "24",  lbl: "אתגרים הושלמו", fg: "text-amber-500",   bg: "bg-amber-50" },
-                { icon: TrendingUp,val: "87%",lbl: "דיוק כללי",     fg: "text-emerald-500", bg: "bg-emerald-50" },
-              ].map((s, i) => (
-                <div key={i} className="bg-white ring-1 ring-border rounded-2xl p-4 text-center shadow-[var(--shadow-card)]">
-                  <div className={`w-10 h-10 rounded-full ${s.bg} flex items-center justify-center mx-auto mb-2`}>
-                    <s.icon className={`h-4 w-4 ${s.fg}`} strokeWidth={2} />
+              {ACHIEVEMENTS.map((a, i) => (
+                <div key={i} className={`bg-white ring-1 ${a.ring} rounded-2xl p-4 flex flex-col items-center text-center shadow-[var(--shadow-card)]`}>
+                  <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${a.color} flex items-center justify-center shadow-md mb-2`}>
+                    <a.icon className="h-6 w-6 text-white" strokeWidth={2} />
                   </div>
-                  <p className="text-[20px] font-bold tabular-nums">{s.val}</p>
-                  <p className="text-[10.5px] text-muted-foreground mt-0.5">{s.lbl}</p>
+                  <p className="text-[12px] font-semibold text-foreground">{a.label}</p>
                 </div>
               ))}
             </div>
           </div>
         )}
+      </div>
 
-        <div className="mt-12 text-center">
-          <span className="text-[8.5px] text-muted-foreground/30 tracking-wider">האקדמיה למצוינות · מכון וינגייט</span>
+      {/* ─── Urgent task popup ─────────────────────────── */}
+      {urgentPopup && (
+        <UrgentPopup
+          task={urgentPopup}
+          onClose={() => { setUrgentPopup(null); setPopupDismissed(true); }}
+          onStart={() => { completeTask(urgentPopup.id); setUrgentPopup(null); setPopupDismissed(true); }}
+        />
+      )}
+    </div>
+  );
+};
+
+/* ── Featured task card (matches reference image) ───────── */
+const FeaturedTaskCard = ({ task, onPlay }: { task: Task; onPlay: () => void }) => {
+  const Icon = typeIcon(task.type);
+  return (
+    <div className="bg-gradient-to-br from-violet-50 via-white to-violet-50/60 rounded-3xl ring-1 ring-violet-100 p-5 md:p-6 shadow-[var(--shadow-card)] relative overflow-hidden">
+      {/* scenic decoration */}
+      <svg viewBox="0 0 400 120" className="absolute bottom-0 inset-x-0 w-full opacity-50 pointer-events-none" preserveAspectRatio="none">
+        <ellipse cx="60" cy="30" rx="35" ry="8" fill="white" />
+        <ellipse cx="340" cy="20" rx="30" ry="7" fill="white" />
+        <path d="M 0 100 L 60 50 L 120 100 Z" fill="hsl(270 40% 92%)" />
+        <path d="M 280 100 L 340 60 L 400 100 Z" fill="hsl(270 40% 92%)" />
+      </svg>
+
+      <p className="text-[10.5px] font-semibold text-violet-600 mb-3 inline-flex items-center gap-1.5 relative">
+        <Target className="h-3 w-3" strokeWidth={2.2} />
+        האתגר היומי
+      </p>
+
+      <div className="flex items-start gap-4 relative">
+        <div className="flex-1">
+          <span className="text-[10px] font-semibold text-violet-700 bg-white/80 px-2 py-0.5 rounded-full">{task.subject}</span>
+          <h3 className="text-[28px] md:text-[32px] font-bold text-foreground mt-2 leading-tight">{task.title}</h3>
+          <p className="text-[12px] text-muted-foreground mt-1.5">
+            {task.questions ? `${task.questions} שאלות · ` : ""}{task.minutes} דקות
+          </p>
+          <button
+            onClick={onPlay}
+            className="mt-5 inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[14px] font-semibold px-6 py-3 rounded-2xl shadow-[0_10px_24px_-10px_rgba(120,80,200,0.6)] transition-all hover:scale-[1.02]"
+          >
+            <Play className="h-4 w-4 fill-white" strokeWidth={0} />
+            התחל לשחק
+          </button>
+        </div>
+
+        {/* trophy illustration */}
+        <div className="hidden sm:flex w-28 h-28 md:w-36 md:h-36 items-center justify-center shrink-0">
+          <Trophy className="w-full h-full text-violet-300 drop-shadow-lg" strokeWidth={1.5} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── All-done state with AI review suggestion ───────────── */
+const AllDoneCard = ({ expanded = false }: { expanded?: boolean }) => (
+  <div className={`bg-gradient-to-br from-emerald-50 via-white to-violet-50 rounded-3xl ring-1 ring-emerald-100 p-6 md:p-8 shadow-[var(--shadow-card)] text-center ${expanded ? "py-12" : ""}`}>
+    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mx-auto mb-4 shadow-md">
+      <CheckCircle2 className="h-8 w-8 text-white" strokeWidth={2.2} />
+    </div>
+    <h3 className="text-[20px] font-bold text-foreground mb-1">סיימת את כל המשימות! 🎉</h3>
+    <p className="text-[13px] text-muted-foreground mb-5 max-w-md mx-auto">
+      וינגייט סמארט מציעה לך עכשיו חזרה ממוקדת על הנושאים החלשים שלך — לשמור על הרצף.
+    </p>
+    <div className="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[13px] font-semibold px-5 py-2.5 rounded-2xl shadow-md cursor-pointer transition-colors">
+      <Brain className="h-4 w-4" strokeWidth={2} />
+      התחל חזרה חכמה
+    </div>
+  </div>
+);
+
+/* ── Small AI banner inside progress card ───────────── */
+const AiReviewBanner = () => (
+  <div className="mt-4 bg-violet-50 ring-1 ring-violet-100 rounded-2xl p-3 flex items-center gap-3">
+    <div className="w-9 h-9 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
+      <Brain className="h-4 w-4 text-white" strokeWidth={2} />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-[12px] font-semibold text-violet-800">חזרה חכמה זמינה</p>
+      <p className="text-[10.5px] text-muted-foreground">5 שאלות מותאמות אישית</p>
+    </div>
+    <button className="text-[11px] font-semibold text-white bg-violet-500 hover:bg-violet-600 px-3 py-1.5 rounded-full">התחל</button>
+  </div>
+);
+
+/* ── Urgent task popup ────────────────────────────── */
+const UrgentPopup = ({ task, onClose, onStart }: { task: Task; onClose: () => void; onStart: () => void }) => {
+  const Icon = typeIcon(task.type);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div
+        className="bg-white rounded-3xl ring-1 ring-rose-100 p-6 max-w-sm w-full shadow-2xl relative animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button onClick={onClose} className="absolute top-3 end-3 w-7 h-7 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors">
+          <X className="h-3.5 w-3.5" />
+        </button>
+
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-400 to-orange-400 flex items-center justify-center mx-auto mb-4 shadow-md">
+          <AlertTriangle className="h-7 w-7 text-white" strokeWidth={2.2} />
+        </div>
+
+        <p className="text-[10.5px] font-semibold text-rose-600 text-center mb-1">דחוף — נותרו {task.dueInDays} ימים</p>
+        <h3 className="text-[20px] font-bold text-foreground text-center leading-tight">{task.title}</h3>
+        <p className="text-[12px] text-muted-foreground text-center mt-2">
+          {task.subject} · {task.minutes} דקות · {task.xp} XP
+        </p>
+
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <button
+            onClick={onClose}
+            className="text-[12.5px] font-medium text-muted-foreground hover:text-foreground py-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors"
+          >
+            אחר כך
+          </button>
+          <button
+            onClick={onStart}
+            className="inline-flex items-center justify-center gap-1.5 text-[12.5px] font-semibold text-white bg-violet-500 hover:bg-violet-600 py-2.5 rounded-xl shadow-sm transition-colors"
+          >
+            <Play className="h-3 w-3 fill-white" strokeWidth={0} />
+            התחל עכשיו
+          </button>
         </div>
       </div>
     </div>
