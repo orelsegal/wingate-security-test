@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { Loader2, Plus, Pencil, Trash2, Check, X, Dumbbell, BookOpen, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +15,14 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 const CLASSES = ["ט'1", "ט'2", "ט'3", "י'1", "י'2", "י'3", "יא'1", "יא'2", "יא'3"];
 
 const DataManagementPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { labels } = useUiLabels();
+
+  useEffect(() => {
+    if (user && user.role !== "developer" && user.role !== "admin") navigate("/", { replace: true });
+  }, [user, navigate]);
   const { data: sports = [], isLoading: loadingSports } = useSports();
   const { data: subjects = [], isLoading: loadingSubjects } = useSubjects();
 

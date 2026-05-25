@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { roleLabels } from "@/context/AuthContext";
@@ -61,7 +63,13 @@ const getStatusBadge = (lastDate: string) => {
 type StatusFilter = "all" | "active_today" | "active_week" | "inactive_3" | "inactive_7";
 
 const UserActivityPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { labels } = useUiLabels();
+
+  useEffect(() => {
+    if (user && user.role !== "developer" && user.role !== "admin") navigate("/", { replace: true });
+  }, [user, navigate]);
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
