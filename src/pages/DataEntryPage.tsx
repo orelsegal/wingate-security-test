@@ -414,7 +414,7 @@ const DataEntryPageInner = () => {
       </div>
 
       <Tabs defaultValue="add-athlete" dir="rtl">
-        <TabsList className="w-full grid grid-cols-5">
+        <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="add-staff" className="gap-1 text-xs md:text-sm">
             <Users className="h-3.5 w-3.5" />
             <span className="hidden md:inline">הוספת איש צוות</span>
@@ -424,11 +424,6 @@ const DataEntryPageInner = () => {
             <UserPlus className="h-3.5 w-3.5" />
             <span className="hidden md:inline">הוספת ספורטאי</span>
             <span className="md:hidden">הוספה</span>
-          </TabsTrigger>
-          <TabsTrigger value="grade-entry" className="gap-1 text-xs md:text-sm">
-            <BookOpen className="h-3.5 w-3.5" />
-            <span className="hidden md:inline">הזנת ציונים</span>
-            <span className="md:hidden">ציונים</span>
           </TabsTrigger>
           <TabsTrigger value="bulk-import" className="gap-1 text-xs md:text-sm">
             <Upload className="h-3.5 w-3.5" />
@@ -538,121 +533,7 @@ const DataEntryPageInner = () => {
           </Card>
         </TabsContent>
 
-        {/* ====== TAB 2: GRADE ENTRY ====== */}
-        <TabsContent value="grade-entry" className="space-y-4 mt-4">
-          <Card className="card-premium">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                בחירת ספורטאי ומקצוע
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">ספורטאי</Label>
-                <Select value={selectedStudentId} onValueChange={(v) => { setSelectedStudentId(v); setSelectedSubjectId(""); }}>
-                  <SelectTrigger><SelectValue placeholder="בחר ספורטאי..." /></SelectTrigger>
-                  <SelectContent>
-                    {students?.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.full_name} — {s.sport} ({s.class_name})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">מקצוע</Label>
-                <Select value={selectedSubjectId} onValueChange={(v) => { setSelectedSubjectId(v); setGrade(""); setCompletionPercent("0"); setAbsences("0"); setNotes(""); setStatus("green"); }} disabled={!selectedStudentId}>
-                  <SelectTrigger><SelectValue placeholder="בחר מקצוע..." /></SelectTrigger>
-                  <SelectContent>
-                    {subjects?.map((s) => <SelectItem key={s.id} value={s.id}>{s.subject_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {selectedStudentId && selectedSubjectId && (
-            <Card className="card-premium animate-fade-in-up">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  ציונים והערכה
-                  {currentProgress && <span className="text-xs font-normal text-muted-foreground mr-2">(עדכון רשומה קיימת)</span>}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">ציון (0-100)</Label>
-                    <Input type="number" min={0} max={100} value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="85" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">אחוז השלמה</Label>
-                    <Input type="number" min={0} max={100} value={completionPercent} onChange={(e) => setCompletionPercent(e.target.value)} placeholder="0-100" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">חיסורים</Label>
-                    <Input type="number" min={0} value={absences} onChange={(e) => setAbsences(e.target.value)} placeholder="0" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">סטטוס</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {statusOptions.map((opt) => (
-                      <button key={opt.value} onClick={() => setStatus(opt.value)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 border ${
-                          status === opt.value ? "border-primary/30 bg-primary/5 text-foreground shadow-sm" : "border-border bg-card text-muted-foreground hover:bg-accent"
-                        }`}>
-                        <div className={`w-2.5 h-2.5 rounded-full ${opt.color}`} />
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">הערות</Label>
-                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="הערכה כללית, נקודות לשיפור..." className="min-h-[80px] resize-none" />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button onClick={handleSaveProgress} disabled={saving} className="gap-2" size="lg">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {currentProgress ? "עדכן ציון" : "שמור ציון"}
-                  </Button>
-                  {gradeSuccess && (
-                    <span className="flex items-center gap-1.5 text-sm text-success animate-fade-in-up">
-                      <CheckCircle2 className="h-4 w-4" /> נשמר בהצלחה!
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {selectedStudentId && selectedSubjectId && subjectRoadmap.length > 0 && (
-            <Card className="card-premium animate-fade-in-up">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Route className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                  מפת דרכים — סימון נושאים
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {subjectRoadmap.map((item) => (
-                    <label key={item.id} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-150 cursor-pointer ${
-                      item.completed ? "bg-success/5 border-success/20" : "bg-card border-border hover:bg-accent/50"
-                    }`}>
-                      <Checkbox checked={item.completed} onCheckedChange={() => handleToggleRoadmapItem(item.id, item.completed, item.progress_id)} />
-                      <span className={`text-sm ${item.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{item.topic_name}</span>
-                      {item.required_for_completion && (
-                        <span className="mr-auto text-[10px] text-primary/60 bg-primary/5 px-2 py-0.5 rounded-full">נדרש להשלמה</span>
-                      )}
-                    </label>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        {/* Grade entry moved to dedicated /grade-entry page */}
 
         {/* ====== TAB 3: BULK IMPORT ====== */}
         <TabsContent value="bulk-import" className="space-y-4 mt-4">

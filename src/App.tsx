@@ -15,6 +15,7 @@ import StudentProfilePage from "./pages/StudentProfilePage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import CoursesPage from "./pages/CoursesPage.tsx";
 import DataEntryPage from "./pages/DataEntryPage.tsx";
+import GradeEntryPage from "./pages/GradeEntryPage.tsx";
 import DataManagementPage from "./pages/DataManagementPage.tsx";
 import StudentHomePage from "./pages/StudentHomePage.tsx";
 import StudentLearningTrafficLight from "./pages/StudentLearningTrafficLight.tsx";
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/students/:id" element={<StudentProfilePage />} />
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/data-entry" element={<DataEntryPage />} />
+              <Route path="/grade-entry" element={<GradeEntryPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
               <Route path="/student-home" element={<StudentHomePage />} />
               <Route path="/student-learning" element={<StudentLearningTrafficLight />} />
