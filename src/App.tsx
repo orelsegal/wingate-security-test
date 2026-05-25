@@ -38,6 +38,7 @@ import UserActivityPage from "./pages/UserActivityPage.tsx";
 import YearPlan2026Page from "./pages/YearPlan2026Page.tsx";
 import AdminLabelsPage from "./pages/AdminLabelsPage.tsx";
 import AdminBuilderPage from "./pages/AdminBuilderPage.tsx";
+import StylePickerPage from "./pages/StylePickerPage.tsx";
 import RoadmapsPage from "./pages/RoadmapsPage.tsx";
 import MathRoadmapPage from "./pages/MathRoadmapPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -70,8 +71,9 @@ const App = () => (
           <ErrorBoundary>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            {/* Full-screen builder — no AppLayout wrapper */}
+            {/* Full-screen — no AppLayout wrapper */}
             <Route path="/admin/builder" element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />
+            <Route path="/style-preview" element={<ProtectedRoute><StylePickerPage /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<DashboardContent />} />
