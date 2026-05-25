@@ -477,45 +477,6 @@ const MathRoadmapPage = () => {
           </div>
         </div>
 
-        {/* Units list (side) */}
-        <div className="bg-card rounded-3xl border border-border p-4 shadow-[var(--shadow-card)] lg:max-h-[calc(100vh-220px)] lg:overflow-auto">
-          <h2 className="text-[13px] font-bold text-foreground mb-3 px-2 flex items-center gap-2 justify-end">
-            רשימת יחידות הלימוד
-            <MapIcon className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-          </h2>
-          <div className="space-y-1.5">
-            {UNITS.map((u, i) => {
-              const isDone = i < activeUnit;
-              const isCurrent = i === activeUnit;
-              const isLocked = i > activeUnit + 1;
-              return (
-                <button
-                  key={u.title}
-                  onClick={() => !isLocked && handleSelect(i)}
-                  disabled={isLocked}
-                  className={[
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-end transition-colors",
-                    isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-accent cursor-pointer",
-                    isCurrent && "bg-violet-50 ring-1 ring-violet-200",
-                  ].filter(Boolean).join(" ")}
-                >
-                  <span className={[
-                    "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold",
-                    isDone ? "bg-emerald-400 text-white" :
-                    isCurrent ? "bg-violet-500 text-white" :
-                    "bg-muted text-muted-foreground",
-                  ].join(" ")}>
-                    {isLocked ? <Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> : i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] font-semibold text-foreground leading-tight truncate">{u.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{u.topics.length} נושאים</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       {/* Unit detail */}
