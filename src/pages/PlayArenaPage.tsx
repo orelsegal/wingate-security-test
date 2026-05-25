@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { useStudent, useStudentProgress } from "@/hooks/useStudents";
+import { useStudent, useStudentProgress, useClassLeaderboard } from "@/hooks/useStudents";
 import { useMemo } from "react";
 import {
   ArrowRight, Play, ClipboardList, Pencil, Trophy, Zap, GraduationCap,
@@ -8,14 +8,8 @@ import {
   MessageCircleQuestion, Home as HomeIcon, BarChart3,
 } from "lucide-react";
 
-/* ── Mock class leaderboard (until backend is wired) ─────────────── */
-const MOCK_LEADERBOARD = [
-  { name: "נועם ש.",  xp: 4820, rank: 1 },
-  { name: "מאיה ל.",  xp: 4610, rank: 2 },
-  { name: "אתה",      xp: 4340, rank: 3, isMe: true },
-  { name: "יואב ק.",  xp: 4060, rank: 4 },
-  { name: "תמר א.",   xp: 3720, rank: 5 },
-];
+const studentXp = (avgScore: number, completionPct: number) =>
+  Math.round(avgScore * 8 + completionPct * 5 + 100);
 
 const STAGE_ICONS = [Play, ClipboardList, Pencil, HomeIcon, Trophy, MessageCircleQuestion, Zap, GraduationCap, Star];
 const STAGE_LABELS = [
@@ -23,11 +17,6 @@ const STAGE_LABELS = [
   "חידון", "שאלות פתוחות", "אתגר בונוס", "מבחן מקדם", "השלמה",
 ];
 
-const DAILY_GOALS = [
-  { title: "ענה על אתגר יומי",   sub: "השלם את הקרב היומי",    icon: Play,           done: true },
-  { title: "תרגל 10 שאלות",       sub: "לפחות 10 תשובות נכונות", icon: ClipboardList,  done: true },
-  { title: "סיכום קצר",            sub: "צפה בסרטון או קרא סיכום", icon: MessageCircleQuestion, done: false },
-];
 
 const PlayArenaPage = () => {
   const navigate = useNavigate();
@@ -37,52 +26,81 @@ const PlayArenaPage = () => {
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: student } = useStudent(studentId);
   const { data: progress = [] } = useStudentProgress(studentId);
+  const { data: classmates = [] } = useClassLeaderboard(student?.class_name || "");
 
   // Pick the subject from URL when given, otherwise highest-progress fallback
   const focus = useMemo(() => {
-    const arr = progress.map((p: any) => ({
+    const arr = (progress as any[]).map((p) => ({
       name: p.subjects?.subject_name || "",
       pct: p.completion_percent || 0,
       grade: p.grade,
+      status: p.status,
     }));
     if (subjectName) {
       const match = arr.find((a) => a.name === subjectName || (subjectName === "לשון" && a.name === "לשון והבעה"));
-      return match || { name: subjectName, pct: 0, grade: null };
+      return match || { name: subjectName, pct: 0, grade: null, status: "yellow" };
     }
-    const best = arr.sort((a, b) => b.pct - a.pct)[0];
-    return best || { name: "מתמטיקה", pct: 0, grade: null };
+    const best = [...arr].sort((a, b) => b.pct - a.pct)[0];
+    return best || { name: "מתמטיקה", pct: 0, grade: null, status: "yellow" };
   }, [progress, subjectName]);
 
   const pct = focus.pct;
-  const xp = Math.round(pct * 11.4 + 320);
-  const level = Math.max(1, Math.floor(pct / 12) + 1);
-  const nextLevel = level + 1;
-  const xpToNext = Math.max(20, nextLevel * 200 - xp);
-  const streak = 7;
+  const xp = studentXp(student?.avg_score || 0, student?.completion_percent || 0);
+  const level = Math.max(1, Math.floor(xp / 200) + 1);
+  const xpToNext = Math.max(20, level * 200 - xp);
   const activeStage = Math.max(1, Math.min(STAGE_LABELS.length, Math.ceil((pct / 100) * STAGE_LABELS.length)));
+
+  // Real leaderboard
+  const leaderboard = useMemo(() =>
+    classmates.map((c, i) => ({
+      name: c.full_name,
+      xp: studentXp(c.avg_score || 0, c.completion_percent || 0),
+      rank: i + 1,
+      isMe: c.id === studentId,
+    })), [classmates, studentId]);
+
+  const myRank = leaderboard.find(l => l.isMe)?.rank ?? 0;
+  const myXp = leaderboard.find(l => l.isMe)?.xp ?? xp;
+  const aboveMe = myRank > 1 ? leaderboard[myRank - 2] : null;
+  const gapToNext = aboveMe ? aboveMe.xp - myXp : 0;
+  const maxXp = leaderboard.length > 0 ? leaderboard[0].xp : xp;
+
+  // Daily goals from real progress
+  const greenCount = (progress as any[]).filter(p => p.status === "green").length;
+  const nearDone = (progress as any[]).find(p => p.completion_percent >= 70 && p.completion_percent < 100);
+  const dailyGoals = useMemo(() => [
+    {
+      title: "סיים מקצוע אחד ב-80%+",
+      sub: nearDone ? `${nearDone.subjects?.subject_name} ב-${nearDone.completion_percent}% — כמעט שם!` : "השלם מקצוע עד 80% השלמה",
+      icon: CheckCircle2,
+      done: (progress as any[]).some(p => p.completion_percent >= 80),
+    },
+    {
+      title: "הגיע לסטטוס ירוק",
+      sub: `${greenCount} מקצועות ירוקים כרגע`,
+      icon: Star,
+      done: greenCount >= 1,
+    },
+    {
+      title: `שפר את ${focus.name}`,
+      sub: `${Math.round(pct)}% השלמה עכשיו — לך על 100%!`,
+      icon: Play,
+      done: pct >= 100,
+    },
+  ], [progress, greenCount, nearDone, focus, pct]);
 
   /* Winding path geometry — bottom→top */
   const TOTAL = STAGE_LABELS.length;
   const points = STAGE_LABELS.map((_, i) => {
     const t = TOTAL > 1 ? i / (TOTAL - 1) : 0.5;
-    return {
-      i,
-      x: 50 + Math.sin(i * 1.35) * 22,
-      y: 94 - t * 88,
-    };
+    return { i, x: 50 + Math.sin(i * 1.35) * 22, y: 94 - t * 88 };
   });
-  const pathD = points
-    .map((p, i) => {
-      if (i === 0) return `M ${p.x} ${p.y}`;
-      const prev = points[i - 1];
-      const cy = (prev.y + p.y) / 2;
-      return `C ${prev.x} ${cy}, ${p.x} ${cy}, ${p.x} ${p.y}`;
-    })
-    .join(" ");
-
-  const myRank = MOCK_LEADERBOARD.find(l => l.isMe)?.rank ?? 3;
-  const gapToNext = MOCK_LEADERBOARD[myRank - 2]?.xp ? MOCK_LEADERBOARD[myRank - 2].xp - (MOCK_LEADERBOARD.find(l => l.isMe)?.xp ?? 0) : 0;
-  const maxXp = Math.max(...MOCK_LEADERBOARD.map(l => l.xp));
+  const pathD = points.map((p, i) => {
+    if (i === 0) return `M ${p.x} ${p.y}`;
+    const prev = points[i - 1];
+    const cy = (prev.y + p.y) / 2;
+    return `C ${prev.x} ${cy}, ${p.x} ${cy}, ${p.x} ${p.y}`;
+  }).join(" ");
 
   return (
     <div className="p-5 md:p-8 lg:p-10 max-w-[1280px] mx-auto" dir="rtl">
@@ -127,16 +145,16 @@ const PlayArenaPage = () => {
               </div>
             </div>
           </div>
-          <Stat label="נקודות ניסיון" value={xp} suffix="XP" tone="violet" />
+          <Stat label="נקודות ניסיון" value={xp.toLocaleString()} suffix="XP" tone="violet" />
           <Stat label="היכן אתה נמצא" value={level} prefix="רמה " tone="amber" />
-          <Stat label="נושאים הושלמו" value={`${activeStage}/${TOTAL}`} tone="emerald" />
+          <Stat label="ממוצע ציונים" value={Math.round(student?.avg_score || 0)} suffix="%" tone="emerald" />
           <div className="bg-gradient-to-l from-amber-50 to-rose-50 rounded-2xl p-3.5 text-center border border-amber-100">
-            <p className="text-[9.5px] text-muted-foreground">רצף נוכחי</p>
-            <p className="text-[22px] font-bold text-foreground leading-none mt-1 tabular-nums">{streak} 🔥</p>
+            <p className="text-[9.5px] text-muted-foreground">דירוג בכיתה</p>
+            <p className="text-[22px] font-bold text-foreground leading-none mt-1 tabular-nums">{myRank > 0 ? `#${myRank}` : "—"} 🏆</p>
             <div className="mt-2 h-1.5 bg-white/80 rounded-full overflow-hidden">
               <div className="h-full bg-amber-400" style={{ width: `${Math.min(100, (xp % 200) / 2)}%` }} />
             </div>
-            <p className="text-[9px] text-muted-foreground mt-1.5">נשארו {xpToNext} XP</p>
+            <p className="text-[9px] text-muted-foreground mt-1.5">נשארו {xpToNext} XP לרמה</p>
           </div>
         </div>
       </div>
@@ -303,10 +321,10 @@ const PlayArenaPage = () => {
               דירוג כיתתי
               <BarChart3 className="h-3.5 w-3.5 text-violet-500" strokeWidth={2} />
             </h2>
-            <p className="text-[10.5px] text-muted-foreground mb-3 text-end">הכיתה שלך במקום <span className="font-bold text-violet-700">3</span></p>
+            {myRank > 0 && <p className="text-[10.5px] text-muted-foreground mb-3 text-end">את/ה במקום <span className="font-bold text-violet-700">{myRank}</span> בכיתה</p>}
             <div className="space-y-2">
-              {MOCK_LEADERBOARD.map((row) => {
-                const w = Math.round((row.xp / maxXp) * 100);
+              {leaderboard.slice(0, 5).map((row) => {
+                const w = Math.round((row.xp / Math.max(maxXp, 1)) * 100);
                 return (
                   <div key={row.rank}
                     className={[
@@ -329,11 +347,11 @@ const PlayArenaPage = () => {
                 );
               })}
             </div>
-            {gapToNext > 0 && (
+            {gapToNext > 0 && aboveMe && (
               <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 p-3 flex items-center gap-2">
                 <Zap className="h-3.5 w-3.5 text-emerald-600 shrink-0" strokeWidth={2} />
                 <p className="text-[10.5px] text-emerald-800 text-end flex-1 font-medium">
-                  חסרות {gapToNext} נקודות כדי לעקוף את י״ב 2
+                  עוד {gapToNext.toLocaleString()} XP לעקוף את {aboveMe.name.split(" ")[0]}
                 </p>
               </div>
             )}
@@ -346,7 +364,7 @@ const PlayArenaPage = () => {
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2} />
             </h2>
             <div className="space-y-2">
-              {DAILY_GOALS.map((g, i) => {
+              {dailyGoals.map((g, i) => {
                 const Icon = g.icon;
                 return (
                   <div key={i} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${g.done ? "bg-emerald-50/60 border-emerald-100" : "bg-background border-border"}`}>
@@ -364,11 +382,12 @@ const PlayArenaPage = () => {
             </div>
             <div className="mt-3 flex items-center gap-2 text-end">
               <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-l from-violet-500 to-pink-400 transition-all duration-500" style={{ width: `${(DAILY_GOALS.filter(g => g.done).length / DAILY_GOALS.length) * 100}%` }} />
+                <div className="h-full bg-gradient-to-l from-violet-500 to-pink-400 transition-all duration-500"
+                  style={{ width: `${(dailyGoals.filter(g => g.done).length / dailyGoals.length) * 100}%` }} />
               </div>
               <span className="text-[10.5px] font-semibold text-violet-700 inline-flex items-center gap-1">
                 <Gift className="h-3.5 w-3.5" strokeWidth={2} />
-                {DAILY_GOALS.filter(g => g.done).length} מתוך {DAILY_GOALS.length} השלמתי
+                {dailyGoals.filter(g => g.done).length} מתוך {dailyGoals.length} השלמתי
               </span>
             </div>
           </div>
@@ -380,9 +399,9 @@ const PlayArenaPage = () => {
               <BarChart3 className="h-3.5 w-3.5 text-violet-500" strokeWidth={2} />
             </h2>
             <div className="grid grid-cols-3 gap-2">
-              <Metric label="דיוק ממוצע" value={`${Math.min(99, 60 + Math.round(pct / 3))}%`} tone="emerald" icon="📊" />
-              <Metric label="שיפור השבוע" value="+120" suffix="XP" tone="violet" icon="📈" />
-              <Metric label="רצף נוכחי" value={streak} suffix="ימים" tone="rose" icon="🔥" />
+              <Metric label="ממוצע ציונים" value={`${Math.round(student?.avg_score || 0)}%`} tone="emerald" icon="📊" />
+              <Metric label="נקודות XP" value={xp.toLocaleString()} tone="violet" icon="📈" />
+              <Metric label="השלמה" value={`${Math.round(student?.completion_percent || 0)}%`} tone="rose" icon="🎯" />
             </div>
             <div className="mt-3 rounded-xl bg-emerald-50/70 border border-emerald-100 p-3 text-center">
               <p className="text-[10.5px] text-emerald-800 font-medium">👏 כל הכבוד! אתה בדרך הנכונה לניצחון!</p>
