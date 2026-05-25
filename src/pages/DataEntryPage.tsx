@@ -800,6 +800,137 @@ const DataEntryPageInner = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ====== TAB: ADD STAFF (teacher/coach) ====== */}
+        <TabsContent value="add-staff" className="space-y-4 mt-4">
+          <Card className="card-premium">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                פרטי איש צוות חדש
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Role toggle */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={staffRole === "teacher" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStaffRole("teacher")}
+                >
+                  מורה
+                </Button>
+                <Button
+                  type="button"
+                  variant={staffRole === "coach" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStaffRole("coach")}
+                >
+                  מאמן
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">שם פרטי</Label>
+                  <Input value={staffFirstName} onChange={(e) => setStaffFirstName(e.target.value)} placeholder="לדוגמה: רונית" dir="rtl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">שם משפחה</Label>
+                  <Input value={staffLastName} onChange={(e) => setStaffLastName(e.target.value)} placeholder="לדוגמה: לוי" dir="rtl" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">תעודת זהות</Label>
+                  <Input value={staffNationalId} onChange={(e) => setStaffNationalId(e.target.value)} placeholder="9 ספרות" dir="rtl" inputMode="numeric" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">טלפון</Label>
+                  <Input value={staffPhone} onChange={(e) => setStaffPhone(e.target.value)} placeholder="05X-XXXXXXX" dir="rtl" inputMode="tel" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">אימייל (אופציונלי)</Label>
+                  <Input value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} placeholder="name@example.com" dir="ltr" />
+                </div>
+              </div>
+
+              {/* Subjects multi-select */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  מקצועות {staffSubjects.length > 0 && <span className="text-primary">({staffSubjects.length})</span>}
+                </Label>
+                <div className="flex flex-wrap gap-2 p-3 rounded-md border bg-muted/30 max-h-44 overflow-y-auto">
+                  {(subjects || []).length === 0 && <span className="text-xs text-muted-foreground">אין מקצועות מוגדרים</span>}
+                  {(subjects || []).map((s) => {
+                    const selected = staffSubjects.includes(s.subject_name);
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setStaffSubjects((prev) => toggleInArray(prev, s.subject_name))}
+                        className={`px-3 py-1 text-xs rounded-full border transition-all ${
+                          selected
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-muted border-border"
+                        }`}
+                      >
+                        {s.subject_name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Classes multi-select — teachers only */}
+              {staffRole === "teacher" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    כיתות {staffClasses.length > 0 && <span className="text-primary">({staffClasses.length})</span>}
+                  </Label>
+                  <div className="flex flex-wrap gap-2 p-3 rounded-md border bg-muted/30">
+                    {CLASSES.map((c) => {
+                      const selected = staffClasses.includes(c);
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setStaffClasses((prev) => toggleInArray(prev, c))}
+                          className={`px-3 py-1 text-xs rounded-full border transition-all ${
+                            selected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background hover:bg-muted border-border"
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">הערות</Label>
+                <Textarea value={staffNotes} onChange={(e) => setStaffNotes(e.target.value)} placeholder="הערות חופשיות..." dir="rtl" rows={3} />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <Button onClick={handleAddStaff} disabled={savingStaff} className="gap-2" size="lg">
+                  {savingStaff ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  שמור {staffRole === "teacher" ? "מורה" : "מאמן"}
+                </Button>
+                {staffSuccess && (
+                  <span className="flex items-center gap-1.5 text-sm text-success animate-fade-in-up">
+                    <CheckCircle2 className="h-4 w-4" /> נשמר בהצלחה!
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
