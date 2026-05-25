@@ -389,9 +389,15 @@ const DataEntryPageInner = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">שם מלא</Label>
-                <Input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="לדוגמה: יעל כהן" dir="rtl" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">שם פרטי</Label>
+                  <Input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="לדוגמה: יעל" dir="rtl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">שם משפחה</Label>
+                  <Input value={athleteLastName} onChange={(e) => setAthleteLastName(e.target.value)} placeholder="לדוגמה: כהן" dir="rtl" />
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -407,18 +413,52 @@ const DataEntryPageInner = () => {
                     <SelectTrigger><SelectValue placeholder="בחר כיתה..." /></SelectTrigger>
                     <SelectContent>{CLASSES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
+                  <p className="text-[10px] text-muted-foreground/70">בכל מעבר שנה״ל הכיתה תקודם אוטומטית (ט׳→י״ב, ואז ״סיים״)</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">תעודת זהות</Label>
+                  <Input value={athleteNationalId} onChange={(e) => setAthleteNationalId(e.target.value)} placeholder="9 ספרות" dir="rtl" inputMode="numeric" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">טלפון</Label>
+                  <Input value={athletePhone} onChange={(e) => setAthletePhone(e.target.value)} placeholder="05X-XXXXXXX" dir="rtl" inputMode="tel" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">איש קשר לחירום</Label>
+                  <Input value={athleteEmergency} onChange={(e) => setAthleteEmergency(e.target.value)} placeholder="שם וטלפון" dir="rtl" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">רמת מתמטיקה (3/4/5)</Label>
+                  <Select value={athleteMathLevel} onValueChange={setAthleteMathLevel}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 יח"ל</SelectItem>
+                      <SelectItem value="4">4 יח"ל</SelectItem>
+                      <SelectItem value="5">5 יח"ל</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">מאמן משויך</Label>
+                  <Select value={athleteCoach} onValueChange={setAthleteCoach}>
+                    <SelectTrigger><SelectValue placeholder={(coachesList as any[]).length ? "בחר מאמן..." : "אין מאמנים רשומים"} /></SelectTrigger>
+                    <SelectContent>
+                      {(coachesList as any[]).map((c: any) => (
+                        <SelectItem key={c.id} value={c.full_name}>
+                          {c.full_name}{c.linked_sport ? ` · ${c.linked_sport}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">רמת מתמטיקה (3/4/5)</Label>
-                <Select value={athleteMathLevel} onValueChange={setAthleteMathLevel}>
-                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 יח"ל</SelectItem>
-                    <SelectItem value="4">4 יח"ל</SelectItem>
-                    <SelectItem value="5">5 יח"ל</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs text-muted-foreground">הערות</Label>
+                <Textarea value={athleteNotes} onChange={(e) => setAthleteNotes(e.target.value)} placeholder="הערות חופשיות על הספורטאי..." dir="rtl" rows={3} />
               </div>
               <div className="flex items-center gap-3 pt-2">
                 <Button onClick={handleAddAthlete} disabled={savingAthlete} className="gap-2" size="lg">
