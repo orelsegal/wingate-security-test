@@ -353,18 +353,15 @@ const MathRoadmapPage = () => {
             <path d="M 0 820 Q 100 760 200 800 T 400 780 L 400 900 L 0 900 Z" fill="hsl(160 25% 92%)" opacity="0.55" />
 
             {/* The road — soft white with shadow */}
-            <g filter="url(#roadShadow)">
+            <g filter="url(#roadShadow)" transform="scale(4 9)">
               <path
                 d={pathD}
                 stroke="hsl(0 0% 100%)"
                 strokeWidth="11"
                 fill="none"
                 strokeLinecap="round"
-                style={{ transform: "none" }}
-                pathLength={1}
-                vectorEffect="non-scaling-stroke"
                 strokeLinejoin="round"
-                transform="scale(4 9)"
+                vectorEffect="non-scaling-stroke"
               />
             </g>
             {/* Dashed center line */}
