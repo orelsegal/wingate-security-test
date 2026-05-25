@@ -175,40 +175,28 @@ const StudentHomePage = () => {
         </div>
       </div>
 
-      {/* Progress chart */}
-      <div className="bg-gradient-to-b from-sky-50/40 to-card rounded-3xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)] mb-7">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] text-rose-500 font-medium">מסלול הריצה</span>
+      {/* Progress chart — minimal */}
+      <div className="bg-card rounded-2xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)] mb-7">
+        <div className="flex items-baseline justify-between mb-5">
+          <span className="text-[10.5px] text-muted-foreground">יעד שבועי {targetPct}%</span>
           <h2 className="text-[13px] font-semibold text-foreground">מהזינוק לקו הסיום</h2>
         </div>
-        <div className="space-y-2.5 relative">
-          {/* Target dashed line */}
-          <div className="absolute top-0 bottom-8 right-[calc(28%+8rem)] border-r-2 border-dashed border-rose-400/60 pointer-events-none">
-            <span className="absolute -top-2 -right-12 bg-rose-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">יעד שבועי {targetPct}%</span>
-          </div>
+        <div className="space-y-3">
           {perSubject.map((s, i) => {
-            const m = metaFor(s.name);
-            const Icon = m.icon;
             const onTrack = s.pct >= targetPct;
             return (
               <div key={i} className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full ${m.pill} flex items-center justify-center text-[9px] font-bold shrink-0`}>{i + 1}</div>
-                <div className="flex items-center gap-2 w-32 shrink-0">
-                  <Icon className={`h-3.5 w-3.5 ${m.fg}`} strokeWidth={2} />
-                  <span className="text-[11px] font-medium text-foreground truncate">{s.name}</span>
+                <span className="text-[11px] text-foreground/80 w-24 shrink-0 text-end truncate">{s.name}</span>
+                <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${onTrack ? "bg-foreground/80" : "bg-foreground/35"}`}
+                    style={{ width: `${Math.max(s.pct, 1)}%` }}
+                  />
                 </div>
-                <div className="flex-1 h-6 bg-sky-50 rounded-md overflow-hidden relative">
-                  <div className={`h-full rounded-md transition-all duration-700 ${onTrack ? "bg-sky-400" : "bg-rose-300"}`}
-                    style={{ width: `${Math.max(s.pct, 2)}%` }} />
-                  <span className="absolute inset-y-0 right-2 flex items-center text-[10px] font-semibold text-foreground/80 tabular-nums">{s.pct}%</span>
-                </div>
+                <span className="text-[10.5px] font-medium text-muted-foreground tabular-nums w-10 text-end">{s.pct}%</span>
               </div>
             );
           })}
-          <div className="flex items-center justify-between pt-3 mt-2 border-t border-border/40">
-            <span className="text-[10px] text-rose-500 font-medium">זינוק</span>
-            <span className="text-[10px] text-muted-foreground">קו הסיום</span>
-          </div>
         </div>
       </div>
 

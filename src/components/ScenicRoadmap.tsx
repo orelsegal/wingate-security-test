@@ -24,12 +24,12 @@ const ScenicRoadmap = ({
   continueLabel = "המשך למסלול",
   heightClass = "h-[calc(100vh-220px)] min-h-[640px] max-h-[920px]",
 }: Props) => {
-  // Geometry: serpentine path bottom→top (so #1 at bottom, #N at top)
+  // Geometry: serpentine path top→bottom (#1 at top, #N at bottom)
   const points = useMemo(() => {
     const total = nodes.length;
     return nodes.map((n, i) => {
       const t = total > 1 ? i / (total - 1) : 0.5;
-      const y = 94 - t * 88;
+      const y = 6 + t * 88;
       const x = 50 + Math.sin(i * 1.35) * 22;
       return { ...n, idx: i, x, y };
     });
@@ -199,7 +199,7 @@ const ScenicRoadmap = ({
       </div>
 
       {/* Start chip */}
-      <div className="absolute bottom-5 right-5 z-20 flex items-center gap-2">
+      <div className="absolute top-16 right-5 z-20 flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center shadow">
           <Lock className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
         </div>
