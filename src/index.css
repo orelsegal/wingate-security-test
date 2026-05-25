@@ -83,13 +83,13 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'FbEleganti', 'Heebo', 'Assistant', sans-serif;
+    font-family: 'FbTamlil', 'Heebo', 'Assistant', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4 {
-    font-family: 'FbEleganti', 'Rubik', 'Heebo', sans-serif;
+    font-family: 'FbTamlil', 'Rubik', 'Heebo', sans-serif;
     font-weight: 500;
   }
 
