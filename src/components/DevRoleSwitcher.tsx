@@ -25,8 +25,8 @@ const DevRoleSwitcher = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-  // Only render for real developers
-  if (realUser?.role !== "developer") return null;
+  // Only render for developers and admins
+  if (realUser?.role !== "developer" && realUser?.role !== "admin") return null;
 
   const activeOption = ROLES.find(r => r.role === previewRole);
 
