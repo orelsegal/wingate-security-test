@@ -16,7 +16,7 @@ interface AuthContextType {
   user: AppUser | null;
   realUser: AppUser | null;
   previewRole: UserRole | null;
-  setPreviewRole: (role: UserRole | null) => void;
+  setPreviewRole: (role: UserRole | null, scopeFilter?: string[]) => void;
   login: (user: AppUser) => void;
   logout: () => void;
   isLoggedIn: boolean;
@@ -102,15 +102,20 @@ async function buildAppUserFromSession(session: Session): Promise<AppUser | null
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [previewRole, setPreviewRoleState] = useState<UserRole | null>(null);
+  const [previewScopeFilter, setPreviewScopeFilterState] = useState<string[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
-  const setPreviewRole = useCallback((role: UserRole | null) => {
+  const setPreviewRole = useCallback((role: UserRole | null, scopeFilter?: string[]) => {
     setPreviewRoleState(role);
+    if (role === null) {
+      setPreviewScopeFilterState(undefined);
+    } else if (scopeFilter !== undefined) {
+      setPreviewScopeFilterState(scopeFilter);
+    } else {
+      // Fall back to demo user scope only if caller didn't provide one
+      setPreviewScopeFilterState(demoUsers.find(d => d.role === role)?.scopeFilter);
+    }
   }, []);
-
-  const previewScopeFilter = previewRole
-    ? demoUsers.find(d => d.role === previewRole)?.scopeFilter
-    : undefined;
 
   const effectiveUser = user && previewRole
     ? { ...user, role: previewRole, scopeFilter: previewScopeFilter }

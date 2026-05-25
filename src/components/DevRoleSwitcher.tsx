@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RoleOption {
   role: UserRole;
@@ -30,8 +31,16 @@ const DevRoleSwitcher = () => {
 
   const activeOption = ROLES.find(r => r.role === previewRole);
 
-  const handleSelect = (opt: RoleOption) => {
-    setPreviewRole(opt.role);
+  const handleSelect = async (opt: RoleOption) => {
+    if (opt.role === "student" || opt.role === "parent") {
+      const { data } = await supabase.from("students").select("id").limit(1).maybeSingle();
+      setPreviewRole(opt.role, data?.id ? [data.id] : undefined);
+    } else if (opt.role === "coach") {
+      const { data } = await supabase.from("sports").select("sport_name").limit(1).maybeSingle();
+      setPreviewRole(opt.role, data?.sport_name ? [data.sport_name] : undefined);
+    } else {
+      setPreviewRole(opt.role);
+    }
     navigate(opt.home, { replace: true });
     setOpen(false);
   };
