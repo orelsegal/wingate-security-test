@@ -111,22 +111,6 @@ const StudentHomePage = () => {
         </h1>
       </div>
 
-      {/* Subjects pills row */}
-      <div className="flex items-center justify-end gap-2 mb-5 flex-wrap">
-        <span className="text-[11px] text-muted-foreground font-medium ml-2">המקצועות שלך</span>
-        {perSubject.map((s, i) => {
-          const m = metaFor(s.name);
-          const Icon = m.icon;
-          return (
-            <button key={i} onClick={() => navigate(`/subjects/${encodeURIComponent(s.name)}`)}
-              className={`inline-flex items-center gap-1.5 ${m.pill} rounded-full px-2.5 py-1 text-[10.5px] font-medium hover:scale-105 transition-transform`}>
-              <span className="tabular-nums opacity-70">{s.pct}%</span>
-              <span>{s.name}</span>
-              <Icon className="h-3 w-3" strokeWidth={2} />
-            </button>
-          );
-        })}
-      </div>
 
       {/* Donut + Stat cards */}
       <div className="bg-card rounded-3xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)] mb-5">
