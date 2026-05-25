@@ -7,6 +7,7 @@ import PageTransition from "@/components/PageTransition";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useActivityLogger } from "@/hooks/useActivityLogger";
+import DevRoleSwitcher from "@/components/DevRoleSwitcher";
 
 const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -42,6 +43,7 @@ const AppLayout = () => {
         </main>
       </div>
       <MobileBottomNav />
+      <DevRoleSwitcher />
     </div>
   );
 };

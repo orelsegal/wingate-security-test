@@ -14,6 +14,9 @@ export interface AppUser {
 
 interface AuthContextType {
   user: AppUser | null;
+  realUser: AppUser | null;
+  previewRole: UserRole | null;
+  setPreviewRole: (role: UserRole | null) => void;
   login: (user: AppUser) => void;
   logout: () => void;
   isLoggedIn: boolean;
@@ -22,6 +25,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  realUser: null,
+  previewRole: null,
+  setPreviewRole: () => {},
   login: () => {},
   logout: () => {},
   isLoggedIn: false,
@@ -95,7 +101,14 @@ async function buildAppUserFromSession(session: Session): Promise<AppUser | null
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
+  const [previewRole, setPreviewRoleState] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const setPreviewRole = useCallback((role: UserRole | null) => {
+    setPreviewRoleState(role);
+  }, []);
+
+  const effectiveUser = user && previewRole ? { ...user, role: previewRole } : user;
 
   useEffect(() => {
     // Clear any leftover legacy demo auth keys — real auth is Supabase only.
@@ -136,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     setUser(null);
+    setPreviewRoleState(null);
     try {
       ["wingate_demo_user", "demo_user", "wingate_role", "demo_role"].forEach((k) =>
         window.localStorage.removeItem(k),
@@ -145,7 +159,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user, loading }}>
+    <AuthContext.Provider value={{
+      user: effectiveUser,
+      realUser: user,
+      previewRole,
+      setPreviewRole,
+      login,
+      logout,
+      isLoggedIn: !!user,
+      loading,
+    }}>
       {children}
     </AuthContext.Provider>
   );
