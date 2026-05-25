@@ -174,7 +174,7 @@ const SubjectDetailPage = () => {
                 <div key={n.id} className={`relative flex items-center gap-3 z-10 ${offset}`}>
                   <button
                     disabled={isLocked}
-                    onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}`)}
+                    onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`)}
                     className={`w-14 h-14 rounded-full flex items-center justify-center text-[14px] font-bold shadow-lg transition-all duration-300 hover:scale-110 ${
                       isDone ? "bg-emerald-400 text-white" :
                       isCurrent ? "bg-violet-500 text-white ring-4 ring-violet-200 animate-pulse" :
