@@ -7,6 +7,7 @@ import { saveLastVisited } from "@/pages/RoleHomePage";
 import DataExportTools from "@/components/DataExportTools";
 import TeacherAIAssistant from "@/components/TeacherAIAssistant";
 import { courseContent } from "@/lib/courseContent";
+import ScenicRoadmap from "@/components/ScenicRoadmap";
 
 const SubjectDetailPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
