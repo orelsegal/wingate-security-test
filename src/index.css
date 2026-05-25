@@ -36,11 +36,11 @@
     --accent-foreground: 120 30% 10%;
 
     /* ── Status colors ── */
-    --destructive: 4 80% 54%;
+    --destructive: 0 85% 55%;
     --destructive-foreground: 0 0% 100%;
-    --success: 112 55% 31%;
+    --success: 142 70% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 36 92% 52%;
+    --warning: 38 95% 52%;
     --warning-foreground: 0 0% 100%;
 
     /* ── Borders ── */

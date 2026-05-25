@@ -37,9 +37,9 @@ export const statusConfig: Record<StatusType, {
   textClass: string;
   activeBg: string;
 }> = {
-  green: { label: "במסלול", dotClass: "bg-success", bgClass: "bg-success/10", textClass: "text-success", activeBg: "bg-success/15 ring-1 ring-success/30" },
-  yellow: { label: "פערים", dotClass: "bg-warning", bgClass: "bg-warning/10", textClass: "text-warning", activeBg: "bg-warning/15 ring-1 ring-warning/30" },
-  red: { label: "בסיכון", dotClass: "bg-destructive", bgClass: "bg-destructive/10", textClass: "text-destructive", activeBg: "bg-destructive/15 ring-1 ring-destructive/30" },
+  green: { label: "במסלול", dotClass: "bg-success", bgClass: "bg-success/30 border border-success/50", textClass: "text-success", activeBg: "bg-success/40 ring-1 ring-success/50" },
+  yellow: { label: "פערים", dotClass: "bg-warning", bgClass: "bg-warning/30 border border-warning/50", textClass: "text-warning", activeBg: "bg-warning/40 ring-1 ring-warning/50" },
+  red: { label: "בסיכון", dotClass: "bg-destructive", bgClass: "bg-destructive/30 border border-destructive/50", textClass: "text-destructive", activeBg: "bg-destructive/40 ring-1 ring-destructive/50" },
 };
 
 export const useStudents = () => {
