@@ -100,6 +100,7 @@ const App = () => (
               <Route path="/year-plan-2026" element={<YearPlan2026Page />} />
               <Route path="/admin/labels" element={<AdminLabelsPage />} />
               <Route path="/roadmaps" element={<RoadmapsPage />} />
+              <Route path="/roadmaps/math" element={<MathRoadmapPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
