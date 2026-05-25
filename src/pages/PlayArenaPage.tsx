@@ -269,6 +269,7 @@ const PlayArenaPage = () => {
                           )}
                           <button
                             disabled={isLocked}
+                            onClick={() => !isLocked && focus.name && navigate(`/subjects/${encodeURIComponent(focus.name)}`)}
                             className={[
                               "w-[48px] h-[48px] rounded-full flex items-center justify-center text-[16px] font-bold shadow-[0_6px_16px_-4px_rgba(120,80,200,0.35)] transition-all duration-300",
                               isLocked ? "opacity-70 cursor-not-allowed" : "hover:scale-110 cursor-pointer",
@@ -304,7 +305,10 @@ const PlayArenaPage = () => {
 
               {/* CTA */}
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20">
-                <button className="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[13px] font-semibold px-7 py-3 rounded-full shadow-[0_10px_24px_-6px_rgba(120,80,200,0.55)] transition-colors">
+                <button
+                  onClick={() => focus.name && navigate(`/subjects/${encodeURIComponent(focus.name)}`)}
+                  className="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[13px] font-semibold px-7 py-3 rounded-full shadow-[0_10px_24px_-6px_rgba(120,80,200,0.55)] transition-colors"
+                >
                   המשך למסלול
                   <ArrowRight className="h-4 w-4 rotate-180" strokeWidth={2} />
                 </button>
