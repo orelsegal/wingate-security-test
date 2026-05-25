@@ -48,6 +48,7 @@ const StylePickerPage            = lazy(() => import("./pages/StylePickerPage"))
 const FontLabPage                = lazy(() => import("./pages/FontLabPage"));
 const RoadmapsPage               = lazy(() => import("./pages/RoadmapsPage"));
 const MathRoadmapPage            = lazy(() => import("./pages/MathRoadmapPage"));
+const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
 const NotFound                   = lazy(() => import("./pages/NotFound"));
 
 // ── Shared route-level loading fallback ─────────────────────────────────────
@@ -120,6 +121,7 @@ const App = () => (
               <Route path="/admin/users"                        element={<UserManagementPage />} />
               <Route path="/roadmaps"                           element={<RoadmapsPage />} />
               <Route path="/roadmaps/math"                      element={<MathRoadmapPage />} />
+              <Route path="/play"                               element={<PlayArenaPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
