@@ -38,7 +38,9 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [expandedItem, setExpandedItem] = useState<string | null>(
     unit.items.find(i => !coveredTopics.includes(i.title))?.id || null
   );
+  // null = not answered, number = last selected (reset on wrong to allow retry)
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
+  const [quizSolved, setQuizSolved] = useState<Set<string>>(new Set()); // permanently locked after correct
   const [quizFeedback, setQuizFeedback] = useState<Record<string, { correct: boolean; message: string } | null>>({});
   const [practiceText, setPracticeText] = useState<Record<string, string>>({});
 
@@ -52,18 +54,26 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
 
   const handleQuizAnswer = useCallback((itemId: string, quizIdx: number, selectedIdx: number, correctIdx: number) => {
     const key = `${itemId}-${quizIdx}`;
-    setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
     const isCorrect = selectedIdx === correctIdx;
+
+    setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
     setQuizFeedback(prev => ({ ...prev, [key]: { correct: isCorrect, message: randomFeedback(isCorrect) } }));
 
-    if (!isCorrect) {
-      // Track attempts per question and trigger escalating failure feedback
+    if (isCorrect) {
+      // Lock permanently on correct answer
+      setQuizSolved(prev => { const next = new Set(prev); next.add(key); return next; });
+    } else {
+      // Show failure animation; after it's done the user can retry (answers reset)
       setWrongAttempts(prev => {
         const next = { ...prev, [key]: (prev[key] || 0) + 1 };
         setFailureAttempt(next[key]);
         setFailureVisible(true);
         return next;
       });
+      // Reset selected answer after short delay so user can retry
+      setTimeout(() => {
+        setQuizAnswers(prev => ({ ...prev, [key]: null }));
+      }, 2800);
     }
   }, []);
 
@@ -211,7 +221,8 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                 {/* Quiz */}
                 {item.quiz && item.quiz.map((q, qi) => {
                   const key = `${item.id}-${qi}`;
-                  const answered = quizAnswers[key] != null;
+                  const solved = quizSolved.has(key);          // permanently locked (got it right)
+                  const answered = solved || quizAnswers[key] != null; // showing feedback right now
                   const fb = quizFeedback[key];
 
                   return (
@@ -226,23 +237,26 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                           const isSelected = quizAnswers[key] === oi;
                           const isCorrectOption = oi === q.correct;
                           let btnClass = "bg-muted/30 text-foreground hover:bg-muted/50";
-                          if (answered) {
+                          if (solved) {
+                            // Permanently show correct answer highlighted
                             if (isCorrectOption) btnClass = "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20";
-                            else if (isSelected && !isCorrectOption) btnClass = "bg-destructive/10 text-destructive border-destructive/20";
+                          } else if (answered) {
+                            // Transient: showing feedback for this attempt
+                            if (isSelected && !isCorrectOption) btnClass = "bg-destructive/10 text-destructive border-destructive/20";
                           }
                           return (
                             <button
                               key={oi}
-                              onClick={() => !answered && handleQuizAnswer(item.id, qi, oi, q.correct)}
-                              disabled={answered}
-                              className={`text-start px-3 py-2 rounded-lg text-[11px] border border-transparent transition-all ${btnClass} ${!answered ? "cursor-pointer" : ""}`}
+                              onClick={() => !solved && handleQuizAnswer(item.id, qi, oi, q.correct)}
+                              disabled={solved}
+                              className={`text-start px-3 py-2 rounded-lg text-[11px] border border-transparent transition-all ${btnClass} ${!solved ? "cursor-pointer" : ""}`}
                             >
                               {opt}
                             </button>
                           );
                         })}
                       </div>
-                      {fb && (
+                      {fb && answered && (
                         <div className={`mt-2.5 flex items-center gap-2 px-3 py-2 rounded-lg text-[10.5px] ${
                           fb.correct
                             ? "bg-[hsl(var(--success))]/8 text-[hsl(var(--success))]"
@@ -251,7 +265,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                           {fb.correct
                             ? <CheckCircle2 className="h-3 w-3 shrink-0 text-[hsl(var(--success))]" strokeWidth={1.5} />
                             : <span className="text-[12px]">🍅</span>}
-                          <span>{fb.correct ? fb.message : "נסה שוב — התשובה הנכונה מסומנת בירוק"}</span>
+                          <span>{fb.correct ? fb.message : "לא בדיוק — נסה שוב!"}</span>
                         </div>
                       )}
                     </div>

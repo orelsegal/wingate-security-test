@@ -189,6 +189,8 @@ const PlayHubPage = () => {
   }, [classmates, studentId]);
 
   const myRank = leaderboard.find((p) => p.isMe);
+  const playerAboveMe = myRank && myRank.rank > 1 ? leaderboard[myRank.rank - 2] : null;
+  const xpGapToNext = playerAboveMe && myRank ? playerAboveMe.xp - myRank.xp : 0;
 
   /* Show urgent popup once on mount */
   useEffect(() => {
@@ -269,7 +271,13 @@ const PlayHubPage = () => {
               </h2>
               <p className="text-[13px] text-foreground/70 mt-2 inline-flex items-center gap-1.5 justify-center">
                 <Trophy className="h-3.5 w-3.5 text-amber-500" strokeWidth={2.2} />
-                עוד <span className="font-bold text-foreground">280</span> נקודות ואנחנו עוקפים את 1'3 2'
+                {playerAboveMe && xpGapToNext > 0 ? (
+                  <>עוד <span className="font-bold text-foreground">{xpGapToNext.toLocaleString()}</span> נקודות ותעקוף את {playerAboveMe.name.split(" ")[0]}!</>
+                ) : myRank?.rank === 1 ? (
+                  <>אתה במקום הראשון! <span className="font-bold text-foreground">כל הכבוד 🏆</span></>
+                ) : (
+                  <>הכנס ותשחרר את הפוטנציאל שלך!</>
+                )}
               </p>
             </div>
 
@@ -285,11 +293,14 @@ const PlayHubPage = () => {
                 <DailyRing color="sky" pct={20} label="חידון שבועי" text="3" />
               </div>
               <button
-                onClick={() => navigate("/play/blitz/seed-poetry-hunters")}
+                onClick={() => openChallenges.length > 0
+                  ? navigate(`/play/blitz/${openChallenges[0].id}`)
+                  : navigate(`/play/${encodeURIComponent(focus.name || "מתמטיקה")}`)
+                }
                 className="mt-5 w-full inline-flex items-center justify-center gap-2 bg-gradient-to-l from-violet-500 to-violet-600 hover:brightness-110 text-white text-[14px] font-bold px-5 py-3 rounded-2xl shadow-[0_12px_28px_-12px_rgba(140,80,220,0.55)] transition-all hover:scale-[1.01]"
               >
                 <Zap className="h-4 w-4 fill-white" strokeWidth={0} />
-                התחל לשחק
+                {openChallenges.length > 0 ? "התחל אתגר" : "כנס לזירה"}
               </button>
             </div>
 
