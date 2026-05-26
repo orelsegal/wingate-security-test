@@ -157,6 +157,10 @@ const PlayHubPage = () => {
   const xp = studentXp(student?.avg_score || 0, student?.completion_percent || 0);
   const completedSubjects = (progress as any[]).filter((p) => p.status === "green").length;
   const totalSubjects = (progress as any[]).length;
+  // Avg of assignments/quizzes across the student's subjects (proxy via completion_percent)
+  const assignmentsAvg = totalSubjects > 0
+    ? Math.round((progress as any[]).reduce((s, p) => s + (p.completion_percent || 0), 0) / totalSubjects)
+    : Math.round(student?.completion_percent || 0);
 
   // Leaderboard with real data — find current student's rank
   const leaderboard = useMemo(() => {
@@ -241,6 +245,14 @@ const PlayHubPage = () => {
         {tab === "home" && (
           <div className="space-y-5">
             {/* KPI strip (from reference image) */}
+            {/* קרב בזק — featured */}
+            <BlitzFeaturedCard
+              role={user?.role || ""}
+              onPlay={() => navigate("/play/blitz/seed-poetry-hunters")}
+              onBuild={() => navigate("/play/blitz/builder")}
+            />
+
+            {/* KPI strip (from reference image) */}
             <div className="bg-white rounded-3xl ring-1 ring-border p-5 md:p-6 shadow-[var(--shadow-card)]">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-2 items-center">
                 {/* completion ring */}
@@ -249,13 +261,13 @@ const PlayHubPage = () => {
                     <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                       <circle cx="18" cy="18" r="15" fill="none" className="stroke-muted/40" strokeWidth="3" />
                       <circle cx="18" cy="18" r="15" fill="none" className="stroke-violet-500" strokeWidth="3"
-                        strokeDasharray={`${Math.round((student?.completion_percent || 0) * 0.94)}, 100`} strokeLinecap="round" />
+                        strokeDasharray={`${Math.round(assignmentsAvg * 0.94)}, 100`} strokeLinecap="round" />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[14px] font-bold text-foreground">{Math.round(student?.completion_percent || 0)}%</span>
+                      <span className="text-[14px] font-bold text-foreground">{assignmentsAvg}%</span>
                     </div>
                   </div>
-                  <p className="text-[10.5px] text-muted-foreground">השלמה<br/>ביחידה</p>
+                  <p className="text-[10.5px] text-muted-foreground">ממוצע מטלות<br/>ובחנים במקצוע</p>
                 </div>
                 {/* xp */}
                 <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
@@ -680,6 +692,56 @@ const UrgentPopup = ({ task, onClose, onStart }: { task: Task; onClose: () => vo
             <Play className="h-3 w-3 fill-white" strokeWidth={0} />
             התחל עכשיו
           </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── קרב בזק featured card ─────────────────────── */
+const BlitzFeaturedCard = ({
+  role, onPlay, onBuild,
+}: { role: string; onPlay: () => void; onBuild: () => void }) => {
+  const canBuild = role === "admin" || role === "teacher";
+  return (
+    <div className="relative overflow-hidden rounded-[28px] ring-1 ring-violet-200 shadow-[var(--shadow-card)] bg-gradient-to-br from-violet-100 via-white to-fuchsia-50 p-5 md:p-6">
+      <div className="absolute -top-10 -end-10 w-40 h-40 rounded-full bg-fuchsia-200/40 blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-10 -start-10 w-40 h-40 rounded-full bg-violet-200/40 blur-2xl pointer-events-none" />
+      <div className="relative flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+        <div className="flex-1 min-w-0">
+          <span className="inline-flex items-center gap-1.5 bg-white/80 text-violet-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+            <Zap className="h-3 w-3" /> קרב בזק נפתח 🔥
+          </span>
+          <h2 className="text-[22px] md:text-[26px] font-bold text-foreground mt-2 leading-tight">ציידי השירה</h2>
+          <p className="text-[12.5px] text-muted-foreground mt-1">
+            5 שאלות · 5 דקות · נושא היום: שירה · פרס: 120 XP + בונוס לכיתה
+          </p>
+          <p className="text-[12px] font-semibold text-violet-700 mt-2">
+            הכיתה שלך צריכה אותך היום! חסרות לכם 280 נקודות כדי לעקוף את י׳2
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              onClick={onPlay}
+              className="inline-flex items-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 hover:brightness-110 text-white text-[14px] font-bold px-5 py-2.5 rounded-2xl shadow-[0_12px_28px_-12px_rgba(140,80,220,0.6)] transition-all hover:scale-[1.02]"
+            >
+              <Play className="h-4 w-4 fill-white" strokeWidth={0} />
+              התחל לשחק
+            </button>
+            {canBuild && (
+              <button
+                onClick={onBuild}
+                className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-violet-700 bg-white/80 hover:bg-white border border-violet-200 px-4 py-2.5 rounded-2xl"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                צור קרב חדש
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center justify-center w-28 h-28 md:w-32 md:h-32 shrink-0 relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-200 to-fuchsia-200 rounded-full opacity-50 blur-xl" />
+          <Trophy className="w-20 h-20 md:w-24 md:h-24 text-amber-400 relative drop-shadow-md" strokeWidth={1.6} />
+          <Clock className="absolute bottom-1 end-1 w-6 h-6 text-violet-500 bg-white rounded-full p-1 shadow" strokeWidth={2.2} />
         </div>
       </div>
     </div>
