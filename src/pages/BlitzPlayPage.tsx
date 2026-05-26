@@ -360,6 +360,25 @@ const BlitzIntroCard = ({ game, onStart }: { game: ReturnType<typeof getBlitzGam
         <Pill icon={Trophy} text={`${game!.prizeXp || 100} XP + בונוס לכיתה`} />
       </div>
 
+      {game!.sourceText && (
+        <div className="mt-5 bg-white/80 backdrop-blur rounded-2xl p-4 ring-1 ring-violet-100 text-right">
+          {(game!.sourceTitle || game!.sourceAuthor) && (
+            <div className="mb-2">
+              {game!.sourceTitle && (
+                <p className="text-[13px] font-bold text-foreground">״{game!.sourceTitle}״</p>
+              )}
+              {game!.sourceAuthor && (
+                <p className="text-[11px] text-muted-foreground">{game!.sourceAuthor}</p>
+              )}
+            </div>
+          )}
+          <pre className="whitespace-pre-wrap font-sans text-[13.5px] leading-[1.85] text-foreground/90">
+{game!.sourceText}
+          </pre>
+          <p className="text-[11px] text-violet-700 font-semibold mt-2">קרא בעיון — השאלות יתבססו גם על תוכן השיר.</p>
+        </div>
+      )}
+
       <div className="mt-5 bg-white/70 backdrop-blur rounded-2xl p-4 ring-1 ring-white">
         <p className="text-[14px] font-bold text-foreground">הכיתה שלך צריכה אותך היום!</p>
         <p className="text-[12px] text-muted-foreground mt-0.5">חסרות לכם 280 נקודות כדי לעקוף את י׳2</p>
