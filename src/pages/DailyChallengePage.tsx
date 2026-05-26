@@ -169,13 +169,18 @@ export default function DailyChallengePage() {
 
         {/* Task card */}
         <div className="bg-white rounded-3xl ring-1 ring-border shadow-[0_10px_40px_-12px_rgba(139,92,246,0.18)] p-5 md:p-7">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10.5px] font-semibold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-full">
-              משימה {idx + 1} מתוך {total}
-            </span>
+          <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10.5px] font-semibold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-full">
+                משימה {idx + 1} מתוך {total}
+              </span>
+              <span className="text-[10.5px] font-semibold text-foreground bg-muted px-2.5 py-1 rounded-full">
+                {GAME_NAMES[task.kind] || "משחק"}
+              </span>
+            </div>
             {task.kind === "boss" && (
               <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-amber-700 bg-amber-50 ring-1 ring-amber-200 px-2.5 py-1 rounded-full">
-                <Crown className="h-3 w-3" /> שאלת בוס · נקודות כפולות
+                <Crown className="h-3 w-3" /> בוס הגמר · נקודות כפולות
               </span>
             )}
           </div>
