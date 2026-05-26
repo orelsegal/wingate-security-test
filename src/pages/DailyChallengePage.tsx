@@ -8,6 +8,7 @@ import {
 import {
   getTodayChallenge, DCTask, loadSettings, saveResult,
 } from "@/lib/dailyChallenge";
+import MonsterBurst from "@/components/MonsterBurst";
 
 /* shuffle helper */
 const shuffle = <T,>(arr: T[]) => arr.map(v => [Math.random(), v] as const).sort((a,b)=>a[0]-b[0]).map(([,v])=>v);
