@@ -108,6 +108,7 @@ const ScienceIntroPage = () => {
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<LearningUnit | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
+  const [showMonsters, setShowMonsters] = useState(false);
 
   // Teacher edit states
   const [editOpen, setEditOpen] = useState(false);
