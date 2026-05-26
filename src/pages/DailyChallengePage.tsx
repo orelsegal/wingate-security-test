@@ -12,6 +12,15 @@ import {
 /* shuffle helper */
 const shuffle = <T,>(arr: T[]) => arr.map(v => [Math.random(), v] as const).sort((a,b)=>a[0]-b[0]).map(([,v])=>v);
 
+/* Olympic-themed game names per task kind */
+const GAME_NAMES: Record<string, string> = {
+  bubbles: "קליעה לידע",
+  truefalse: "מדליה או פסילה",
+  podium: "פודיום המושגים",
+  match: "טבעות הידע",
+  boss: "בוס הגמר",
+};
+
 const fireConfetti = () => {
   const defaults = { startVelocity: 28, spread: 360, ticks: 60, zIndex: 9999, scalar: 0.9 };
   const count = 160;
