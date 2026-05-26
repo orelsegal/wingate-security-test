@@ -377,6 +377,8 @@ const AIGenerateModal = ({
         totalSeconds: Math.max(120, (data.questions?.length || numQuestions) * 30),
         perQuestionSeconds: 30,
         createdBy: user?.name,
+        source: "ai",
+        published: false,
         questions: (data.questions || []).map((q: any, i: number) => ({
           id: `q-${Date.now()}-${i}`,
           type: q.type === "truefalse" ? "truefalse" : "multi",
