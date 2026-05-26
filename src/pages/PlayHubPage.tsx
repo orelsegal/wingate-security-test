@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useClassLeaderboard } from "@/hooks/useStudents";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import confetti from "canvas-confetti";
 import {
   Play, Trophy, Sparkles, Flame, BookOpen, Crown, Medal, Target,
@@ -463,163 +463,31 @@ const PlayHubPage = () => {
         )}
 
 
-        {/* ─── LEADERBOARD tab — פודיום כיתתי ───────────────── */}
+        {/* ─── LEADERBOARD tab — הדירוג הכיתתי ───────────────── */}
         {tab === "leaderboard" && (
-          <div className="space-y-4 max-w-[720px] mx-auto">
-            {/* header strip */}
-            <div className="flex items-center justify-between px-1">
-              <button onClick={() => setTab("home")} className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700 transition-colors">
-                חזרה
-              </button>
-              <h2 className="text-[15px] font-bold text-foreground inline-flex items-center gap-1.5">
-                <Trophy className="h-4 w-4 text-violet-500" strokeWidth={2.2} />
-                פודיום כיתתי
-              </h2>
-            </div>
-
-            {/* My-rank summary */}
-            {myRank && (
-              <div className="relative bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)] overflow-hidden">
-                <div className="absolute -top-12 -end-12 w-40 h-40 rounded-full bg-violet-100/50 blur-2xl pointer-events-none" />
-                <div className="relative flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-1 ring-violet-200/60 flex items-center justify-center shrink-0 shadow-sm">
-                    <Trophy className="h-6 w-6 text-violet-600" strokeWidth={2} />
-                  </div>
-                  <div className="flex-1 min-w-0 text-end">
-                    <p className="text-[10.5px] font-semibold text-violet-600">הכיתה שלך — {student?.class_name || ""}</p>
-                    <h3 className="text-[18px] font-bold text-foreground leading-tight mt-0.5">
-                      את/ה במקום <span className="text-violet-600">#{myRank.rank}</span> מתוך {leaderboard.length}
-                    </h3>
-                    {myRank.rank > 1 && leaderboard[myRank.rank - 2] && (
-                      <p className="text-[12px] text-foreground/70 mt-1">
-                        עוד <span className="font-bold text-violet-700">{(leaderboard[myRank.rank - 2].xp - myRank.xp).toLocaleString()} XP</span> כדי לעקוף את {leaderboard[myRank.rank - 2].name.split(" ")[0]}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Top 3 podium — soft cards */}
-            {leaderboard.length >= 3 && (
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { ...leaderboard[1], place: 2, ring: "ring-slate-200",  bg: "from-slate-50 to-white",  chip: "bg-slate-100 text-slate-700",   icon: Medal },
-                  { ...leaderboard[0], place: 1, ring: "ring-amber-200",  bg: "from-amber-50 to-white",  chip: "bg-amber-100 text-amber-800",   icon: Crown },
-                  { ...leaderboard[2], place: 3, ring: "ring-orange-200", bg: "from-orange-50 to-white", chip: "bg-orange-100 text-orange-800", icon: Medal },
-                ].map((p, i) => (
-                  <div key={i} className={`bg-gradient-to-b ${p.bg} rounded-3xl ring-1 ${p.ring} p-4 shadow-[var(--shadow-card)] flex flex-col items-center text-center ${p.place === 1 ? "scale-[1.04]" : ""}`}>
-                    <div className={`w-12 h-12 rounded-2xl ${p.chip} flex items-center justify-center shadow-sm`}>
-                      <p.icon className="h-5 w-5" strokeWidth={2} />
-                    </div>
-                    <span className={`mt-2 text-[10px] font-bold ${p.chip} px-2 py-0.5 rounded-full`}>מקום {p.place}</span>
-                    <p className={`text-[12.5px] font-semibold mt-2 truncate max-w-full ${p.isMe ? "text-violet-700" : "text-foreground"}`}>
-                      {p.name.split(" ")[0]}
-                    </p>
-                    <p className="text-[13px] font-bold tabular-nums text-foreground/80 mt-0.5">{p.xp.toLocaleString()} XP</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Full list cards */}
-            <div className="space-y-2">
-              {leaderboard.length === 0 && (
-                <div className="bg-white rounded-3xl ring-1 ring-border p-8 text-center">
-                  <p className="text-[13px] text-muted-foreground">אין נתוני כיתה עדיין</p>
-                </div>
-              )}
-              {leaderboard.map((p) => {
-                const max = leaderboard[0]?.xp || 1;
-                const w = Math.round((p.xp / max) * 100);
-                return (
-                  <div key={p.rank} className={`bg-white rounded-2xl ring-1 ${p.isMe ? "ring-violet-200 bg-violet-50/40" : "ring-border"} p-3.5 shadow-sm flex items-center gap-3`}>
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[12px] font-bold shrink-0 ${
-                      p.rank === 1 ? "bg-amber-100 text-amber-800"   :
-                      p.rank === 2 ? "bg-slate-100 text-slate-700"   :
-                      p.rank === 3 ? "bg-orange-100 text-orange-800" :
-                      "bg-muted text-muted-foreground"
-                    }`}>
-                      {p.rank}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-[13px] truncate ${p.isMe ? "font-bold text-violet-700" : "font-semibold text-foreground"}`}>
-                        {p.name}{p.isMe && <span className="text-[10.5px] font-medium text-violet-500 me-1"> (אני)</span>}
-                      </p>
-                      <div className="mt-1.5 h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-l from-violet-500 to-fuchsia-400 rounded-full" style={{ width: `${w}%` }} />
-                      </div>
-                    </div>
-                    <span className="text-[12px] font-bold tabular-nums text-foreground/80 shrink-0">{p.xp.toLocaleString()} XP</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <LeaderboardView
+            leaderboard={leaderboard}
+            myClass={student?.class_name || ""}
+            myName={student?.full_name || "אני"}
+            xp={xp}
+            avgScore={student?.avg_score || 0}
+            onBack={() => setTab("home")}
+          />
         )}
 
-        {/* ─── ACHIEVEMENTS tab — ארון המדליות ───────────────── */}
+        {/* ─── ACHIEVEMENTS tab — ההתקדמות שלי ─────────────── */}
         {tab === "achievements" && (() => {
           const items = buildAchievements(student, completedSubjects);
           const unlockedCount = items.filter(a => a.unlocked).length;
           return (
-            <div className="space-y-4 max-w-[720px] mx-auto">
-              {/* header strip */}
-              <div className="flex items-center justify-between px-1">
-                <button onClick={() => setTab("home")} className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700 transition-colors">
-                  חזרה
-                </button>
-                <h2 className="text-[15px] font-bold text-foreground inline-flex items-center gap-1.5">
-                  <Medal className="h-4 w-4 text-violet-500" strokeWidth={2.2} />
-                  ארון המדליות
-                </h2>
-              </div>
-
-              {/* Summary card */}
-              <div className="relative bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)] overflow-hidden">
-                <div className="absolute -top-12 -end-12 w-40 h-40 rounded-full bg-violet-100/50 blur-2xl pointer-events-none" />
-                <div className="relative flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 ring-1 ring-amber-200/60 flex items-center justify-center shrink-0 shadow-sm">
-                    <Medal className="h-6 w-6 text-amber-600" strokeWidth={2} />
-                  </div>
-                  <div className="flex-1 min-w-0 text-end">
-                    <p className="text-[10.5px] font-semibold text-violet-600">האוסף שלך</p>
-                    <h3 className="text-[18px] font-bold text-foreground leading-tight mt-0.5">
-                      <span className="text-violet-600">{unlockedCount}</span> מדליות מתוך {items.length}
-                    </h3>
-                    <div className="mt-2 h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-l from-amber-400 to-amber-500 rounded-full transition-all" style={{ width: `${(unlockedCount / items.length) * 100}%` }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Medals grid — app-like cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {items.map((a, i) => (
-                  <div
-                    key={i}
-                    className={`relative bg-white rounded-3xl ring-1 ${a.unlocked ? "ring-violet-100" : "ring-border"} p-4 shadow-[var(--shadow-card)] flex flex-col items-center text-center overflow-hidden ${!a.unlocked ? "opacity-75" : ""}`}
-                  >
-                    {a.unlocked && (
-                      <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-violet-100/40 blur-2xl pointer-events-none" />
-                    )}
-                    <div className={`relative w-16 h-16 rounded-full bg-gradient-to-br ${a.unlocked ? a.color : "from-muted to-muted-foreground/30"} flex items-center justify-center shadow-md mb-2.5`}>
-                      {a.unlocked
-                        ? <a.icon className="h-7 w-7 text-white" strokeWidth={2} />
-                        : <Lock className="h-6 w-6 text-white/80" strokeWidth={2} />
-                      }
-                    </div>
-                    <p className="text-[12.5px] font-bold text-foreground leading-tight">{a.label}</p>
-                    <span className={`mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      a.unlocked ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"
-                    }`}>
-                      {a.unlocked ? <><CheckCircle2 className="h-2.5 w-2.5" /> הושג</> : <><Lock className="h-2.5 w-2.5" /> נעול</>}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AchievementsView
+              items={items}
+              unlockedCount={unlockedCount}
+              xp={xp}
+              streak={streak}
+              avgScore={Math.round(student?.avg_score || 0)}
+              onBack={() => setTab("home")}
+            />
           );
         })()}
       </div>
@@ -635,6 +503,267 @@ const PlayHubPage = () => {
     </div>
   );
 };
+
+/* ── Leaderboard view ─ podium + scoped tabs ────────────── */
+type LbPlayer = { name: string; xp: number; rank: number; isMe: boolean };
+type LbScope = "personal" | "groups" | "classes";
+
+const initials = (name: string) =>
+  name.split(" ").map(s => s[0]).filter(Boolean).slice(0, 2).join("");
+
+const LeaderboardView = ({ leaderboard, myClass, myName, xp, avgScore, onBack }: {
+  leaderboard: LbPlayer[]; myClass: string; myName: string; xp: number; avgScore: number;
+  onBack: () => void;
+}) => {
+  const [scope, setScope] = useState<LbScope>("classes");
+
+  // Synthetic class-vs-class podium (mocked, but uses real class name)
+  const classRanks = useMemo(() => {
+    const others = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'"].filter(c => c !== myClass);
+    const base = [
+      { name: others[0] || "א'", xp: 4820 },
+      { name: others[1] || "ב'", xp: 4540 },
+      { name: myClass || "ג'", xp: 4260, isMe: true },
+      { name: others[2] || "ד'", xp: 3980 },
+      { name: others[3] || "ה'", xp: 3240 },
+      { name: others[4] || "ו'", xp: 2890 },
+    ];
+    return base.map((b, i) => ({ ...b, rank: i + 1 } as LbPlayer & { isMe?: boolean }));
+  }, [myClass]);
+
+  // Personal podium: real classmates leaderboard
+  const personalRanks = leaderboard;
+
+  // Group view: mocked sport-based aggregation
+  const groupRanks = useMemo(() => ([
+    { name: "כדורסל", xp: 4720, rank: 1, isMe: false },
+    { name: "שחייה",  xp: 4380, rank: 2, isMe: true  },
+    { name: "ג'ודו",  xp: 4110, rank: 3, isMe: false },
+    { name: "כדורגל", xp: 3760, rank: 4, isMe: false },
+    { name: "אתלטיקה", xp: 3220, rank: 5, isMe: false },
+  ] as LbPlayer[]), []);
+
+  const data: LbPlayer[] =
+    scope === "classes"  ? classRanks  :
+    scope === "groups"   ? groupRanks  :
+    personalRanks.length > 0 ? personalRanks : [];
+
+  const me = data.find(d => d.isMe);
+  const ahead = me && me.rank > 1 ? data[me.rank - 2] : null;
+  const gap = ahead && me ? ahead.xp - me.xp : 0;
+
+  return (
+    <div className="space-y-5 max-w-[520px] mx-auto">
+      {/* header */}
+      <div className="flex items-center justify-between">
+        <button onClick={onBack} className="w-9 h-9 rounded-full bg-white ring-1 ring-border flex items-center justify-center text-foreground/70 hover:bg-muted/40 transition-colors">
+          <X className="h-4 w-4 rotate-45" />
+        </button>
+        <h2 className="text-[17px] font-bold text-foreground">הדירוג הכיתתי</h2>
+        <div className="w-9 h-9" />
+      </div>
+
+      {/* scope tabs */}
+      <div className="grid grid-cols-3 bg-violet-50/70 rounded-2xl p-1 ring-1 ring-violet-100">
+        {([
+          { id: "classes",  label: "כיתות" },
+          { id: "groups",   label: "קבוצות" },
+          { id: "personal", label: "אישי" },
+        ] as { id: LbScope; label: string }[]).map(t => {
+          const active = scope === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setScope(t.id)}
+              className={`py-2 rounded-xl text-[13px] font-semibold transition-all ${
+                active ? "bg-violet-600 text-white shadow-sm" : "text-foreground/70 hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {data.length === 0 ? (
+        <div className="bg-white rounded-3xl ring-1 ring-border p-10 text-center">
+          <p className="text-[13px] text-muted-foreground">אין נתונים עדיין</p>
+        </div>
+      ) : (
+        <>
+          {/* Podium 2-1-3 */}
+          {data.length >= 3 && (
+            <div className="bg-white rounded-3xl ring-1 ring-violet-100 p-6 pb-4 shadow-[var(--shadow-card)]">
+              <div className="grid grid-cols-3 gap-3 items-end">
+                {[
+                  { ...data[1], place: 2, h: "h-20", color: "from-slate-200 to-slate-300",   text: "text-slate-700",   chip: "bg-slate-400" },
+                  { ...data[0], place: 1, h: "h-28", color: "from-amber-300 to-yellow-400",  text: "text-amber-900",   chip: "bg-amber-500", crown: true },
+                  { ...data[2], place: 3, h: "h-16", color: "from-orange-200 to-orange-300", text: "text-orange-800",  chip: "bg-orange-400" },
+                ].map((p: any, i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    {p.crown && <Crown className="h-5 w-5 text-amber-500 mb-1 fill-amber-300" strokeWidth={1.8} />}
+                    <p className={`text-[12px] font-bold ${p.isMe ? "text-emerald-600" : "text-foreground"}`}>
+                      {p.name}{p.isMe ? " (אנחנו)" : ""}
+                    </p>
+                    <p className="text-[13px] font-extrabold tabular-nums text-foreground/80 mb-2">
+                      {p.xp.toLocaleString()}
+                    </p>
+                    <div className={`w-full ${p.h} rounded-t-2xl bg-gradient-to-b ${p.color} flex items-start justify-center pt-2 relative shadow-sm`}>
+                      <div className={`w-8 h-8 rounded-full ${p.chip} text-white text-[13px] font-bold flex items-center justify-center shadow-md ring-2 ring-white`}>
+                        {p.place}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ranks 4+ list */}
+          {data.length > 3 && (
+            <div className="bg-white rounded-3xl ring-1 ring-violet-100 shadow-[var(--shadow-card)] divide-y divide-border/60 overflow-hidden">
+              {data.slice(3).map(p => (
+                <div key={p.rank} className={`flex items-center gap-3 px-4 py-3 ${p.isMe ? "bg-violet-50/60" : ""}`}>
+                  <span className="text-[13px] font-bold text-foreground/60 w-5 tabular-nums">{p.rank}</span>
+                  <div className="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-[12px] font-bold text-violet-700 shrink-0">
+                    {initials(p.name)}
+                  </div>
+                  <p className={`flex-1 text-[13.5px] truncate ${p.isMe ? "font-bold text-violet-700" : "font-semibold text-foreground"}`}>
+                    {p.name}{p.isMe ? " (אנחנו)" : ""}
+                  </p>
+                  <span className="text-[13px] font-bold tabular-nums text-foreground/80">{p.xp.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Gap message */}
+          {me && ahead && (
+            <div className="bg-white rounded-2xl ring-1 ring-violet-100 px-4 py-3.5 shadow-sm text-center text-[13px] text-foreground inline-flex items-center justify-center gap-2 w-full">
+              <span className="text-base">💪</span>
+              חסרות <span className="font-bold text-violet-700">{gap.toLocaleString()}</span> נקודות{scope === "classes" ? " ואנחנו עוקפים את " : " כדי לעקוף את "}
+              <span className="font-bold">{ahead.name}!</span>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+/* ── Achievements view — level hex + stats ─────────────── */
+const xpToLevel = (xp: number) => {
+  // 250 xp per level (nice round numbers for the demo)
+  const level = Math.max(1, Math.floor(xp / 250) + 1);
+  const inLevel = xp - (level - 1) * 250;
+  const nextNeed = 250 - inLevel;
+  return { level, inLevel, total: 250, nextNeed, totalXp: xp };
+};
+
+const AchievementsView = ({ items, unlockedCount, xp, streak, avgScore, onBack }: {
+  items: ReturnType<typeof buildAchievements>; unlockedCount: number; xp: number;
+  streak: number; avgScore: number; onBack: () => void;
+}) => {
+  const lvl = xpToLevel(Math.max(xp, 2450)); // ensure demo-feel even on empty data
+  const pct = Math.round((lvl.inLevel / lvl.total) * 100);
+  return (
+    <div className="space-y-4 max-w-[520px] mx-auto">
+      {/* header */}
+      <div className="flex items-center justify-between">
+        <button onClick={onBack} className="w-9 h-9 rounded-full bg-white ring-1 ring-border flex items-center justify-center text-foreground/70 hover:bg-muted/40 transition-colors">
+          <X className="h-4 w-4 rotate-45" />
+        </button>
+        <h2 className="text-[17px] font-bold text-foreground">ההתקדמות שלי</h2>
+        <Star className="h-5 w-5 text-foreground/40" />
+      </div>
+
+      {/* Level card with hexagon */}
+      <div className="bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)]">
+        <div className="flex items-center gap-4">
+          {/* Hexagon */}
+          <div className="relative w-[72px] h-[72px] shrink-0">
+            <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full drop-shadow-md">
+              <defs>
+                <linearGradient id="hex-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#a78bfa" />
+                  <stop offset="100%" stopColor="#7c3aed" />
+                </linearGradient>
+              </defs>
+              <polygon points="50,4 92,27 92,73 50,96 8,73 8,27" fill="url(#hex-grad)" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[26px] font-extrabold text-white tabular-nums">{lvl.level}</span>
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline justify-between">
+              <p className="text-[13px] font-semibold tabular-nums text-foreground/70">
+                {lvl.totalXp.toLocaleString()} / {((lvl.level) * 250).toLocaleString()} נקודות
+              </p>
+              <h3 className="text-[18px] font-bold text-foreground">רמה {lvl.level}</h3>
+            </div>
+            <div className="mt-2 h-2 bg-violet-100/60 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-l from-violet-500 to-fuchsia-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <p className="text-[12px] text-foreground/60 mt-2 text-end">
+              לרמה הבאה: חסרות <span className="font-bold text-foreground/80">{lvl.nextNeed}</span> נקודות
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3 mini stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatChip icon={<Flame className="h-5 w-5 text-rose-500 fill-rose-400" strokeWidth={1.8} />} value={String(streak)} label="רצף ימים" />
+        <StatChip icon={<Trophy className="h-5 w-5 text-amber-500 fill-amber-300" strokeWidth={1.8} />} value={String(unlockedCount)} label="הישגים" />
+        <StatChip icon={<AccuracyDonut pct={avgScore} />} value={`${avgScore}%`} label="דיוק כללי" />
+      </div>
+
+      {/* All achievements grid */}
+      <div className="bg-white rounded-3xl ring-1 ring-violet-100 p-4 shadow-[var(--shadow-card)]">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-[11.5px] font-semibold text-violet-600">{unlockedCount}/{items.length}</span>
+          <h3 className="text-[14px] font-bold text-foreground">ארון המדליות</h3>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {items.map((a, i) => (
+            <div key={i} className={`flex flex-col items-center text-center ${!a.unlocked ? "opacity-60" : ""}`}>
+              <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${a.unlocked ? a.color : "from-muted to-muted-foreground/30"} flex items-center justify-center shadow-md`}>
+                {a.unlocked
+                  ? <a.icon className="h-6 w-6 text-white" strokeWidth={2} />
+                  : <Lock className="h-5 w-5 text-white/80" strokeWidth={2} />}
+              </div>
+              <p className="text-[11.5px] font-semibold text-foreground mt-2 leading-tight">{a.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StatChip = ({ icon, value, label }: { icon: ReactNode; value: string; label: string }) => (
+  <div className="bg-white rounded-2xl ring-1 ring-violet-100 p-3 shadow-sm flex items-center gap-2.5">
+    <div className="shrink-0">{icon}</div>
+    <div className="min-w-0">
+      <p className="text-[16px] font-extrabold tabular-nums text-foreground leading-none">{value}</p>
+      <p className="text-[10.5px] text-foreground/60 mt-1 truncate">{label}</p>
+    </div>
+  </div>
+);
+
+const AccuracyDonut = ({ pct }: { pct: number }) => {
+  const r = 9, c = 2 * Math.PI * r;
+  const off = c - (Math.max(0, Math.min(100, pct)) / 100) * c;
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5 -rotate-90">
+      <circle cx="12" cy="12" r={r} stroke="hsl(var(--muted))" strokeWidth="3" fill="none" />
+      <circle cx="12" cy="12" r={r} stroke="#10b981" strokeWidth="3" strokeLinecap="round" fill="none" strokeDasharray={c} strokeDashoffset={off} />
+    </svg>
+  );
+};
+
 
 /* ── Featured task card (matches reference image) ───────── */
 const FeaturedTaskCard = ({ task, onPlay, onLearn }: { task: Task; onPlay: () => void; onLearn: () => void }) => {
