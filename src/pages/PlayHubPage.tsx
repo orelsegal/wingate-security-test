@@ -8,6 +8,8 @@ import {
   CheckCircle2, Clock, Zap, TrendingUp, Map, AlertTriangle, X,
   Brain, FileText, MessageSquare, Gamepad2, Lock, Star, Gift,
 } from "lucide-react";
+import DailyChallengePopup from "@/components/DailyChallengePopup";
+import { getTodayChallenge, wasPopupSeenToday, markPopupSeen, hasPlayedToday } from "@/lib/dailyChallenge";
 
 type Task = {
   id: string;
@@ -128,11 +130,21 @@ const PlayHubPage = () => {
   const [urgentPopup, setUrgentPopup] = useState<Task | null>(null);
   const [popupDismissed, setPopupDismissed] = useState(false);
   const [streak, setStreak] = useState<number>(loadStreak);
+  const todaysChallenge = useMemo(() => getTodayChallenge(), []);
+  const [dailyPopupOpen, setDailyPopupOpen] = useState(false);
 
   // Bump streak on first meaningful render (student data arrived)
   useEffect(() => {
     if (studentId) setStreak(bumpStreak());
   }, [studentId]);
+
+  // Show Daily Challenge popup once per day for students
+  useEffect(() => {
+    if (user?.role === "student" && !wasPopupSeenToday() && !hasPlayedToday()) {
+      const t = setTimeout(() => { setDailyPopupOpen(true); markPopupSeen(); }, 700);
+      return () => clearTimeout(t);
+    }
+  }, [user?.role]);
 
   // Derive tasks from real progress data
   const allTasks = useMemo<Task[]>(() => {
@@ -190,6 +202,9 @@ const PlayHubPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50/50 via-white to-violet-50/30" dir="rtl">
+      {dailyPopupOpen && (
+        <DailyChallengePopup challenge={todaysChallenge} onClose={() => setDailyPopupOpen(false)} />
+      )}
       <div className="relative p-5 md:p-8 lg:p-10 max-w-[1200px] mx-auto">
 
         {/* ── Header ─────────────────────────────────────── */}
@@ -244,7 +259,9 @@ const PlayHubPage = () => {
         {/* ─── HOME tab ───────────────────────────────── */}
         {tab === "home" && (
           <div className="space-y-5">
-            {/* KPI strip (from reference image) */}
+            {/* האתגר היומי — featured at top */}
+            <DailyChallengePopup challenge={todaysChallenge} onClose={() => {}} variant="card" />
+
             {/* קרב בזק — featured */}
             <BlitzFeaturedCard
               role={user?.role || ""}

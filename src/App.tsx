@@ -55,6 +55,8 @@ const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
 const PlayHubPage                = lazy(() => import("./pages/PlayHubPage"));
 const BlitzPlayPage              = lazy(() => import("./pages/BlitzPlayPage"));
 const BlitzBuilderPage           = lazy(() => import("./pages/BlitzBuilderPage"));
+const DailyChallengePage         = lazy(() => import("./pages/DailyChallengePage"));
+const DailyChallengeAdminPage    = lazy(() => import("./pages/DailyChallengeAdminPage"));
 const NotFound                   = lazy(() => import("./pages/NotFound"));
 
 // ── Shared route-level loading fallback ─────────────────────────────────────
@@ -126,6 +128,8 @@ const App = () => (
               <Route path="/roadmaps"                           element={<RoadmapsPage />} />
               <Route path="/roadmaps/math"                      element={<MathRoadmapPage />} />
              <Route path="/play"                               element={<PlayHubPage />} />
+              <Route path="/play/daily"                         element={<DailyChallengePage />} />
+              <Route path="/play/daily/admin"                   element={<DailyChallengeAdminPage />} />
               <Route path="/play/blitz/builder"                 element={<BlitzBuilderPage />} />
               <Route path="/play/blitz/:id"                     element={<BlitzPlayPage />} />
               <Route path="/play/:subject"                      element={<PlayArenaPage />} />
