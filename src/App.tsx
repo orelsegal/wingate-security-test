@@ -126,6 +126,8 @@ const App = () => (
               <Route path="/roadmaps"                           element={<RoadmapsPage />} />
               <Route path="/roadmaps/math"                      element={<MathRoadmapPage />} />
              <Route path="/play"                               element={<PlayHubPage />} />
+              <Route path="/play/blitz/builder"                 element={<BlitzBuilderPage />} />
+              <Route path="/play/blitz/:id"                     element={<BlitzPlayPage />} />
               <Route path="/play/:subject"                      element={<PlayArenaPage />} />
             </Route>
 
