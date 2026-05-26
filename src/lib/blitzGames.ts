@@ -212,6 +212,10 @@ const writeAll = (games: BlitzGame[]) => {
 
 export const listBlitzGames = (): BlitzGame[] => readAll();
 
+/** Games that are visible to students — seed + manually-published. */
+export const listPublishedBlitzGames = (): BlitzGame[] =>
+  readAll().filter((g) => g.seed || g.published);
+
 export const getBlitzGame = (id: string): BlitzGame | undefined =>
   readAll().find((g) => g.id === id);
 
@@ -239,6 +243,8 @@ export const newBlitzGame = (): BlitzGame => ({
   prizeXp: 100,
   createdAt: new Date().toISOString(),
   questions: [],
+  published: false,
+  source: "manual",
 });
 
 export const blankQuestion = (): BlitzQuestion => ({
