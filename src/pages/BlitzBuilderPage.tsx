@@ -59,13 +59,28 @@ const BlitzBuilderPage = () => {
             <h1 className="text-[26px] font-bold text-foreground">בניית קרבות בזק</h1>
             <p className="text-[13px] text-muted-foreground mt-1">צרו משחק לימודי קצר, מהיר ותחרותי לתלמידים.</p>
           </div>
-          <button
-            onClick={() => setEditing(newBlitzGame())}
-            className="inline-flex items-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 text-white text-[14px] font-bold px-5 py-3 rounded-2xl shadow-[0_12px_28px_-12px_rgba(140,80,220,0.6)] hover:scale-[1.02] transition-all"
-          >
-            <Plus className="h-4 w-4" /> צור משחק חדש
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setAiOpen(true)}
+              className="inline-flex items-center gap-2 bg-white text-violet-700 ring-1 ring-violet-200 hover:bg-violet-50 text-[14px] font-bold px-5 py-3 rounded-2xl shadow-sm transition-all"
+            >
+              <Wand2 className="h-4 w-4" /> צור עם AI
+            </button>
+            <button
+              onClick={() => setEditing(newBlitzGame())}
+              className="inline-flex items-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 text-white text-[14px] font-bold px-5 py-3 rounded-2xl shadow-[0_12px_28px_-12px_rgba(140,80,220,0.6)] hover:scale-[1.02] transition-all"
+            >
+              <Plus className="h-4 w-4" /> צור משחק חדש
+            </button>
+          </div>
         </div>
+
+        {aiOpen && (
+          <AIGenerateModal
+            onClose={() => setAiOpen(false)}
+            onGenerated={(g) => { setAiOpen(false); setEditing(g); }}
+          />
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {games.map((g) => (
