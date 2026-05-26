@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import MonsterBurst from "@/components/MonsterBurst";
 
 /* ═══ Types ═══ */
 interface LearningUnit {
@@ -108,6 +109,7 @@ const ScienceIntroPage = () => {
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<LearningUnit | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
+  const [showMonsters, setShowMonsters] = useState(false);
 
   // Teacher edit states
   const [editOpen, setEditOpen] = useState(false);
@@ -133,6 +135,7 @@ const ScienceIntroPage = () => {
       toast.success("תשובה נכונה! הנושא הבא נפתח 🎉");
     } else {
       toast.error("תשובה שגויה, נסה/י שוב");
+      setShowMonsters(true);
     }
   };
 
@@ -178,6 +181,7 @@ const ScienceIntroPage = () => {
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[720px] mx-auto" dir="rtl">
+      {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate("/subjects")} className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors">

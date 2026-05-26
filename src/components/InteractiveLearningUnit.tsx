@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import MonsterBurst from "@/components/MonsterBurst";
 
 const FEEDBACK_MESSAGES = {
   correct: [
@@ -40,6 +41,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
   const [quizFeedback, setQuizFeedback] = useState<Record<string, { correct: boolean; message: string } | null>>({});
   const [practiceText, setPracticeText] = useState<Record<string, string>>({});
+  const [showMonsters, setShowMonsters] = useState(false);
 
   const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
   const pct = unit.items.length > 0 ? Math.round((completedCount / unit.items.length) * 100) : 0;
@@ -49,10 +51,12 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
     setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
     const isCorrect = selectedIdx === correctIdx;
     setQuizFeedback(prev => ({ ...prev, [key]: { correct: isCorrect, message: randomFeedback(isCorrect) } }));
+    if (!isCorrect) setShowMonsters(true);
   };
 
   return (
     <div className="space-y-3">
+      {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
       {/* Unit header */}
       <div className="flex items-center gap-3 mb-1">
         <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
