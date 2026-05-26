@@ -346,7 +346,7 @@ const PlayHubPage = () => {
               <div className="bg-white rounded-3xl ring-1 ring-border p-5 shadow-[var(--shadow-card)]">
                 <div className="flex items-baseline justify-between mb-3">
                   <Trophy className="h-4 w-4 text-violet-500" strokeWidth={2} />
-                  <h3 className="text-[14px] font-semibold text-foreground">דירוג כיתתי</h3>
+                  <h3 className="text-[14px] font-semibold text-foreground">פודיום כיתתי</h3>
                 </div>
                 {myRank && (
                   <div className="bg-violet-50 ring-1 ring-violet-100 rounded-2xl p-3 mb-3">
