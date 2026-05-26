@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useClassLeaderboard } from "@/hooks/useStudents";
 import { useMemo } from "react";
+import { courseContent } from "@/lib/courseContent";
 import {
   ArrowRight, Play, ClipboardList, Pencil, Trophy, Zap, GraduationCap,
   CheckCircle2, Circle, Star, Lock, Flame, Gift, Sparkles, MapIcon,
@@ -49,6 +50,11 @@ const PlayArenaPage = () => {
   const level = Math.max(1, Math.floor(xp / 200) + 1);
   const xpToNext = Math.max(20, level * 200 - xp);
   const activeStage = Math.max(1, Math.min(STAGE_LABELS.length, Math.ceil((pct / 100) * STAGE_LABELS.length)));
+
+  // Subject content from courseContent (for subtitle)
+  const subjectDef = courseContent[focus.name] || courseContent[focus.name === "לשון" ? "לשון" : ""];
+  const activeUnit = subjectDef?.parts?.[0]?.units?.[Math.max(0, activeStage - 1)] || subjectDef?.parts?.[0]?.units?.[0];
+  const arenaSubtitle = activeUnit?.title || subjectDef?.subtitle || focus.name;
 
   // Real leaderboard
   const leaderboard = useMemo(() =>
@@ -117,7 +123,7 @@ const PlayArenaPage = () => {
               <Sparkles className="h-5 w-5 text-violet-600" strokeWidth={2} />
             </div>
           </h1>
-          <p className="text-[12px] text-muted-foreground mt-1">חזרה על הפעולות, סדר הפעולות וחוקי הקדימות במספרים</p>
+          <p className="text-[12px] text-muted-foreground mt-1">{arenaSubtitle}</p>
         </div>
       </div>
 
@@ -173,7 +179,10 @@ const PlayArenaPage = () => {
                 <p className="text-[10.5px] font-semibold text-violet-700 mb-1">{focus.name}</p>
                 <p className="text-[20px] font-bold text-foreground leading-tight">קרב החזקות</p>
                 <p className="text-[11px] text-muted-foreground mt-1">10 שאלות · 7 דקות</p>
-                <button className="mt-3 inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[12.5px] font-semibold px-5 py-2.5 rounded-full shadow-[0_8px_20px_-6px_rgba(120,80,200,0.55)] transition-colors">
+                <button
+                  onClick={() => focus.name && navigate(`/subjects/${encodeURIComponent(focus.name)}`)}
+                  className="mt-3 inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-[12.5px] font-semibold px-5 py-2.5 rounded-full shadow-[0_8px_20px_-6px_rgba(120,80,200,0.55)] transition-colors"
+                >
                   <Play className="h-3.5 w-3.5 fill-white" strokeWidth={0} />
                   התחל לשחק
                 </button>
@@ -183,12 +192,23 @@ const PlayArenaPage = () => {
               </div>
             </div>
 
-            <div className="mt-3 rounded-2xl bg-rose-50/70 border border-rose-100 p-3 flex items-center gap-3">
-              <Flame className="h-4 w-4 text-rose-500 shrink-0" strokeWidth={2} />
-              <p className="text-[11px] text-foreground/85 text-end flex-1">
-                הכיתה שלך צריכה אותך היום! רק 4 תלמידים ענו עדיין — אם תענה, תוכל לעקוף את י״ב 2!
-              </p>
-            </div>
+            {aboveMe && gapToNext > 0 && (
+              <div className="mt-3 rounded-2xl bg-rose-50/70 border border-rose-100 p-3 flex items-center gap-3">
+                <Flame className="h-4 w-4 text-rose-500 shrink-0" strokeWidth={2} />
+                <p className="text-[11px] text-foreground/85 text-end flex-1">
+                  עוד {gapToNext.toLocaleString()} XP ותעקוף את {aboveMe.name.split(" ")[0]}!
+                  {leaderboard.length > 0 && ` אתה במקום ${myRank} מתוך ${leaderboard.length}.`}
+                </p>
+              </div>
+            )}
+            {(!aboveMe || gapToNext === 0) && myRank === 1 && (
+              <div className="mt-3 rounded-2xl bg-amber-50/70 border border-amber-100 p-3 flex items-center gap-3">
+                <Trophy className="h-4 w-4 text-amber-500 shrink-0" strokeWidth={2} />
+                <p className="text-[11px] text-foreground/85 text-end flex-1">
+                  אתה במקום ראשון בכיתה! שמור על הבכורה 🏆
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Path */}

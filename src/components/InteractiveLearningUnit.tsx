@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { UnitDef } from "@/lib/courseContent";
 import {
   ChevronDown, ChevronUp, CheckCircle2, BookOpen,
@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import MonsterBurst from "@/components/MonsterBurst";
+import FailureFeedback from "@/components/FailureFeedback";
 
 const FEEDBACK_MESSAGES = {
   correct: [
@@ -41,22 +41,41 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
   const [quizFeedback, setQuizFeedback] = useState<Record<string, { correct: boolean; message: string } | null>>({});
   const [practiceText, setPracticeText] = useState<Record<string, string>>({});
-  const [showMonsters, setShowMonsters] = useState(false);
+
+  /* Failure feedback animation state */
+  const [failureVisible, setFailureVisible] = useState(false);
+  const [failureAttempt, setFailureAttempt] = useState(1);
+  const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
 
   const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
   const pct = unit.items.length > 0 ? Math.round((completedCount / unit.items.length) * 100) : 0;
 
-  const handleQuizAnswer = (itemId: string, quizIdx: number, selectedIdx: number, correctIdx: number) => {
+  const handleQuizAnswer = useCallback((itemId: string, quizIdx: number, selectedIdx: number, correctIdx: number) => {
     const key = `${itemId}-${quizIdx}`;
     setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
     const isCorrect = selectedIdx === correctIdx;
     setQuizFeedback(prev => ({ ...prev, [key]: { correct: isCorrect, message: randomFeedback(isCorrect) } }));
-    if (!isCorrect) setShowMonsters(true);
-  };
+
+    if (!isCorrect) {
+      // Track attempts per question and trigger escalating failure feedback
+      setWrongAttempts(prev => {
+        const next = { ...prev, [key]: (prev[key] || 0) + 1 };
+        setFailureAttempt(next[key]);
+        setFailureVisible(true);
+        return next;
+      });
+    }
+  }, []);
 
   return (
     <div className="space-y-3">
-      {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
+      {/* Fun failure feedback overlay */}
+      <FailureFeedback
+        visible={failureVisible}
+        attemptCount={failureAttempt}
+        onDone={() => setFailureVisible(false)}
+      />
+
       {/* Unit header */}
       <div className="flex items-center gap-3 mb-1">
         <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
@@ -225,10 +244,14 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                       </div>
                       {fb && (
                         <div className={`mt-2.5 flex items-center gap-2 px-3 py-2 rounded-lg text-[10.5px] ${
-                          fb.correct ? "bg-[hsl(var(--success))]/8 text-[hsl(var(--success))]" : "bg-destructive/8 text-destructive"
+                          fb.correct
+                            ? "bg-[hsl(var(--success))]/8 text-[hsl(var(--success))]"
+                            : "bg-muted/40 text-muted-foreground"
                         }`}>
-                          {fb.correct ? <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.5} /> : <Sparkles className="h-3 w-3 shrink-0" strokeWidth={1.5} />}
-                          <span>{fb.message}</span>
+                          {fb.correct
+                            ? <CheckCircle2 className="h-3 w-3 shrink-0 text-[hsl(var(--success))]" strokeWidth={1.5} />
+                            : <span className="text-[12px]">🍅</span>}
+                          <span>{fb.correct ? fb.message : "נסה שוב — התשובה הנכונה מסומנת בירוק"}</span>
                         </div>
                       )}
                     </div>
