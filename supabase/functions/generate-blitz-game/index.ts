@@ -189,6 +189,21 @@ ${instructions ? `\nהנחיות נוספות מהמורה: ${instructions}` : "
       const opts = Array.isArray(q.options) ? q.options.slice(0, 4) : [];
       while (opts.length < (q.type === "truefalse" ? 2 : 4)) opts.push("");
       const idx = Math.min(Math.max(Number(q.correctIndex) || 0, 0), opts.length - 1);
+
+      // Shuffle options so the correct answer is not biased to a position
+      // (and to avoid the "longest = correct" tell). True/false keeps order.
+      if (q.type !== "truefalse" && opts.length > 1) {
+        const correctText = opts[idx];
+        const order = opts.map((_, i) => i);
+        for (let i = order.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [order[i], order[j]] = [order[j], order[i]];
+        }
+        const shuffled = order.map((i) => opts[i]);
+        const newIdx = shuffled.indexOf(correctText);
+        return { ...q, options: shuffled, correctIndex: newIdx };
+      }
+
       return { ...q, options: opts, correctIndex: idx };
     });
 
