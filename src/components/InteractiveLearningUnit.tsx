@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import confetti from "canvas-confetti";
 import type { UnitDef } from "@/lib/courseContent";
 import {
   ChevronDown, ChevronUp, CheckCircle2, BookOpen,
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import FailureFeedback from "@/components/FailureFeedback";
-import SuccessFeedback from "@/components/SuccessFeedback";
 
 const FEEDBACK_MESSAGES = {
   correct: [
@@ -27,6 +27,13 @@ const FEEDBACK_MESSAGES = {
 const randomFeedback = (correct: boolean) => {
   const arr = correct ? FEEDBACK_MESSAGES.correct : FEEDBACK_MESSAGES.incorrect;
   return arr[Math.floor(Math.random() * arr.length)];
+};
+
+const fireConfetti = () => {
+  const colors = ["#10b981", "#a78bfa", "#fbbf24", "#f472b6", "#34d399", "#60a5fa"];
+  confetti({ particleCount: 70, angle: 60,  spread: 52, origin: { x: 0,   y: 0.72 }, colors, startVelocity: 52, ticks: 90, scalar: 0.9, zIndex: 9999 });
+  confetti({ particleCount: 70, angle: 120, spread: 52, origin: { x: 1,   y: 0.72 }, colors, startVelocity: 52, ticks: 90, scalar: 0.9, zIndex: 9999 });
+  setTimeout(() => confetti({ particleCount: 40, spread: 80, origin: { x: 0.5, y: 0 }, colors: ["#fbbf24","#f59e0b","#fcd34d","#fff"], shapes: ["star"], scalar: 1.3, startVelocity: 20, ticks: 120, gravity: 0.6, zIndex: 9999 }), 180);
 };
 
 
@@ -52,9 +59,6 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [failureAttempt, setFailureAttempt] = useState(1);
   const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
 
-  /* Success monster — grows with each correct answer */
-  const [successVisible, setSuccessVisible] = useState(false);
-  const [successCount, setSuccessCount] = useState(0); // total correct so far this unit
 
   const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
   const pct = unit.items.length > 0 ? Math.round((completedCount / unit.items.length) * 100) : 0;
@@ -70,8 +74,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
     if (isCorrect) {
       // Lock permanently — correct answer, we're done with this question
       setQuizSolved(prev => { const s = new Set(prev); s.add(key); return s; });
-      setSuccessCount(prev => prev + 1);
-      setSuccessVisible(true);
+      fireConfetti();
     } else {
       // Wrong — trigger fun animation, but DON'T lock the buttons.
       // The user can click another option immediately (no timeout, no disabled state).
@@ -91,12 +94,6 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
         visible={failureVisible}
         attemptCount={failureAttempt}
         onDone={() => setFailureVisible(false)}
-      />
-      {/* Success monster — gets bigger each correct answer */}
-      <SuccessFeedback
-        visible={successVisible}
-        correctCount={successCount}
-        onDone={() => setSuccessVisible(false)}
       />
 
       {/* Unit header */}
