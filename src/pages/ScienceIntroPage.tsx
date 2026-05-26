@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import MonsterBurst from "@/components/MonsterBurst";
 
 /* ═══ Types ═══ */
 interface LearningUnit {
