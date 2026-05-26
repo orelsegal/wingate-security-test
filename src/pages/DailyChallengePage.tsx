@@ -8,6 +8,7 @@ import {
 import {
   getTodayChallenge, DCTask, loadSettings, saveResult,
 } from "@/lib/dailyChallenge";
+import MonsterBurst from "@/components/MonsterBurst";
 
 /* shuffle helper */
 const shuffle = <T,>(arr: T[]) => arr.map(v => [Math.random(), v] as const).sort((a,b)=>a[0]-b[0]).map(([,v])=>v);
@@ -42,6 +43,7 @@ export default function DailyChallengePage() {
   const [classXp, setClassXp] = useState(0);
   const [startedAt] = useState(() => Date.now());
   const [finished, setFinished] = useState(false);
+  const [showMonsters, setShowMonsters] = useState(false);
 
   // overall timer (5 min default)
   const [secondsLeft, setSecondsLeft] = useState(challenge.minutes * 60);
@@ -62,6 +64,9 @@ export default function DailyChallengePage() {
       setXp(x => x + gain);
       setClassXp(c => c + gain);
       setCorrectCount(c => c + 1);
+      fireConfetti();
+    } else {
+      setShowMonsters(true);
     }
   };
 
@@ -149,6 +154,7 @@ export default function DailyChallengePage() {
   /* ── Active play ──────────────────────────────── */
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50/50 via-white to-emerald-50/30 p-5 md:p-10" dir="rtl">
+      {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
       <div className="max-w-[680px] mx-auto">
         {/* Header bar */}
         <div className="flex items-center justify-between mb-4">

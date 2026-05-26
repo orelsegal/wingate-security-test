@@ -10,6 +10,7 @@ import {
 } from "@/lib/blitzGames";
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useClassLeaderboard } from "@/hooks/useStudents";
+import MonsterBurst from "@/components/MonsterBurst";
 
 type Phase = "intro" | "play" | "result" | "leaderboard";
 
@@ -46,6 +47,7 @@ const BlitzPlayPage = () => {
   const [wrong, setWrong] = useState<string[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(game?.totalSeconds || 300);
   const [qSecondsLeft, setQSecondsLeft] = useState(game?.perQuestionSeconds || 30);
+  const [showMonsters, setShowMonsters] = useState(false);
   const tickRef = useRef<number | null>(null);
 
   useEffect(() => () => { if (tickRef.current) window.clearInterval(tickRef.current); }, []);
@@ -94,6 +96,7 @@ const BlitzPlayPage = () => {
       setClassContribution((c) => c + Math.round(delta * 0.6));
     } else {
       setWrong((w) => [...w, q.id]);
+      setShowMonsters(true);
     }
     setFeedback({
       ok,
@@ -139,6 +142,7 @@ const BlitzPlayPage = () => {
     const pct = Math.round(((qIdx) / game.questions.length) * 100);
     return (
       <div className="min-h-screen bg-gradient-to-b from-violet-50/60 via-white to-violet-50/30 p-5 md:p-8" dir="rtl">
+        {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
         <div className="max-w-[760px] mx-auto">
 
           {/* Top bar */}
