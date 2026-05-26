@@ -474,47 +474,75 @@ const PlayHubPage = () => {
 
         {/* ─── TASKS tab ───────────────────────────────── */}
         {tab === "tasks" && (
-          <div className="space-y-3 max-w-[720px] mx-auto">
+          <div className="space-y-4 max-w-[720px] mx-auto">
+            {/* Header strip — "אתגרים פתוחים" */}
+            <div className="flex items-center justify-between px-1">
+              <button className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700 transition-colors">
+                ראה הכל
+              </button>
+              <h2 className="text-[15px] font-bold text-foreground inline-flex items-center gap-1.5">
+                <Target className="h-4 w-4 text-violet-500" strokeWidth={2.2} />
+                אתגרים פתוחים
+              </h2>
+            </div>
+
             {allDone ? (
               <AllDoneCard expanded />
             ) : (
               openTasks.map((t) => {
                 const Icon = typeIcon(t.type);
                 const urgent = t.dueInDays <= 3;
+                const difficulty = t.xp >= 200 ? "מתקדם" : t.xp >= 120 ? "בינוני" : "מתחילים";
                 return (
-                  <div key={t.id} className={`bg-white rounded-2xl ring-1 ${urgent ? "ring-rose-200" : "ring-border"} p-4 shadow-[var(--shadow-card)] flex items-center gap-3`}>
-                    <div className={`w-12 h-12 rounded-2xl ${urgent ? "bg-rose-50" : "bg-violet-50"} flex items-center justify-center shrink-0`}>
-                      <Icon className={`h-5 w-5 ${urgent ? "text-rose-500" : "text-violet-500"}`} strokeWidth={2} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full">{t.subject}</span>
-                        {urgent && (
-                          <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
-                            <Clock className="h-2.5 w-2.5" /> {t.dueInDays} ימים
-                          </span>
-                        )}
+                  <div
+                    key={t.id}
+                    className="relative bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)] overflow-hidden"
+                  >
+                    {/* soft decorative glow */}
+                    <div className="absolute -top-12 -end-12 w-40 h-40 rounded-full bg-violet-100/50 blur-2xl pointer-events-none" />
+
+                    <div className="relative flex items-start gap-4">
+                      {/* Icon medallion */}
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-1 ring-violet-200/60 flex items-center justify-center shrink-0 shadow-sm">
+                        <Icon className="h-6 w-6 text-violet-600" strokeWidth={2} />
                       </div>
-                      <p className="text-[13px] font-semibold text-foreground truncate">{t.title}</p>
-                      <p className="text-[10.5px] text-muted-foreground">
-                        {t.questions ? `${t.questions} שאלות · ` : ""}{t.minutes} דקות · {t.xp} XP
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-1.5 shrink-0">
-                      <button
-                        onClick={() => navigate(`/play/${encodeURIComponent(t.subject)}`)}
-                        className="inline-flex items-center gap-1.5 bg-violet-500 hover:bg-violet-600 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-sm transition-colors"
-                      >
-                        <Play className="h-3 w-3 fill-white" strokeWidth={0} />
-                        כנס
-                      </button>
-                      <button
-                        onClick={() => completeTask(t.id)}
-                        className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 rounded-full border border-border/60 hover:bg-muted/40 transition-colors"
-                      >
-                        <CheckCircle2 className="h-3 w-3" strokeWidth={1.5} />
-                        עשיתי
-                      </button>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-[15px] font-bold text-foreground leading-tight">
+                            {t.subject} — {t.title.replace(`— ${t.subject}`, "").replace(t.subject, "").trim() || t.title}
+                          </h3>
+                          {urgent && (
+                            <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1 shrink-0">
+                              <Clock className="h-2.5 w-2.5" /> {t.dueInDays} ימים
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[12px] text-violet-600 mt-1.5 font-medium">
+                          {t.questions ? `${t.questions} שאלות` : `${t.minutes} דק׳`} · {t.minutes} דקות · {difficulty}
+                        </p>
+                        <p className="text-[12px] text-foreground/70 mt-1">
+                          פרס: <span className="font-bold text-violet-700">{t.xp} XP</span>
+                        </p>
+
+                        <div className="mt-4 flex items-center gap-2">
+                          <button
+                            onClick={() => navigate(`/play/${encodeURIComponent(t.subject)}`)}
+                            className="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 hover:brightness-110 text-white text-[13.5px] font-bold px-5 py-2.5 rounded-2xl shadow-[0_10px_24px_-12px_rgba(140,80,220,0.6)] transition-all hover:scale-[1.01]"
+                          >
+                            <Play className="h-3.5 w-3.5 fill-white" strokeWidth={0} />
+                            התחל אתגר
+                          </button>
+                          <button
+                            onClick={() => completeTask(t.id)}
+                            className="inline-flex items-center justify-center w-10 h-10 rounded-2xl text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted/40 transition-colors shrink-0"
+                            title="סמן כבוצע"
+                          >
+                            <CheckCircle2 className="h-4 w-4" strokeWidth={1.8} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
@@ -522,6 +550,7 @@ const PlayHubPage = () => {
             )}
           </div>
         )}
+
 
         {/* ─── LEADERBOARD tab ───────────────────────────────── */}
         {tab === "leaderboard" && (
