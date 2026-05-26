@@ -9,6 +9,7 @@ import {
   Brain, FileText, MessageSquare, Gamepad2, Lock, Star, Gift,
 } from "lucide-react";
 import DailyChallengePopup from "@/components/DailyChallengePopup";
+import OlympicTopPanel from "@/components/OlympicTopPanel";
 import { getTodayChallenge, wasPopupSeenToday, markPopupSeen, hasPlayedToday } from "@/lib/dailyChallenge";
 
 type Task = {
@@ -259,7 +260,15 @@ const PlayHubPage = () => {
         {/* ─── HOME tab ───────────────────────────────── */}
         {tab === "home" && (
           <div className="space-y-5">
-            {/* האתגר היומי — featured at top */}
+            {/* אולימפיאדת הידע — פאנל פתיחה ראשי */}
+            <OlympicTopPanel
+              challenge={todaysChallenge}
+              studentName={student?.full_name || user?.name}
+              classRank={3}
+              className={student?.class_name}
+            />
+
+            {/* האתגר היומי — featured card */}
             <DailyChallengePopup challenge={todaysChallenge} onClose={() => {}} variant="card" />
 
             {/* קרב בזק — featured */}
