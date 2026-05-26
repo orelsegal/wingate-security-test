@@ -28,6 +28,9 @@ export type BlitzGame = {
   startsAt?: string;
   endsAt?: string;
   prizeXp?: number;
+  sourceTitle?: string;     // e.g. שם השיר
+  sourceAuthor?: string;    // e.g. שם המשורר
+  sourceText?: string;      // full text of the poem/passage shown before play
   questions: BlitzQuestion[];
   createdBy?: string;
   createdAt: string;
