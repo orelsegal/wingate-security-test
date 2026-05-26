@@ -57,7 +57,6 @@ const BlitzPlayPage              = lazy(() => import("./pages/BlitzPlayPage"));
 const BlitzBuilderPage           = lazy(() => import("./pages/BlitzBuilderPage"));
 const DailyChallengePage         = lazy(() => import("./pages/DailyChallengePage"));
 const DailyChallengeAdminPage    = lazy(() => import("./pages/DailyChallengeAdminPage"));
-const FeedbackLabPage            = lazy(() => import("./pages/FeedbackLabPage"));
 const NotFound                   = lazy(() => import("./pages/NotFound"));
 
 // ── Shared route-level loading fallback ─────────────────────────────────────
@@ -95,7 +94,6 @@ const App = () => (
             <Route path="/admin/builder"  element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />
             <Route path="/style-preview"  element={<ProtectedRoute><StylePickerPage /></ProtectedRoute>} />
             <Route path="/font-lab"       element={<ProtectedRoute><FontLabPage /></ProtectedRoute>} />
-            <Route path="/feedback-lab"   element={<FeedbackLabPage />} />
 
             {/* ── Main app (with AppLayout sidebar) ──────────── */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
