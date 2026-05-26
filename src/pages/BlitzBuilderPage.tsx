@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus, Trash2, Save, Zap, Sparkles, ChevronLeft, Play, Crown, Edit3, Copy, Wand2, Loader2, X,
+  CheckCircle2, EyeOff,
 } from "lucide-react";
 import {
   listBlitzGames, upsertBlitzGame, deleteBlitzGame, newBlitzGame, blankQuestion,
