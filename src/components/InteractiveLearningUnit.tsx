@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import confetti from "canvas-confetti";
 import type { UnitDef } from "@/lib/courseContent";
 import {
   ChevronDown, ChevronUp, CheckCircle2, BookOpen,
@@ -8,7 +7,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import ErrorFeedbackOverlay from "@/components/ErrorFeedbackOverlay";
+import SportFeedbackOverlay from "@/components/SportFeedbackOverlay";
+import type { FeedbackEventType } from "@/lib/sportFeedback";
 
 const FEEDBACK_MESSAGES = {
   correct: [
@@ -29,70 +29,56 @@ const randomFeedback = (correct: boolean) => {
   return arr[Math.floor(Math.random() * arr.length)];
 };
 
-const fireConfetti = () => {
-  const colors = ["#10b981", "#a78bfa", "#fbbf24", "#f472b6", "#34d399", "#60a5fa"];
-  confetti({ particleCount: 70, angle: 60,  spread: 52, origin: { x: 0,   y: 0.72 }, colors, startVelocity: 52, ticks: 90, scalar: 0.9, zIndex: 9999 });
-  confetti({ particleCount: 70, angle: 120, spread: 52, origin: { x: 1,   y: 0.72 }, colors, startVelocity: 52, ticks: 90, scalar: 0.9, zIndex: 9999 });
-  setTimeout(() => confetti({ particleCount: 40, spread: 80, origin: { x: 0.5, y: 0 }, colors: ["#fbbf24","#f59e0b","#fcd34d","#fff"], shapes: ["star"], scalar: 1.3, startVelocity: 20, ticks: 120, gravity: 0.6, zIndex: 9999 }), 180);
-};
-
-
 interface Props {
   unit: UnitDef;
   coveredTopics: string[];
   onTopicComplete?: (topicTitle: string) => void;
+  /** Student's sport — drives the gamified feedback overlay theme */
+  sport?: string | null;
 }
 
-const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props) => {
+const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete, sport }: Props) => {
   const [expandedItem, setExpandedItem] = useState<string | null>(
     unit.items.find(i => !coveredTopics.includes(i.title))?.id || null
   );
-  // Which answer the student currently has selected for each question (null = nothing)
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
-  // Questions permanently solved (correct answer given — locked forever)
   const [quizSolved, setQuizSolved] = useState<Set<string>>(new Set());
   const [quizFeedback, setQuizFeedback] = useState<Record<string, { correct: boolean; message: string } | null>>({});
   const [practiceText, setPracticeText] = useState<Record<string, string>>({});
 
-  /* Failure feedback animation state */
-  const [failureVisible, setFailureVisible] = useState(false);
-  const [failureAttempt, setFailureAttempt] = useState(1);
-  const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
-
+  /* Sport-aware feedback overlay state — single shared instance with a remount key */
+  const [feedback, setFeedback] = useState<{ event: FeedbackEventType; tick: number } | null>(null);
 
   const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
   const pct = unit.items.length > 0 ? Math.round((completedCount / unit.items.length) * 100) : 0;
+
+  const triggerFeedback = (event: FeedbackEventType) =>
+    setFeedback(prev => ({ event, tick: (prev?.tick ?? 0) + 1 }));
 
   const handleQuizAnswer = useCallback((itemId: string, quizIdx: number, selectedIdx: number, correctIdx: number) => {
     const key = `${itemId}-${quizIdx}`;
     const isCorrect = selectedIdx === correctIdx;
 
-    // Always record the current selection (replaces previous — no need to clear)
     setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
     setQuizFeedback(prev => ({ ...prev, [key]: { correct: isCorrect, message: randomFeedback(isCorrect) } }));
 
     if (isCorrect) {
-      // Lock permanently — correct answer, we're done with this question
       setQuizSolved(prev => { const s = new Set(prev); s.add(key); return s; });
-      fireConfetti();
+      triggerFeedback("success");
     } else {
-      // Wrong — trigger fun animation, but DON'T lock the buttons.
-      // The user can click another option immediately (no timeout, no disabled state).
-      setWrongAttempts(prev => {
-        const next = { ...prev, [key]: (prev[key] || 0) + 1 };
-        setFailureAttempt(next[key]);
-        setFailureVisible(true);
-        return next;
-      });
+      triggerFeedback("failure");
     }
   }, []);
 
   return (
     <div className="space-y-3">
-      {/* Giant Chaos Monster — fullscreen wrong-answer overlay */}
-      <ErrorFeedbackOverlay
-        visible={failureVisible}
-        onDone={() => setFailureVisible(false)}
+      {/* Sport-specific fullscreen gamified feedback */}
+      <SportFeedbackOverlay
+        key={feedback?.tick ?? 0}
+        visible={!!feedback}
+        event={feedback?.event ?? "failure"}
+        sport={sport}
+        onDone={() => setFeedback(null)}
       />
 
       {/* Unit header */}
