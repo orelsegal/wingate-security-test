@@ -253,10 +253,10 @@ const PlayHubPage = () => {
                     <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                       <circle cx="18" cy="18" r="15" fill="none" className="stroke-muted/40" strokeWidth="3" />
                       <circle cx="18" cy="18" r="15" fill="none" className="stroke-violet-500" strokeWidth="3"
-                        strokeDasharray={`${Math.round((student?.completion_percent || 0) * 0.94)}, 100`} strokeLinecap="round" />
+                        strokeDasharray={`${Math.round(assignmentsAvg * 0.94)}, 100`} strokeLinecap="round" />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[14px] font-bold text-foreground">{Math.round(student?.completion_percent || 0)}%</span>
+                      <span className="text-[14px] font-bold text-foreground">{assignmentsAvg}%</span>
                     </div>
                   </div>
                   <p className="text-[10.5px] text-muted-foreground">ממוצע מטלות<br/>ובחנים במקצוע</p>
