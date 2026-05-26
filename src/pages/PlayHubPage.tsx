@@ -527,7 +527,7 @@ const PlayHubPage = () => {
         {tab === "leaderboard" && (
           <div className="space-y-4 max-w-[720px] mx-auto">
             <div className="bg-white rounded-3xl ring-1 ring-border p-6 shadow-[var(--shadow-card)]">
-              <h2 className="text-[16px] font-semibold text-foreground text-center mb-6">הדירוג הכיתתי</h2>
+              <h2 className="text-[16px] font-semibold text-foreground text-center mb-6">הפודיום הכיתתי</h2>
               {leaderboard.length >= 3 && (
                 <div className="grid grid-cols-3 items-end gap-3 mb-6">
                   {[
