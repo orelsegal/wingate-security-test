@@ -245,6 +245,14 @@ const PlayHubPage = () => {
         {tab === "home" && (
           <div className="space-y-5">
             {/* KPI strip (from reference image) */}
+            {/* קרב בזק — featured */}
+            <BlitzFeaturedCard
+              role={user?.role || ""}
+              onPlay={() => navigate("/play/blitz/seed-poetry-hunters")}
+              onBuild={() => navigate("/play/blitz/builder")}
+            />
+
+            {/* KPI strip (from reference image) */}
             <div className="bg-white rounded-3xl ring-1 ring-border p-5 md:p-6 shadow-[var(--shadow-card)]">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-2 items-center">
                 {/* completion ring */}
