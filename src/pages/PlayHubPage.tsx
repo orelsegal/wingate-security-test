@@ -237,9 +237,9 @@ const PlayHubPage = () => {
         <div className="inline-flex items-center gap-1 bg-white rounded-2xl p-1 ring-1 ring-border shadow-sm mb-5">
           {([
             { id: "home",         label: "בית",          icon: Target },
-            { id: "tasks",        label: "המשימות שלי",  icon: Zap },
-            { id: "leaderboard",  label: "דירוג כיתתי",  icon: Trophy },
-            { id: "achievements", label: "הישגים",       icon: Medal },
+            { id: "tasks",        label: "המשימות שלי",   icon: Zap },
+            { id: "leaderboard",  label: "פודיום כיתתי",  icon: Trophy },
+            { id: "achievements", label: "ארון המדליות",  icon: Medal },
           ] as { id: Tab; label: string; icon: any }[]).map((t) => {
             const active = tab === t.id;
             return (
