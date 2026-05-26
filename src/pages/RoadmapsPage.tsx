@@ -43,11 +43,7 @@ const RoadmapsPage = () => {
 
               <div className="space-y-2">
                 <button
-                  onClick={() =>
-                    s.name === "מתמטיקה"
-                      ? navigate("/roadmaps/math")
-                      : navigate(`/subjects/${encodeURIComponent(s.name)}`)
-                  }
+                  onClick={() => navigate(`/subjects/${encodeURIComponent(s.name)}`)}
                   className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[12.5px] font-medium text-foreground bg-muted/50 hover:bg-muted transition-colors duration-150 text-start"
                 >
                   <Eye className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
