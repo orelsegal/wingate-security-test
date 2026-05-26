@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress, useClassLeaderboard } from "@/hooks/useStudents";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import confetti from "canvas-confetti";
 import {
   Play, Trophy, Sparkles, Flame, BookOpen, Crown, Medal, Target,
