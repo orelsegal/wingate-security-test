@@ -461,6 +461,56 @@ const PlayHubPage = () => {
               </div>
             </div>
 
+            {/* ── אתגרים פתוחים ─────────────── */}
+            {openChallenges.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <button onClick={() => setTab("tasks")} className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700 transition-colors">
+                    ראה הכל
+                  </button>
+                  <h3 className="text-[15px] font-bold text-foreground inline-flex items-center gap-1.5">
+                    <Target className="h-4 w-4 text-violet-500" strokeWidth={2.2} />
+                    אתגרים פתוחים
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {openChallenges.slice(0, 4).map((g) => {
+                    const minutes = Math.round(g.totalSeconds / 60);
+                    const difficulty = g.questions.length >= 8 ? "מתקדם" : g.questions.length >= 5 ? "בינוני" : "מתחילים";
+                    return (
+                      <div key={g.id} className="relative bg-white rounded-3xl ring-1 ring-violet-100 p-4 shadow-[var(--shadow-card)] overflow-hidden">
+                        <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-violet-100/50 blur-2xl pointer-events-none" />
+                        <div className="relative flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-1 ring-violet-200/60 flex items-center justify-center shrink-0 shadow-sm">
+                            <Target className="h-5 w-5 text-violet-600" strokeWidth={2} />
+                          </div>
+                          <div className="flex-1 min-w-0 text-end">
+                            <h4 className="text-[14px] font-bold text-foreground leading-tight">
+                              {g.subject} — {g.name}
+                            </h4>
+                            <p className="text-[11.5px] text-violet-600 mt-1 font-medium">
+                              {g.questions.length} שאלות · {minutes} דק׳ · {difficulty}
+                            </p>
+                            <p className="text-[11.5px] text-foreground/70 mt-0.5">
+                              פרס: <span className="font-bold text-violet-700">{g.prizeXp || 100} נקודות</span>
+                            </p>
+                            <button
+                              onClick={() => navigate(`/play/blitz/${g.id}`)}
+                              className="mt-3 w-full inline-flex items-center justify-center gap-1.5 bg-gradient-to-l from-violet-500 to-fuchsia-500 hover:brightness-110 text-white text-[13px] font-bold px-4 py-2 rounded-2xl shadow-[0_10px_24px_-12px_rgba(140,80,220,0.6)] transition-all hover:scale-[1.01]"
+                            >
+                              <Play className="h-3 w-3 fill-white" strokeWidth={0} />
+                              התחל אתגר
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+
             {/* Tip footer */}
             <div className="bg-amber-50/60 rounded-2xl ring-1 ring-amber-100 p-4 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-amber-200 flex items-center justify-center shrink-0">
