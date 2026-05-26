@@ -6,7 +6,7 @@ import {
   Link as LinkIcon, Upload, Save, GraduationCap, Award
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useStudentProgress } from "@/hooks/useStudents";
+import { useStudentProgress, useStudent } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ const SubjectPartPage = () => {
   const isStaff = isTeacher || user?.role === "coach";
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: progress = [] } = useStudentProgress(studentId);
+  const { data: studentRow } = useStudent(studentId);
+  const studentSport = (studentRow as any)?.sport ?? null;
 
   const decoded = decodeURIComponent(subjectName || "");
   const subjectData = courseContent[decoded];
@@ -186,6 +188,7 @@ const SubjectPartPage = () => {
                   <InteractiveLearningUnit
                     unit={unit}
                     coveredTopics={coveredTopics}
+                    sport={studentSport}
                     onTopicComplete={(title) => {
                       toast({ title: "יפה — שלטת היטב במושג הזה", description: `הנושא "${title}" סומן כהושלם` });
                     }}
