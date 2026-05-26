@@ -566,7 +566,7 @@ const PlayHubPage = () => {
           <div className="max-w-[720px] mx-auto bg-white rounded-3xl ring-1 ring-border p-6 shadow-[var(--shadow-card)]">
             <h2 className="text-[16px] font-semibold text-foreground text-center mb-5 inline-flex items-center gap-2 w-full justify-center">
               <Medal className="h-4 w-4 text-amber-500" />
-              ההישגים שלי
+              ארון המדליות שלי
             </h2>
             <div className="grid grid-cols-3 gap-3">
               {buildAchievements(student, completedSubjects).map((a, i) => (
