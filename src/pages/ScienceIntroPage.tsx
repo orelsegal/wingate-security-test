@@ -134,6 +134,7 @@ const ScienceIntroPage = () => {
       toast.success("תשובה נכונה! הנושא הבא נפתח 🎉");
     } else {
       toast.error("תשובה שגויה, נסה/י שוב");
+      setShowMonsters(true);
     }
   };
 
