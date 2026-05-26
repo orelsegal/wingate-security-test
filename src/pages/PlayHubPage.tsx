@@ -157,6 +157,10 @@ const PlayHubPage = () => {
   const xp = studentXp(student?.avg_score || 0, student?.completion_percent || 0);
   const completedSubjects = (progress as any[]).filter((p) => p.status === "green").length;
   const totalSubjects = (progress as any[]).length;
+  // Avg of assignments/quizzes across the student's subjects (proxy via completion_percent)
+  const assignmentsAvg = totalSubjects > 0
+    ? Math.round((progress as any[]).reduce((s, p) => s + (p.completion_percent || 0), 0) / totalSubjects)
+    : Math.round(student?.completion_percent || 0);
 
   // Leaderboard with real data — find current student's rank
   const leaderboard = useMemo(() => {
