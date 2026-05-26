@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Plus, Trash2, Save, Zap, Sparkles, ChevronLeft, Play, Crown, Edit3, Copy,
+  Plus, Trash2, Save, Zap, Sparkles, ChevronLeft, Play, Crown, Edit3, Copy, Wand2, Loader2, X,
 } from "lucide-react";
 import {
   listBlitzGames, upsertBlitzGame, deleteBlitzGame, newBlitzGame, blankQuestion,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/blitzGames";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const BlitzBuilderPage = () => {
   const navigate = useNavigate();
