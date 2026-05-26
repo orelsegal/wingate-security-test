@@ -19,6 +19,7 @@ const BlitzBuilderPage = () => {
 
   const [games, setGames] = useState<BlitzGame[]>([]);
   const [editing, setEditing] = useState<BlitzGame | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   useEffect(() => { setGames(listBlitzGames()); }, []);
   const refresh = () => setGames(listBlitzGames());
