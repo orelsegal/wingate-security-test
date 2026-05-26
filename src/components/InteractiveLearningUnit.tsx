@@ -38,9 +38,10 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [expandedItem, setExpandedItem] = useState<string | null>(
     unit.items.find(i => !coveredTopics.includes(i.title))?.id || null
   );
-  // null = not answered, number = last selected (reset on wrong to allow retry)
+  // Which answer the student currently has selected for each question (null = nothing)
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
-  const [quizSolved, setQuizSolved] = useState<Set<string>>(new Set()); // permanently locked after correct
+  // Questions permanently solved (correct answer given — locked forever)
+  const [quizSolved, setQuizSolved] = useState<Set<string>>(new Set());
   const [quizFeedback, setQuizFeedback] = useState<Record<string, { correct: boolean; message: string } | null>>({});
   const [practiceText, setPracticeText] = useState<Record<string, string>>({});
 
@@ -56,24 +57,22 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
     const key = `${itemId}-${quizIdx}`;
     const isCorrect = selectedIdx === correctIdx;
 
+    // Always record the current selection (replaces previous — no need to clear)
     setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
     setQuizFeedback(prev => ({ ...prev, [key]: { correct: isCorrect, message: randomFeedback(isCorrect) } }));
 
     if (isCorrect) {
-      // Lock permanently on correct answer
-      setQuizSolved(prev => { const next = new Set(prev); next.add(key); return next; });
+      // Lock permanently — correct answer, we're done with this question
+      setQuizSolved(prev => { const s = new Set(prev); s.add(key); return s; });
     } else {
-      // Show failure animation; after it's done the user can retry (answers reset)
+      // Wrong — trigger fun animation, but DON'T lock the buttons.
+      // The user can click another option immediately (no timeout, no disabled state).
       setWrongAttempts(prev => {
         const next = { ...prev, [key]: (prev[key] || 0) + 1 };
         setFailureAttempt(next[key]);
         setFailureVisible(true);
         return next;
       });
-      // Reset selected answer after short delay so user can retry
-      setTimeout(() => {
-        setQuizAnswers(prev => ({ ...prev, [key]: null }));
-      }, 2800);
     }
   }, []);
 
@@ -221,51 +220,68 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                 {/* Quiz */}
                 {item.quiz && item.quiz.map((q, qi) => {
                   const key = `${item.id}-${qi}`;
-                  const solved = quizSolved.has(key);          // permanently locked (got it right)
-                  const answered = solved || quizAnswers[key] != null; // showing feedback right now
+                  const solved = quizSolved.has(key);      // got it right — locked forever
+                  const selected = quizAnswers[key];       // which option is currently highlighted
+                  const hasSelection = selected != null;
                   const fb = quizFeedback[key];
 
                   return (
                     <div key={qi} className="bg-card rounded-xl border border-border p-4">
-                      <div className="flex items-center gap-1.5 mb-2.5">
-                        <HelpCircle className="h-3 w-3 text-primary/50" strokeWidth={1.5} />
-                        <span className="text-[10px] font-semibold text-primary/50">בדיקת הבנה</span>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <HelpCircle className="h-3 w-3 text-primary/50" strokeWidth={1.5} />
+                          <span className="text-[10px] font-semibold text-primary/50">בדיקת הבנה</span>
+                        </div>
+                        {/* Retry hint — shows after a wrong attempt */}
+                        {hasSelection && !solved && (
+                          <span className="text-[9.5px] font-semibold text-primary/40 animate-pulse">
+                            ← בחר תשובה אחרת
+                          </span>
+                        )}
                       </div>
                       <p className="text-[11.5px] font-medium text-foreground mb-3">{q.question}</p>
                       <div className="grid grid-cols-1 gap-1.5">
                         {q.options.map((opt, oi) => {
-                          const isSelected = quizAnswers[key] === oi;
+                          const isSelected = selected === oi;
                           const isCorrectOption = oi === q.correct;
-                          let btnClass = "bg-muted/30 text-foreground hover:bg-muted/50";
+
+                          let btnClass = "bg-muted/30 text-foreground hover:bg-muted/50 hover:scale-[1.01]";
+
                           if (solved) {
-                            // Permanently show correct answer highlighted
-                            if (isCorrectOption) btnClass = "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20";
-                          } else if (answered) {
-                            // Transient: showing feedback for this attempt
-                            if (isSelected && !isCorrectOption) btnClass = "bg-destructive/10 text-destructive border-destructive/20";
+                            // Question is done — highlight correct answer, grey everything else
+                            if (isCorrectOption) btnClass = "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/30";
+                            else btnClass = "bg-muted/20 text-muted-foreground/50";
+                          } else if (isSelected) {
+                            // This option was the last wrong pick — show red, still clickable
+                            btnClass = "bg-destructive/10 text-destructive border-destructive/30 ring-1 ring-destructive/20";
                           }
+
                           return (
                             <button
                               key={oi}
                               onClick={() => !solved && handleQuizAnswer(item.id, qi, oi, q.correct)}
                               disabled={solved}
-                              className={`text-start px-3 py-2 rounded-lg text-[11px] border border-transparent transition-all ${btnClass} ${!solved ? "cursor-pointer" : ""}`}
+                              className={`text-start px-3 py-2 rounded-lg text-[11px] border border-transparent transition-all duration-150 ${btnClass} ${!solved ? "cursor-pointer active:scale-[0.98]" : "cursor-default"}`}
                             >
                               {opt}
                             </button>
                           );
                         })}
                       </div>
-                      {fb && answered && (
-                        <div className={`mt-2.5 flex items-center gap-2 px-3 py-2 rounded-lg text-[10.5px] ${
+
+                      {/* Feedback strip */}
+                      {fb && (
+                        <div className={`mt-2.5 flex items-center gap-2 px-3 py-2 rounded-lg text-[10.5px] transition-all ${
                           fb.correct
                             ? "bg-[hsl(var(--success))]/8 text-[hsl(var(--success))]"
-                            : "bg-muted/40 text-muted-foreground"
+                            : hasSelection
+                              ? "bg-muted/40 text-muted-foreground"
+                              : "opacity-0 pointer-events-none"
                         }`}>
                           {fb.correct
                             ? <CheckCircle2 className="h-3 w-3 shrink-0 text-[hsl(var(--success))]" strokeWidth={1.5} />
                             : <span className="text-[12px]">🍅</span>}
-                          <span>{fb.correct ? fb.message : "לא בדיוק — נסה שוב!"}</span>
+                          <span>{fb.correct ? fb.message : "לא בדיוק — בחר תשובה אחרת!"}</span>
                         </div>
                       )}
                     </div>
