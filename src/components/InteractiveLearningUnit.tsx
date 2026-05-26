@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import FailureFeedback from "@/components/FailureFeedback";
+import ErrorFeedbackOverlay from "@/components/ErrorFeedbackOverlay";
 
 const FEEDBACK_MESSAGES = {
   correct: [
@@ -89,10 +89,9 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
 
   return (
     <div className="space-y-3">
-      {/* Failure feedback overlay */}
-      <FailureFeedback
+      {/* Giant Chaos Monster — fullscreen wrong-answer overlay */}
+      <ErrorFeedbackOverlay
         visible={failureVisible}
-        attemptCount={failureAttempt}
         onDone={() => setFailureVisible(false)}
       />
 
