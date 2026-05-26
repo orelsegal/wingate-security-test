@@ -255,7 +255,7 @@ const PlayHubPage = () => {
                       <span className="text-[14px] font-bold text-foreground">{Math.round(student?.completion_percent || 0)}%</span>
                     </div>
                   </div>
-                  <p className="text-[10.5px] text-muted-foreground">השלמה<br/>ביחידה</p>
+                  <p className="text-[10.5px] text-muted-foreground">ממוצע מטלות<br/>ובחנים במקצוע</p>
                 </div>
                 {/* xp */}
                 <div className="flex flex-col items-center text-center border-s border-border/60 ps-2">
