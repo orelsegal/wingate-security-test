@@ -11,6 +11,7 @@ import {
 import DailyChallengePopup from "@/components/DailyChallengePopup";
 import OlympicTopPanel from "@/components/OlympicTopPanel";
 import { getTodayChallenge, wasPopupSeenToday, markPopupSeen, hasPlayedToday } from "@/lib/dailyChallenge";
+import { listPublishedBlitzGames, type BlitzGame } from "@/lib/blitzGames";
 
 type Task = {
   id: string;
@@ -133,6 +134,7 @@ const PlayHubPage = () => {
   const [streak, setStreak] = useState<number>(loadStreak);
   const todaysChallenge = useMemo(() => getTodayChallenge(), []);
   const [dailyPopupOpen, setDailyPopupOpen] = useState(false);
+  const openChallenges = useMemo<BlitzGame[]>(() => listPublishedBlitzGames(), []);
 
   // Bump streak on first meaningful render (student data arrived)
   useEffect(() => {
