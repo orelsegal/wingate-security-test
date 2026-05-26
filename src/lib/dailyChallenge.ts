@@ -15,7 +15,7 @@ export type DCTask = {
   id: string;
   kind: DCGameKind;
   prompt: string;
-  options: string[];          // for bubbles/truefalse/boss
+  options?: string[];         // for bubbles/truefalse/boss
   correctIndex?: number;      // for bubbles/truefalse/boss
   podiumItems?: string[];     // for podium — already in correct order
   matchPairs?: { left: string; right: string }[]; // for match
