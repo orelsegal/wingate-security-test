@@ -8,6 +8,8 @@ import {
   CheckCircle2, Clock, Zap, TrendingUp, Map, AlertTriangle, X,
   Brain, FileText, MessageSquare, Gamepad2, Lock, Star, Gift,
 } from "lucide-react";
+import DailyChallengePopup from "@/components/DailyChallengePopup";
+import { getTodayChallenge, wasPopupSeenToday, markPopupSeen, hasPlayedToday } from "@/lib/dailyChallenge";
 
 type Task = {
   id: string;
