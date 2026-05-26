@@ -379,36 +379,37 @@ function PodiumGame({ task, answered, onDone }: { task: DCTask; answered: null|b
 /* ── Matching pairs ────────────────────────────── */
 function MatchGame({ task, answered, onDone }: { task: DCTask; answered: null|boolean; onDone:(ok:boolean)=>void; }) {
   const pairs = task.matchPairs || [];
-  const [rights] = useState(() => shuffle(pairs.map(p => p.right)));
+  // Keep indices so duplicate right-side values (e.g. "זכר"/"נקבה") remain unique
+  const [rights] = useState(() => shuffle(pairs.map((p, i) => ({ value: p.right, id: i }))));
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
-  const [matches, setMatches] = useState<Record<string, string>>({});
-  const [wrong, setWrong] = useState<string | null>(null);
+  const [matches, setMatches] = useState<Record<string, number>>({});
+  const [wrong, setWrong] = useState<number | null>(null);
 
-  const pickLeft = (l: string) => { if (matches[l]) return; setSelectedLeft(l); };
-  const pickRight = (r: string) => {
+  const pickLeft = (l: string) => { if (matches[l] !== undefined) return; setSelectedLeft(l); };
+  const pickRight = (r: { value: string; id: number }) => {
     if (!selectedLeft) return;
-    const correct = pairs.find(p => p.left === selectedLeft)?.right === r;
+    const correct = pairs.find(p => p.left === selectedLeft)?.right === r.value;
     if (correct) {
-      const m = { ...matches, [selectedLeft]: r };
+      const m = { ...matches, [selectedLeft]: r.id };
       setMatches(m);
       setSelectedLeft(null);
       if (Object.keys(m).length === pairs.length) setTimeout(() => onDone(true), 250);
     } else {
-      setWrong(r);
+      setWrong(r.id);
       setTimeout(() => { setWrong(null); setSelectedLeft(null); }, 500);
     }
   };
 
-  const matchedRights = new Set(Object.values(matches));
+  const matchedRightIds = new Set(Object.values(matches));
 
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-2">
-        {pairs.map(p => {
-          const isMatched = !!matches[p.left];
+        {pairs.map((p, i) => {
+          const isMatched = matches[p.left] !== undefined;
           const isSelected = selectedLeft === p.left;
           return (
-            <button key={p.left} disabled={isMatched || answered !== null}
+            <button key={`L-${i}-${p.left}`} disabled={isMatched || answered !== null}
               onClick={() => pickLeft(p.left)}
               className={`w-full rounded-xl ring-1 px-3 py-3 text-[12.5px] font-semibold text-start transition-all ${
                 isMatched ? "bg-emerald-50 ring-emerald-200 text-emerald-700"
@@ -422,17 +423,17 @@ function MatchGame({ task, answered, onDone }: { task: DCTask; answered: null|bo
       </div>
       <div className="space-y-2">
         {rights.map(r => {
-          const isMatched = matchedRights.has(r);
-          const isWrong = wrong === r;
+          const isMatched = matchedRightIds.has(r.id);
+          const isWrong = wrong === r.id;
           return (
-            <button key={r} disabled={isMatched || answered !== null}
+            <button key={`R-${r.id}`} disabled={isMatched || answered !== null}
               onClick={() => pickRight(r)}
               className={`w-full rounded-xl ring-1 px-3 py-3 text-[12.5px] text-start transition-all ${
                 isMatched ? "bg-emerald-50 ring-emerald-200 text-emerald-700 line-through"
                 : isWrong ? "bg-rose-50 ring-rose-300 text-rose-700 animate-pulse"
                 : "bg-white ring-border text-foreground hover:ring-violet-300"
               }`}>
-              {r}
+              {r.value}
             </button>
           );
         })}
