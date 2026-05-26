@@ -85,7 +85,7 @@ export default function DailyChallengeAdminPage() {
           <Card title="ניקוד">
             <div className="grid grid-cols-3 gap-3">
               <Field label="תשובה נכונה" value={s.pointsPerCorrect} onChange={v=>update("pointsPerCorrect", v)} />
-              <Field label="שאלת בוס"     value={s.pointsBoss}        onChange={v=>update("pointsBoss", v)} />
+              <Field label="בוס הגמר"     value={s.pointsBoss}        onChange={v=>update("pointsBoss", v)} />
               <Field label="סיום אתגר"    value={s.pointsCompletion}  onChange={v=>update("pointsCompletion", v)} />
             </div>
           </Card>

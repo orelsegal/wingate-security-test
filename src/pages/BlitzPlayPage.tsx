@@ -169,7 +169,7 @@ const BlitzPlayPage = () => {
           <div className="bg-white rounded-3xl ring-1 ring-border p-6 md:p-8 shadow-[var(--shadow-card)]">
             {q.bossDouble && (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mb-3">
-                <Crown className="h-3 w-3" /> שאלת בוס · ניקוד כפול
+                <Crown className="h-3 w-3" /> בוס הגמר · ניקוד כפול
               </span>
             )}
             <h2 className="text-[19px] md:text-[22px] font-bold text-foreground leading-snug">
@@ -346,10 +346,10 @@ const BlitzIntroCard = ({ game, onStart }: { game: ReturnType<typeof getBlitzGam
     <div className="absolute -bottom-10 -start-10 w-44 h-44 rounded-full bg-violet-200/40 blur-2xl pointer-events-none" />
     <div className="relative">
       <span className="inline-flex items-center gap-1.5 bg-white/80 text-violet-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
-        <Zap className="h-3 w-3" /> קרב בזק
+        <Zap className="h-3 w-3" /> מקצה הבזק
       </span>
       <h1 className="text-[26px] md:text-[32px] font-bold text-foreground mt-3 leading-tight">
-        קרב בזק נפתח 🔥
+        מקצה הבזק נפתח 🔥
       </h1>
       <p className="text-[16px] md:text-[18px] font-semibold text-violet-700 mt-1">{game!.name}</p>
 

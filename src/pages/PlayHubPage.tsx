@@ -321,7 +321,7 @@ const PlayHubPage = () => {
               className={student?.class_name}
             />
 
-            {/* קרב בזק — featured */}
+            {/* מקצה הבזק — featured */}
             <BlitzFeaturedCard
               role={user?.role || ""}
               onPlay={() => navigate("/play/blitz/seed-poetry-hunters")}
@@ -724,7 +724,7 @@ const UrgentPopup = ({ task, onClose, onStart }: { task: Task; onClose: () => vo
   );
 };
 
-/* ── קרב בזק featured card ─────────────────────── */
+/* ── מקצה הבזק featured card ─────────────────────── */
 const BlitzFeaturedCard = ({
   role, onPlay, onBuild,
 }: { role: string; onPlay: () => void; onBuild: () => void }) => {
@@ -736,7 +736,7 @@ const BlitzFeaturedCard = ({
       <div className="relative flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
         <div className="flex-1 min-w-0">
           <span className="inline-flex items-center gap-1.5 bg-white/80 text-violet-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
-            <Zap className="h-3 w-3" /> קרב בזק נפתח 🔥
+            <Zap className="h-3 w-3" /> מקצה הבזק נפתח 🔥
           </span>
           <h2 className="text-[22px] md:text-[26px] font-bold text-foreground mt-2 leading-tight">ציידי השירה</h2>
           <p className="text-[12.5px] text-muted-foreground mt-1">

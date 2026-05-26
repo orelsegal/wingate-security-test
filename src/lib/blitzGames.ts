@@ -1,5 +1,5 @@
 /**
- * "קרב בזק" — quick-fire learning battles.
+ * "מקצה הבזק" — quick-fire learning battles.
  * Local-storage backed prototype: a seeded sample game + custom games created
  * by teachers/admins via the builder page.
  */
@@ -184,7 +184,7 @@ export const seedGame: BlitzGame = {
       ],
       correctIndex: 1,
       bossDouble: true,
-      feedbackRight: "שאלת בוס! ניקוד כפול.",
+      feedbackRight: "בוס הגמר! ניקוד כפול.",
       feedbackWrong: "כמעט. בכל ניתוח מתחילים מדובר, נושא ורגש.",
     },
   ],

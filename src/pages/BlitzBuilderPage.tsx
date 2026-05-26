@@ -52,7 +52,7 @@ const BlitzBuilderPage = () => {
         <div className="flex items-end justify-between mb-5 flex-wrap gap-3">
           <div>
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-violet-700 bg-violet-50 px-2.5 py-1 rounded-full mb-2">
-              <Zap className="h-3 w-3" /> קרב בזק · מצב מורה
+              <Zap className="h-3 w-3" /> מקצה הבזק · מצב מורה
             </span>
             <h1 className="text-[26px] font-bold text-foreground">בניית קרבות בזק</h1>
             <p className="text-[13px] text-muted-foreground mt-1">צרו משחק לימודי קצר, מהיר ותחרותי לתלמידים.</p>
@@ -153,7 +153,7 @@ const BlitzEditor = ({ game, onSave, onCancel }: { game: BlitzGame; onSave: (g: 
           <ChevronLeft className="h-3.5 w-3.5" /> חזרה לרשימה
         </button>
 
-        <h1 className="text-[24px] font-bold text-foreground mb-1">עריכת קרב בזק</h1>
+        <h1 className="text-[24px] font-bold text-foreground mb-1">עריכת מקצה הבזק</h1>
         <p className="text-[13px] text-muted-foreground mb-5">הגדירו פרטים, הוסיפו שאלות ושמרו.</p>
 
         {/* meta */}
@@ -219,7 +219,7 @@ const BlitzEditor = ({ game, onSave, onCancel }: { game: BlitzGame; onSave: (g: 
                 <div className="flex items-center gap-2">
                   <label className="inline-flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
                     <input type="checkbox" checked={!!q.bossDouble} onChange={(e) => updateQ(i, { bossDouble: e.target.checked })} />
-                    שאלת בוס (×2)
+                    בוס הגמר (×2)
                   </label>
                   <select value={q.type} onChange={(e) => {
                     const type = e.target.value as BlitzQuestion["type"];
