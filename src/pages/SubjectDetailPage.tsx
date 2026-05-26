@@ -231,25 +231,31 @@ const SubjectDetailPage = () => {
         </div>
       )}
 
-      {/* Motivation */}
-      <div className="mb-6 bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 rounded-3xl border border-amber-100 p-5">
-        <h2 className="text-[13px] font-bold text-foreground mb-4 flex items-center gap-2 justify-end">
-          מוטיבציה והישגים
-          <Flame className="h-3.5 w-3.5 text-rose-500" strokeWidth={2} />
+      {/* Medal cabinet */}
+      <div className="mb-6">
+        <h2 className="text-[13px] font-bold text-foreground mb-3 flex items-center gap-2 justify-end">
+          ארון המדליות
+          <Award className="h-3.5 w-3.5 text-amber-500" strokeWidth={2} />
         </h2>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { icon: BarChart3, label: "התקדמות כללית ביחידה", value: `${pct}%`, color: "text-emerald-600" },
-            { icon: Gift,      label: `תגמול הבא · ברמה ${nextLevel}`, value: `+120 XP`, color: "text-violet-600" },
-            { icon: Flame,     label: "ימים ברצף", value: streak, color: "text-rose-500" },
-          ].map((m, i) => (
-            <div key={i} className="bg-white/70 rounded-2xl p-2.5 text-center">
-              <p className={`text-[16px] font-bold ${m.color} tabular-nums leading-none`}>{m.value}</p>
-              <p className="text-[9px] text-muted-foreground mt-1.5 leading-tight">{m.label}</p>
-            </div>
-          ))}
+            { icon: Crown,  label: "אלוף/ה",     value: 100, color: "text-amber-500",  bg: "bg-amber-50" },
+            { icon: Shield, label: "חוסן",        value: 88,  color: "text-sky-500",    bg: "bg-sky-50" },
+            { icon: Target, label: "משיג יעדים",  value: 75,  color: "text-rose-500",   bg: "bg-rose-50" },
+            { icon: Trophy, label: "שליטה",       value: 60,  color: "text-violet-500", bg: "bg-violet-50" },
+          ].map((m, i) => {
+            const Icon = m.icon;
+            return (
+              <div key={i} className="bg-card rounded-2xl border border-border p-4 text-center shadow-[var(--shadow-card)] hover:shadow-md transition-all">
+                <div className={`w-10 h-10 mx-auto rounded-xl ${m.bg} flex items-center justify-center mb-2`}>
+                  <Icon className={`h-5 w-5 ${m.color}`} strokeWidth={1.8} />
+                </div>
+                <p className="text-[12px] font-semibold text-foreground">{m.label}</p>
+                <p className="text-[13px] font-bold text-muted-foreground mt-1 tabular-nums">{m.value}%</p>
+              </div>
+            );
+          })}
         </div>
-        <p className="text-[10.5px] text-muted-foreground text-center mt-3">👏 כל צעד מקרב אותך להצלחה!</p>
       </div>
 
 
