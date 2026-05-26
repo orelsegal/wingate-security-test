@@ -154,6 +154,7 @@ export default function DailyChallengePage() {
   /* ── Active play ──────────────────────────────── */
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50/50 via-white to-emerald-50/30 p-5 md:p-10" dir="rtl">
+      {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
       <div className="max-w-[680px] mx-auto">
         {/* Header bar */}
         <div className="flex items-center justify-between mb-4">
