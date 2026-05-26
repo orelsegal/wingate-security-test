@@ -208,27 +208,26 @@ const PlayHubPage = () => {
       )}
       <div className="relative p-5 md:p-8 lg:p-10 max-w-[1200px] mx-auto">
 
-        {/* ── Header ─────────────────────────────────────── */}
-        <div className="mb-6">
-          <p className="text-[10.5px] font-semibold text-violet-600 mb-1.5 inline-flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3" strokeWidth={2.2} />
-            שנעלה על המסלול? גו!
-          </p>
-          <div className="flex items-end justify-between gap-3 flex-wrap">
+        {/* ── Header (unit-style) ─────────────────────────── */}
+        <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+          <div className={`flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 ring-1 shadow-sm ${streak >= 7 ? "ring-rose-200" : streak >= 3 ? "ring-orange-100" : "ring-violet-100"}`}>
+            <Flame className={`h-4 w-4 ${streak >= 7 ? "text-rose-500" : streak >= 3 ? "text-orange-400" : "text-muted-foreground"}`} strokeWidth={2.2} />
+            <span className="text-[13px] font-bold text-foreground">{streak}</span>
+            <span className="text-[10.5px] text-muted-foreground">רצף ימים</span>
+          </div>
+          <div className="text-end flex items-center gap-3 justify-end">
             <div>
-              <h1 className="text-[24px] md:text-[30px] font-bold text-foreground tracking-tight leading-tight">
+              <h1 className="text-[22px] md:text-[26px] font-bold text-foreground tracking-tight leading-tight">
                 המסלול של <span className="text-violet-600">{student?.full_name || user?.name}</span>
               </h1>
-              <p className="text-[13px] text-muted-foreground mt-1.5">
+              <p className="text-[12px] text-muted-foreground mt-1">
                 {openTasks.length > 0
                   ? `${openTasks.length} משימות פתוחות מחכות לך — קדימה!`
                   : "כל הכבוד! סיימת הכל. הגיע הזמן לחזרה חכמה ✨"}
               </p>
             </div>
-            <div className={`flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 ring-1 shadow-sm ${streak >= 7 ? "ring-rose-200" : streak >= 3 ? "ring-orange-100" : "ring-violet-100"}`}>
-              <Flame className={`h-4 w-4 ${streak >= 7 ? "text-rose-500" : streak >= 3 ? "text-orange-400" : "text-muted-foreground"}`} strokeWidth={2.2} />
-              <span className="text-[13px] font-bold text-foreground">{streak}</span>
-              <span className="text-[10.5px] text-muted-foreground">רצף ימים</span>
+            <div className="w-11 h-11 rounded-2xl bg-violet-100 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 text-violet-600" strokeWidth={2} />
             </div>
           </div>
         </div>
