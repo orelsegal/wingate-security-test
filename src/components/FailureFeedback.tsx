@@ -56,27 +56,21 @@ const DURATIONS: Record<FailureMode, number> = {
 
 /* ─── CSS keyframes (injected once) ─────────────────────────────────── */
 const ANIM_CSS = `
-  @keyframes ff-fly-right {
-    0%   { transform: translateX(115vw) scale(0.3) rotate(25deg); }
-    65%  { transform: translateX(0)     scale(1.15) rotate(-4deg); }
-    78%  { transform: translateX(0)     scale(0.93) rotate(2deg); }
-    100% { transform: translateX(0)     scale(1)    rotate(0deg); }
+  /* Tomato zooms straight toward the viewer (perspective effect) */
+  @keyframes ff-tomato-at-you {
+    0%   { transform: scale(0.04) translateY(10px); opacity: 1; filter: blur(3px); }
+    30%  { filter: blur(0); }
+    68%  { transform: scale(1.45) translateY(-4px); opacity: 1; }
+    78%  { transform: scale(1.22) scaleY(0.72) translateY(4px); }  /* squish on glass */
+    88%  { transform: scale(1.08) scaleY(0.88); }
+    100% { transform: scale(1.05) scaleY(0.9); opacity: 0; }
   }
-  @keyframes ff-fly-left {
-    0%   { transform: translateX(-115vw) scale(0.3) rotate(-25deg); }
-    65%  { transform: translateX(0)      scale(1.2)  rotate(4deg); }
-    78%  { transform: translateX(0)      scale(0.91) rotate(-2deg); }
-    100% { transform: translateX(0)      scale(1)    rotate(0deg); }
-  }
-  @keyframes ff-flash {
-    0%   { opacity: 0.85; }
-    100% { opacity: 0; }
-  }
-  @keyframes ff-splat {
-    0%   { transform: scale(0) rotate(-12deg); opacity: 0; }
-    55%  { transform: scale(1.18) rotate(4deg); opacity: 1; }
-    80%  { transform: scale(0.97) rotate(-1deg); opacity: 1; }
-    100% { transform: scale(1)    rotate(0deg); opacity: 1; }
+  /* Smear blob expands from the impact point */
+  @keyframes ff-smear {
+    0%   { transform: scale(0); opacity: 0; }
+    40%  { transform: scale(1.14) rotate(2deg); opacity: 0.92; }
+    70%  { transform: scale(0.97) rotate(-0.5deg); opacity: 0.9; }
+    100% { transform: scale(1) rotate(0deg); opacity: 0.88; }
   }
   @keyframes ff-drop {
     0%   { height: 0;   opacity: 1; }
@@ -174,44 +168,72 @@ const TomatoSvg = ({ big }: { big: boolean }) => (
   </svg>
 );
 
-/* ─── Splat SVG ──────────────────────────────────────────────────────── */
-const SplatSvg = ({ big }: { big: boolean }) => {
-  const s = big ? 1.35 : 1;
-  return (
-    <svg viewBox="-10 -10 220 195"
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-      {/* big central blob */}
-      <path
-        d="M100,10 C145,5 190,35 195,80 C200,125 175,170 130,178 C85,186 25,175 10,130 C-5,85 15,30 55,12 C70,6 85,11 100,10Z"
-        fill="#E60A08" opacity="0.88"
-        transform={`translate(0 0) scale(${s})`}
-        style={{ transformOrigin: "100px 95px" }}
-      />
-      {/* splatter rays */}
-      {[
-        { d: "M100,8 C95,0 90,-12 88,-22 C92,-14 97,-4 100,8Z", o: 0.8 },
-        { d: "M180,55 C188,48 200,40 210,35 C202,44 192,52 180,55Z", o: 0.75 },
-        { d: "M195,115 C205,118 220,120 228,115 C218,122 206,124 195,115Z", o: 0.7 },
-        { d: "M145,185 C148,196 144,208 138,215 C140,204 141,193 145,185Z", o: 0.72 },
-        { d: "M50,185 C46,198 48,210 44,218 C40,206 42,194 50,185Z", o: 0.7 },
-        { d: "M8,120 C-4,124 -16,118 -22,110 C-12,118 2,120 8,120Z", o: 0.75 },
-        { d: "M12,55 C2,46 -8,34 -14,22 C-4,36 6,48 12,55Z", o: 0.73 },
-        { d: "M55,10 C50,0 46,-14 50,-24 C52,-12 54,-2 55,10Z", o: 0.7 },
-      ].map((r, i) => (
-        <path key={i} d={r.d} fill="#FF2211" opacity={r.o} />
-      ))}
-      {/* small splatter drops */}
-      {[
-        [22, 22, 8, 6], [182, 18, 7, 5], [210, 90, 9, 6], [195, 155, 8, 5],
-        [15, 158, 7, 6], [-5, 88, 8, 5], [105, -18, 6, 4], [165, 195, 7, 5],
-      ].map(([cx, cy, rx, ry], i) => (
-        <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry}
-          fill="#FF1A08" opacity={0.65 - i * 0.03}
-          transform={`rotate(${i * 22} ${cx} ${cy})`} />
-      ))}
-    </svg>
-  );
-};
+/* ─── Smear SVG — tomato pressed & dragged on glass ─────────────────── */
+const SmearSvg = ({ big }: { big: boolean }) => (
+  <svg viewBox="0 0 300 260" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+    <defs>
+      <radialGradient id="smear-core" cx="50%" cy="45%" r="55%">
+        <stop offset="0%"   stopColor="#FF1A08" stopOpacity="0.97" />
+        <stop offset="60%"  stopColor="#CC0600" stopOpacity="0.88" />
+        <stop offset="100%" stopColor="#8B0000" stopOpacity="0.5" />
+      </radialGradient>
+      <radialGradient id="smear-juice" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"   stopColor="#FF3318" stopOpacity="0.55" />
+        <stop offset="100%" stopColor="#FF1A08" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* outer juice spray — thin, wide, translucent */}
+    <ellipse cx="150" cy="125" rx={big ? 148 : 128} ry={big ? 118 : 100} fill="url(#smear-juice)" />
+
+    {/* main smear body — irregular, wider than tall, like pressed on glass */}
+    <path
+      d="M150,18 C188,12 238,28 252,72 C266,116 258,155 230,178
+         C210,194 182,204 150,206 C118,208 82,200 58,182
+         C28,160 24,124 32,84 C40,48 72,20 110,16 C124,14 138,18 150,18Z"
+      fill="url(#smear-core)"
+    />
+
+    {/* smear streaks — the "dragged" part, going outward radially */}
+    {[
+      { d: "M150,16 C146,6 144,-6 148,-18 C152,-6 154,6 150,16Z",       o: 0.7 },
+      { d: "M248,74 C258,62 272,54 282,46 C272,58 260,68 248,74Z",       o: 0.65 },
+      { d: "M254,148 C266,152 280,148 290,140 C278,150 264,156 254,148Z", o: 0.62 },
+      { d: "M186,206 C190,218 186,230 180,240 C178,228 180,216 186,206Z", o: 0.65 },
+      { d: "M106,208 C102,220 106,234 112,244 C110,230 108,218 106,208Z", o: 0.63 },
+      { d: "M40,172 C28,178 14,174 4,166 C16,174 30,178 40,172Z",         o: 0.65 },
+      { d: "M30,86 C18,76 8,62 2,48 C12,64 22,78 30,86Z",                o: 0.62 },
+      { d: "M102,16 C96,4 98,-10 104,-22 C102,-8 100,4 102,16Z",         o: 0.6 },
+    ].map((r, i) => (
+      <path key={i} d={r.d} fill="#FF2010" opacity={r.o} />
+    ))}
+
+    {/* juice drops — irregular, scattered */}
+    {[
+      [28, 36, 11, 7, -20], [272, 42, 10, 6, 15],  [288, 118, 12, 7, 8],
+      [268, 188, 10, 6, -12], [108, 246, 11, 6, 5], [192, 248, 9, 6, -8],
+      [14, 150, 10, 6, 10],  [62, 30, 8, 5, 25],
+    ].map(([cx, cy, rx, ry, rot], i) => (
+      <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry}
+        fill="#FF2010" opacity={0.68 - i * 0.04}
+        transform={`rotate(${rot} ${cx} ${cy})`} />
+    ))}
+
+    {/* seeds scattered in the smear */}
+    {[
+      [126, 88, -25], [162, 72, 18], [188, 110, -10],
+      [112, 140, 30], [170, 152, -15], [140, 120, 5],
+    ].map(([cx, cy, rot], i) => (
+      <ellipse key={i} cx={cx} cy={cy} rx="9" ry="5"
+        fill="#FFDC8A" opacity="0.75"
+        transform={`rotate(${rot} ${cx} ${cy})`} />
+    ))}
+
+    {/* highlight smear — the "juice gloss" */}
+    <ellipse cx="128" cy="80" rx="32" ry="16" fill="rgba(255,255,255,0.22)" transform="rotate(-18 128 80)" />
+    <ellipse cx="118" cy="72" rx="14" ry="7"  fill="rgba(255,255,255,0.15)" transform="rotate(-18 118 72)" />
+  </svg>
+);
 
 /* ─── Drip lines ─────────────────────────────────────────────────────── */
 const Drips = ({ big }: { big: boolean }) => {
@@ -318,85 +340,82 @@ const MonsterSvg = ({ dropping }: { dropping: boolean }) => (
 );
 
 /* ─── Tomato overlay (attempts 1–2) ──────────────────────────────────── */
+// The tomato flies TOWARD the viewer — scales from tiny dot to full screen,
+// squishes on impact (like pressed on glass), fades revealing the smear.
 const TomatoOverlay = ({
-  big, phase, msg, fromLeft,
+  big, phase, msg,
 }: {
-  big: boolean; phase: Phase; msg: [string, string]; fromLeft: boolean;
+  big: boolean; phase: Phase; msg: [string, string];
 }) => {
-  const leaving = phase === "out";
-  const inFlight = phase === "fly";
-  const showSplat = phase === "impact" || phase === "hold" || phase === "out";
+  const leaving    = phase === "out";
+  const showSmear  = phase === "impact" || phase === "hold" || phase === "out";
+  const tomatoGone = phase === "hold" || phase === "out"; // tomato faded, smear stays
+
+  // Smear covers most of the screen — bigger on attempt 2
+  const smearW = big ? "100vw" : "84vw";
+  const smearMax = big ? "620px" : "480px";
 
   return (
     <div className="fixed inset-0 z-[9000] pointer-events-none overflow-hidden">
-      {/* red screen flash on impact */}
-      {phase === "impact" && (
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "#E60A08",
-          animationName: "ff-flash",
-          animationDuration: "0.18s",
-          animationFillMode: "forwards",
-        }} />
-      )}
 
-      {/* splat (appears on impact, stays) */}
-      {showSplat && (
+      {/* ── Smear on glass (appears at impact, stays) ── */}
+      {showSmear && (
         <div style={{
           position: "absolute", inset: 0,
           opacity: leaving ? 0 : 1,
-          transition: "opacity 0.45s ease",
+          transition: "opacity 0.5s ease",
         }}>
+          {/* smear blob — centered, fills most of screen */}
           <div style={{
             position: "absolute",
-            top: big ? "10%" : "18%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: big ? "90vw" : "72vw",
-            maxWidth: big ? "520px" : "380px",
-            aspectRatio: "1.15",
-            animationName: "ff-splat",
-            animationDuration: "0.35s",
+            top: "50%", left: "50%",
+            transform: "translate(-50%, -52%)",
+            width: smearW,
+            maxWidth: smearMax,
+            aspectRatio: "1.18",
+            animationName: "ff-smear",
+            animationDuration: "0.38s",
+            animationTimingFunction: "cubic-bezier(0.2, 0.8, 0.3, 1)",
             animationFillMode: "both",
           }}>
-            <SplatSvg big={big} />
+            <SmearSvg big={big} />
           </div>
-          {/* drip lines from bottom of splat */}
-          <div style={{ position: "absolute", top: big ? "62%" : "64%", left: 0, right: 0, height: "38%" }}>
+
+          {/* drip lines fall from the bottom of the smear */}
+          <div style={{ position: "absolute", top: "56%", left: 0, right: 0, height: "44%" }}>
             <Drips big={big} />
           </div>
         </div>
       )}
 
-      {/* tomato missile */}
-      <div style={{
-        position: "absolute",
-        top: big ? "16%" : "22%",
-        left: "50%",
-        transform: "translateX(-50%)",
-        display: "flex",
-        justifyContent: "center",
-        animationName: fromLeft ? "ff-fly-left" : "ff-fly-right",
-        animationDuration: "0.42s",
-        animationTimingFunction: "cubic-bezier(0.2, 0.8, 0.3, 1.3)",
-        animationFillMode: "both",
-        opacity: leaving ? 0 : 1,
-        transition: leaving ? "opacity 0.4s ease" : undefined,
-      }}>
-        <TomatoSvg big={big} />
-      </div>
-
-      {/* message bubble */}
-      {showSplat && (
+      {/* ── Tomato zooming toward you ── */}
+      {!tomatoGone && (
         <div style={{
           position: "absolute",
-          bottom: "10%",
+          top: "50%", left: "50%",
+          transform: "translate(-50%, -52%)",
+          display: "flex",
+          justifyContent: "center",
+          /* tiny → fills screen → squishes → fades */
+          animationName: "ff-tomato-at-you",
+          animationDuration: "0.52s",
+          animationTimingFunction: "cubic-bezier(0.15, 0.5, 0.35, 1.1)",
+          animationFillMode: "both",
+        }}>
+          <TomatoSvg big={big} />
+        </div>
+      )}
+
+      {/* ── Message bubble ── */}
+      {showSmear && (
+        <div style={{
+          position: "absolute",
+          bottom: "8%",
           left: "50%",
-          transform: "translate(-50%, 0)",
           animationName: "ff-msg",
           animationDuration: "0.45s",
           animationTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)",
-          animationDelay: "0.15s",
+          animationDelay: "0.12s",
           animationFillMode: "both",
           opacity: leaving ? 0 : 1,
           transition: leaving ? "opacity 0.35s ease" : undefined,
@@ -404,22 +423,21 @@ const TomatoOverlay = ({
           whiteSpace: "nowrap",
         }} dir="rtl">
           <div style={{
-            background: "#CC0000",
+            background: "linear-gradient(135deg, #CC0000 0%, #9B0000 100%)",
             color: "white",
             borderRadius: 24,
             padding: "12px 28px",
-            boxShadow: "0 8px 32px rgba(200,0,0,0.5)",
-            border: "3px solid #FF4422",
+            boxShadow: "0 8px 32px rgba(160,0,0,0.55), inset 0 1px 0 rgba(255,80,60,0.3)",
+            border: "2px solid rgba(255,80,60,0.35)",
           }}>
             <p style={{ fontSize: "clamp(17px,4vw,22px)", fontWeight: 800, margin: 0, lineHeight: 1.2 }}>{msg[0]}</p>
-            <p style={{ fontSize: "clamp(11px,3vw,14px)", margin: "4px 0 0", opacity: 0.9, fontWeight: 600 }}>{msg[1]}</p>
+            <p style={{ fontSize: "clamp(11px,3vw,14px)", margin: "4px 0 0", opacity: 0.88, fontWeight: 600 }}>{msg[1]}</p>
           </div>
-          {/* bubble tail */}
           <div style={{
             width: 0, height: 0,
             borderLeft: "12px solid transparent",
             borderRight: "12px solid transparent",
-            borderTop: "14px solid #CC0000",
+            borderTop: "13px solid #9B0000",
             margin: "0 auto",
           }} />
         </div>
@@ -509,7 +527,6 @@ const FailureFeedback = ({ visible, onDone, attemptCount = 1 }: Props) => {
   const [phase, setPhase] = useState<Phase>("hidden");
   const [mode]     = useState<FailureMode>(() => chooseMode(attemptCount));
   const [msg]      = useState<[string, string]>(() => pick(MSGS[chooseMode(attemptCount)]));
-  const [fromLeft] = useState(() => attemptCount % 2 === 0);
 
   useEffect(() => {
     if (!visible) { setPhase("hidden"); return; }
@@ -528,7 +545,7 @@ const FailureFeedback = ({ visible, onDone, attemptCount = 1 }: Props) => {
     <>
       <style>{ANIM_CSS}</style>
       {mode !== "monster" ? (
-        <TomatoOverlay big={mode === "tomato-lg"} phase={phase} msg={msg} fromLeft={fromLeft} />
+        <TomatoOverlay big={mode === "tomato-lg"} phase={phase} msg={msg} />
       ) : (
         <MonsterOverlay phase={phase} msg={msg} />
       )}
