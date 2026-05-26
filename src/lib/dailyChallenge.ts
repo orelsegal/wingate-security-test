@@ -201,7 +201,7 @@ const BANK: Record<string, DCTask[]> = {
     },
     {
       id: "h4", kind: "match",
-      prompt: "התאימו מין דקדוקי",
+      prompt: "חברו כל מילה למין הדקדוקי שלה",
       matchPairs: [
         { left: "שולחן", right: "זכר" },
         { left: "מחברת", right: "נקבה" },
