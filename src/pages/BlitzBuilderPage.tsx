@@ -219,7 +219,7 @@ const BlitzEditor = ({ game, onSave, onCancel }: { game: BlitzGame; onSave: (g: 
                 <div className="flex items-center gap-2">
                   <label className="inline-flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
                     <input type="checkbox" checked={!!q.bossDouble} onChange={(e) => updateQ(i, { bossDouble: e.target.checked })} />
-                    שאלת בוס (×2)
+                    בוס הגמר (×2)
                   </label>
                   <select value={q.type} onChange={(e) => {
                     const type = e.target.value as BlitzQuestion["type"];

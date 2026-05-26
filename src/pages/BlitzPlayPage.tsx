@@ -169,7 +169,7 @@ const BlitzPlayPage = () => {
           <div className="bg-white rounded-3xl ring-1 ring-border p-6 md:p-8 shadow-[var(--shadow-card)]">
             {q.bossDouble && (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mb-3">
-                <Crown className="h-3 w-3" /> שאלת בוס · ניקוד כפול
+                <Crown className="h-3 w-3" /> בוס הגמר · ניקוד כפול
               </span>
             )}
             <h2 className="text-[19px] md:text-[22px] font-bold text-foreground leading-snug">

@@ -184,7 +184,7 @@ export const seedGame: BlitzGame = {
       ],
       correctIndex: 1,
       bossDouble: true,
-      feedbackRight: "שאלת בוס! ניקוד כפול.",
+      feedbackRight: "בוס הגמר! ניקוד כפול.",
       feedbackWrong: "כמעט. בכל ניתוח מתחילים מדובר, נושא ורגש.",
     },
   ],
