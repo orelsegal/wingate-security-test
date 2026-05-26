@@ -180,6 +180,7 @@ const ScienceIntroPage = () => {
 
   return (
     <div className="p-5 md:p-10 lg:p-14 max-w-[720px] mx-auto" dir="rtl">
+      {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate("/subjects")} className="p-2 rounded-lg text-muted-foreground hover:bg-accent transition-colors">
