@@ -56,6 +56,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
 
   return (
     <div className="space-y-3">
+      {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
       {/* Unit header */}
       <div className="flex items-center gap-3 mb-1">
         <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
