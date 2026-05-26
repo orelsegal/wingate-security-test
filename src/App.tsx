@@ -126,7 +126,7 @@ const App = () => (
               <Route path="/admin/users"                        element={<UserManagementPage />} />
               <Route path="/admin/settings"                     element={<DevSettingsPage />} />
               <Route path="/roadmaps"                           element={<RoadmapsPage />} />
-              <Route path="/roadmaps/math"                      element={<MathRoadmapPage />} />
+              <Route path="/roadmaps/math"                      element={<Navigate to={`/subjects/${encodeURIComponent("מתמטיקה")}`} replace />} />
              <Route path="/play"                               element={<PlayHubPage />} />
               <Route path="/play/daily"                         element={<DailyChallengePage />} />
               <Route path="/play/daily/admin"                   element={<DailyChallengeAdminPage />} />
