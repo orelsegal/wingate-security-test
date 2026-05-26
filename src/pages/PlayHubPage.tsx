@@ -260,23 +260,8 @@ const PlayHubPage = () => {
         {/* ─── HOME tab ───────────────────────────────── */}
         {tab === "home" && (
           <div className="space-y-5">
-            {/* אולימפיאדת הידע — פאנל פתיחה ראשי */}
-            <OlympicTopPanel
-              challenge={todaysChallenge}
-              studentName={student?.full_name || user?.name}
-              classRank={3}
-              className={student?.class_name}
-            />
-
-            {/* האתגר היומי — featured card */}
+            {/* האתגר היומי — featured card (TOP) */}
             <DailyChallengePopup challenge={todaysChallenge} onClose={() => {}} variant="card" />
-
-            {/* קרב בזק — featured */}
-            <BlitzFeaturedCard
-              role={user?.role || ""}
-              onPlay={() => navigate("/play/blitz/seed-poetry-hunters")}
-              onBuild={() => navigate("/play/blitz/builder")}
-            />
 
             {/* KPI strip (from reference image) */}
             <div className="bg-white rounded-3xl ring-1 ring-border p-5 md:p-6 shadow-[var(--shadow-card)]">
@@ -327,6 +312,21 @@ const PlayHubPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* אולימפיאדת הידע — פאנל פתיחה ראשי */}
+            <OlympicTopPanel
+              challenge={todaysChallenge}
+              studentName={student?.full_name || user?.name}
+              classRank={3}
+              className={student?.class_name}
+            />
+
+            {/* קרב בזק — featured */}
+            <BlitzFeaturedCard
+              role={user?.role || ""}
+              onPlay={() => navigate("/play/blitz/seed-poetry-hunters")}
+              onBuild={() => navigate("/play/blitz/builder")}
+            />
 
             {/* Featured task + Leaderboard side by side */}
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-4">
