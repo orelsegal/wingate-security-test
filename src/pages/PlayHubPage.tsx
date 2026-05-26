@@ -778,4 +778,126 @@ const BlitzFeaturedCard = ({
   );
 };
 
+/* ── DailyRing — circular progress ring used in "המשימות היומיות שלך" ── */
+const DailyRing = ({
+  color, pct, label, text, sub, done, big,
+}: {
+  color: "emerald" | "violet" | "sky";
+  pct: number;
+  label: string;
+  text?: string;
+  sub?: string;
+  done?: boolean;
+  big?: boolean;
+}) => {
+  const stroke = color === "emerald" ? "stroke-emerald-500"
+              : color === "sky"     ? "stroke-sky-400"
+              :                       "stroke-violet-500";
+  const size = big ? 84 : 72;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+          <circle cx="18" cy="18" r="15" fill="none" className="stroke-muted/40" strokeWidth="3" />
+          <circle cx="18" cy="18" r="15" fill="none" className={stroke} strokeWidth="3"
+            strokeDasharray={`${Math.max(0, Math.min(100, pct)) * 0.94}, 100`} strokeLinecap="round" />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+          {done ? (
+            <CheckCircle2 className="h-6 w-6 text-emerald-500" strokeWidth={2.5} />
+          ) : (
+            <>
+              <span className={`${big ? "text-[22px]" : "text-[18px]"} font-extrabold text-foreground tabular-nums`}>{text ?? Math.round(pct)}</span>
+              {sub && <span className="text-[9px] text-muted-foreground mt-0.5">{sub}</span>}
+            </>
+          )}
+        </div>
+      </div>
+      <p className="text-[10.5px] text-muted-foreground text-center leading-tight">{label}</p>
+    </div>
+  );
+};
+
+/* ── ClassBattleCard — לוח מירוצי כיתות עם ספירה לאחור ── */
+const ClassBattleCard = ({
+  myClass,
+  leaderboard,
+}: { myClass: string; leaderboard: { name: string; xp: number; rank: number; isMe: boolean }[] }) => {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const end = useMemo(() => {
+    const d = new Date(); d.setHours(23, 59, 59, 0); return d.getTime();
+  }, []);
+  const diff = Math.max(0, end - now);
+  const hh = String(Math.floor(diff / 3.6e6)).padStart(2, "0");
+  const mm = String(Math.floor((diff % 3.6e6) / 6e4)).padStart(2, "0");
+  const ss = String(Math.floor((diff % 6e4) / 1000)).padStart(2, "0");
+
+  const classes = useMemo(() => ([
+    { name: "1'1",                xp: 4820, isMe: false, color: "bg-violet-500" },
+    { name: "2'",                 xp: 4540, isMe: false, color: "bg-sky-400" },
+    { name: `${myClass} (אנחנו)`, xp: 4260, isMe: true,  color: "bg-emerald-500" },
+    { name: "4'",                 xp: 3980, isMe: false, color: "bg-slate-300" },
+  ]), [myClass]);
+  const max = Math.max(...classes.map(c => c.xp));
+  const myPlace = classes.findIndex(c => c.isMe) + 1;
+
+  return (
+    <div className="bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)]">
+      <div className="flex items-start justify-between mb-3">
+        <div className="relative">
+          <div className="w-14 h-16 bg-gradient-to-b from-amber-400 to-amber-500 rounded-b-[14px] rounded-t-md flex flex-col items-center justify-center shadow-md text-white">
+            <span className="text-[8.5px] font-semibold opacity-90 leading-none">מקום</span>
+            <span className="text-[20px] font-extrabold leading-none mt-0.5">{myPlace}</span>
+          </div>
+          <Sparkles className="absolute -top-1 -end-2 h-3.5 w-3.5 text-amber-300" strokeWidth={2.4} />
+          <Sparkles className="absolute -bottom-1 -start-2 h-3 w-3 text-rose-300" strokeWidth={2.4} />
+        </div>
+        <div className="text-end">
+          <h3 className="text-[16px] font-bold text-foreground">הקרב הכיתתי</h3>
+          <p className="text-[11.5px] text-muted-foreground mt-1 tabular-nums">
+            נגמר בעוד {hh}:{mm}:{ss}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2 mt-4">
+        {classes.map((c) => {
+          const w = Math.round((c.xp / max) * 100);
+          return (
+            <div key={c.name} className="flex items-center gap-2">
+              <span className={`text-[12px] font-bold w-20 shrink-0 text-end ${c.isMe ? "text-emerald-700" : "text-foreground/80"}`}>
+                {c.name}
+              </span>
+              <div className="flex-1 h-3.5 bg-muted/40 rounded-full overflow-hidden relative">
+                <div className={`h-full ${c.color} rounded-full transition-all`} style={{ width: `${w}%` }} />
+                <span className="absolute inset-y-0 end-2 flex items-center text-[10.5px] font-bold tabular-nums text-foreground/90">
+                  {c.xp.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 bg-violet-50/70 ring-1 ring-violet-100 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2">
+        <div className="flex -space-x-2 rtl:space-x-reverse">
+          {["bg-violet-400", "bg-rose-400", "bg-amber-400"].map((b, i) => (
+            <div key={i} className={`w-6 h-6 rounded-full ${b} ring-2 ring-white text-white text-[10px] font-bold flex items-center justify-center`}>
+              {["נ", "ט", "ר"][i]}
+            </div>
+          ))}
+          <div className="w-6 h-6 rounded-full bg-violet-200 ring-2 ring-white text-violet-800 text-[9px] font-bold flex items-center justify-center">+3</div>
+        </div>
+        <p className="text-[11.5px] font-semibold text-violet-800 text-end">
+          עוד 3 תלמידים עונים ואנחנו עולים מקום!
+        </p>
+      </div>
+    </div>
+  );
+};
+
 export default PlayHubPage;
