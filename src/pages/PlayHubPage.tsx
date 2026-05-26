@@ -363,7 +363,41 @@ const PlayHubPage = () => {
               </h2>
             </div>
 
-            {allDone ? (
+            {/* Published blitz challenges */}
+            {openChallenges.map((g) => {
+              const minutes = Math.round(g.totalSeconds / 60);
+              const difficulty = g.questions.length >= 8 ? "מתקדם" : g.questions.length >= 5 ? "בינוני" : "מתחילים";
+              return (
+                <div key={g.id} className="relative bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)] overflow-hidden">
+                  <div className="absolute -top-12 -end-12 w-40 h-40 rounded-full bg-violet-100/50 blur-2xl pointer-events-none" />
+                  <div className="relative flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-100 to-orange-100 ring-1 ring-rose-200/50 flex items-center justify-center shrink-0 shadow-sm">
+                      <Target className="h-6 w-6 text-rose-500" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0 text-end">
+                      <h3 className="text-[15px] font-bold text-foreground leading-tight">
+                        {g.subject} — {g.name}
+                      </h3>
+                      <p className="text-[12px] text-violet-600 mt-1.5 font-medium">
+                        {g.questions.length} שאלות · {minutes} דקות · {difficulty}
+                      </p>
+                      <p className="text-[12px] text-foreground/70 mt-1">
+                        פרס: <span className="font-bold text-violet-700">{g.prizeXp || 150} XP</span>
+                      </p>
+                      <button
+                        onClick={() => navigate(`/play/blitz/${g.id}`)}
+                        className="mt-4 w-full inline-flex items-center justify-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 hover:brightness-110 text-white text-[13.5px] font-bold px-5 py-2.5 rounded-2xl shadow-[0_10px_24px_-12px_rgba(140,80,220,0.6)] transition-all hover:scale-[1.01]"
+                      >
+                        <Play className="h-3.5 w-3.5 fill-white" strokeWidth={0} />
+                        התחל אתגר
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {allDone && openChallenges.length === 0 ? (
               <AllDoneCard expanded />
             ) : (
               openTasks.map((t) => {
