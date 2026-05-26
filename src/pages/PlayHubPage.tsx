@@ -130,11 +130,21 @@ const PlayHubPage = () => {
   const [urgentPopup, setUrgentPopup] = useState<Task | null>(null);
   const [popupDismissed, setPopupDismissed] = useState(false);
   const [streak, setStreak] = useState<number>(loadStreak);
+  const todaysChallenge = useMemo(() => getTodayChallenge(), []);
+  const [dailyPopupOpen, setDailyPopupOpen] = useState(false);
 
   // Bump streak on first meaningful render (student data arrived)
   useEffect(() => {
     if (studentId) setStreak(bumpStreak());
   }, [studentId]);
+
+  // Show Daily Challenge popup once per day for students
+  useEffect(() => {
+    if (user?.role === "student" && !wasPopupSeenToday() && !hasPlayedToday()) {
+      const t = setTimeout(() => { setDailyPopupOpen(true); markPopupSeen(); }, 700);
+      return () => clearTimeout(t);
+    }
+  }, [user?.role]);
 
   // Derive tasks from real progress data
   const allTasks = useMemo<Task[]>(() => {
