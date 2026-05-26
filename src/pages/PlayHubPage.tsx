@@ -256,7 +256,9 @@ const PlayHubPage = () => {
         {/* ─── HOME tab ───────────────────────────────── */}
         {tab === "home" && (
           <div className="space-y-5">
-            {/* KPI strip (from reference image) */}
+            {/* האתגר היומי — featured at top */}
+            <DailyChallengePopup challenge={todaysChallenge} onClose={() => {}} variant="card" />
+
             {/* קרב בזק — featured */}
             <BlitzFeaturedCard
               role={user?.role || ""}
