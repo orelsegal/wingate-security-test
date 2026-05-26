@@ -1,5 +1,5 @@
 /**
- * "קרב בזק" — quick-fire learning battles.
+ * "מקצה הבזק" — quick-fire learning battles.
  * Local-storage backed prototype: a seeded sample game + custom games created
  * by teachers/admins via the builder page.
  */
