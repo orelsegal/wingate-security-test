@@ -41,6 +41,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
   const [quizFeedback, setQuizFeedback] = useState<Record<string, { correct: boolean; message: string } | null>>({});
   const [practiceText, setPracticeText] = useState<Record<string, string>>({});
+  const [showMonsters, setShowMonsters] = useState(false);
 
   const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
   const pct = unit.items.length > 0 ? Math.round((completedCount / unit.items.length) * 100) : 0;
@@ -50,6 +51,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
     setQuizAnswers(prev => ({ ...prev, [key]: selectedIdx }));
     const isCorrect = selectedIdx === correctIdx;
     setQuizFeedback(prev => ({ ...prev, [key]: { correct: isCorrect, message: randomFeedback(isCorrect) } }));
+    if (!isCorrect) setShowMonsters(true);
   };
 
   return (
