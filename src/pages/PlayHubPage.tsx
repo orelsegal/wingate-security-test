@@ -589,6 +589,30 @@ const PlayHubPage = () => {
           onStart={() => { setUrgentPopup(null); setPopupDismissed(true); navigate(`/play/${encodeURIComponent(urgentPopup.subject)}`); }}
         />
       )}
+
+      {/* ─── Floating Bottom Nav (play area only) ──────────── */}
+      <nav className="fixed inset-x-0 bottom-[72px] md:bottom-5 z-40 flex justify-center px-4 pointer-events-none">
+        <div className="pointer-events-auto bg-white/95 backdrop-blur-md ring-1 ring-violet-100 shadow-[0_12px_40px_-12px_rgba(140,80,220,0.35)] rounded-full p-1.5 flex items-center gap-1">
+          {tabsList.map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all ${
+                  active
+                    ? "bg-gradient-to-l from-violet-500 to-fuchsia-500 text-white shadow-[0_6px_16px_-6px_rgba(140,80,220,0.6)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                aria-current={active ? "page" : undefined}
+              >
+                <t.icon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                <span className={active ? "" : "hidden sm:inline"}>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };
