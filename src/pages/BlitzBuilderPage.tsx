@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Plus, Trash2, Save, Zap, Sparkles, ChevronLeft, Play, Crown, Edit3, Copy,
+  Plus, Trash2, Save, Zap, Sparkles, ChevronLeft, Play, Crown, Edit3, Copy, Wand2, Loader2, X,
 } from "lucide-react";
 import {
   listBlitzGames, upsertBlitzGame, deleteBlitzGame, newBlitzGame, blankQuestion,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/blitzGames";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const BlitzBuilderPage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const BlitzBuilderPage = () => {
 
   const [games, setGames] = useState<BlitzGame[]>([]);
   const [editing, setEditing] = useState<BlitzGame | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   useEffect(() => { setGames(listBlitzGames()); }, []);
   const refresh = () => setGames(listBlitzGames());
@@ -57,13 +59,28 @@ const BlitzBuilderPage = () => {
             <h1 className="text-[26px] font-bold text-foreground">בניית קרבות בזק</h1>
             <p className="text-[13px] text-muted-foreground mt-1">צרו משחק לימודי קצר, מהיר ותחרותי לתלמידים.</p>
           </div>
-          <button
-            onClick={() => setEditing(newBlitzGame())}
-            className="inline-flex items-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 text-white text-[14px] font-bold px-5 py-3 rounded-2xl shadow-[0_12px_28px_-12px_rgba(140,80,220,0.6)] hover:scale-[1.02] transition-all"
-          >
-            <Plus className="h-4 w-4" /> צור משחק חדש
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setAiOpen(true)}
+              className="inline-flex items-center gap-2 bg-white text-violet-700 ring-1 ring-violet-200 hover:bg-violet-50 text-[14px] font-bold px-5 py-3 rounded-2xl shadow-sm transition-all"
+            >
+              <Wand2 className="h-4 w-4" /> צור עם AI
+            </button>
+            <button
+              onClick={() => setEditing(newBlitzGame())}
+              className="inline-flex items-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 text-white text-[14px] font-bold px-5 py-3 rounded-2xl shadow-[0_12px_28px_-12px_rgba(140,80,220,0.6)] hover:scale-[1.02] transition-all"
+            >
+              <Plus className="h-4 w-4" /> צור משחק חדש
+            </button>
+          </div>
         </div>
+
+        {aiOpen && (
+          <AIGenerateModal
+            onClose={() => setAiOpen(false)}
+            onGenerated={(g) => { setAiOpen(false); setEditing(g); }}
+          />
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {games.map((g) => (
@@ -287,4 +304,171 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </label>
 );
 
+/* ─── AI Generation Modal ──────────────────────────────── */
+const AIGenerateModal = ({
+  onClose,
+  onGenerated,
+}: {
+  onClose: () => void;
+  onGenerated: (game: BlitzGame) => void;
+}) => {
+  const { user } = useAuth();
+  const [subject, setSubject] = useState("");
+  const [topic, setTopic] = useState("");
+  const [grade, setGrade] = useState("י׳");
+  const [difficulty, setDifficulty] = useState("בינוני");
+  const [numQuestions, setNumQuestions] = useState(5);
+  const [instructions, setInstructions] = useState("");
+  const [sourceText, setSourceText] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const generate = async () => {
+    if (!subject.trim() || !topic.trim()) {
+      toast({ title: "חסרים פרטים", description: "יש למלא לפחות מקצוע ונושא.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-blitz-game", {
+        body: { subject, topic, grade, difficulty, numQuestions, instructions, sourceText },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const base = newBlitzGame();
+      const game: BlitzGame = {
+        ...base,
+        name: data.name || `${subject} — ${topic}`,
+        subject: data.subject || subject,
+        topic: data.topic || topic,
+        grade: data.grade || grade,
+        sourceTitle: data.sourceTitle,
+        sourceAuthor: data.sourceAuthor,
+        sourceText: data.sourceText,
+        totalSeconds: Math.max(120, (data.questions?.length || numQuestions) * 30),
+        perQuestionSeconds: 30,
+        createdBy: user?.name,
+        questions: (data.questions || []).map((q: any, i: number) => ({
+          id: `q-${Date.now()}-${i}`,
+          type: q.type === "truefalse" ? "truefalse" : "multi",
+          text: String(q.text || ""),
+          options: Array.isArray(q.options) ? q.options.map(String) : ["", "", "", ""],
+          correctIndex: Number.isFinite(q.correctIndex) ? q.correctIndex : 0,
+          feedbackRight: q.feedbackRight,
+          feedbackWrong: q.feedbackWrong,
+        })),
+      };
+
+      if (!game.questions.length) throw new Error("המודל לא החזיר שאלות.");
+
+      toast({ title: "נוצר!", description: `נוצרו ${game.questions.length} שאלות. אפשר לערוך לפני שמירה.` });
+      onGenerated(game);
+    } catch (err: any) {
+      toast({
+        title: "יצירה נכשלה",
+        description: err?.message || "נסה שוב בעוד רגע.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={() => !loading && onClose()}
+      dir="rtl"
+    >
+      <div
+        className="bg-white rounded-3xl ring-1 ring-violet-100 p-6 max-w-lg w-full shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          disabled={loading}
+          className="absolute top-3 end-3 w-7 h-7 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors disabled:opacity-40"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-md mb-3">
+          <Wand2 className="h-5 w-5 text-white" strokeWidth={2.2} />
+        </div>
+        <h3 className="text-[18px] font-bold text-foreground">יצירת קרב הבזק עם AI</h3>
+        <p className="text-[12px] text-muted-foreground mt-1 mb-5">
+          תאר את הנושא — וניצור עבורך שאלות מותאמות. תוכל לערוך אותן לפני שמירה.
+        </p>
+
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="מקצוע">
+              <input className={inputCls} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="למשל: לשון" />
+            </Field>
+            <Field label="נושא">
+              <input className={inputCls} value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="למשל: הבנת הנקרא" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="כיתה">
+              <input className={inputCls} value={grade} onChange={(e) => setGrade(e.target.value)} />
+            </Field>
+            <Field label="רמת קושי">
+              <select className={inputCls} value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                <option>מתחילים</option>
+                <option>בינוני</option>
+                <option>מתקדם</option>
+              </select>
+            </Field>
+            <Field label="מס׳ שאלות">
+              <input
+                type="number"
+                min={3}
+                max={12}
+                className={inputCls}
+                value={numQuestions}
+                onChange={(e) => setNumQuestions(Number(e.target.value))}
+              />
+            </Field>
+          </div>
+          <Field label="הנחיות נוספות (אופציונלי)">
+            <textarea
+              className={inputCls + " min-h-[60px] resize-y"}
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              placeholder="למשל: התמקד במשמעות מילים בהקשר, הימנע משאלות טריוויה."
+            />
+          </Field>
+          <Field label="טקסט מקור — שיר/קטע (אופציונלי)">
+            <textarea
+              className={inputCls + " min-h-[80px] resize-y font-[450]"}
+              value={sourceText}
+              onChange={(e) => setSourceText(e.target.value)}
+              placeholder="הדבק כאן שיר או קטע, והשאלות ייבנו סביבו."
+            />
+          </Field>
+        </div>
+
+        <div className="mt-5 flex items-center gap-2">
+          <button
+            onClick={generate}
+            disabled={loading}
+            className="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-l from-violet-500 to-fuchsia-500 hover:brightness-110 text-white text-[14px] font-bold px-5 py-3 rounded-2xl shadow-[0_10px_24px_-12px_rgba(140,80,220,0.6)] transition-all disabled:opacity-60"
+          >
+            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> יוצר שאלות...</> : <><Sparkles className="h-4 w-4" /> צור משחק</>}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-[13px] font-medium text-muted-foreground hover:text-foreground px-4 py-3 rounded-2xl border border-border hover:bg-muted/40 transition-colors disabled:opacity-40"
+          >
+            ביטול
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default BlitzBuilderPage;
+
