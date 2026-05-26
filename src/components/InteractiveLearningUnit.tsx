@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import confetti from "canvas-confetti";
 import type { UnitDef } from "@/lib/courseContent";
 import {
   ChevronDown, ChevronUp, CheckCircle2, BookOpen,
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import FailureFeedback from "@/components/FailureFeedback";
+import SuccessFeedback from "@/components/SuccessFeedback";
 
 const FEEDBACK_MESSAGES = {
   correct: [
@@ -29,45 +29,6 @@ const randomFeedback = (correct: boolean) => {
   return arr[Math.floor(Math.random() * arr.length)];
 };
 
-/* ── Quiz success confetti — dopamine burst ─────────────────────────── */
-const fireQuizSuccess = () => {
-  const colors = ["#10b981", "#a78bfa", "#fbbf24", "#f472b6", "#34d399", "#60a5fa"];
-
-  // Two cannons from the bottom corners — cross in the middle
-  confetti({ particleCount: 70, angle: 60,  spread: 52, origin: { x: 0,   y: 0.72 }, colors, startVelocity: 52, ticks: 90, scalar: 0.9, zIndex: 9999 });
-  confetti({ particleCount: 70, angle: 120, spread: 52, origin: { x: 1,   y: 0.72 }, colors, startVelocity: 52, ticks: 90, scalar: 0.9, zIndex: 9999 });
-
-  // Gold star shower from the top — delayed for layered feel
-  setTimeout(() => {
-    confetti({
-      particleCount: 40,
-      spread: 80,
-      origin: { x: 0.5, y: 0 },
-      colors: ["#fbbf24", "#f59e0b", "#fcd34d", "#ffffff"],
-      shapes: ["star"],
-      scalar: 1.3,
-      startVelocity: 20,
-      ticks: 120,
-      gravity: 0.6,
-      zIndex: 9999,
-    });
-  }, 180);
-
-  // Quick center burst for immediate feedback
-  setTimeout(() => {
-    confetti({
-      particleCount: 35,
-      spread: 360,
-      origin: { x: 0.5, y: 0.55 },
-      colors: ["#10b981", "#fbbf24", "#a78bfa"],
-      startVelocity: 18,
-      ticks: 60,
-      scalar: 0.7,
-      gravity: 0.4,
-      zIndex: 9999,
-    });
-  }, 80);
-};
 
 interface Props {
   unit: UnitDef;
@@ -91,6 +52,10 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [failureAttempt, setFailureAttempt] = useState(1);
   const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
 
+  /* Success monster — grows with each correct answer */
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [successCount, setSuccessCount] = useState(0); // total correct so far this unit
+
   const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
   const pct = unit.items.length > 0 ? Math.round((completedCount / unit.items.length) * 100) : 0;
 
@@ -105,7 +70,8 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
     if (isCorrect) {
       // Lock permanently — correct answer, we're done with this question
       setQuizSolved(prev => { const s = new Set(prev); s.add(key); return s; });
-      fireQuizSuccess();
+      setSuccessCount(prev => prev + 1);
+      setSuccessVisible(true);
     } else {
       // Wrong — trigger fun animation, but DON'T lock the buttons.
       // The user can click another option immediately (no timeout, no disabled state).
@@ -120,11 +86,17 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
 
   return (
     <div className="space-y-3">
-      {/* Fun failure feedback overlay */}
+      {/* Failure feedback overlay */}
       <FailureFeedback
         visible={failureVisible}
         attemptCount={failureAttempt}
         onDone={() => setFailureVisible(false)}
+      />
+      {/* Success monster — gets bigger each correct answer */}
+      <SuccessFeedback
+        visible={successVisible}
+        correctCount={successCount}
+        onDone={() => setSuccessVisible(false)}
       />
 
       {/* Unit header */}
