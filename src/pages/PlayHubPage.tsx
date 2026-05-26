@@ -743,7 +743,7 @@ const AchievementsView = ({ items, unlockedCount, xp, streak, avgScore, onBack }
   );
 };
 
-const StatChip = ({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) => (
+const StatChip = ({ icon, value, label }: { icon: ReactNode; value: string; label: string }) => (
   <div className="bg-white rounded-2xl ring-1 ring-violet-100 p-3 shadow-sm flex items-center gap-2.5">
     <div className="shrink-0">{icon}</div>
     <div className="min-w-0">
