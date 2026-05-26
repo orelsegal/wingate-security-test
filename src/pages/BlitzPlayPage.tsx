@@ -142,6 +142,7 @@ const BlitzPlayPage = () => {
     const pct = Math.round(((qIdx) / game.questions.length) * 100);
     return (
       <div className="min-h-screen bg-gradient-to-b from-violet-50/60 via-white to-violet-50/30 p-5 md:p-8" dir="rtl">
+        {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
         <div className="max-w-[760px] mx-auto">
 
           {/* Top bar */}
