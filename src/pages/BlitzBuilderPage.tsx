@@ -84,46 +84,74 @@ const BlitzBuilderPage = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {games.map((g) => (
-            <div key={g.id} className="bg-white rounded-3xl ring-1 ring-border p-5 shadow-[var(--shadow-card)]">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="inline-flex items-center gap-1.5 mb-1">
-                    {g.seed && <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">דוגמה</span>}
-                    <span className="text-[10px] font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">{g.subject || "ללא מקצוע"}</span>
+          {games.map((g) => {
+            const isPublished = g.seed || g.published;
+            const togglePublish = () => {
+              upsertBlitzGame({ ...g, published: !g.published });
+              refresh();
+              toast({
+                title: g.published ? "הוסר מהפרסום" : "אושר ופורסם",
+                description: g.published
+                  ? `"${g.name}" כבר לא יוצג לתלמידים.`
+                  : `"${g.name}" זמין כעת לתלמידים.`,
+              });
+            };
+            return (
+              <div key={g.id} className={`bg-white rounded-3xl ring-1 p-5 shadow-[var(--shadow-card)] ${isPublished ? "ring-border" : "ring-amber-200 bg-amber-50/30"}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="inline-flex items-center gap-1.5 mb-1 flex-wrap">
+                      {g.seed && <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">דוגמה</span>}
+                      {!g.seed && (g.published
+                        ? <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><CheckCircle2 className="h-2.5 w-2.5" />מאושר</span>
+                        : <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><EyeOff className="h-2.5 w-2.5" />טיוטה</span>
+                      )}
+                      {g.source === "ai" && <span className="text-[10px] font-bold text-fuchsia-700 bg-fuchsia-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><Wand2 className="h-2.5 w-2.5" />AI</span>}
+                      {g.source === "manual" && !g.seed && <span className="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">ידני</span>}
+                      <span className="text-[10px] font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">{g.subject || "ללא מקצוע"}</span>
+                    </div>
+                    <h3 className="text-[16px] font-bold text-foreground truncate">{g.name || "ללא שם"}</h3>
+                    <p className="text-[11.5px] text-muted-foreground mt-1">
+                      {g.questions.length} שאלות · {Math.round(g.totalSeconds / 60)} דק׳ · {g.topic || "—"}
+                    </p>
                   </div>
-                  <h3 className="text-[16px] font-bold text-foreground truncate">{g.name || "ללא שם"}</h3>
-                  <p className="text-[11.5px] text-muted-foreground mt-1">
-                    {g.questions.length} שאלות · {Math.round(g.totalSeconds / 60)} דק׳ · {g.topic || "—"}
-                  </p>
+                  <Crown className="h-5 w-5 text-amber-400 shrink-0" />
                 </div>
-                <Crown className="h-5 w-5 text-amber-400 shrink-0" />
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  onClick={() => navigate(`/play/blitz/${g.id}`)}
-                  className="inline-flex items-center gap-1.5 bg-violet-500 hover:bg-violet-600 text-white text-[12px] font-semibold px-3 py-1.5 rounded-full"
-                >
-                  <Play className="h-3 w-3 fill-white" strokeWidth={0} /> שחק
-                </button>
-                <button
-                  onClick={() => setEditing(g.seed ? { ...g, id: `blitz-${Date.now()}`, seed: false, name: `${g.name} (עותק)` } : g)}
-                  className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground border border-border hover:bg-muted/40 px-3 py-1.5 rounded-full"
-                >
-                  {g.seed ? <><Copy className="h-3 w-3" /> שכפול לעריכה</> : <><Edit3 className="h-3 w-3" /> ערוך</>}
-                </button>
-                {!g.seed && (
+                <div className="mt-4 flex flex-wrap gap-2">
                   <button
-                    onClick={() => { if (confirm(`למחוק את "${g.name}"?`)) { deleteBlitzGame(g.id); refresh(); } }}
-                    className="inline-flex items-center gap-1.5 text-[12px] font-medium text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-full"
+                    onClick={() => navigate(`/play/blitz/${g.id}`)}
+                    className="inline-flex items-center gap-1.5 bg-violet-500 hover:bg-violet-600 text-white text-[12px] font-semibold px-3 py-1.5 rounded-full"
                   >
-                    <Trash2 className="h-3 w-3" /> מחק
+                    <Play className="h-3 w-3 fill-white" strokeWidth={0} /> שחק
                   </button>
-                )}
+                  <button
+                    onClick={() => setEditing(g.seed ? { ...g, id: `blitz-${Date.now()}`, seed: false, name: `${g.name} (עותק)`, source: "manual", published: false } : g)}
+                    className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground border border-border hover:bg-muted/40 px-3 py-1.5 rounded-full"
+                  >
+                    {g.seed ? <><Copy className="h-3 w-3" /> שכפול לעריכה</> : <><Edit3 className="h-3 w-3" /> ערוך</>}
+                  </button>
+                  {!g.seed && (
+                    <button
+                      onClick={togglePublish}
+                      className={`inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-full ${g.published ? "text-amber-700 bg-amber-50 hover:bg-amber-100" : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"}`}
+                    >
+                      {g.published ? <><EyeOff className="h-3 w-3" /> בטל פרסום</> : <><CheckCircle2 className="h-3 w-3" /> אשר ופרסם</>}
+                    </button>
+                  )}
+                  {!g.seed && (
+                    <button
+                      onClick={() => { if (confirm(`למחוק את "${g.name}"?`)) { deleteBlitzGame(g.id); refresh(); } }}
+                      className="inline-flex items-center gap-1.5 text-[12px] font-medium text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-full"
+                    >
+                      <Trash2 className="h-3 w-3" /> מחק
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
 
         <div className="mt-6 bg-violet-50/70 rounded-2xl p-4 ring-1 ring-violet-100">
           <p className="text-[12.5px] text-violet-900 inline-flex items-center gap-2">
