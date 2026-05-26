@@ -202,6 +202,9 @@ const PlayHubPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50/50 via-white to-violet-50/30" dir="rtl">
+      {dailyPopupOpen && (
+        <DailyChallengePopup challenge={todaysChallenge} onClose={() => setDailyPopupOpen(false)} />
+      )}
       <div className="relative p-5 md:p-8 lg:p-10 max-w-[1200px] mx-auto">
 
         {/* ── Header ─────────────────────────────────────── */}
