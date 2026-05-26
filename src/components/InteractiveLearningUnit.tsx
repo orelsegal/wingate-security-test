@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import MonsterBurst from "@/components/MonsterBurst";
 
 const FEEDBACK_MESSAGES = {
   correct: [
