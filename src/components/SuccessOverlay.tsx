@@ -1,20 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 
 /**
- * SuccessOverlay v2 — Cinematic beach-volleyball spike.
+ * SuccessOverlay — JUDO IPPON: cinematic seoi-nage throw.
  *
- * Improvements over v1:
- *  • 3-act cinematic timing with slow-mo freeze on impact
- *  • Camera shake on body at impact
- *  • Ball motion trail (ghost balls) on the rocket-out trajectory
- *  • Anticipation pose (player loads, ball drifts in) before the SLAM
- *  • Spike line (motion streak from hand through ball)
- *  • Light beam burst from impact + radial vignette focusing eye on hit
- *  • Crowd silhouette + palm tree for cinematic depth
- *  • Higher-quality player SVG: dynamic pose, flowing hair, muscle shading
- *  • Caption pops AFTER impact, not during
+ * Cast:
+ *  • TORI (thrower) — blue gi, stays grounded right-center, pivots & pulls
+ *  • UKE  (opponent) — white gi, gripped, lifted, flipped 360° over Tori's shoulder, SLAMMED
  *
- * Total runtime: ~2.4s. Pointer-events disabled. RTL.
+ * Acts (total ~2.6s):
+ *   0.00–0.30  Scene fade in (dojo, spotlights, tatami). Both bow-stance, gripping.
+ *   0.30–0.70  KUZUSHI — Tori breaks Uke's balance forward. Uke leans in.
+ *   0.70–1.10  TSUKURI — Tori pivots, drops under, lifts Uke off the mat.
+ *   1.10–1.35  KAKE — Uke flips through the air (360° rotation).
+ *   1.35–1.45  IMPACT — Uke slams on mat. Dust cloud, shockwave, screen shake.
+ *   1.45–2.60  Tori stands tall. "איפון!" caption + confetti.
  */
 type Props = {
   visible: boolean;
@@ -22,7 +21,7 @@ type Props = {
   caption?: string;
 };
 
-const CAPTIONS = ["בול!", "הנחתה!", "אלוף/ה!", "פצצה!", "וואו!", "מטורף!"];
+const CAPTIONS = ["איפון!", "ippon!", "ניצחון מוחץ!", "וואו!", "מטורף!"];
 
 const CONFETTI_COLORS = [
   "#ef4444", "#3b82f6", "#10b981", "#f59e0b",
@@ -37,16 +36,16 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
     [key, caption]
   );
 
-  // Confetti — erupts from impact point at impact frame (~38% into anim)
+  // Confetti — explodes from mat impact point at ~1.35s (52% of 2.6s)
   const confetti = useMemo(() => {
     return Array.from({ length: 110 }).map((_, i) => {
-      const angle = Math.random() * Math.PI * 2;
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.4; // upward bias
       const dist = 320 + Math.random() * 520;
       return {
         tx: Math.cos(angle) * dist,
-        ty: Math.sin(angle) * dist - 140,
-        delay: 920 + Math.random() * 220,
-        duration: 1200 + Math.random() * 800,
+        ty: Math.sin(angle) * dist,
+        delay: 1380 + Math.random() * 220,
+        duration: 1100 + Math.random() * 700,
         size: 6 + Math.random() * 14,
         color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
         rot: Math.random() * 900 - 450,
@@ -55,51 +54,43 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
     });
   }, [key]);
 
-  const streamers = useMemo(() => {
-    return Array.from({ length: 16 }).map((_, i) => {
-      const angle = (i / 16) * Math.PI * 2 + Math.random() * 0.3;
-      const dist = 420 + Math.random() * 240;
+  // Dust particles from slam
+  const dust = useMemo(
+    () => Array.from({ length: 24 }).map((_, i) => {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.3;
+      const dist = 80 + Math.random() * 200;
       return {
         tx: Math.cos(angle) * dist,
-        ty: Math.sin(angle) * dist - 80,
-        delay: 940 + Math.random() * 160,
-        duration: 1600 + Math.random() * 500,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        rot: Math.random() * 360,
+        ty: Math.sin(angle) * dist * 0.6 - 40,
+        delay: 1340 + Math.random() * 80,
+        duration: 700 + Math.random() * 400,
+        size: 18 + Math.random() * 28,
+        opacity: 0.5 + Math.random() * 0.4,
       };
-    });
-  }, [key]);
+    }),
+    [key]
+  );
 
   // Light beams radiating from impact
   const beams = useMemo(
-    () => Array.from({ length: 12 }).map((_, i) => ({
-      rot: (i / 12) * 360,
-      delay: 900 + (i % 3) * 40,
+    () => Array.from({ length: 10 }).map((_, i) => ({
+      rot: (i / 10) * 360,
+      delay: 1370 + (i % 3) * 40,
     })),
     [key]
   );
 
-  // Ball motion trail — ghosts that follow main ball with delay (only during rocket-out)
-  const trail = useMemo(
-    () => Array.from({ length: 6 }).map((_, i) => ({
-      delay: i * 35,
-      opacity: 0.55 - i * 0.08,
-      scale: 1 - i * 0.05,
-    })),
-    [key]
-  );
-
-  // Screen shake on impact
+  // Screen shake at slam
   useEffect(() => {
     if (!visible) return;
     setKey(k => k + 1);
     const shakeStart = setTimeout(() => {
       document.body.classList.add("so-screen-shake");
-    }, 880);
+    }, 1340);
     const shakeEnd = setTimeout(() => {
       document.body.classList.remove("so-screen-shake");
-    }, 1280);
-    const done = setTimeout(() => onDone?.(), 2400);
+    }, 1740);
+    const done = setTimeout(() => onDone?.(), 2600);
     return () => {
       clearTimeout(shakeStart);
       clearTimeout(shakeEnd);
@@ -115,138 +106,125 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
       <style>{`
         @keyframes so-screen-shake {
           0%,100% { transform: translate(0,0); }
-          12% { transform: translate(-7px, 5px); }
-          24% { transform: translate(8px, -4px); }
-          36% { transform: translate(-5px, -6px); }
-          50% { transform: translate(6px, 6px); }
-          64% { transform: translate(-4px, 3px); }
-          78% { transform: translate(3px, -2px); }
+          10% { transform: translate(-9px, 7px); }
+          20% { transform: translate(10px, -5px); }
+          32% { transform: translate(-7px, -8px); }
+          45% { transform: translate(8px, 7px); }
+          60% { transform: translate(-5px, 4px); }
+          78% { transform: translate(4px, -3px); }
         }
         .so-screen-shake { animation: so-screen-shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
         @keyframes so-scene-in {
-          0% { opacity: 0; transform: scale(1.04); }
-          12% { opacity: 1; transform: scale(1); }
-          88% { opacity: 1; transform: scale(1); }
+          0% { opacity: 0; transform: scale(1.06); }
+          10% { opacity: 1; transform: scale(1); }
+          90% { opacity: 1; transform: scale(1); }
           100% { opacity: 0; transform: scale(1.02); }
         }
         @keyframes so-vignette {
-          0%, 30% { opacity: 0; }
-          38% { opacity: 0.55; }
-          70% { opacity: 0; }
+          0%, 45% { opacity: 0.3; }
+          52% { opacity: 0.7; }
+          75% { opacity: 0.3; }
           100% { opacity: 0; }
         }
         @keyframes so-flash {
-          0%, 35% { opacity: 0; }
-          38% { opacity: 1; }
-          50% { opacity: 0; }
+          0%, 50% { opacity: 0; }
+          53% { opacity: 1; }
+          62% { opacity: 0; }
           100% { opacity: 0; }
         }
-        @keyframes so-sun-pulse {
-          0%, 100% { transform: scale(1); opacity: 0.95; }
-          50% { transform: scale(1.06); opacity: 1; }
-        }
-        @keyframes so-sunrays {
-          0% { transform: translate(-50%,-50%) rotate(0deg); }
-          100% { transform: translate(-50%,-50%) rotate(360deg); }
-        }
-        @keyframes so-cloud {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-20px); }
+        @keyframes so-spotlight {
+          0%,100% { opacity: 0.6; }
+          50% { opacity: 0.9; }
         }
 
-        /* BALL — anticipation arc (slow), then frozen at impact, then SLAMS down-left */
-        @keyframes so-ball {
-          0%   { transform: translate(-65vw, 25vh) rotate(0deg) scale(0.65); opacity: 0; }
-          8%   { opacity: 1; }
-          25%  { transform: translate(-25vw, -5vh) rotate(160deg) scale(0.95); }
-          34%  { transform: translate(-5vw, -2vh) rotate(220deg) scale(1.05); }   /* approach impact */
-          37%  { transform: translate(0, 0) rotate(240deg) scale(1.35); }          /* IMPACT — squash */
-          39%  { transform: translate(0, 0) rotate(245deg) scale(1.45) scaleY(0.75); } /* squash hit */
-          42%  { transform: translate(-3vw, 2vh) rotate(280deg) scale(1.15); }     /* release */
-          70%  { transform: translate(-45vw, 42vh) rotate(900deg) scale(0.9); opacity: 1; }
-          92%  { transform: translate(-70vw, 65vh) rotate(1300deg) scale(0.55); opacity: 0.7; }
-          100% { transform: translate(-78vw, 72vh) rotate(1500deg) scale(0.4); opacity: 0; }
+        /* ===== TORI (thrower, blue gi) ===== */
+        /* Stays mostly stationary, pivots & drops under during throw, then rises triumphant */
+        @keyframes so-tori {
+          0%    { transform: translate(15vw, 0vh) scale(1); }
+          12%   { transform: translate(8vw, 0vh) scale(1); }       /* settles in */
+          27%   { transform: translate(4vw, 1vh) scale(1) rotate(-8deg); } /* kuzushi pull */
+          40%   { transform: translate(0vw, 4vh) scale(0.94) rotate(-25deg); } /* tsukuri drop */
+          50%   { transform: translate(-2vw, 3vh) scale(0.96) rotate(-15deg); } /* lift */
+          58%   { transform: translate(-2vw, 0vh) scale(1.02) rotate(10deg); } /* kake follow-through */
+          75%   { transform: translate(-1vw, -2vh) scale(1.06) rotate(0deg); } /* stand tall */
+          100%  { transform: translate(-1vw, -2vh) scale(1.06) rotate(0deg); }
         }
-        @keyframes so-ball-trail {
-          0%, 42% { opacity: 0; }
-          50% { opacity: var(--op); }
-          90% { opacity: var(--op); }
+
+        /* ===== UKE (opponent, white gi) ===== */
+        /* Starts left, gripped → tilted → LIFTED → FLIPS 360° → SLAMS on mat */
+        @keyframes so-uke {
+          0%   { transform: translate(-20vw, 0vh) scale(1) rotate(0deg); opacity: 1; }
+          15%  { transform: translate(-14vw, 0vh) scale(1) rotate(0deg); }       /* approach */
+          27%  { transform: translate(-10vw, -2vh) scale(1) rotate(-20deg); }    /* kuzushi tilt fwd */
+          38%  { transform: translate(-6vw, -10vh) scale(1) rotate(-60deg); }    /* lifted */
+          45%  { transform: translate(-3vw, -22vh) scale(1) rotate(-130deg); }   /* peak airborne */
+          50%  { transform: translate(2vw, -28vh) scale(1) rotate(-200deg); }    /* apex of flip */
+          54%  { transform: translate(8vw, -16vh) scale(1) rotate(-290deg); }    /* falling */
+          58%  { transform: translate(13vw, -2vh) scale(1) rotate(-360deg); }    /* about to land */
+          61%  { transform: translate(14vw, 8vh) scale(1, 0.85) rotate(-380deg); } /* SLAM squash */
+          66%  { transform: translate(14vw, 9vh) scale(1.05, 0.7) rotate(-360deg); } /* compressed */
+          78%  { transform: translate(14vw, 8vh) scale(1, 0.9) rotate(-360deg); }
+          100% { transform: translate(14vw, 8vh) scale(1, 0.9) rotate(-360deg); opacity: 1; }
+        }
+        /* Motion blur on Uke during flip */
+        @keyframes so-uke-blur {
+          0%, 30% { filter: drop-shadow(0 18px 30px rgba(0,0,0,0.4)); }
+          45%, 58% { filter: drop-shadow(0 18px 30px rgba(0,0,0,0.4)) blur(1.5px); }
+          62%, 100% { filter: drop-shadow(0 18px 30px rgba(0,0,0,0.4)); }
+        }
+
+        /* Speed lines that arc around Uke during the flip */
+        @keyframes so-arc-line {
+          0%, 35% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(0); }
+          40% { opacity: 0.85; transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(1); }
+          58% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(1.3) translateX(40px); }
           100% { opacity: 0; }
         }
 
-        /* PLAYER — enters mid-right, loads, peaks at impact, lands */
-        @keyframes so-player {
-          0%   { transform: translate(45vw, 55vh) scale(0.55); opacity: 0; }
-          10%  { opacity: 1; }
-          22%  { transform: translate(12vw, -12vh) scale(0.95); }   /* rising */
-          32%  { transform: translate(2vw, -22vh) scale(1.05); }    /* peak / load */
-          37%  { transform: translate(0vw, -20vh) scale(1.08); }    /* IMPACT freeze */
-          40%  { transform: translate(0vw, -19vh) scale(1.08); }
-          55%  { transform: translate(-3vw, -6vh) scale(1); }       /* falling */
-          80%  { transform: translate(-4vw, 6vh) scale(0.95); opacity: 1; }
-          100% { transform: translate(-4vw, 14vh) scale(0.88); opacity: 0; }
-        }
-        /* Arm: wound back during ascent, EXPLODES forward at impact frame */
-        @keyframes so-arm-swing {
-          0%   { transform: rotate(-150deg); }
-          22%  { transform: rotate(-165deg); }   /* wind up further */
-          32%  { transform: rotate(-170deg); }   /* peak load */
-          36%  { transform: rotate(-60deg); }    /* SNAP forward */
-          39%  { transform: rotate(35deg); }     /* THROUGH ball */
-          45%  { transform: rotate(55deg); }     /* follow through */
-          100% { transform: rotate(60deg); }
-        }
-        /* Hair flow */
-        @keyframes so-hair {
-          0%,100% { transform: rotate(0deg); }
-          37% { transform: rotate(-8deg) translateY(-2px); }
-          45% { transform: rotate(5deg); }
-        }
-
+        /* Impact effects (trigger at slam — 1.35s in 2.6s timeline ≈ 52%) */
         @keyframes so-impact-ring {
-          0%, 36% { transform: translate(-50%,-50%) scale(0.15); opacity: 0; }
-          38% { opacity: 1; }
-          75% { transform: translate(-50%,-50%) scale(3.4); opacity: 0; }
+          0%, 51% { transform: translate(-50%,-50%) scale(0.1); opacity: 0; }
+          53% { opacity: 1; }
+          80% { transform: translate(-50%,-50%) scale(3.4); opacity: 0; }
           100% { opacity: 0; }
         }
         @keyframes so-shockwave {
-          0%, 35% { transform: translate(-50%,-50%) scale(0.08); opacity: 0; }
-          38% { opacity: 0.85; }
-          60% { transform: translate(-50%,-50%) scale(2.8); opacity: 0; }
+          0%, 50% { transform: translate(-50%, -50%) scaleX(0.05) scaleY(0.05); opacity: 0; }
+          53% { opacity: 0.9; }
+          75% { transform: translate(-50%, -50%) scaleX(3.2) scaleY(0.6); opacity: 0; }
           100% { opacity: 0; }
         }
         @keyframes so-beam {
-          0%, 36% { transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(0); opacity: 0; }
-          39% { opacity: 0.9; transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(1); }
-          55% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(1.4); }
+          0%, 51% { transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(0); opacity: 0; }
+          54% { opacity: 0.95; transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(1); }
+          70% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot)) scaleX(1.5); }
           100% { opacity: 0; }
         }
-        @keyframes so-spike-streak {
-          0%, 36% { transform: translate(-50%,-50%) rotate(220deg) scaleX(0); opacity: 0; }
-          39% { opacity: 1; transform: translate(-50%,-50%) rotate(220deg) scaleX(1); }
-          55% { opacity: 0.6; }
-          72% { opacity: 0; transform: translate(-50%,-50%) rotate(220deg) scaleX(1.6) translateX(80px); }
-          100% { opacity: 0; }
+        @keyframes so-dust {
+          0%   { transform: translate(-50%,-50%) translate(0,0) scale(0.2); opacity: 0; }
+          15%  { opacity: var(--op); }
+          100% { transform: translate(-50%,-50%) translate(var(--tx), var(--ty)) scale(1.4); opacity: 0; }
         }
-
         @keyframes so-confetti {
           0%   { transform: translate(-50%,-50%) translate(0,0) rotate(0deg) scale(0.2); opacity: 0; }
           5%   { opacity: 1; }
           100% { transform: translate(-50%,-50%) translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1); opacity: 0; }
         }
-        @keyframes so-streamer {
-          0%   { transform: translate(-50%,-50%) translate(0,0) rotate(0deg) scaleY(0.2); opacity: 0; }
-          8%   { opacity: 1; }
-          100% { transform: translate(-50%,-50%) translate(var(--tx), var(--ty)) rotate(var(--rot)) scaleY(1); opacity: 0; }
-        }
 
         @keyframes so-caption {
-          0%, 45% { transform: translate(-50%, 90px) scale(0.2) rotate(-10deg); opacity: 0; }
-          52%     { transform: translate(-50%, 0) scale(1.3) rotate(5deg); opacity: 1; }
-          65%     { transform: translate(-50%, 0) scale(1.05) rotate(-2deg); opacity: 1; }
-          88%     { transform: translate(-50%, 0) scale(1) rotate(0deg); opacity: 1; }
+          0%, 55% { transform: translate(-50%, 100px) scale(0.15) rotate(-12deg); opacity: 0; }
+          62%     { transform: translate(-50%, 0) scale(1.4) rotate(6deg); opacity: 1; }
+          72%     { transform: translate(-50%, 0) scale(1.08) rotate(-3deg); opacity: 1; }
+          90%     { transform: translate(-50%, 0) scale(1) rotate(0deg); opacity: 1; }
           100%    { transform: translate(-50%, -40px) scale(0.85); opacity: 0; }
+        }
+
+        @keyframes so-kanji {
+          0%, 60% { opacity: 0; transform: translate(-50%, 0) scale(0.3) rotate(-20deg); }
+          68%     { opacity: 0.4; transform: translate(-50%, 0) scale(1.1) rotate(0deg); }
+          90%     { opacity: 0.4; transform: translate(-50%, 0) scale(1) rotate(0deg); }
+          100%    { opacity: 0; }
         }
       `}</style>
 
@@ -254,159 +232,181 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
         className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden"
         aria-hidden="true"
       >
-        {/* ── Beach scene background ── */}
+        {/* ── DOJO BACKGROUND ── */}
         <div
           className="absolute inset-0"
           style={{
-            animation: "so-scene-in 2.4s ease-in-out both",
+            animation: "so-scene-in 2.6s ease-in-out both",
             background:
-              "linear-gradient(to bottom, #5cb8e6 0%, #8ed4ee 30%, #c8e8f5 48%, #ffe0a3 56%, #f5cd75 75%, #d99b4a 100%)",
+              "linear-gradient(to bottom, #1a1a2e 0%, #2d2438 40%, #3d2f1f 60%, #5c3a1f 100%)",
           }}
         >
-          {/* Sun rays (rotating) */}
+          {/* Tatami mat — perspective floor */}
           <div
-            className="absolute"
+            className="absolute left-0 right-0 bottom-0"
             style={{
-              top: "12%",
-              left: "20%",
-              width: 420,
-              height: 420,
-              transform: "translate(-50%,-50%)",
-              animation: "so-sunrays 12s linear infinite",
+              height: "55%",
               background:
-                "conic-gradient(from 0deg, rgba(255,235,150,0) 0deg, rgba(255,235,150,0.55) 6deg, rgba(255,235,150,0) 14deg, rgba(255,235,150,0) 28deg, rgba(255,235,150,0.55) 36deg, rgba(255,235,150,0) 44deg, rgba(255,235,150,0) 60deg, rgba(255,235,150,0.55) 68deg, rgba(255,235,150,0) 76deg, rgba(255,235,150,0) 92deg, rgba(255,235,150,0.55) 100deg, rgba(255,235,150,0) 108deg, rgba(255,235,150,0) 360deg)",
-              filter: "blur(10px)",
+                "linear-gradient(to bottom, #d4a55a 0%, #c79348 40%, #a87d3a 100%)",
+              transform: "perspective(900px) rotateX(58deg)",
+              transformOrigin: "center top",
+              boxShadow: "inset 0 60px 80px rgba(0,0,0,0.5)",
             }}
-          />
-          {/* Sun */}
-          <div
-            className="absolute rounded-full"
-            style={{
-              top: "12%",
-              left: "20%",
-              width: 140,
-              height: 140,
-              transform: "translate(-50%,-50%)",
-              background: "radial-gradient(circle, #fff8d6 0%, #ffd966 55%, #f59e0b 100%)",
-              boxShadow: "0 0 100px rgba(255, 220, 120, 1)",
-              animation: "so-sun-pulse 2.4s ease-in-out infinite",
-            }}
-          />
+          >
+            {/* Tatami grid lines */}
+            <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <line key={`v${i}`} x1={i * 14 + 2} y1="0" x2={i * 14 + 2} y2="100" stroke="#7a5828" strokeWidth="0.3" opacity="0.7" />
+              ))}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <line key={`h${i}`} x1="0" y1={i * 18 + 4} x2="100" y2={i * 18 + 4} stroke="#7a5828" strokeWidth="0.3" opacity="0.7" />
+              ))}
+              {/* Red competition square */}
+              <rect x="20" y="30" width="60" height="50" fill="none" stroke="#dc2626" strokeWidth="0.6" opacity="0.55" />
+            </svg>
+          </div>
 
-          {/* Clouds */}
-          <svg className="absolute" style={{ top: "8%", left: "55%", width: 180, opacity: 0.85, animation: "so-cloud 2.4s ease-in-out infinite alternate" }} viewBox="0 0 180 60">
-            <ellipse cx="40" cy="35" rx="32" ry="18" fill="#fff" />
-            <ellipse cx="80" cy="28" rx="40" ry="22" fill="#fff" />
-            <ellipse cx="130" cy="36" rx="36" ry="20" fill="#fff" />
-          </svg>
-          <svg className="absolute" style={{ top: "18%", left: "75%", width: 130, opacity: 0.75 }} viewBox="0 0 130 50">
-            <ellipse cx="30" cy="28" rx="24" ry="14" fill="#fff" />
-            <ellipse cx="65" cy="22" rx="30" ry="18" fill="#fff" />
-            <ellipse cx="100" cy="28" rx="26" ry="15" fill="#fff" />
-          </svg>
-
-          {/* Sea horizon strip */}
+          {/* Back wall — dojo with Japanese banners */}
           <div
             className="absolute left-0 right-0"
             style={{
-              top: "48%",
-              height: 16,
-              background: "linear-gradient(to bottom, rgba(38,150,190,0.6), rgba(56,178,210,0))",
+              top: 0,
+              height: "45%",
+              background:
+                "linear-gradient(to bottom, #0f0a1f 0%, #1e1530 60%, #2a1f3d 100%)",
             }}
           />
-          {/* Sea sparkles */}
-          <svg className="absolute left-0 right-0" style={{ top: "49%", width: "100%", height: 20, opacity: 0.6 }} viewBox="0 0 1000 20" preserveAspectRatio="none">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <circle key={i} cx={i * 35 + (i % 3) * 7} cy={6 + (i % 4) * 3} r="1.2" fill="#fff" />
-            ))}
-          </svg>
 
-          {/* Distant net */}
-          <svg
+          {/* Hanging spotlights */}
+          {[20, 50, 80].map((x, i) => (
+            <div key={i}>
+              {/* Light source */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  top: "4%",
+                  left: `${x}%`,
+                  width: 24,
+                  height: 24,
+                  transform: "translateX(-50%)",
+                  background: "radial-gradient(circle, #fff8d6 0%, #ffd966 60%, transparent 100%)",
+                  boxShadow: "0 0 40px rgba(255,220,120,0.9)",
+                  animation: `so-spotlight 2s ease-in-out ${i * 200}ms infinite`,
+                }}
+              />
+              {/* Light cone */}
+              <div
+                className="absolute"
+                style={{
+                  top: "4%",
+                  left: `${x}%`,
+                  width: 280,
+                  height: 460,
+                  transform: "translateX(-50%)",
+                  background:
+                    "linear-gradient(to bottom, rgba(255,236,150,0.35) 0%, rgba(255,236,150,0.1) 50%, transparent 100%)",
+                  clipPath: "polygon(38% 0, 62% 0, 100% 100%, 0% 100%)",
+                  filter: "blur(8px)",
+                  opacity: 0.7,
+                }}
+              />
+            </div>
+          ))}
+
+          {/* Japanese banner (left) */}
+          <div
             className="absolute"
-            style={{ left: "6%", top: "42%", width: "20%", opacity: 0.4 }}
-            viewBox="0 0 200 130"
-            preserveAspectRatio="none"
+            style={{
+              top: "8%",
+              left: "4%",
+              width: 60,
+              height: 180,
+              background: "linear-gradient(to bottom, #7c1d1d, #991b1b)",
+              border: "2px solid #fef3c7",
+              boxShadow: "0 6px 18px rgba(0,0,0,0.5)",
+            }}
           >
-            <line x1="10" y1="0" x2="10" y2="130" stroke="#475569" strokeWidth="3" />
-            <line x1="190" y1="0" x2="190" y2="130" stroke="#475569" strokeWidth="3" />
-            <rect x="10" y="22" width="180" height="36" fill="none" stroke="#475569" strokeWidth="2" />
-            {Array.from({ length: 14 }).map((_, i) => (
-              <line key={`v${i}`} x1={10 + i * 13} y1="22" x2={10 + i * 13} y2="58" stroke="#475569" strokeWidth="1" />
-            ))}
-            {Array.from({ length: 5 }).map((_, i) => (
-              <line key={`h${i}`} x1="10" y1={22 + i * 9} x2="190" y2={22 + i * 9} stroke="#475569" strokeWidth="1" />
-            ))}
-          </svg>
-
-          {/* Palm tree (right edge) */}
-          <svg className="absolute" style={{ right: "2%", bottom: "20%", width: 180, opacity: 0.92 }} viewBox="0 0 200 280">
-            <path d="M100 280 Q95 200 105 120 Q98 80 110 40" stroke="#7c3a18" strokeWidth="10" fill="none" strokeLinecap="round" />
-            <g fill="#15803d" stroke="#14532d" strokeWidth="1.5">
-              <path d="M105 50 Q60 30 20 50 Q55 35 105 55 Z" />
-              <path d="M105 50 Q150 25 195 45 Q160 35 105 55 Z" />
-              <path d="M105 50 Q80 10 65 0 Q90 20 105 55 Z" />
-              <path d="M105 50 Q130 15 145 5 Q120 25 105 55 Z" />
-              <path d="M105 50 Q50 80 10 90 Q60 70 105 55 Z" />
-              <path d="M105 50 Q160 80 195 95 Q150 70 105 55 Z" />
-            </g>
-            <circle cx="100" cy="58" r="6" fill="#84cc16" />
-            <circle cx="112" cy="60" r="5" fill="#84cc16" />
-            <circle cx="94" cy="62" r="4" fill="#84cc16" />
-          </svg>
+            <div style={{ color: "#fef3c7", textAlign: "center", fontSize: 36, lineHeight: 1, marginTop: 16, fontFamily: "serif" }}>柔</div>
+            <div style={{ color: "#fef3c7", textAlign: "center", fontSize: 36, lineHeight: 1, marginTop: 8, fontFamily: "serif" }}>道</div>
+          </div>
+          {/* Japanese banner (right) */}
+          <div
+            className="absolute"
+            style={{
+              top: "8%",
+              right: "4%",
+              width: 60,
+              height: 180,
+              background: "linear-gradient(to bottom, #7c1d1d, #991b1b)",
+              border: "2px solid #fef3c7",
+              boxShadow: "0 6px 18px rgba(0,0,0,0.5)",
+            }}
+          >
+            <div style={{ color: "#fef3c7", textAlign: "center", fontSize: 36, lineHeight: 1, marginTop: 16, fontFamily: "serif" }}>武</div>
+            <div style={{ color: "#fef3c7", textAlign: "center", fontSize: 36, lineHeight: 1, marginTop: 8, fontFamily: "serif" }}>士</div>
+          </div>
 
           {/* Crowd silhouette */}
           <svg
             className="absolute left-0 right-0"
-            style={{ bottom: "30%", width: "100%", height: 50, opacity: 0.28 }}
-            viewBox="0 0 1000 50"
+            style={{ top: "38%", width: "100%", height: 40, opacity: 0.5 }}
+            viewBox="0 0 1000 40"
             preserveAspectRatio="none"
           >
-            {Array.from({ length: 40 }).map((_, i) => {
-              const x = i * 25;
-              const h = 26 + (i % 5) * 4;
+            {Array.from({ length: 50 }).map((_, i) => {
+              const x = i * 20;
+              const h = 20 + (i % 5) * 3;
               return (
-                <g key={i} fill="#1e293b">
-                  <circle cx={x + 12} cy={50 - h} r="6" />
-                  <rect x={x + 4} y={50 - h + 4} width="16" height={h} rx="4" />
+                <g key={i} fill="#0f172a">
+                  <circle cx={x + 10} cy={40 - h} r="5" />
+                  <rect x={x + 3} y={40 - h + 3} width="14" height={h} rx="3" />
                 </g>
               );
             })}
           </svg>
-
-          {/* Sand grain texture */}
-          <div
-            className="absolute left-0 right-0 bottom-0"
-            style={{
-              height: "30%",
-              background:
-                "radial-gradient(circle at 20% 30%, rgba(180,140,80,0.3), transparent 40%), radial-gradient(circle at 70% 60%, rgba(180,140,80,0.25), transparent 50%), radial-gradient(circle at 50% 80%, rgba(120,90,50,0.25), transparent 40%)",
-            }}
-          />
         </div>
 
-        {/* Vignette to focus on impact */}
+        {/* Vignette */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse at 50% 38%, transparent 25%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.65) 100%)",
-            animation: "so-vignette 2.4s ease-out both",
+              "radial-gradient(ellipse at 50% 55%, transparent 30%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.8) 100%)",
+            animation: "so-vignette 2.6s ease-out both",
           }}
         />
 
-        {/* Impact white flash */}
+        {/* Impact flash */}
         <div
           className="absolute inset-0"
           style={{
-            background: "radial-gradient(circle at 50% 38%, #fff 0%, rgba(255,255,255,0.4) 25%, transparent 60%)",
-            animation: "so-flash 2.4s ease-out both",
+            background: "radial-gradient(circle at 52% 65%, #fff 0%, rgba(255,255,255,0.4) 25%, transparent 60%)",
+            animation: "so-flash 2.6s ease-out both",
           }}
         />
 
-        {/* ── IMPACT POINT EFFECTS — center at 50% / 38% ── */}
-        <div className="absolute" style={{ left: "50%", top: "38%" }}>
-          {/* Light beams */}
+        {/* Background kanji "一本" (IPPON) */}
+        <div
+          className="absolute left-1/2"
+          style={{
+            top: "20%",
+            fontSize: "clamp(180px, 28vw, 380px)",
+            fontWeight: 900,
+            color: "#fef3c7",
+            fontFamily: "serif",
+            animation: "so-kanji 2.6s ease-out both",
+            whiteSpace: "nowrap",
+            letterSpacing: "0.1em",
+            textShadow: "0 0 60px rgba(220,38,38,0.8)",
+            zIndex: 1,
+          }}
+        >
+          一本
+        </div>
+
+        {/* ── IMPACT EFFECTS — center at 52% / 65% (where uke slams) ── */}
+        <div className="absolute" style={{ left: "52%", top: "65%", zIndex: 5 }}>
+          {/* Beams */}
           {beams.map((b, i) => (
             <div
               key={`bm-${key}-${i}`}
@@ -415,29 +415,29 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
                 {
                   left: 0,
                   top: 0,
-                  width: 360,
+                  width: 380,
                   height: 8,
                   borderRadius: 4,
                   background:
-                    "linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,236,150,0.8), transparent)",
+                    "linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,236,150,0.85), transparent)",
                   ["--rot" as any]: `${b.rot}deg`,
-                  animation: `so-beam 2.4s ease-out ${b.delay}ms both`,
-                  boxShadow: "0 0 20px rgba(255,236,150,0.8)",
+                  animation: `so-beam 2.6s ease-out ${b.delay}ms both`,
+                  boxShadow: "0 0 24px rgba(255,236,150,0.9)",
                   transformOrigin: "left center",
                 } as React.CSSProperties
               }
             />
           ))}
 
-          {/* Shockwave */}
+          {/* Horizontal shockwave (along the mat) */}
           <div
-            className="absolute rounded-full border-[7px]"
+            className="absolute rounded-full"
             style={{
-              width: 220,
-              height: 220,
-              borderColor: "#fff",
-              boxShadow: "0 0 50px rgba(255,255,255,0.9)",
-              animation: "so-shockwave 2.4s ease-out both",
+              width: 240,
+              height: 100,
+              border: "8px solid #fff",
+              boxShadow: "0 0 50px rgba(255,255,255,0.95)",
+              animation: "so-shockwave 2.6s ease-out both",
             }}
           />
           {/* Impact rings */}
@@ -446,50 +446,32 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
               key={i}
               className="absolute rounded-full border-4"
               style={{
-                width: 200,
-                height: 200,
+                width: 220,
+                height: 80,
                 borderColor: i === 0 ? "#facc15" : i === 1 ? "#f97316" : "#fff",
-                animation: `so-impact-ring 2.4s ease-out ${d}ms both`,
-                boxShadow: "0 0 28px rgba(250,204,21,0.7)",
+                animation: `so-impact-ring 2.6s ease-out ${d}ms both`,
+                boxShadow: "0 0 30px rgba(250,204,21,0.7)",
               }}
             />
           ))}
 
-          {/* Spike streak — direction of ball */}
-          <div
-            className="absolute"
-            style={{
-              left: 0,
-              top: 0,
-              width: 280,
-              height: 14,
-              borderRadius: 7,
-              background:
-                "linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.95), rgba(250,204,21,0.6), transparent)",
-              animation: "so-spike-streak 2.4s ease-out both",
-              transformOrigin: "left center",
-              filter: "blur(1px)",
-            }}
-          />
-
-          {/* Streamers */}
-          {streamers.map((s, i) => (
+          {/* Dust clouds */}
+          {dust.map((d, i) => (
             <div
-              key={`s-${key}-${i}`}
-              className="absolute"
+              key={`d-${key}-${i}`}
+              className="absolute rounded-full"
               style={
                 {
                   left: 0,
                   top: 0,
-                  width: 7,
-                  height: 100,
-                  borderRadius: 4,
-                  background: `linear-gradient(to bottom, ${s.color}, ${s.color}00)`,
-                  ["--tx" as any]: `${s.tx}px`,
-                  ["--ty" as any]: `${s.ty}px`,
-                  ["--rot" as any]: `${s.rot}deg`,
-                  animation: `so-streamer ${s.duration}ms cubic-bezier(.2,.7,.3,1) ${s.delay}ms both`,
-                  boxShadow: `0 0 10px ${s.color}`,
+                  width: d.size,
+                  height: d.size,
+                  background: "radial-gradient(circle, rgba(212,165,90,0.9), rgba(168,125,58,0.3))",
+                  ["--tx" as any]: `${d.tx}px`,
+                  ["--ty" as any]: `${d.ty}px`,
+                  ["--op" as any]: d.opacity,
+                  animation: `so-dust ${d.duration}ms ease-out ${d.delay}ms both`,
+                  filter: "blur(2px)",
                 } as React.CSSProperties
               }
             />
@@ -522,61 +504,59 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
           ))}
         </div>
 
-        {/* ── BALL TRAIL (ghosts) ── */}
-        {trail.map((t, i) => (
-          <div
-            key={`bt-${key}-${i}`}
-            className="absolute"
-            style={
-              {
-                left: "50%",
-                top: "38%",
-                width: "clamp(70px, 9vw, 130px)",
-                height: "clamp(70px, 9vw, 130px)",
-                transform: "translate(-50%,-50%)",
-                animation: `so-ball 2.4s cubic-bezier(.4,.1,.4,1) ${t.delay}ms both, so-ball-trail 2.4s ease-out ${t.delay}ms both`,
-                ["--op" as any]: t.opacity,
-                opacity: 0,
-                filter: `blur(${i}px)`,
-                pointerEvents: "none",
-              } as React.CSSProperties
-            }
-          >
-            <div style={{ transform: `scale(${t.scale})`, width: "100%", height: "100%" }}>
-              <VolleyballSVG />
-            </div>
-          </div>
-        ))}
+        {/* Arc speed-lines around throw arc */}
+        <div className="absolute" style={{ left: "50%", top: "50%", zIndex: 4 }}>
+          {[20, 50, 80, 110, 140, 170].map((rot, i) => (
+            <div
+              key={`arc-${key}-${i}`}
+              className="absolute"
+              style={
+                {
+                  left: 0,
+                  top: 0,
+                  width: 200,
+                  height: 6,
+                  borderRadius: 3,
+                  background: "linear-gradient(to right, rgba(255,255,255,0.9), rgba(250,204,21,0.5), transparent)",
+                  ["--rot" as any]: `${rot}deg`,
+                  animation: `so-arc-line 2.6s ease-out ${1100 + i * 30}ms both`,
+                  transformOrigin: "left center",
+                  filter: "blur(0.5px)",
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
 
-        {/* ── BALL (main) ── */}
+        {/* ── UKE (white gi, being thrown) ── */}
         <div
           className="absolute"
           style={{
             left: "50%",
-            top: "38%",
-            width: "clamp(70px, 9vw, 130px)",
-            height: "clamp(70px, 9vw, 130px)",
+            top: "50%",
+            width: "clamp(160px, 22vw, 360px)",
             transform: "translate(-50%,-50%)",
-            animation: "so-ball 2.4s cubic-bezier(.4,.1,.4,1) both",
-            filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.4))",
+            animation: "so-uke 2.6s cubic-bezier(.4,.0,.5,1) both, so-uke-blur 2.6s ease-out both",
+            zIndex: 6,
           }}
         >
-          <VolleyballSVG />
+          <JudokaSVG gi="white" />
         </div>
 
-        {/* ── PLAYER ── */}
+        {/* ── TORI (blue gi, thrower) ── */}
         <div
           className="absolute"
           style={{
-            left: "54%",
-            top: "42%",
+            left: "50%",
+            top: "50%",
             width: "clamp(180px, 24vw, 400px)",
             transform: "translate(-50%,-50%)",
-            animation: "so-player 2.4s cubic-bezier(.34,1.2,.5,1) both",
-            filter: "drop-shadow(0 22px 36px rgba(0,0,0,0.45))",
+            animation: "so-tori 2.6s cubic-bezier(.5,.0,.4,1) both",
+            zIndex: 7,
+            filter: "drop-shadow(0 22px 36px rgba(0,0,0,0.5))",
           }}
         >
-          <BeachSpikerSVG />
+          <JudokaSVG gi="blue" pose="thrower" />
         </div>
 
         {/* ── CAPTION ── */}
@@ -584,19 +564,20 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
           key={`cap-${key}`}
           className="absolute left-1/2"
           style={{
-            top: "72%",
-            animation: "so-caption 2.4s cubic-bezier(.34,1.56,.64,1) both",
+            top: "16%",
+            animation: "so-caption 2.6s cubic-bezier(.34,1.56,.64,1) both",
+            zIndex: 10,
           }}
         >
           <span
-            className="inline-block font-black tracking-tight px-8 py-3 rounded-2xl text-white"
+            className="inline-block font-black tracking-tight px-10 py-4 rounded-2xl text-white"
             style={{
-              fontSize: "clamp(34px, 6.5vw, 82px)",
-              background: "linear-gradient(135deg, #10b981 0%, #facc15 50%, #f97316 100%)",
+              fontSize: "clamp(38px, 7vw, 92px)",
+              background: "linear-gradient(135deg, #dc2626 0%, #f59e0b 50%, #facc15 100%)",
               boxShadow:
-                "0 18px 60px rgba(16,185,129,0.55), 0 0 50px rgba(250,204,21,0.55)",
-              border: "4px solid #0f172a",
-              textShadow: "0 4px 0 #0f172a, 0 8px 24px rgba(0,0,0,0.4)",
+                "0 20px 70px rgba(220,38,38,0.6), 0 0 60px rgba(250,204,21,0.6)",
+              border: "5px solid #0f172a",
+              textShadow: "0 5px 0 #0f172a, 0 10px 28px rgba(0,0,0,0.5)",
             }}
             dir="rtl"
           >
@@ -609,178 +590,166 @@ const SuccessOverlay = ({ visible, onDone, caption }: Props) => {
 };
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Volleyball — classic 3-panel beach ball
+   Judoka SVG — gi (uniform), belt, dynamic pose
+   gi: "white" | "blue"; pose: default (uke = neutral) | "thrower" (tori = crouched)
    ────────────────────────────────────────────────────────────────────────── */
-const VolleyballSVG = () => (
-  <svg viewBox="0 0 100 100" className="w-full h-full">
-    <defs>
-      <radialGradient id="vb-body" cx="35%" cy="32%" r="75%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="65%" stopColor="#f8fafc" />
-        <stop offset="100%" stopColor="#cbd5e1" />
-      </radialGradient>
-    </defs>
-    <circle cx="50" cy="50" r="46" fill="url(#vb-body)" stroke="#1e293b" strokeWidth="2" />
-    <path d="M50 4 Q22 30 50 96" stroke="#1e293b" strokeWidth="2.5" fill="none" />
-    <path d="M4 50 Q40 38 96 50" stroke="#1e293b" strokeWidth="2.5" fill="none" />
-    <path d="M50 4 Q78 30 50 96" stroke="#1e293b" strokeWidth="2.5" fill="none" />
-    <path d="M50 4 Q22 30 50 96 L50 50 Z" fill="#fbbf24" opacity="0.2" />
-    <path d="M4 50 Q40 38 96 50 L50 50 Z" fill="#06b6d4" opacity="0.18" />
-    <ellipse cx="34" cy="30" rx="14" ry="8" fill="rgba(255,255,255,0.75)" transform="rotate(-30 34 30)" />
-  </svg>
-);
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Beach Spiker — dynamic mid-air pose
-   ────────────────────────────────────────────────────────────────────────── */
-const BeachSpikerSVG = () => {
+const JudokaSVG = ({ gi, pose }: { gi: "white" | "blue"; pose?: "thrower" }) => {
+  const giColor = gi === "white" ? "#f5f5f0" : "#1e3a8a";
+  const giShade = gi === "white" ? "#c7c7bd" : "#1e293b";
+  const giLine = gi === "white" ? "#9a9a8e" : "#0f172a";
   const skin = "#e0a878";
   const skinShade = "#b8865a";
-  const shorts = "#0ea5e9";
-  const shortsShade = "#0369a1";
-  const top = "#fb923c";
-  const topShade = "#c2410c";
+  const belt = "#0f172a";
+  const beltStripe = "#facc15";
   const hair = "#1e1b4b";
 
+  const isThrower = pose === "thrower";
+
   return (
-    <svg viewBox="0 0 200 240" className="w-full h-auto" style={{ overflow: "visible" }}>
+    <svg viewBox="0 0 200 280" className="w-full h-auto" style={{ overflow: "visible" }}>
       <defs>
-        <linearGradient id="bs-skin" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`gi-${gi}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={giColor} />
+          <stop offset="100%" stopColor={giShade} />
+        </linearGradient>
+        <linearGradient id={`skin-${gi}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={skin} />
           <stop offset="100%" stopColor={skinShade} />
         </linearGradient>
-        <linearGradient id="bs-shorts" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={shorts} />
-          <stop offset="100%" stopColor={shortsShade} />
-        </linearGradient>
-        <linearGradient id="bs-top" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={top} />
-          <stop offset="100%" stopColor={topShade} />
-        </linearGradient>
       </defs>
 
-      {/* BACK LEG (kicked back & up — dynamic) */}
-      <g stroke="#1e293b" strokeWidth="2.2" strokeLinejoin="round">
-        <path d="M118 148 Q146 162 168 196 L160 208 Q138 178 110 160 Z" fill="url(#bs-skin)" />
-        {/* calf shading */}
-        <path d="M150 188 Q158 196 162 204" stroke={skinShade} strokeWidth="2" fill="none" opacity="0.6" />
-        <ellipse cx="166" cy="206" rx="11" ry="5" fill={skinShade} />
-      </g>
+      {isThrower ? (
+        /* ===== TORI — crouched, head down, arms reaching back to grip uke ===== */
+        <g>
+          {/* Back leg planted */}
+          <path d="M88 170 Q70 200 60 246 L78 254 Q92 210 105 180 Z"
+            fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+          <ellipse cx="68" cy="252" rx="14" ry="5" fill="#0f172a" />
+          {/* Front leg bent */}
+          <path d="M115 170 Q140 188 148 232 L130 240 Q116 200 105 180 Z"
+            fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+          <ellipse cx="140" cy="238" rx="14" ry="5" fill="#0f172a" />
 
-      {/* FRONT LEG (tucked) */}
-      <g stroke="#1e293b" strokeWidth="2.2" strokeLinejoin="round">
-        <path d="M95 148 Q76 174 64 212 L80 220 Q98 186 110 158 Z" fill="url(#bs-skin)" />
-        <path d="M82 200 Q76 210 72 218" stroke={skinShade} strokeWidth="2" fill="none" opacity="0.6" />
-        <ellipse cx="72" cy="218" rx="11" ry="5" fill={skinShade} />
-      </g>
+          {/* Pants ties */}
+          <path d="M70 248 L72 256 M80 250 L82 258" stroke={giLine} strokeWidth="1.5" />
 
-      {/* SHORTS */}
-      <path
-        d="M82 116 Q100 108 122 116 L130 152 Q118 158 108 156 Q98 158 88 156 Q82 154 78 150 Z"
-        fill="url(#bs-shorts)"
-        stroke="#1e293b"
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-      />
-      <path d="M82 130 L130 130" stroke="#fff" strokeWidth="2" opacity="0.6" />
-      <path d="M104 116 L104 156" stroke={shortsShade} strokeWidth="1.5" opacity="0.5" />
-
-      {/* TORSO (twisted for swing) */}
-      <path
-        d="M76 58 Q82 48 100 46 Q120 48 126 58 L132 122 Q108 130 74 122 Z"
-        fill="url(#bs-top)"
-        stroke="#1e293b"
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-      />
-      <path d="M86 54 Q100 60 114 54" stroke="#1e293b" strokeWidth="1.8" fill="none" />
-      {/* Abs */}
-      <path d="M100 68 L102 118" stroke={topShade} strokeWidth="1.5" opacity="0.5" />
-      <path d="M92 90 Q100 92 108 90" stroke={topShade} strokeWidth="1.2" fill="none" opacity="0.4" />
-      {/* Number on jersey */}
-      <text x="100" y="100" textAnchor="middle" fontSize="22" fontWeight="900" fill="#fff" stroke={topShade} strokeWidth="0.8" style={{ fontFamily: "system-ui" }}>
-        7
-      </text>
-
-      {/* LEFT ARM (forward, balance) */}
-      <g stroke="#1e293b" strokeWidth="2.2" strokeLinejoin="round">
-        <path d="M74 66 Q48 78 28 94 L36 104 Q58 90 80 78 Z" fill="url(#bs-skin)" />
-        <circle cx="28" cy="96" r="9" fill="url(#bs-skin)" />
-        {/* Wristband */}
-        <rect x="34" y="88" width="10" height="6" rx="2" fill="#fff" stroke="#1e293b" strokeWidth="1" />
-      </g>
-
-      {/* HEAD */}
-      <g>
-        {/* Neck */}
-        <rect x="93" y="40" width="14" height="14" fill={skinShade} />
-        {/* Face */}
-        <ellipse cx="100" cy="30" rx="18" ry="20" fill="url(#bs-skin)" stroke="#1e293b" strokeWidth="2.2" />
-        {/* Ear */}
-        <ellipse cx="83" cy="30" rx="3" ry="5" fill={skinShade} stroke="#1e293b" strokeWidth="1.4" />
-        {/* HAIR — flowing with motion */}
-        <g style={{ transformOrigin: "100px 28px", animation: "so-hair 2.4s ease-out both" }}>
+          {/* Jacket — crouched, broad shoulders pulled forward */}
           <path
-            d="M82 26 Q82 8 100 6 Q120 8 122 28 Q116 18 108 18 Q104 14 100 16 Q94 14 90 20 Q86 22 82 26 Z"
-            fill={hair}
-            stroke="#0f172a"
-            strokeWidth="1.5"
+            d="M68 90 Q62 78 78 70 L122 70 Q138 78 132 90 L142 160 Q126 172 100 170 Q74 172 58 160 Z"
+            fill={`url(#gi-${gi})`}
+            stroke={giLine}
+            strokeWidth="3"
+            strokeLinejoin="round"
           />
-          {/* Flowing strands */}
-          <path d="M120 22 Q130 14 138 6" stroke={hair} strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M122 28 Q134 22 142 16" stroke={hair} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-          <path d="M82 22 Q72 16 64 8" stroke={hair} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        </g>
-        {/* Eyebrows — intense */}
-        <path d="M88 27 L96 25" stroke="#1e293b" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M104 25 L112 27" stroke="#1e293b" strokeWidth="2.4" strokeLinecap="round" />
-        {/* Eyes — focused */}
-        <circle cx="92" cy="33" r="1.8" fill="#1e293b" />
-        <circle cx="108" cy="33" r="1.8" fill="#1e293b" />
-        {/* Determined mouth — slight clench */}
-        <path d="M92 43 L108 43" stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
-        {/* Sweat drop */}
-        <path d="M119 32 Q122 38 119 42 Q116 38 119 32 Z" fill="#7dd3fc" opacity="0.9" stroke="#0f172a" strokeWidth="0.6" />
-      </g>
+          {/* Lapels (overlap) */}
+          <path d="M78 70 L92 92 L100 168 L108 92 L122 70" stroke={giLine} strokeWidth="2.5" fill="none" />
+          <path d="M82 72 L96 96 L100 165" stroke={giColor} strokeWidth="6" fill="none" opacity="0.6" />
+          <path d="M118 72 L104 96 L100 165" stroke={giColor} strokeWidth="6" fill="none" opacity="0.6" />
 
-      {/* RIGHT ARM (SPIKING ARM) — full SNAP animation */}
-      <g style={{ transformOrigin: "120px 56px", animation: "so-arm-swing 2.4s cubic-bezier(.5,.0,.3,1) both" }}>
-        {/* Upper arm */}
-        <path
-          d="M118 50 L140 46 L146 22 L128 22 Z"
-          fill="url(#bs-skin)"
-          stroke="#1e293b"
-          strokeWidth="2.2"
-          strokeLinejoin="round"
-        />
-        {/* Bicep bulge */}
-        <ellipse cx="134" cy="34" rx="5" ry="9" fill={skin} opacity="0.7" />
-        {/* Forearm */}
-        <path
-          d="M138 24 L160 18 L166 -4 L146 -2 Z"
-          fill="url(#bs-skin)"
-          stroke="#1e293b"
-          strokeWidth="2.2"
-          strokeLinejoin="round"
-        />
-        {/* Forearm muscle shade */}
-        <path d="M150 10 Q156 8 162 4" stroke={skinShade} strokeWidth="1.5" fill="none" opacity="0.6" />
-        {/* Wristband */}
-        <rect x="148" y="-2" width="14" height="6" rx="2" fill="#fff" stroke="#1e293b" strokeWidth="1.2" />
-        {/* HAND — open palm SLAM */}
-        <g transform="translate(156, -8)">
-          <ellipse cx="0" cy="0" rx="12" ry="14" fill="url(#bs-skin)" stroke="#1e293b" strokeWidth="2.2" />
-          {/* Fingers spread */}
-          <path d="M-7 -10 L-6 -19" stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
-          <path d="M-2 -13 L-1 -23" stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
-          <path d="M4 -13 L5 -22" stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
-          <path d="M9 -10 L11 -18" stroke="#1e293b" strokeWidth="2.2" strokeLinecap="round" />
-          {/* Thumb */}
-          <path d="M-9 -2 Q-16 -4 -13 5" stroke="#1e293b" strokeWidth="2.2" fill="url(#bs-skin)" strokeLinecap="round" />
-          {/* Palm crease */}
-          <path d="M-5 0 Q0 4 6 0" stroke={skinShade} strokeWidth="1" fill="none" />
+          {/* BELT — black with gold stripe */}
+          <rect x="58" y="148" width="84" height="12" fill={belt} stroke="#000" strokeWidth="1.5" />
+          <rect x="58" y="153" width="84" height="2" fill={beltStripe} />
+          {/* Belt knot */}
+          <rect x="92" y="145" width="16" height="18" rx="2" fill={belt} stroke="#000" strokeWidth="1.5" />
+          <rect x="86" y="160" width="6" height="20" fill={belt} stroke="#000" strokeWidth="1" />
+          <rect x="108" y="160" width="6" height="20" fill={belt} stroke="#000" strokeWidth="1" />
+
+          {/* HEAD — tilted forward */}
+          <g transform="translate(0, -2) rotate(-20 100 60)">
+            <ellipse cx="100" cy="58" rx="16" ry="18" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            {/* Hair */}
+            <path d="M84 54 Q86 38 100 36 Q116 38 116 54 Q112 46 104 46 Q96 46 92 50 Q88 50 84 54 Z" fill={hair} />
+            {/* Eyes — fierce, slit */}
+            <path d="M90 60 L96 60" stroke="#0f172a" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M104 60 L110 60" stroke="#0f172a" strokeWidth="2.4" strokeLinecap="round" />
+            {/* Eyebrows */}
+            <path d="M88 56 L96 54" stroke="#0f172a" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M104 54 L112 56" stroke="#0f172a" strokeWidth="2.4" strokeLinecap="round" />
+            {/* Yell mouth */}
+            <ellipse cx="100" cy="68" rx="5" ry="4" fill="#0f172a" />
+          </g>
+
+          {/* ARMS — both reaching up & back to pull/grip uke */}
+          {/* Right arm (pulling) */}
+          <g>
+            <path d="M132 92 L152 78 L168 50 L150 40 Z" fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+            <path d="M168 50 L184 30 L172 18 L156 38 Z" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            {/* Fist gripping uke's sleeve */}
+            <circle cx="178" cy="22" r="10" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            <path d="M170 18 L186 18" stroke="#0f172a" strokeWidth="1.5" />
+          </g>
+          {/* Left arm (pulling lapel) */}
+          <g>
+            <path d="M68 92 L48 78 L34 56 L52 46 Z" fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+            <path d="M34 56 L20 38 L32 26 L46 44 Z" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            <circle cx="26" cy="32" r="10" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            <path d="M18 28 L34 28" stroke="#0f172a" strokeWidth="1.5" />
+          </g>
         </g>
-      </g>
+      ) : (
+        /* ===== UKE — neutral standing pose (will be flipped/rotated by parent transform) ===== */
+        <g>
+          {/* Legs — straight, slightly apart */}
+          <path d="M88 168 L82 250 L98 252 L100 170 Z" fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+          <path d="M112 168 L118 250 L102 252 L100 170 Z" fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+          <ellipse cx="88" cy="252" rx="13" ry="5" fill="#0f172a" />
+          <ellipse cx="112" cy="252" rx="13" ry="5" fill="#0f172a" />
+          {/* Pants stripes */}
+          <path d="M90 200 L92 240" stroke={giLine} strokeWidth="1" opacity="0.5" />
+          <path d="M110 200 L108 240" stroke={giLine} strokeWidth="1" opacity="0.5" />
+
+          {/* Jacket */}
+          <path
+            d="M68 90 Q62 78 78 70 L122 70 Q138 78 132 90 L138 160 Q120 168 100 168 Q80 168 62 160 Z"
+            fill={`url(#gi-${gi})`}
+            stroke={giLine}
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          {/* Lapels */}
+          <path d="M78 70 L92 92 L100 165 L108 92 L122 70" stroke={giLine} strokeWidth="2.5" fill="none" />
+          <path d="M82 72 L96 96 L100 162" stroke={giColor === "#f5f5f0" ? "#fff" : "#3b82f6"} strokeWidth="6" fill="none" opacity="0.6" />
+          <path d="M118 72 L104 96 L100 162" stroke={giColor === "#f5f5f0" ? "#fff" : "#3b82f6"} strokeWidth="6" fill="none" opacity="0.6" />
+
+          {/* BELT */}
+          <rect x="62" y="148" width="76" height="12" fill={belt} stroke="#000" strokeWidth="1.5" />
+          <rect x="62" y="153" width="76" height="2" fill={beltStripe} />
+          <rect x="92" y="145" width="16" height="18" rx="2" fill={belt} stroke="#000" strokeWidth="1.5" />
+          <rect x="86" y="160" width="6" height="22" fill={belt} stroke="#000" strokeWidth="1" />
+          <rect x="108" y="160" width="6" height="22" fill={belt} stroke="#000" strokeWidth="1" />
+
+          {/* HEAD */}
+          <ellipse cx="100" cy="50" rx="17" ry="20" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+          {/* Hair */}
+          <path d="M83 46 Q85 28 100 26 Q117 28 117 46 Q113 38 105 38 Q96 38 92 42 Q88 42 83 46 Z" fill={hair} />
+          {/* Wide-eyed (surprised — being thrown!) */}
+          <circle cx="93" cy="52" r="3" fill="#fff" stroke="#0f172a" strokeWidth="1.5" />
+          <circle cx="107" cy="52" r="3" fill="#fff" stroke="#0f172a" strokeWidth="1.5" />
+          <circle cx="93" cy="52" r="1.5" fill="#0f172a" />
+          <circle cx="107" cy="52" r="1.5" fill="#0f172a" />
+          {/* Eyebrows raised */}
+          <path d="M86 44 L98 42" stroke="#0f172a" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M102 42 L114 44" stroke="#0f172a" strokeWidth="2.2" strokeLinecap="round" />
+          {/* Open shocked mouth */}
+          <ellipse cx="100" cy="64" rx="4" ry="5" fill="#0f172a" />
+
+          {/* ARMS — flailing (one forward, one out) */}
+          {/* Left arm — gripped by tori, pulled forward */}
+          <g>
+            <path d="M68 90 L48 100 L30 130 L48 140 Z" fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+            <path d="M30 130 L14 150 L22 164 L40 144 Z" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            <circle cx="16" cy="158" r="9" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            <path d="M10 154 L22 162" stroke="#0f172a" strokeWidth="1.5" />
+          </g>
+          {/* Right arm — flailing up/back */}
+          <g>
+            <path d="M132 90 L150 76 L168 56 L152 46 Z" fill={`url(#gi-${gi})`} stroke={giLine} strokeWidth="2.5" />
+            <path d="M168 56 L186 40 L176 28 L160 44 Z" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            <circle cx="180" cy="32" r="9" fill={`url(#skin-${gi})`} stroke="#1e293b" strokeWidth="2.2" />
+            <path d="M174 28 L186 36" stroke="#0f172a" strokeWidth="1.5" />
+          </g>
+        </g>
+      )}
     </svg>
   );
 };
