@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import ErrorFeedbackOverlay from "@/components/ErrorFeedbackOverlay";
+import SuccessOverlay from "@/components/SuccessOverlay";
 
 const FEEDBACK_MESSAGES = {
   correct: [
@@ -58,6 +59,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
   const [failureVisible, setFailureVisible] = useState(false);
   const [failureAttempt, setFailureAttempt] = useState(1);
   const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
+  const [successVisible, setSuccessVisible] = useState(false);
 
 
   const completedCount = unit.items.filter(i => coveredTopics.includes(i.title)).length;
@@ -75,6 +77,7 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
       // Lock permanently — correct answer, we're done with this question
       setQuizSolved(prev => { const s = new Set(prev); s.add(key); return s; });
       fireConfetti();
+      setSuccessVisible(true);
     } else {
       // Wrong — trigger fun animation, but DON'T lock the buttons.
       // The user can click another option immediately (no timeout, no disabled state).
@@ -93,6 +96,11 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
       <ErrorFeedbackOverlay
         visible={failureVisible}
         onDone={() => setFailureVisible(false)}
+      />
+      {/* Cheering athletes + confetti — fullscreen correct-answer overlay */}
+      <SuccessOverlay
+        visible={successVisible}
+        onDone={() => setSuccessVisible(false)}
       />
 
       {/* Unit header */}
