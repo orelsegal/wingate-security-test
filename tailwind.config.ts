@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx,js,jsx}"],
   prefix: "",
   theme: {
     container: {
@@ -17,8 +17,15 @@ export default {
         sans: ["Heebo", "Assistant", "sans-serif"],
         heading: ["Rubik", "Heebo", "sans-serif"],
         display: ["Rubik", "sans-serif"],
+        heebo: ["Heebo", "sans-serif"],
       },
       colors: {
+        /* ── larutz-im-milim palette ── */
+        navy:       { DEFAULT: '#1a2744', 50: '#EEF2F7', 100: '#D5E0ED', 200: '#AAC0DA', 500: '#2B5C90', 600: '#1E3A5F', 700: '#152B47', 900: '#070F1A' },
+        sand:       { DEFAULT: '#EDD9C0', 50: '#FBF7F2', 100: '#F5EDE0', 200: '#EDD9C0', 300: '#E2C49A' },
+        terracotta: { DEFAULT: '#D4754E', 400: '#E8904A', 500: '#D4754E', 600: '#B85D3A' },
+        sage:       { DEFAULT: '#6B9E7A', 50: '#EEF5F0', 100: '#D5EAD9', 300: '#9FC9A8', 400: '#7BB37A', 500: '#6B9E7A', 600: '#4A7C59', 700: '#3A6148' },
+        /* ── end larutz palette ── */
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
