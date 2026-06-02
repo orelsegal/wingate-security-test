@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Map as MapIcon, Lock, ArrowRight } from "lucide-react";
-import riverBg from "@/assets/river-roadmap.png.asset.json";
+import riverBg from "@/assets/cycling-roadmap.png.asset.json";
 
 export type ScenicNode = {
   id: string;
@@ -25,15 +25,15 @@ const SIGN_COLORS: Record<ScenicNode["status"], { fill: string; stroke: string; 
   locked:    { fill: "hsl(220 12% 68%)", stroke: "hsl(220 14% 44%)", text: "#fff" },
 };
 
-// Anchor points calibrated to the reference image (percent of width/height).
-// Each entry matches the location of a baked-in signpost in the artwork.
+// Anchor points calibrated to the cycling-road reference image.
+// Points follow the serpentine road from START (top) to FINISH (bottom).
 const ANCHORS: Array<{ x: number; y: number; labelSide: "right" | "left" }> = [
-  { x: 12, y: 7.2,  labelSide: "right" }, // 1 LAUNCH DOCK (top-left)
-  { x: 88, y: 19.5, labelSide: "left"  }, // 2 FOREST STOP (right)
-  { x: 11, y: 36.5, labelSide: "right" }, // 3 PICNIC REST (left)
-  { x: 88, y: 46.5, labelSide: "left"  }, // 4 BRIDGE CROSSING (right)
-  { x: 11, y: 62.0, labelSide: "right" }, // 5 WILDLIFE VIEWING (left)
-  { x: 80, y: 80.0, labelSide: "left"  }, // 6 FINISH DOCK (right)
+  { x: 40, y: 9,  labelSide: "right" }, // 1 near START
+  { x: 56, y: 22, labelSide: "left"  }, // 2 first right curve
+  { x: 30, y: 33, labelSide: "right" }, // 3 left curve
+  { x: 55, y: 45, labelSide: "left"  }, // 4 right curve mid
+  { x: 35, y: 58, labelSide: "right" }, // 5 left curve lower
+  { x: 50, y: 72, labelSide: "left"  }, // 6 approach FINISH
 ];
 
 const ScenicRoadmap = ({
