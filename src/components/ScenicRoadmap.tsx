@@ -63,7 +63,9 @@ const ScenicRoadmap = ({
   onContinue,
   continueLabel = "המשך למסלול",
   heightClass = "h-[calc(100vh-220px)] min-h-[720px] max-h-[1100px]",
+  subject,
 }: Props) => {
+  const bg = (subject && SUBJECT_BG[subject]) || cyclingBg;
   // Map nodes to anchor points. If more nodes than anchors, distribute along
   // a serpentine path between top and bottom.
   const points = useMemo(() => {
