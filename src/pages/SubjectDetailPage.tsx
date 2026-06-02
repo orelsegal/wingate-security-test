@@ -169,6 +169,7 @@ const SubjectDetailPage = () => {
       {/* Scenic roadmap (full width) */}
       <div className="mb-6">
         <ScenicRoadmap
+          subject={decoded}
           nodes={nodes.map(n => ({
             id: n.id,
             title: n.title,

@@ -1,6 +1,14 @@
 import { useMemo } from "react";
 import { Map as MapIcon, Lock, ArrowRight } from "lucide-react";
-import riverBg from "@/assets/cycling-roadmap.png.asset.json";
+import cyclingBg from "@/assets/cycling-roadmap.png.asset.json";
+import tanachBg from "@/assets/roadmap-tanach.jpg.asset.json";
+import lashonBg from "@/assets/roadmap-lashon.jpg.asset.json";
+import mathBg from "@/assets/roadmap-math.jpg.asset.json";
+import englishBg from "@/assets/roadmap-english.jpg.asset.json";
+import historyBg from "@/assets/roadmap-history.jpg.asset.json";
+import peBg from "@/assets/roadmap-pe.jpg.asset.json";
+import literatureBg from "@/assets/roadmap-literature.jpg.asset.json";
+import civicsBg from "@/assets/roadmap-civics.jpg.asset.json";
 
 export type ScenicNode = {
   id: string;
@@ -16,6 +24,19 @@ type Props = {
   onContinue?: () => void;
   continueLabel?: string;
   heightClass?: string;
+  subject?: string;
+};
+
+const SUBJECT_BG: Record<string, { url: string }> = {
+  "תנ״ך": tanachBg,
+  'תנ"ך': tanachBg,
+  "לשון": lashonBg,
+  "מתמטיקה": mathBg,
+  "אנגלית": englishBg,
+  "היסטוריה": historyBg,
+  "חינוך גופני": peBg,
+  "ספרות": literatureBg,
+  "אזרחות": civicsBg,
 };
 
 const SIGN_COLORS: Record<ScenicNode["status"], { fill: string; stroke: string; text: string }> = {
@@ -42,7 +63,9 @@ const ScenicRoadmap = ({
   onContinue,
   continueLabel = "המשך למסלול",
   heightClass = "h-[calc(100vh-220px)] min-h-[720px] max-h-[1100px]",
+  subject,
 }: Props) => {
+  const bg = (subject && SUBJECT_BG[subject]) || cyclingBg;
   // Map nodes to anchor points. If more nodes than anchors, distribute along
   // a serpentine path between top and bottom.
   const points = useMemo(() => {
@@ -68,7 +91,7 @@ const ScenicRoadmap = ({
     >
       {/* Background artwork */}
       <img
-        src={riverBg.url}
+        src={bg.url}
         alt=""
         aria-hidden
         className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
