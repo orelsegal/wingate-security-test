@@ -91,7 +91,7 @@ const ScenicRoadmap = ({
     >
       {/* Background artwork */}
       <img
-        src={riverBg.url}
+        src={bg.url}
         alt=""
         aria-hidden
         className="absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none"
