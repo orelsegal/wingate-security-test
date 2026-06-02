@@ -75,11 +75,12 @@ export function LarutzBridge({ children, onExit }: Props) {
   const isTeacher = wingateUser?.role === 'teacher' || wingateUser?.role === 'admin';
 
   /* Adapt the Wingate user object to match what the original app expects */
-  const user = wingateUser ? {
-    uid:         wingateUser.id || wingateUser.uid,
-    email:       wingateUser.email,
-    displayName: wingateUser.name || wingateUser.displayName || wingateUser.email,
-    photoURL:    wingateUser.photoURL || null,
+  const wu = wingateUser as any;
+  const user = wu ? {
+    uid:         wu.id || wu.uid,
+    email:       wu.email,
+    displayName: wu.name || wu.displayName || wu.email,
+    photoURL:    wu.photoURL || null,
   } : null;
 
   const ctx: LarutzCtx = {
