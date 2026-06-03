@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Globe, Calculator, Languages, Scroll, Scale, Dumbbell, Feather, Eye, Pencil } from "lucide-react";
+import { BookOpen, Globe, Calculator, Languages, Scroll, Scale, Dumbbell, Feather } from "lucide-react";
 
 const subjects: { name: string; icon: any; bg: string; iconColor: string }[] = [
   { name: "תנ״ך",        icon: BookOpen,   bg: "bg-[hsl(45,35%,94%)]",  iconColor: "text-[hsl(45,45%,42%)]" },
