@@ -75,8 +75,9 @@ const SubjectDetailPage = () => {
   const activeUnit = activePart?.units.find(u => u.id === activeNode?.unitId);
 
   const handleNodeSelect = (i: number) => {
-    setActiveUnitIdx(i);
-    setTimeout(() => unitDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    const n = nodes[i];
+    if (!n) return;
+    navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`);
   };
 
   const doneCount = nodes.filter(n => n.status === "done").length;
