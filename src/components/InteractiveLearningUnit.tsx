@@ -175,8 +175,8 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                     <BookOpen className="h-3 w-3 text-primary/60" strokeWidth={1.5} />
                     <span className="text-[10px] font-semibold text-primary/60">הסבר</span>
                   </div>
-                  <p className="text-[11.5px] text-foreground leading-relaxed whitespace-pre-wrap">
-                    {item.explanation}
+                  <p className="text-[11.5px] text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                    <RichText text={item.explanation} />
                   </p>
                 </div>
 
@@ -224,21 +224,32 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                       <Lightbulb className="h-3 w-3 text-primary/60" strokeWidth={1.5} />
                       <span className="text-[10px] font-semibold text-primary/60">דוגמה</span>
                     </div>
-                    <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
-                      {item.example}
+                    <p className="text-[11px] text-foreground/85 leading-relaxed whitespace-pre-wrap">
+                      <RichText text={item.example} />
                     </p>
                   </div>
                 )}
 
-                {/* Practice */}
-                {item.practice && (
+                {/* Structured fields (preferred) */}
+                {item.fields && item.fields.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <PenLine className="h-3 w-3 text-[hsl(var(--warning))]/70" strokeWidth={1.5} />
+                      <span className="text-[10px] font-semibold text-[hsl(var(--warning))]/70">תרגול — מלאו את השדות</span>
+                    </div>
+                    <StructuredPractice itemId={item.id} fields={item.fields} />
+                  </div>
+                )}
+
+                {/* Plain practice fallback */}
+                {item.practice && !item.fields && (
                   <div className="bg-card rounded-xl border border-border p-4">
                     <div className="flex items-center gap-1.5 mb-2">
                       <PenLine className="h-3 w-3 text-[hsl(var(--warning))]/70" strokeWidth={1.5} />
                       <span className="text-[10px] font-semibold text-[hsl(var(--warning))]/70">תרגול</span>
                     </div>
                     <p className="text-[11px] text-foreground leading-relaxed mb-3 whitespace-pre-wrap">
-                      {item.practice}
+                      <RichText text={item.practice} />
                     </p>
                     <Textarea
                       value={practiceText[item.id] || ""}
@@ -324,7 +335,9 @@ const InteractiveLearningUnit = ({ unit, coveredTopics, onTopicComplete }: Props
                 {item.tip && (
                   <div className="flex items-start gap-2 px-3 py-2.5 bg-[hsl(var(--warning))]/5 rounded-lg border border-[hsl(var(--warning))]/10">
                     <Sparkles className="h-3 w-3 text-[hsl(var(--warning))] shrink-0 mt-0.5" strokeWidth={1.5} />
-                    <p className="text-[10px] text-foreground/80 leading-relaxed">{item.tip}</p>
+                    <p className="text-[10px] text-foreground/80 leading-relaxed">
+                      <RichText text={item.tip} />
+                    </p>
                   </div>
                 )}
 
