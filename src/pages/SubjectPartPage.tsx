@@ -197,7 +197,44 @@ const SubjectPartPage = () => {
             });
           })()}
         </div>
+
+        {/* "סיימתי — המשך הלאה" — מעבר ליחידה הבאה */}
+        {(() => {
+          const flat: { partId: string; unitId: string; title: string }[] = [];
+          subjectData?.parts.forEach(p => p.units.forEach(u => flat.push({ partId: p.id, unitId: u.id, title: u.title })));
+          const currentIdx = flat.findIndex(f => f.partId === part.id);
+          // איתור היחידה הנוכחית בתוך המודול הזה: היחידה הראשונה שעדיין לא הושלמה
+          let inPartIdx = part.units.findIndex(u => !u.items.every(it => coveredTopics.includes(it.title)));
+          if (inPartIdx < 0) inPartIdx = part.units.length - 1;
+          const flatCurrentIdx = flat.findIndex(f => f.partId === part.id && f.unitId === part.units[inPartIdx]?.id);
+          const next = flatCurrentIdx >= 0 ? flat[flatCurrentIdx + 1] : undefined;
+          return (
+            <div className="mt-5 flex items-center justify-between gap-3 bg-violet-50/50 border border-violet-100 rounded-2xl p-4">
+              <div className="text-end flex-1">
+                <p className="text-[12px] font-semibold text-foreground">סיימת את היחידה הזו?</p>
+                <p className="text-[10.5px] text-muted-foreground mt-0.5">
+                  {next ? `הבא בתור: ${next.title}` : "זו היחידה האחרונה במקצוע"}
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  toast({ title: "כל הכבוד", description: "עברנו ליחידה הבאה" });
+                  if (next) {
+                    navigate(`/subjects/${encodeURIComponent(decoded)}/${next.partId}#${next.unitId}`);
+                  } else {
+                    navigate(`/subjects/${encodeURIComponent(decoded)}`);
+                  }
+                }}
+                className="text-[11.5px] font-semibold rounded-full px-4 h-9 bg-violet-500 hover:bg-violet-600 text-white"
+              >
+                סיימתי — המשך הלאה
+              </Button>
+            </div>
+          );
+        })()}
       </section>
+
+
 
       {/* Materials */}
       <section className="mb-6">
