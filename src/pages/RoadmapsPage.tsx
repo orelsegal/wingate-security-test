@@ -30,44 +30,24 @@ const RoadmapsPage = () => {
         {subjects.map((s) => {
           const Icon = s.icon;
           return (
-            <div
+            <button
               key={s.name}
-              className="group bg-card border border-border/60 rounded-2xl p-5 transition-all duration-200 hover:shadow-md hover:border-border"
+              onClick={() => {
+                if (s.name === "ספרות") {
+                  navigate(`/subjects/${encodeURIComponent(s.name)}/assessment-30`);
+                } else {
+                  navigate(`/subjects/${encodeURIComponent(s.name)}`);
+                }
+              }}
+              className="group bg-card border border-border/60 rounded-2xl p-5 transition-all duration-200 hover:shadow-md hover:border-border text-start"
             >
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3">
                 <div className={`w-11 h-11 rounded-xl ${s.bg} flex items-center justify-center shrink-0`}>
                   <Icon className={`h-5 w-5 ${s.iconColor}`} strokeWidth={1.6} />
                 </div>
                 <h3 className="text-[15px] font-semibold text-foreground tracking-tight">{s.name}</h3>
               </div>
-
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    if (s.name === "ספרות") {
-                      navigate(`/subjects/${encodeURIComponent(s.name)}/assessment-30`);
-                    } else {
-                      navigate(`/subjects/${encodeURIComponent(s.name)}`);
-                    }
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[12.5px] font-medium text-foreground bg-muted/50 hover:bg-muted transition-colors duration-150 text-start"
-                >
-                  <Eye className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  <span>{s.name === "ספרות" ? "מפות דרכים — הערכה פנימית" : "צפייה של התלמיד"}</span>
-                </button>
-                <button
-                  onClick={() =>
-                    s.name === "מתמטיקה"
-                      ? navigate("/roadmaps/math?mode=teacher")
-                      : navigate(`/teacher-subjects?subject=${encodeURIComponent(s.name)}`)
-                  }
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[12.5px] font-medium text-primary-foreground bg-primary hover:bg-primary/90 transition-colors duration-150 text-start"
-                >
-                  <Pencil className="h-4 w-4" strokeWidth={1.5} />
-                  <span>הזנת חומר לימוד של המורה</span>
-                </button>
-              </div>
-            </div>
+            </button>
           );
         })}
       </div>
