@@ -10,6 +10,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import ErrorFeedbackOverlay from "@/components/ErrorFeedbackOverlay";
 import SuccessOverlay from "@/components/SuccessOverlay";
+import StructuredPractice from "@/components/StructuredPractice";
+
+/** Renders text supporting **bold** (markdown-ish) — splits on **...** and emphasizes. */
+const RichText = ({ text, className = "" }: { text: string; className?: string }) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <span className={className}>
+      {parts.map((p, i) => p.startsWith("**") && p.endsWith("**")
+        ? <strong key={i} className="font-semibold text-foreground">{p.slice(2, -2)}</strong>
+        : <span key={i}>{p}</span>)}
+    </span>
+  );
+};
+
 
 const FEEDBACK_MESSAGES = {
   correct: [
