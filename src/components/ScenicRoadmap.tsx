@@ -26,14 +26,15 @@ const SIGN_COLORS: Record<ScenicNode["status"], { fill: string; stroke: string; 
 };
 
 // Anchor points calibrated to the cycling-road reference image.
-// Points follow the serpentine road from START (top) to FINISH (bottom).
+// Used as a baseline for up to 6 nodes; for more nodes we generate a serpentine
+// distribution evenly spread along the road so nothing overlaps.
 const ANCHORS: Array<{ x: number; y: number; labelSide: "right" | "left" }> = [
-  { x: 40, y: 9,  labelSide: "right" }, // 1 near START
-  { x: 56, y: 22, labelSide: "left"  }, // 2 first right curve
-  { x: 30, y: 33, labelSide: "right" }, // 3 left curve
-  { x: 55, y: 45, labelSide: "left"  }, // 4 right curve mid
-  { x: 35, y: 58, labelSide: "right" }, // 5 left curve lower
-  { x: 50, y: 72, labelSide: "left"  }, // 6 approach FINISH
+  { x: 40, y: 9,  labelSide: "right" },
+  { x: 56, y: 22, labelSide: "left"  },
+  { x: 30, y: 33, labelSide: "right" },
+  { x: 55, y: 45, labelSide: "left"  },
+  { x: 35, y: 58, labelSide: "right" },
+  { x: 50, y: 72, labelSide: "left"  },
 ];
 
 const ScenicRoadmap = ({
@@ -43,20 +44,29 @@ const ScenicRoadmap = ({
   continueLabel = "המשך למסלול",
   heightClass = "h-[calc(100vh-220px)] min-h-[720px] max-h-[1100px]",
 }: Props) => {
-  // Map nodes to anchor points. If more nodes than anchors, distribute along
-  // a serpentine path between top and bottom.
+  // Distribute nodes evenly along a serpentine path so labels never overlap.
   const points = useMemo(() => {
-    return nodes.map((n, i) => {
-      if (i < ANCHORS.length) {
-        return { ...n, idx: i, x: ANCHORS[i].x, y: ANCHORS[i].y, labelSide: ANCHORS[i].labelSide as "left" | "right" };
-      }
-      const t = (i - ANCHORS.length + 1) / Math.max(1, nodes.length - ANCHORS.length + 1);
-      const y = 85 + t * 10;
-      const x = i % 2 === 0 ? 22 : 78;
+    const n = nodes.length;
+    if (n === 0) return [];
+    // Use fixed anchors only when count matches comfortably (≤ 6).
+    if (n <= ANCHORS.length) {
+      return nodes.map((node, i) => ({
+        ...node, idx: i,
+        x: ANCHORS[i].x, y: ANCHORS[i].y, labelSide: ANCHORS[i].labelSide,
+      }));
+    }
+    // Otherwise: evenly spaced serpentine, alternating sides.
+    const top = 7;
+    const bottom = 90;
+    return nodes.map((node, i) => {
+      const t = n === 1 ? 0 : i / (n - 1);
+      const y = top + t * (bottom - top);
+      const x = i % 2 === 0 ? 34 : 60;
       const labelSide: "left" | "right" = x < 50 ? "right" : "left";
-      return { ...n, idx: i, x, y, labelSide };
+      return { ...node, idx: i, x, y, labelSide };
     });
   }, [nodes]);
+
 
   return (
     <div
