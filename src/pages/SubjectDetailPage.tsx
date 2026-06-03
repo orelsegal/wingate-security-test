@@ -234,6 +234,49 @@ const SubjectDetailPage = () => {
         </div>
       )}
 
+      {/* רשימת כל היחידות — תצוגה רציפה */}
+      {decoded === "אזרחות" && nodes.length > 0 && (
+        <div className="mb-6 bg-card rounded-3xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[10.5px] text-muted-foreground">{nodes.length} יחידות · לחיצה פותחת את היחידה</p>
+            <h2 className="text-[15px] font-bold text-foreground tracking-tight">כל יחידות הלימוד</h2>
+          </div>
+          <ol className="flex flex-col gap-2">
+            {nodes.map((n, i) => {
+              const isDone = n.status === "done";
+              const isCurrent = n.status === "current" && !isDone;
+              return (
+                <li key={n.id}>
+                  <button
+                    onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`)}
+                    className={[
+                      "w-full flex items-center gap-3 p-3.5 rounded-2xl border text-end transition-all",
+                      isDone ? "bg-emerald-50/60 border-emerald-100 hover:bg-emerald-50" :
+                      isCurrent ? "bg-violet-50/60 border-violet-200 hover:bg-violet-50" :
+                      "bg-background border-border hover:bg-accent",
+                    ].join(" ")}
+                  >
+                    <span className={[
+                      "shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold",
+                      isDone ? "bg-emerald-400 text-white" :
+                      isCurrent ? "bg-violet-500 text-white" :
+                      "bg-muted text-muted-foreground",
+                    ].join(" ")}>
+                      {isDone ? <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} /> : String(i + 1).padStart(2, "0")}
+                    </span>
+                    <div className="flex-1 min-w-0 text-end">
+                      <p className="text-[12.5px] font-semibold text-foreground leading-tight truncate">{n.title}</p>
+                      {n.subtitle && <p className="text-[10.5px] text-muted-foreground mt-0.5 truncate">{n.subtitle}</p>}
+                    </div>
+                    <ChevronLeft className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.6} />
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+
       {/* Medal cabinet */}
       <div className="mb-6">
         <h2 className="text-[13px] font-bold text-foreground mb-3 flex items-center gap-2 justify-end">
