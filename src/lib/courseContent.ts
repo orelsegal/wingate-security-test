@@ -2,12 +2,28 @@
    Real curriculum-aligned content for Israeli Bagrut subjects.
    Each subject has configurable internal/external splits. */
 
+export interface PracticeFieldDef {
+  id: string;
+  kind: "text" | "longtext" | "table" | "tagged-list" | "checklist";
+  label?: string;
+  helper?: string;
+  placeholder?: string;
+  tags?: string[];
+  columns?: string[];
+  rows?: number;
+  items?: string[];
+  expectation?: string;
+  question?: string;
+}
+
 export interface LearningItem {
   id: string;
   title: string;
   explanation: string;
   example?: string;
   practice?: string;
+  /** structured fill-in fields (preferred over `practice` string) */
+  fields?: PracticeFieldDef[];
   quiz?: { question: string; options: string[]; correct: number }[];
   tip?: string;
   videos?: { url: string; label: string }[];
