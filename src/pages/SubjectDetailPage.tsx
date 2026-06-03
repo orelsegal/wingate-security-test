@@ -39,6 +39,7 @@ const SubjectDetailPage = () => {
     const out: { id: string; index: number; title: string; subtitle?: string; partId: string; unitId: string; status: "done" | "current" | "locked" }[] = [];
     let i = 1;
     let foundCurrent = false;
+    const isCivics = decoded === "אזרחות";
     parts.forEach(part => {
       part.units.forEach(unit => {
         const unitTopics = unit.items.map(it => it.title);
@@ -46,6 +47,7 @@ const SubjectDetailPage = () => {
         let status: "done" | "current" | "locked" = "locked";
         if (allDone) status = "done";
         else if (!foundCurrent) { status = "current"; foundCurrent = true; }
+        else if (isCivics) status = "current"; // אזרחות: כל היחידות פתוחות לתצוגה
         out.push({
           id: `${part.id}-${unit.id}`,
           index: i++,
@@ -58,7 +60,8 @@ const SubjectDetailPage = () => {
       });
     });
     return out;
-  }, [parts, coveredTopics]);
+  }, [parts, coveredTopics, decoded]);
+
 
   // Active unit shown below roadmap (default: current node, fallback to first)
   const [activeUnitIdx, setActiveUnitIdx] = useState(0);

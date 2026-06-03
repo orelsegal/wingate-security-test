@@ -155,11 +155,13 @@ const SubjectPartPage = () => {
         <div className="space-y-5">
           {(() => {
             let foundLocked = false;
+            const isCivics = decoded === "אזרחות";
             return part.units.map((unit, idx) => {
               const unitTopics = unit.items.map(i => i.title);
               const allDone = unitTopics.length > 0 && unitTopics.every(t => coveredTopics.includes(t));
-              const isLocked = !allDone && foundLocked;
+              const isLocked = !isCivics && !allDone && foundLocked;
               if (!allDone && !foundLocked) foundLocked = true; // first not-done = current; rest locked
+
               if (isLocked) {
                 return (
                   <div
