@@ -69,18 +69,19 @@ const ScenicRoadmap = ({
 
 
   // For many nodes, ensure enough vertical room so labels never collide.
-  const effectiveHeight = nodes.length > 6
-    ? `min-h-[${Math.max(900, nodes.length * 110)}px]`
-    : heightClass;
+  const manyNodes = nodes.length > 6;
+  const dynamicMinHeight = manyNodes ? Math.max(900, nodes.length * 110) : undefined;
 
   return (
     <div
-      className={`relative rounded-3xl border border-border overflow-hidden shadow-[var(--shadow-card)] ${effectiveHeight}`}
+      className={`relative rounded-3xl border border-border overflow-hidden shadow-[var(--shadow-card)] ${manyNodes ? "" : heightClass}`}
       dir="rtl"
       style={{
         backgroundColor: "hsl(0 0% 96%)",
+        ...(dynamicMinHeight ? { minHeight: `${dynamicMinHeight}px` } : {}),
       }}
     >
+
 
       {/* Background artwork */}
       <img
