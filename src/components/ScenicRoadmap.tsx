@@ -68,14 +68,20 @@ const ScenicRoadmap = ({
   }, [nodes]);
 
 
+  // For many nodes, ensure enough vertical room so labels never collide.
+  const effectiveHeight = nodes.length > 6
+    ? `min-h-[${Math.max(900, nodes.length * 110)}px]`
+    : heightClass;
+
   return (
     <div
-      className={`relative rounded-3xl border border-border overflow-hidden shadow-[var(--shadow-card)] ${heightClass}`}
+      className={`relative rounded-3xl border border-border overflow-hidden shadow-[var(--shadow-card)] ${effectiveHeight}`}
       dir="rtl"
       style={{
         backgroundColor: "hsl(0 0% 96%)",
       }}
     >
+
       {/* Background artwork */}
       <img
         src={riverBg.url}
