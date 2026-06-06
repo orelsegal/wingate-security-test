@@ -1,0 +1,90 @@
+[
+  {
+    "id": "bio-001",
+    "question": "Explain the process of photosynthesis and identify where in the cell it takes place.",
+    "rubric": "A complete answer must cover all four points: (1) photosynthesis converts light energy into chemical energy stored as glucose; (2) the inputs are sunlight, water (H2O), and carbon dioxide (CO2); (3) the outputs are glucose (C6H12O6) and oxygen (O2); (4) it takes place in the chloroplast — specifically the thylakoid membranes for the light-dependent reactions and the stroma for the Calvin cycle. Full marks require all four points.",
+    "studentAnswer": "Photosynthesis is when plants use sunlight and CO2 to make food. It happens in the chloroplast.",
+    "maxScore": 10,
+    "expectedScore": 4,
+    "expectedStatus": "partial",
+    "expectedNeedsHumanReview": false,
+    "expectedReason": "Student identifies sunlight, CO2, and chloroplast but omits water as an input, oxygen and glucose as outputs, and the sub-locations (thylakoid/stroma). Roughly 2 of 4 rubric points partially addressed."
+  },
+  {
+    "id": "math-001",
+    "question": "State the Pythagorean theorem and explain what each variable represents.",
+    "rubric": "Full answer: a² + b² = c², where a and b are the two legs (shorter sides) of a right triangle, and c is the hypotenuse (the longest side, opposite the right angle). Student must state the formula and define all three variables.",
+    "studentAnswer": "The Pythagorean theorem states that a² + b² = c², where a and b are the legs of a right triangle and c is the hypotenuse, which is the side opposite the right angle.",
+    "maxScore": 10,
+    "expectedScore": 10,
+    "expectedStatus": "correct",
+    "expectedNeedsHumanReview": false,
+    "expectedReason": "States the formula correctly and defines all three variables including the geometric meaning of the hypotenuse. Fully satisfies the rubric."
+  },
+  {
+    "id": "hist-001",
+    "question": "In what year did World War II end, and what event marked its end in Europe?",
+    "rubric": "WWII ended in 1945. The war in Europe ended on May 8, 1945 (V-E Day) when Germany surrendered unconditionally. A complete answer mentions 1945 and Germany's surrender.",
+    "studentAnswer": "World War II ended in 1942 when the Allies invaded Normandy.",
+    "maxScore": 10,
+    "expectedScore": 0,
+    "expectedStatus": "incorrect",
+    "expectedNeedsHumanReview": false,
+    "expectedReason": "Both facts are wrong. The year is 1945 not 1942, and the D-Day landings were not the end of the war — they were a military operation during the war."
+  },
+  {
+    "id": "sci-001",
+    "question": "What is Newton's First Law of Motion?",
+    "rubric": "Newton's First Law (Law of Inertia): An object at rest stays at rest, and an object in motion stays in motion at constant velocity, unless acted upon by a net external force. A full answer must include both the rest case and the motion case, and the role of net external force.",
+    "studentAnswer": "Newton's First Law says that objects in motion stay in motion unless something stops them.",
+    "maxScore": 8,
+    "expectedScore": 3,
+    "expectedStatus": "partial",
+    "expectedNeedsHumanReview": false,
+    "expectedReason": "Correctly describes the motion case but omits the rest case entirely and is vague about 'net external force' (says 'something' instead)."
+  },
+  {
+    "id": "eng-001",
+    "question": "What is the main theme of George Orwell's Animal Farm?",
+    "rubric": "The main theme is the corruption of revolutionary ideals by those who seize power, resulting in a system as oppressive as the one it replaced. A full answer should address: (1) the corrupting nature of power, (2) the betrayal of the original revolutionary ideals, (3) the allegorical reference to Stalinism or Soviet totalitarianism.",
+    "studentAnswer": "hmm its like about animals taking over a farm and the pigs become mean i think its about power maybe",
+    "maxScore": 10,
+    "expectedScore": 2,
+    "expectedStatus": "partial",
+    "expectedNeedsHumanReview": true,
+    "expectedReason": "Student vaguely gestures at the theme of power but the answer is too unclear to grade confidently. Missing the corruption of ideals, the Soviet allegory, and any structured argument. Ambiguous phrasing warrants human review."
+  },
+  {
+    "id": "chem-001",
+    "question": "What is the difference between an element and a compound?",
+    "rubric": "An element is a pure substance made of only one type of atom and cannot be broken down chemically. A compound is a substance made of two or more different elements chemically bonded in fixed proportions, which can be broken down by chemical reactions. A full answer must define both correctly and highlight the distinction.",
+    "studentAnswer": "An element is a pure substance with only one type of atom, like oxygen or gold. A compound is made of two or more different elements chemically bonded together, like water (H2O). Elements cannot be broken down chemically, but compounds can be separated into their elements through chemical reactions.",
+    "maxScore": 10,
+    "expectedScore": 10,
+    "expectedStatus": "correct",
+    "expectedNeedsHumanReview": false,
+    "expectedReason": "Correctly defines both terms, provides examples, and explains the key distinction about chemical decomposition. Fully satisfies the rubric."
+  },
+  {
+    "id": "blank-001",
+    "question": "Describe the water cycle and its four main stages.",
+    "rubric": "The water cycle has four stages: (1) Evaporation — water is heated by the sun and becomes water vapor; (2) Condensation — vapor cools and forms clouds; (3) Precipitation — water falls as rain or snow; (4) Collection/Runoff — water gathers in oceans, lakes, rivers, and groundwater. A full answer names and briefly explains all four stages.",
+    "studentAnswer": "I don't know the answer to this question.",
+    "maxScore": 10,
+    "expectedScore": 0,
+    "expectedStatus": "incorrect",
+    "expectedNeedsHumanReview": false,
+    "expectedReason": "Student provided no substantive answer. Zero marks."
+  },
+  {
+    "id": "hist-002",
+    "question": "What were the main causes of World War I?",
+    "rubric": "The main causes are summarized by MAIN: Militarism (arms race between European powers), Alliances (treaty system that pulled nations into war), Imperialism (competition for colonies), Nationalism (ethnic tensions especially in the Balkans). The immediate trigger was the assassination of Archduke Franz Ferdinand in 1914. A full answer covers at least 3 of the 4 MAIN causes and mentions the assassination.",
+    "studentAnswer": "WWI was caused by the assassination of Archduke Franz Ferdinand. There were also complex alliances between countries that pulled everyone into the war, and strong nationalism in Europe, especially in the Balkans.",
+    "maxScore": 10,
+    "expectedScore": 7,
+    "expectedStatus": "partial",
+    "expectedNeedsHumanReview": false,
+    "expectedReason": "Correctly covers the assassination, alliances, and nationalism. Missing militarism and imperialism. Meets the rubric threshold of 3 out of 4 MAIN factors plus the trigger."
+  }
+]
