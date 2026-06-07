@@ -35,8 +35,6 @@ const RoadmapsPage = () => {
               onClick={() => {
                 if (s.name === "ספרות") {
                   navigate(`/subjects/${encodeURIComponent(s.name)}/assessment-30`);
-                } else if (s.name === "אזרחות") {
-                  navigate(`/subjects/${encodeURIComponent(s.name)}/civics-30`);
                 } else {
                   navigate(`/subjects/${encodeURIComponent(s.name)}`);
                 }
