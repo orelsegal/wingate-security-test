@@ -151,10 +151,18 @@ const StudentsPage = () => {
       if (statusFilter && s.overall_status !== statusFilter) return false;
       if (branchFilters.length > 0 && !branchFilters.includes(s.sport)) return false;
       if (gradeFilter && classToGrade(s.class_name) !== gradeFilter) return false;
+      if (classFilter && s.class_name !== classFilter) return false;
       if (subjectFilter) {
         const rows = subjectRowsByStudent.get(s.id) || [];
         const row = rows.find((r) => r.subjectName === subjectFilter);
         if (!row || (row as any).__noData) return false;
+        if (gradeEntryFilter === "with" && row.grade == null) return false;
+        if (gradeEntryFilter === "without" && row.grade != null) return false;
+      } else if (gradeEntryFilter !== "all") {
+        const rows = subjectRowsByStudent.get(s.id) || [];
+        const anyWithGrade = rows.some(r => !(r as any).__noData && r.grade != null);
+        if (gradeEntryFilter === "with" && !anyWithGrade) return false;
+        if (gradeEntryFilter === "without" && anyWithGrade) return false;
       }
       return true;
     });
