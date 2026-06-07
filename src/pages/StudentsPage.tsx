@@ -309,8 +309,8 @@ const StudentsPage = () => {
             <button onClick={() => setViewMode("table")} className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="טבלה">
               <TableIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
-            <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground" title="תצוגת אחוזים" disabled>
-              <PieChart className="h-3.5 w-3.5" strokeWidth={1.5} />
+            <button onClick={() => setViewMode("summary")} className={`h-7 px-2 rounded-md flex items-center gap-1 transition-all ${viewMode === "summary" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="טבלת סיכום לפי מקצועות">
+              <Rows3 className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
           </div>
         </div>
