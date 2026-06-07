@@ -71,7 +71,23 @@ const OnboardingPage = () => {
           if (roleErr) throw roleErr;
         }
 
-        // 3. Clean up localStorage entry
+        // 3. אם תלמיד — קשר אוטומטית לפרופיל ספורטאי לפי מייל
+        if (role === "student") {
+          const { data: studentRow } = await supabase
+            .from("students")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
+
+          if (studentRow?.id) {
+            await supabase
+              .from("profiles")
+              .update({ linked_student_id: studentRow.id })
+              .eq("id", userId);
+          }
+        }
+
+        // 4. Clean up localStorage entry
         try {
           const stored = JSON.parse(localStorage.getItem("pending_invites") || "{}");
           delete stored[email];
