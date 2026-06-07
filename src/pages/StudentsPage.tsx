@@ -25,7 +25,7 @@ import EmptyState from "@/components/EmptyState";
 const grades = ["ט׳", "י׳", "י״א", "י״ב"];
 
 type ViewMode = "cards" | "table" | "summary";
-type SubjectRow = { subjectName: string; grade: number | null; status: StatusType; gradeLabel?: string | null };
+type SubjectRow = { subjectName: string; grade: number | null; bagrutPercent: number | null; status: StatusType; gradeLabel?: string | null };
 
 const STATUS_BORDER: Record<StatusType, string> = {
   green: "border-success/45",
