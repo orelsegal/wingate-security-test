@@ -176,9 +176,9 @@ const StudentsPage = () => {
       });
     }
     return list;
-  }, [students, search, statusFilter, branchFilters, gradeFilter, subjectFilter, sortBy, sortDir, user, subjectRowsByStudent]);
+  }, [students, search, statusFilter, branchFilters, gradeFilter, classFilter, gradeEntryFilter, subjectFilter, sortBy, sortDir, user, subjectRowsByStudent]);
 
-  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || subjectFilter || sortBy;
+  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || classFilter || gradeEntryFilter !== "all" || subjectFilter || sortBy;
 
   const toggleSort = (col: "name" | "avg" | "status") => {
     if (sortBy === col) {
@@ -193,7 +193,7 @@ const StudentsPage = () => {
   };
 
   const clearAll = () => {
-    setSearch(""); setStatusFilter(null); setBranchFilters([]); setGradeFilter(null); setSubjectFilter(null); setSortBy(null); setSortDir("asc");
+    setSearch(""); setStatusFilter(null); setBranchFilters([]); setGradeFilter(null); setClassFilter(null); setGradeEntryFilter("all"); setSubjectFilter(null); setSortBy(null); setSortDir("asc");
   };
 
   // ─── Aggregate totals across ALL non-archived students ────────────
