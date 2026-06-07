@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import WingateBadge from "@/components/WingateBadge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type AppRole = "admin" | "teacher" | "student" | "parent" | "coach";
 
@@ -14,13 +16,19 @@ const ROLE_REDIRECT: Record<AppRole, string> = {
   student: "/student-home",
 };
 
-type Status = "waiting" | "setting-up" | "done" | "no-invite" | "error";
+type Status = "waiting" | "setting-up" | "set-password" | "done" | "no-invite" | "error";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<Status>("waiting");
   const [userName, setUserName] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [roleRedirect, setRoleRedirect] = useState<string>("/");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -94,10 +102,8 @@ const OnboardingPage = () => {
           localStorage.setItem("pending_invites", JSON.stringify(stored));
         } catch { /* ignore */ }
 
-        setStatus("done");
-
-        // Redirect after a short celebration pause
-        setTimeout(() => navigate(ROLE_REDIRECT[role]), 2000);
+        setRoleRedirect(ROLE_REDIRECT[role]);
+        setStatus("set-password");
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "שגיאה לא ידועה";
         setErrorMsg(msg);
@@ -108,6 +114,24 @@ const OnboardingPage = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    if (password.length < 6) { setPasswordError("הסיסמה חייבת להיות לפחות 6 תווים"); return; }
+    if (password !== passwordConfirm) { setPasswordError("הסיסמאות אינן תואמות"); return; }
+    setPasswordLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setPasswordLoading(false);
+    if (error) { setPasswordError("שגיאה: " + error.message); return; }
+    setStatus("done");
+    setTimeout(() => navigate(roleRedirect), 2000);
+  };
+
+  const skipPassword = () => {
+    setStatus("done");
+    setTimeout(() => navigate(roleRedirect), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
       <div className="w-full max-w-[400px] px-6">
@@ -116,7 +140,50 @@ const OnboardingPage = () => {
         </div>
 
         <div className="bg-card rounded-2xl border border-border/50 shadow-[var(--shadow-card)] p-8 text-center space-y-4">
-          {status === "waiting" || status === "setting-up" ? (
+          {status === "set-password" ? (
+            <form onSubmit={handleSetPassword} className="space-y-4 text-right">
+              <p className="text-[18px] font-bold text-foreground">ברוך הבא/ה, {userName}! 👋</p>
+              <p className="text-[13px] text-muted-foreground">הגדר/י סיסמה לכניסות הבאות — כך לא תצטרך/י קישור בכל פעם.</p>
+              <div className="space-y-1.5">
+                <Label className="text-[13px]">סיסמה</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="לפחות 6 תווים"
+                    dir="ltr"
+                    className="text-left pl-10"
+                  />
+                  <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[13px]">אימות סיסמה</Label>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={passwordConfirm}
+                  onChange={e => setPasswordConfirm(e.target.value)}
+                  placeholder="הכנס/י שוב"
+                  dir="ltr"
+                  className="text-left"
+                />
+              </div>
+              {passwordError && <p className="text-[12px] text-destructive">{passwordError}</p>}
+              <button
+                type="submit"
+                disabled={passwordLoading || !password || !passwordConfirm}
+                className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 text-[14px] font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {passwordLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "שמור סיסמה וכנס למערכת"}
+              </button>
+              <button type="button" onClick={skipPassword} className="w-full text-[12px] text-muted-foreground hover:text-foreground">
+                דלג — אכנס עם קישור בכל פעם
+              </button>
+            </form>
+          ) : status === "waiting" || status === "setting-up" ? (
             <>
               <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
               <p className="text-[15px] font-semibold text-foreground">
