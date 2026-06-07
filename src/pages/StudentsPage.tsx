@@ -628,6 +628,15 @@ const StudentsPage = () => {
                     </div>
                   </div>
 
+                  {/* Column headers (once per card) */}
+                  <div className="flex items-center justify-between gap-2 pb-1 mb-1 border-b border-border/40" dir="rtl">
+                    <span className="text-[10px] text-muted-foreground">מקצוע</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="w-8 text-center text-[10px] text-muted-foreground">ציון</span>
+                      <span className="w-12 text-center text-[10px] text-muted-foreground">% בגרות</span>
+                    </div>
+                  </div>
+
                   {/* Subject list */}
                   <ul className="space-y-0 mb-3">
                     {rows.map((row) => <SubjectLine key={row.subjectName} row={row} />)}
