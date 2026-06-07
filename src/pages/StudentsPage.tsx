@@ -272,19 +272,22 @@ const StudentsPage = () => {
           <span className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
           <span className={`text-[12px] ${noData ? "text-muted-foreground/60" : "text-foreground"} truncate`}>{row.subjectName}</span>
         </div>
-        {/* Left side: ציון + צ׳יפ בגרות (מופרדים) */}
+        {/* Left side: ציון + צ׳יפ בגרות (מופרדים, תווית מעל ערך) */}
         {!noData && (
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {row.grade != null && (
-              <span className="text-[11px] tabular-nums text-foreground font-semibold">
-                {row.grade}
-                <span className="text-[9px] text-muted-foreground font-normal mr-0.5">ציון</span>
-              </span>
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-[9px] text-muted-foreground">ציון</span>
+                <span className="text-[12px] tabular-nums text-foreground font-semibold">{row.grade}</span>
+              </div>
             )}
             {row.bagrutPercent != null && (
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[row.status]}`}>
-                בגרות {row.bagrutPercent}%
-              </span>
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-[9px] text-muted-foreground">בגרות</span>
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md mt-0.5 ${STATUS_CHIP_BG[row.status]}`}>
+                  {row.bagrutPercent}%
+                </span>
+              </div>
             )}
           </div>
         )}
@@ -485,17 +488,29 @@ const StudentsPage = () => {
                                 </div>
                               ) : (
                                 <div className="flex flex-col items-center gap-1">
-                                  <div className="inline-flex items-center gap-1.5">
-                                    <span className={`w-2 h-2 rounded-full ${dot}`} />
-                                    <span className="tabular-nums text-foreground font-semibold">
-                                      {r!.grade ?? "—"}
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground">ציון</span>
+                                  <div className="flex flex-col items-center gap-0">
+                                    {r!.grade != null ? (
+                                      <>
+                                        <span className="text-[9px] text-muted-foreground leading-none mb-0.5">ציון</span>
+                                        <div className="inline-flex items-center gap-1">
+                                          <span className={`w-2 h-2 rounded-full ${dot}`} />
+                                          <span className="tabular-nums text-foreground font-semibold text-[13px] leading-none">{r!.grade}</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="inline-flex items-center gap-1">
+                                        <span className={`w-2 h-2 rounded-full ${dot}`} />
+                                        <span className="tabular-nums text-foreground font-semibold">—</span>
+                                      </div>
+                                    )}
                                   </div>
                                   {r!.bagrutPercent != null && (
-                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[r!.status]}`}>
-                                      בגרות {r!.bagrutPercent}%
-                                    </span>
+                                    <div className="flex flex-col items-center gap-0">
+                                      <span className="text-[9px] text-muted-foreground leading-none mb-0.5">בגרות</span>
+                                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium leading-none ${STATUS_CHIP_BG[r!.status]}`}>
+                                        {r!.bagrutPercent}%
+                                      </span>
+                                    </div>
                                   )}
                                 </div>
                               )}
