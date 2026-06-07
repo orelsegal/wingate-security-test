@@ -428,9 +428,62 @@ const StudentsPage = () => {
           <div className="card-premium">
             <EmptyState icon={Search} title="לא נמצאו תלמידים" description="נסי לשנות את הסינון או חפשי שם אחר" />
           </div>
-        ) : viewMode === "table" ? (
+        ) : viewMode === "summary" ? (
+          /* ── SUMMARY PIVOT: subjects as columns ── */
           <div className="card-premium overflow-hidden">
             <div className="overflow-x-auto">
+              <table className="w-full text-[12px] border-collapse" dir="rtl">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-right p-3 font-semibold text-foreground sticky right-0 bg-muted/40 z-10 border-b border-border min-w-[180px]">שם התלמיד</th>
+                    <th className="text-right p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">כיתה</th>
+                    <th className="text-right p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">ענף</th>
+                    {allSubjectNames.map((name) => (
+                      <th key={name} className="text-center p-3 font-semibold text-foreground border-b border-border whitespace-nowrap min-w-[110px]">{name}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((student, idx) => {
+                    const rows = (subjectRowsByStudent.get(student.id) || []) as (SubjectRow & { __noData?: boolean })[];
+                    const byName = new Map(rows.map(r => [r.subjectName, r]));
+                    return (
+                      <tr
+                        key={student.id}
+                        onClick={() => navigate(`/students/${student.id}`)}
+                        className={`cursor-pointer hover:bg-accent/30 transition-colors ${idx % 2 === 0 ? "bg-card" : "bg-muted/10"}`}
+                      >
+                        <td className="p-3 font-medium text-foreground sticky right-0 bg-inherit border-b border-border/60 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <InitialsAvatar name={student.full_name} size="sm" />
+                            <span className="truncate">{student.full_name}</span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-muted-foreground border-b border-border/60 whitespace-nowrap">{student.class_name}</td>
+                        <td className="p-3 text-muted-foreground border-b border-border/60 whitespace-nowrap">{student.sport}</td>
+                        {allSubjectNames.map((name) => {
+                          const r = byName.get(name);
+                          const noData = !r || (r as any).__noData;
+                          const dot = noData ? STATUS_DOT.gray : STATUS_DOT[r!.status];
+                          return (
+                            <td key={name} className="p-3 text-center border-b border-border/60">
+                              <div className="inline-flex items-center justify-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+                                <span className={`tabular-nums ${noData ? "text-muted-foreground/50" : "text-foreground font-semibold"}`}>
+                                  {noData ? "—" : (r!.grade ?? "—")}
+                                </span>
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : viewMode === "table" ? (
               <Table>
                 <TableHeader>
                   <TableRow>
