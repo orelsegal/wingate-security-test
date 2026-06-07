@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-type View = "login" | "forgot" | "forgot-sent";
+type View = "login" | "forgot" | "forgot-sent" | "magic" | "magic-sent";
 
 const LoginPage = () => {
   useAuth(); // ensure context is mounted
@@ -24,6 +24,22 @@ const LoginPage = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [magicEmail, setMagicEmail] = useState("");
+  const [magicLoading, setMagicLoading] = useState(false);
+  const [magicError, setMagicError] = useState<string | null>(null);
+
+  const handleMagicLink = async (e: FormEvent) => {
+    e.preventDefault();
+    setMagicError(null);
+    setMagicLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: magicEmail.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/` },
+    });
+    setMagicLoading(false);
+    if (error) { setMagicError("לא הצלחנו לשלוח. בדוק/י שהאימייל נכון."); return; }
+    setView("magic-sent");
+  };
 
   const handleForgot = async (e: FormEvent) => {
     e.preventDefault();
@@ -199,7 +215,51 @@ const LoginPage = () => {
           >
             שכחתי סיסמה
           </button>
+
+          <div className="relative flex items-center gap-3 py-1">
+            <div className="flex-1 h-px bg-border/50" />
+            <span className="text-[11px] text-muted-foreground/50">או</span>
+            <div className="flex-1 h-px bg-border/50" />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => { setView("magic"); setMagicEmail(email); }}
+            className="w-full border border-border rounded-xl py-2.5 text-[13px] text-foreground/80 hover:bg-accent transition-colors flex items-center justify-center gap-2"
+          >
+            ✉️ כניסה עם קישור למייל
+          </button>
         </form>
+
+        {/* ── Magic Link panel ── */}
+        {(view === "magic" || view === "magic-sent") && (
+          <div className="mt-4 bg-card rounded-2xl border border-border/50 shadow-[var(--shadow-card)] p-6 animate-fade-in-up">
+            {view === "magic-sent" ? (
+              <div className="text-center space-y-2">
+                <p className="text-[28px]">📬</p>
+                <p className="text-[14px] font-medium text-foreground">נשלח! בדוק/י את האימייל</p>
+                <p className="text-[12px] text-muted-foreground">לחץ/י על הקישור שקיבלת — תיכנס/י אוטומטית</p>
+                <button onClick={() => setView("login")} className="text-[12px] text-primary hover:underline mt-2">חזרה להתחברות</button>
+              </div>
+            ) : (
+              <form onSubmit={handleMagicLink} className="space-y-4">
+                <p className="text-[13px] font-medium text-foreground">כניסה עם קישור למייל</p>
+                <p className="text-[12px] text-muted-foreground">נשלח לך קישור כניסה — ללא סיסמה</p>
+                <div className="space-y-2">
+                  <Label className="text-[13px]">אימייל</Label>
+                  <Input type="email" dir="ltr" value={magicEmail} onChange={e => setMagicEmail(e.target.value)} required placeholder="name@wingate.ac.il" className="text-left" />
+                </div>
+                {magicError && <Alert variant="destructive"><AlertDescription className="text-[12px]">{magicError}</AlertDescription></Alert>}
+                <div className="flex gap-2">
+                  <button type="submit" disabled={magicLoading || !magicEmail} className="flex-1 bg-primary text-primary-foreground rounded-xl py-2.5 text-[13px] font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+                    {magicLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "שלח קישור"}
+                  </button>
+                  <button type="button" onClick={() => setView("login")} className="px-4 rounded-xl border border-border text-[13px] text-muted-foreground hover:text-foreground">ביטול</button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* ── Forgot password panel ── */}
         {(view === "forgot" || view === "forgot-sent") && (
