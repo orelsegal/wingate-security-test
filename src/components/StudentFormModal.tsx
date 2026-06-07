@@ -61,6 +61,10 @@ export default function StudentFormModal({ open, onClose, student, duplicate }: 
       toast.error("יש למלא שם פרטי, ענף ספורט וכיתה");
       return;
     }
+    if (!form.email.trim()) {
+      toast.error("יש למלא אימייל — נדרש לכניסה למערכת");
+      return;
+    }
     const fullName = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
     const payload: Record<string, any> = {
       full_name: fullName,
@@ -145,8 +149,9 @@ export default function StudentFormModal({ open, onClose, student, duplicate }: 
             <p className="text-[11px] font-semibold text-muted-foreground tracking-wide">פרטי קשר</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">אימייל</Label>
-                <Input type="email" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} placeholder="name@mail.com" className="h-9 text-[13px]" />
+                <Label className="text-[11px] text-muted-foreground">אימייל *</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} placeholder="name@gmail.com" className={`h-9 text-[13px] ${!form.email.trim() ? "border-orange-300" : ""}`} />
+                <p className="text-[10px] text-muted-foreground">נדרש לכניסה למערכת</p>
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px] text-muted-foreground">טלפון</Label>
