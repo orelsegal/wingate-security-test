@@ -356,6 +356,16 @@ const StudentsPage = () => {
       <section className="mb-5">
         <div className="card-premium p-3">
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={clearAll}
+              className={`h-9 px-3 inline-flex items-center gap-1.5 rounded-xl text-[12px] font-medium transition-colors border ${!hasFilters ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border hover:bg-accent/40"}`}
+              title="הצג את כל הספורטאים"
+            >
+              <Users className="h-3.5 w-3.5" strokeWidth={1.6} />
+              כל הספורטאים
+              <span className="tabular-nums opacity-80">({totalStudents})</span>
+            </button>
+
             <FilterSelect label="כל הרמזורים" value={statusFilter ? statusConfig[statusFilter].label : ""} onClear={statusFilter ? () => setStatusFilter(null) : undefined}>
               {(["green", "yellow", "red"] as StatusType[]).map((t) => (
                 <DropdownMenuItem key={t} onClick={() => setStatusFilter(t)} className="text-[12px] gap-2">
