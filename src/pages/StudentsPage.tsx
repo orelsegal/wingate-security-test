@@ -272,23 +272,26 @@ const StudentsPage = () => {
           <span className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
           <span className={`text-[12px] ${noData ? "text-muted-foreground/60" : "text-foreground"} truncate`}>{row.subjectName}</span>
         </div>
-        {/* Left side: ציון + צ׳יפ בגרות (מופרדים, תווית מעל ערך) */}
-        {!noData && (
+        {/* Left side: ציון | % בגרות (כותרות מופיעות פעם אחת מעל הכרטיס) */}
+        {!noData ? (
           <div className="flex items-center gap-2 shrink-0">
-            {row.grade != null && (
-              <div className="flex flex-col items-center leading-none">
-                <span className="text-[9px] text-muted-foreground">ציון</span>
-                <span className="text-[12px] tabular-nums text-foreground font-semibold">{row.grade}</span>
-              </div>
-            )}
-            {row.bagrutPercent != null && (
-              <div className="flex flex-col items-center leading-none">
-                <span className="text-[9px] text-muted-foreground">בגרות</span>
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md mt-0.5 ${STATUS_CHIP_BG[row.status]}`}>
+            <span className="w-8 text-center text-[12px] tabular-nums text-foreground font-semibold">
+              {row.grade != null ? row.grade : "—"}
+            </span>
+            <span className="w-12 text-center">
+              {row.bagrutPercent != null ? (
+                <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-md ${STATUS_CHIP_BG[row.status]}`}>
                   {row.bagrutPercent}%
                 </span>
-              </div>
-            )}
+              ) : (
+                <span className="text-[10px] text-muted-foreground/60">—</span>
+              )}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="w-8 text-center text-[10px] text-muted-foreground/60">—</span>
+            <span className="w-12 text-center text-[10px] text-muted-foreground/60">—</span>
           </div>
         )}
       </li>
@@ -622,6 +625,15 @@ const StudentsPage = () => {
                       <button onClick={() => setQuickEditStudent(student)} className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground" title="עריכה">
                         <Pencil className="h-3 w-3" strokeWidth={1.5} />
                       </button>
+                    </div>
+                  </div>
+
+                  {/* Column headers (once per card) */}
+                  <div className="flex items-center justify-between gap-2 pb-1 mb-1 border-b border-border/40" dir="rtl">
+                    <span className="text-[10px] text-muted-foreground">מקצוע</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="w-8 text-center text-[10px] text-muted-foreground">ציון</span>
+                      <span className="w-12 text-center text-[10px] text-muted-foreground">% בגרות</span>
                     </div>
                   </div>
 
