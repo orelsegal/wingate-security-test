@@ -585,30 +585,19 @@ const StudentsPage = () => {
                                   <span className="text-muted-foreground/50">—</span>
                                 </div>
                               ) : (
-                                <div className="flex flex-col items-center gap-1">
-                                  <div className="flex flex-col items-center gap-0">
-                                    {r!.grade != null ? (
-                                      <>
-                                        <span className="text-[9px] text-muted-foreground leading-none mb-0.5">ציון</span>
-                                        <div className="inline-flex items-center gap-1">
-                                          <span className={`w-2 h-2 rounded-full ${dot}`} />
-                                          <span className="tabular-nums text-foreground font-semibold text-[13px] leading-none">{r!.grade}</span>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <div className="inline-flex items-center gap-1">
-                                        <span className={`w-2 h-2 rounded-full ${dot}`} />
-                                        <span className="tabular-nums text-foreground font-semibold">—</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  {r!.bagrutPercent != null && (
-                                    <div className="flex flex-col items-center gap-0">
-                                      <span className="text-[9px] text-muted-foreground leading-none mb-0.5">בגרות</span>
-                                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium leading-none ${STATUS_CHIP_BG[r!.status]}`}>
-                                        {r!.bagrutPercent}%
-                                      </span>
-                                    </div>
+                                <div className="inline-flex items-center gap-2">
+                                  <span className={`w-2 h-2 rounded-full ${dot}`} />
+                                  {r!.grade != null ? (
+                                    <span className="tabular-nums text-foreground font-semibold text-[13px] leading-none">{r!.grade}</span>
+                                  ) : (
+                                    <span className="tabular-nums text-muted-foreground/50 text-[13px] leading-none">—</span>
+                                  )}
+                                  {r!.bagrutPercent != null ? (
+                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium leading-none ${STATUS_CHIP_BG[r!.status]}`}>
+                                      {r!.bagrutPercent}%
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] text-muted-foreground/50">—</span>
                                   )}
                                 </div>
                               )}
