@@ -53,6 +53,8 @@ const RoadmapsPage               = lazy(() => import("./pages/RoadmapsPage"));
 const MathRoadmapPage            = lazy(() => import("./pages/MathRoadmapPage"));
 const Assessment30Page           = lazy(() => import("./pages/Assessment30Page"));
 const LarutzImMilimPage          = lazy(() => import("./pages/LarutzImMilimPage"));
+const CivicsAssessmentPage       = lazy(() => import("./pages/CivicsAssessmentPage"));
+const CivicsJourneyPage          = lazy(() => import("./pages/CivicsJourneyPage"));
 const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
 const PlayHubPage                = lazy(() => import("./pages/PlayHubPage"));
 const BlitzPlayPage              = lazy(() => import("./pages/BlitzPlayPage"));
