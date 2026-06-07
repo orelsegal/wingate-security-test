@@ -93,6 +93,7 @@ const App = () => (
             <Route path="/login"          element={<LoginPage />} />
             <Route path="/onboarding"     element={<OnboardingPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/~oauth/callback" element={<OnboardingPage />} />
 
             {/* ── Full-screen protected (no AppLayout) ───────── */}
             <Route path="/admin/builder"  element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />
