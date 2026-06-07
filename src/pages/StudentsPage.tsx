@@ -127,7 +127,7 @@ const StudentsPage = () => {
         const row = m?.get(name);
         if (row) return row;
         // No data → gray placeholder. Use yellow as neutral status for sorting? — keep as a no-data row using "green" but rendered gray via flag.
-        return { subjectName: name, grade: null, status: "green" as StatusType, gradeLabel: null };
+        return { subjectName: name, grade: null, bagrutPercent: null, status: "green" as StatusType, gradeLabel: null };
       });
       // Mark rows with no data by null grade AND no entry — preserve a "noData" flag via gradeLabel absence + status check.
       // We'll re-tag via separate visual handling: rows missing in `m` should be rendered gray.
