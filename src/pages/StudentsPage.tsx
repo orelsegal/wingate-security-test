@@ -272,12 +272,21 @@ const StudentsPage = () => {
           <span className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
           <span className={`text-[12px] ${noData ? "text-muted-foreground/60" : "text-foreground"} truncate`}>{row.subjectName}</span>
         </div>
-        {/* Left side: optional grade chip */}
-        {!noData && row.gradeLabel && (
-          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[row.status]}`}>
-            <Check className="h-2.5 w-2.5" strokeWidth={2.2} />
-            {row.gradeLabel}
-          </span>
+        {/* Left side: ציון + צ׳יפ בגרות (מופרדים) */}
+        {!noData && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {row.grade != null && (
+              <span className="text-[11px] tabular-nums text-foreground font-semibold">
+                {row.grade}
+                <span className="text-[9px] text-muted-foreground font-normal mr-0.5">ציון</span>
+              </span>
+            )}
+            {row.bagrutPercent != null && (
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[row.status]}`}>
+                בגרות {row.bagrutPercent}%
+              </span>
+            )}
+          </div>
         )}
       </li>
     );
