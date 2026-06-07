@@ -174,12 +174,15 @@ const SubjectDetailPage = () => {
       {decoded === "ספרות" && (
         <div className="mb-6 bg-card rounded-3xl border border-border shadow-[var(--shadow-card)] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <span className="text-[15px]">📚</span>
-              <span className="text-[13px] font-semibold text-foreground">מפת קורס ספרות לבגרות</span>
+              <div>
+                <span className="text-[13px] font-semibold text-foreground">מפת קורס ספרות לבגרות</span>
+                <span className="mr-2 text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">70% — חלק ב׳</span>
+              </div>
             </div>
             <a
-              href="https://seferut-bagrut.web.app/roadmap"
+              href="https://seferut-bagrut.web.app/roadmap?guest=1"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[11px] text-primary hover:underline"
@@ -188,7 +191,7 @@ const SubjectDetailPage = () => {
             </a>
           </div>
           <iframe
-            src="https://seferut-bagrut.web.app/roadmap"
+            src="https://seferut-bagrut.web.app/roadmap?guest=1"
             className="w-full"
             style={{ height: "600px", border: "none" }}
             title="מפת קורס ספרות"
