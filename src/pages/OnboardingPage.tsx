@@ -40,6 +40,18 @@ const OnboardingPage = () => {
       const userId = session.user.id;
       const email = (session.user.email ?? "").toLowerCase().trim();
 
+      // אם למשתמש כבר יש role — לא צריך onboarding, פשוט תעביר
+      const { data: existingRolesCheck } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (existingRolesCheck && existingRolesCheck.length > 0) {
+        const existingRole = existingRolesCheck[0].role as AppRole;
+        const target = ROLE_REDIRECT[existingRole] ?? "/";
+        navigate(target);
+        return;
+      }
+
       // Read pending invite data stored by the admin at invite time
       let inviteData: { full_name?: string; role?: AppRole; linked_sport?: string | null } | null = null;
       try {
