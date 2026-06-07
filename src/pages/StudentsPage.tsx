@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search, X, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, AlertTriangle, Users, AlertCircle,
-  UserPlus, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, LayoutGrid, Table as TableIcon, PieChart, ChevronDown, Check,
+  UserPlus, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, LayoutGrid, Table as TableIcon, PieChart, ChevronDown, Check, Rows3,
 } from "lucide-react";
 import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSubjects, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
