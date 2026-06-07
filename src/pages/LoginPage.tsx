@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { logActivity } from "@/hooks/useActivityLogger";
 import WingateBadge from "@/components/WingateBadge";
 import OlympicLoader from "@/components/OlympicLoader";
