@@ -1,14 +1,14 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, BookOpen, ChevronLeft, TrendingUp, TrendingDown, Minus, CalendarCheck, Activity, MessageCircle,
-  UserPlus, Download, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, SlidersHorizontal,
+  Search, X, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, AlertTriangle, Users, AlertCircle,
+  UserPlus, Settings2, Pencil, Trash2, Eye, Copy, Archive, MoreHorizontal, LayoutGrid, Table as TableIcon, PieChart, ChevronDown, Check,
 } from "lucide-react";
-import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSports, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
+import { useStudents, useAllStudentProgress, useDeleteStudent, useUpdateStudent, useSubjects, statusConfig, type StatusType, type Student } from "@/hooks/useStudents";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuCheckboxItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,11 +21,46 @@ import * as XLSX from "xlsx";
 import { classToGrade } from "@/lib/schoolUtils";
 import { StudentsPageSkeleton } from "@/components/PageSkeleton";
 import EmptyState from "@/components/EmptyState";
-import EditableElement from "@/components/builder/EditableElement";
 
 const grades = ["ט׳", "י׳", "י״א", "י״ב"];
 
 type ViewMode = "cards" | "table";
+type SubjectRow = { subjectName: string; grade: number | null; status: StatusType; gradeLabel?: string | null };
+
+const STATUS_BORDER: Record<StatusType, string> = {
+  green: "border-success/45",
+  yellow: "border-warning/45",
+  red: "border-destructive/45",
+};
+const STATUS_DOT: Record<StatusType | "gray", string> = {
+  green: "bg-success",
+  yellow: "bg-warning",
+  red: "bg-destructive",
+  gray: "bg-muted-foreground/25",
+};
+const STATUS_CHIP_BG: Record<StatusType, string> = {
+  green: "bg-success/10 text-success",
+  yellow: "bg-warning/10 text-warning",
+  red: "bg-destructive/10 text-destructive",
+};
+
+/** Generic dropdown multi/single select trigger styled like screenshot pills. */
+const FilterSelect = ({ label, value, onClear, children }: { label: string; value: string; onClear?: () => void; children: React.ReactNode }) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <button className="h-9 px-3 inline-flex items-center justify-between gap-2 bg-card border border-border rounded-xl text-[12px] text-foreground hover:bg-accent/40 transition-colors min-w-[140px]">
+        <span className="truncate">{value || label}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+      </button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end" className="min-w-[200px]">
+      <DropdownMenuLabel className="text-[11px] text-muted-foreground">{label}</DropdownMenuLabel>
+      {onClear && <DropdownMenuItem onClick={onClear} className="text-[11px] text-destructive/80">נקה בחירה</DropdownMenuItem>}
+      <DropdownMenuSeparator />
+      {children}
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
 
 const StudentsPage = () => {
   const navigate = useNavigate();
@@ -36,8 +71,10 @@ const StudentsPage = () => {
   useEffect(() => {
     if (user && (user.role === "parent" || user.role === "student")) navigate("/", { replace: true });
   }, [user, navigate]);
+
   const { data: students = [], isLoading } = useStudents();
   const { data: allProgress = [] } = useAllStudentProgress();
+  const { data: subjectsList = [] } = useSubjects();
   const deleteStudent = useDeleteStudent();
   const updateStudent = useUpdateStudent();
 
@@ -46,47 +83,74 @@ const StudentsPage = () => {
   const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
   const [branchFilters, setBranchFilters] = useState<string[]>([]);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
+  const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
-  const [showFilters, setShowFilters] = useState(false);
 
   // CRUD modals
   const [formOpen, setFormOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [duplicateStudent, setDuplicateStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [dataManagementOpen, setDataManagementOpen] = useState(false); // unused, kept for compat
   const [quickEditStudent, setQuickEditStudent] = useState<Student | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Get unique branches from actual data
-  const branches = useMemo(() => {
-    const unique = new Set(students.map(s => s.sport));
-    return Array.from(unique).sort();
-  }, [students]);
+  const branches = useMemo(() => Array.from(new Set(students.map(s => s.sport))).sort(), [students]);
+  const allSubjectNames = useMemo(() => subjectsList.map((s: any) => s.subject_name as string), [subjectsList]);
 
-  const progressByStudent = useMemo(() => {
-    const map = new Map<string, Array<{ subjectName: string; grade: number | null; status: string; missingItems: string[] | null }>>();
+  /** Map: student.id → all subject rows (one per subject in the system). */
+  const subjectRowsByStudent = useMemo(() => {
+    const progressMap = new Map<string, Map<string, SubjectRow>>();
     allProgress.forEach((p: any) => {
       const sid = p.student_id;
-      if (!map.has(sid)) map.set(sid, []);
-      map.get(sid)!.push({ subjectName: p.subjects?.subject_name || "", grade: p.grade, status: p.status, missingItems: p.missing_items });
+      const name = p.subjects?.subject_name;
+      if (!sid || !name) return;
+      if (!progressMap.has(sid)) progressMap.set(sid, new Map());
+      const grade = typeof p.grade === "number" ? p.grade : Number(p.grade) || 0;
+      const status = (p.status as StatusType) || "green";
+      progressMap.get(sid)!.set(name, {
+        subjectName: name,
+        grade: grade > 0 ? grade : null,
+        status,
+        gradeLabel: grade > 0 ? `בגרות ${grade}%` : null,
+      });
     });
-    return map;
-  }, [allProgress]);
+
+    const result = new Map<string, SubjectRow[]>();
+    students.forEach((st) => {
+      const m = progressMap.get(st.id);
+      const rows: SubjectRow[] = allSubjectNames.map((name) => {
+        const row = m?.get(name);
+        if (row) return row;
+        // No data → gray placeholder. Use yellow as neutral status for sorting? — keep as a no-data row using "green" but rendered gray via flag.
+        return { subjectName: name, grade: null, status: "green" as StatusType, gradeLabel: null };
+      });
+      // Mark rows with no data by null grade AND no entry — preserve a "noData" flag via gradeLabel absence + status check.
+      // We'll re-tag via separate visual handling: rows missing in `m` should be rendered gray.
+      result.set(st.id, rows.map((r) => {
+        const has = m?.has(r.subjectName);
+        return { ...r, gradeLabel: r.gradeLabel, ...((!has) ? { __noData: true } as any : {}) } as any;
+      }));
+    });
+    return result;
+  }, [allProgress, students, allSubjectNames]);
 
   const filtered = useMemo(() => {
     const statusOrder: Record<string, number> = { red: 0, yellow: 1, green: 2 };
     const list = students.filter((s) => {
       if ((s as any).archived) return false;
-      // Coach sees only their own sport
       if (user?.role === "coach" && user.scopeFilter && !user.scopeFilter.includes(s.sport)) return false;
       if (search && !s.full_name.includes(search) && !s.sport.includes(search) && !s.class_name.includes(search)) return false;
       if (statusFilter && s.overall_status !== statusFilter) return false;
       if (branchFilters.length > 0 && !branchFilters.includes(s.sport)) return false;
       if (gradeFilter && classToGrade(s.class_name) !== gradeFilter) return false;
+      if (subjectFilter) {
+        const rows = subjectRowsByStudent.get(s.id) || [];
+        const row = rows.find((r) => r.subjectName === subjectFilter);
+        if (!row || (row as any).__noData) return false;
+      }
       return true;
     });
     if (sortBy) {
@@ -99,9 +163,9 @@ const StudentsPage = () => {
       });
     }
     return list;
-  }, [students, search, statusFilter, branchFilters, gradeFilter, sortBy, sortDir]);
+  }, [students, search, statusFilter, branchFilters, gradeFilter, subjectFilter, sortBy, sortDir, user, subjectRowsByStudent]);
 
-  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || sortBy;
+  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || subjectFilter || sortBy;
 
   const toggleSort = (col: "name" | "avg" | "status") => {
     if (sortBy === col) {
@@ -116,14 +180,26 @@ const StudentsPage = () => {
   };
 
   const clearAll = () => {
-    setSearch(""); setStatusFilter(null); setBranchFilters([]); setGradeFilter(null); setSortBy(null); setSortDir("asc");
+    setSearch(""); setStatusFilter(null); setBranchFilters([]); setGradeFilter(null); setSubjectFilter(null); setSortBy(null); setSortDir("asc");
   };
 
-  const greenCount = students.filter(s => s.overall_status === "green" && !(s as any).archived).length;
-  const yellowCount = students.filter(s => s.overall_status === "yellow" && !(s as any).archived).length;
-  const redCount = students.filter(s => s.overall_status === "red" && !(s as any).archived).length;
-  const total = greenCount + yellowCount + redCount;
-  const avgAll = total > 0 ? (students.filter(s => !(s as any).archived).reduce((sum, s) => sum + (s.avg_score || 0), 0) / total).toFixed(0) : "—";
+  // ─── Aggregate totals across ALL non-archived students ────────────
+  const totals = useMemo(() => {
+    let green = 0, yellow = 0, red = 0;
+    students.filter(s => !(s as any).archived).forEach((s) => {
+      const rows = subjectRowsByStudent.get(s.id) || [];
+      rows.forEach((r) => {
+        if ((r as any).__noData) return;
+        if (r.status === "green") green++;
+        else if (r.status === "yellow") yellow++;
+        else if (r.status === "red") red++;
+      });
+    });
+    return { green, yellow, red, total: green + yellow + red };
+  }, [students, subjectRowsByStudent]);
+
+  const criticalCount = students.filter(s => s.overall_status === "red" && !(s as any).archived).length;
+  const totalStudents = students.filter(s => !(s as any).archived).length;
 
   const toggleSelect = (id: string) => setSelected(prev => {
     const n = new Set(prev);
@@ -158,18 +234,58 @@ const StudentsPage = () => {
     toast.success(`${data.length} ספורטאים יוצאו`);
   }, [filtered, selected]);
 
-  if (isLoading) {
-    return <StudentsPageSkeleton />;
-  }
+  if (isLoading) return <StudentsPageSkeleton />;
 
   const canEdit = user?.role === "developer" || user?.role === "admin" || user?.role === "teacher";
-  const isAdmin = canEdit; // alias kept for JSX below
+  const isAdmin = canEdit;
+
+  // ────────────── Render helpers ──────────────
+  const KpiCard = ({ label, value, icon: Icon, accent }: { label: string; value: number; icon: any; accent: "green" | "red" | "destructive" | "neutral" }) => {
+    const tones = {
+      green: { num: "text-success", icon: "text-success bg-success/10" },
+      red: { num: "text-destructive", icon: "text-destructive bg-destructive/10" },
+      destructive: { num: "text-destructive", icon: "text-destructive bg-destructive/15" },
+      neutral: { num: "text-foreground", icon: "text-foreground bg-accent" },
+    }[accent];
+    return (
+      <div className="card-premium p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] text-muted-foreground font-medium mb-1 truncate">{label}</p>
+          <p className={`text-[28px] leading-none font-bold tabular-nums ${tones.num}`}>{value}</p>
+        </div>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tones.icon}`}>
+          <Icon className="h-5 w-5" strokeWidth={1.7} />
+        </div>
+      </div>
+    );
+  };
+
+  const SubjectLine = ({ row }: { row: SubjectRow & { __noData?: boolean } }) => {
+    const noData = (row as any).__noData;
+    const dotClass = noData ? STATUS_DOT.gray : STATUS_DOT[row.status];
+    return (
+      <li className="flex items-center justify-between gap-2 py-[3px]">
+        {/* Right side (RTL): dot + name */}
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
+          <span className={`text-[12px] ${noData ? "text-muted-foreground/60" : "text-foreground"} truncate`}>{row.subjectName}</span>
+        </div>
+        {/* Left side: optional grade chip */}
+        {!noData && row.gradeLabel && (
+          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[row.status]}`}>
+            <Check className="h-2.5 w-2.5" strokeWidth={2.2} />
+            {row.gradeLabel}
+          </span>
+        )}
+      </li>
+    );
+  };
 
   return (
     <div className="p-4 md:p-8 lg:p-10 max-w-[1400px]">
 
       {/* ── ACTION BAR ── */}
-      <section className="mb-6">
+      <section className="mb-5">
         <div className="flex flex-wrap items-center gap-2">
           {isAdmin && (
             <Button onClick={() => { setEditStudent(null); setDuplicateStudent(null); setFormOpen(true); }} className="gap-1.5" size="sm">
@@ -183,127 +299,111 @@ const StudentsPage = () => {
               ניהול נתונים
             </Button>
           )}
-          <Button
-            variant={showFilters ? "secondary" : "outline"}
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Search className="h-3.5 w-3.5" />
-            סינון
-            {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-          </Button>
           <DataExportTools students={filtered} label="ספורטאים" showImport />
 
           {/* View toggle */}
-          <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5">
-            <button onClick={() => setViewMode("cards")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>כרטיסים</button>
-            <button onClick={() => setViewMode("table")} className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>טבלה</button>
+          <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5 bg-card">
+            <button onClick={() => setViewMode("cards")} className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="כרטיסים">
+              <LayoutGrid className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </button>
+            <button onClick={() => setViewMode("table")} className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="טבלה">
+              <TableIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </button>
+            <button className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground" title="תצוגת אחוזים" disabled>
+              <PieChart className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* ── KPI CARDS ── */}
-      <EditableElement id="students-kpi-strip" type="section" defaultLabel="רצועת נתוני סטטוס" pageKey="students">
-        {({ inlineStyle }) => (
-          <section className="mb-6" style={inlineStyle}>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {(["green", "yellow", "red"] as StatusType[]).map((type) => {
-                const config = statusConfig[type];
-                const count = type === "green" ? greenCount : type === "yellow" ? yellowCount : redCount;
-                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                const isActive = statusFilter === type;
-                return (
-                  <EditableElement key={type} id={`students-kpi-${type}`} type="stat" defaultLabel={`כרטיס ${config.label}`} pageKey="students">
-                    {({ inlineStyle: cardStyle }) => (
-                      <button onClick={() => setStatusFilter(isActive ? null : type)}
-                        className={`card-premium p-4 text-start transition-all duration-200 cursor-pointer group relative overflow-hidden ${isActive ? "ring-2 ring-offset-1 " + (type === "green" ? "ring-success/40" : type === "yellow" ? "ring-warning/40" : "ring-destructive/40") : ""}`}
-                        style={cardStyle}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${config.bgClass}`}>
-                            <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                          </div>
-                          {isActive && <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${config.activeBg} ${config.textClass}`}>פעיל</span>}
-                        </div>
-                        <p className={`text-[24px] font-bold leading-none tracking-tight ${config.textClass}`}>{count}</p>
-                        <div className="flex items-center justify-between mt-1.5">
-                          <p className="text-[11px] text-muted-foreground font-medium">{config.label}</p>
-                          <span className="text-[10px] text-muted-foreground/50">{pct}%</span>
-                        </div>
-                      </button>
-                    )}
-                  </EditableElement>
-                );
-              })}
-            </div>
-          </section>
-        )}
-      </EditableElement>
+      {/* ── KPI 4-card strip ── */}
+      <section className="mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard label="רמזורים ירוקים" value={totals.green} icon={CheckCircle2} accent="green" />
+          <KpiCard label="רמזורים אדומים" value={totals.red} icon={AlertCircle} accent="red" />
+          <KpiCard label="ספורטאים קריטיים" value={criticalCount} icon={AlertTriangle} accent="destructive" />
+          <KpiCard label='סה"כ ספורטאים' value={totalStudents} icon={Users} accent="neutral" />
+        </div>
+      </section>
 
-      {/* ── FILTERS (collapsible) ── */}
-      {showFilters && (
-        <section className="mb-6 animate-in slide-in-from-top-2 duration-200">
-          <div className="card-premium p-4 space-y-3">
-            <div className="relative">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="חיפוש לפי שם, ענף או כיתה..."
-                className="w-full h-9 ps-10 pe-4 bg-background border border-border rounded-xl text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/25 transition-all" />
+      {/* ── Overall stacked bar ── */}
+      <section className="mb-4">
+        <div className="card-premium p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[12px] font-semibold text-foreground">תמונת מצב כוללת</p>
+          </div>
+          <div className="w-full h-2 rounded-full bg-muted/60 overflow-hidden flex" dir="ltr">
+            {totals.total > 0 ? (
+              <>
+                <span className="h-full bg-destructive" style={{ width: `${(totals.red / totals.total) * 100}%` }} />
+                <span className="h-full bg-warning" style={{ width: `${(totals.yellow / totals.total) * 100}%` }} />
+                <span className="h-full bg-success" style={{ width: `${(totals.green / totals.total) * 100}%` }} />
+              </>
+            ) : null}
+          </div>
+          <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
+            <span>סה"כ {totals.total}</span>
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-destructive" />{totals.red}</span>
+              <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-warning" />{totals.yellow}</span>
+              <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success" />{totals.green}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Filters row (always visible, dropdown style) ── */}
+      <section className="mb-5">
+        <div className="card-premium p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterSelect label="כל הרמזורים" value={statusFilter ? statusConfig[statusFilter].label : ""} onClear={statusFilter ? () => setStatusFilter(null) : undefined}>
+              {(["green", "yellow", "red"] as StatusType[]).map((t) => (
+                <DropdownMenuItem key={t} onClick={() => setStatusFilter(t)} className="text-[12px] gap-2">
+                  <span className={`w-2 h-2 rounded-full ${STATUS_DOT[t]}`} />
+                  {statusConfig[t].label}
+                </DropdownMenuItem>
+              ))}
+            </FilterSelect>
+
+            <FilterSelect label="כל המקצועות" value={subjectFilter || ""} onClear={subjectFilter ? () => setSubjectFilter(null) : undefined}>
+              {allSubjectNames.map((n) => (
+                <DropdownMenuItem key={n} onClick={() => setSubjectFilter(n)} className="text-[12px]">{n}</DropdownMenuItem>
+              ))}
+            </FilterSelect>
+
+            <FilterSelect label="כל הענפים" value={branchFilters.length > 0 ? `${branchFilters.length} ענפים` : ""} onClear={branchFilters.length ? () => setBranchFilters([]) : undefined}>
+              {branches.map((b) => (
+                <DropdownMenuCheckboxItem key={b} checked={branchFilters.includes(b)} onCheckedChange={(c) => setBranchFilters((prev) => c ? [...prev, b] : prev.filter(x => x !== b))} className="text-[12px]">{b}</DropdownMenuCheckboxItem>
+              ))}
+            </FilterSelect>
+
+            <FilterSelect label="כל הכיתות" value={gradeFilter || ""} onClear={gradeFilter ? () => setGradeFilter(null) : undefined}>
+              {grades.map((g) => (
+                <DropdownMenuItem key={g} onClick={() => setGradeFilter(g)} className="text-[12px]">{g}</DropdownMenuItem>
+              ))}
+            </FilterSelect>
+
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
+              <input
+                type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                placeholder="חיפוש תלמיד..."
+                className="w-full h-9 ps-9 pe-3 bg-background border border-border rounded-xl text-[12px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/25 transition-all"
+              />
               {search && <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" strokeWidth={1.5} /></button>}
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] text-muted-foreground font-medium ml-1">סטטוס:</span>
-              {(["green", "yellow", "red"] as StatusType[]).map((type) => {
-                const config = statusConfig[type];
-                const active = statusFilter === type;
-                return (
-                  <button key={type} onClick={() => setStatusFilter(active ? null : type)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? config.activeBg + " " + config.textClass : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
-                    <span className={`w-[5px] h-[5px] rounded-full ${active ? config.dotClass : "bg-muted-foreground/30"}`} />
-                    {config.label}
-                  </button>
-                );
-              })}
-              <span className="w-px h-3 bg-border mx-1" />
-              <span className="text-[10px] text-muted-foreground font-medium ml-1">ענף:</span>
-              {branches.map((b) => {
-                const active = branchFilters.includes(b);
-                return (
-                  <button key={b} onClick={() => setBranchFilters(prev => active ? prev.filter(x => x !== b) : [...prev, b])}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
-                    {active && <span className="text-[8px]">✓</span>}
-                    {b}
-                  </button>
-                );
-              })}
-              <span className="w-px h-3 bg-border mx-1" />
-              <span className="text-[10px] text-muted-foreground font-medium ml-1">שכבה:</span>
-              {grades.map((g) => {
-                const active = gradeFilter === g;
-                return (
-                  <button key={g} onClick={() => setGradeFilter(active ? null : g)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${active ? "bg-primary/10 text-primary ring-1 ring-primary/20" : "bg-accent/50 text-muted-foreground hover:bg-accent"}`}>
-                    {g}
-                  </button>
-                );
-              })}
-            </div>
+
             {hasFilters && (
-              <div className="flex items-center justify-between pt-0.5">
-                <span className="text-[11px] text-muted-foreground">{filtered.length} מתוך {total} ספורטאים</span>
-                <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors">נקה הכל</button>
-              </div>
+              <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors px-2">נקה הכל</button>
             )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* ── STUDENTS ── */}
+      {/* ── Header above grid ── */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-foreground">{filtered.length} ספורטאים</span>
-            {selected.size > 0 && <span className="text-[11px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">{selected.size} נבחרו</span>}
-          </div>
+          <span className="text-[12px] text-muted-foreground">מציג {filtered.length} מתוך {totalStudents} ספורטאים</span>
           <div className="flex items-center gap-1">
             {(["name", "avg", "status"] as const).map((col) => (
               <button key={col} onClick={() => toggleSort(col)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-accent transition-colors">
@@ -316,11 +416,7 @@ const StudentsPage = () => {
 
         {filtered.length === 0 ? (
           <div className="card-premium">
-            <EmptyState
-              icon={Search}
-              title="לא נמצאו תלמידים"
-              description="נסי לשנות את הסינון או חפשי שם אחר"
-            />
+            <EmptyState icon={Search} title="לא נמצאו תלמידים" description="נסי לשנות את הסינון או חפשי שם אחר" />
           </div>
         ) : viewMode === "table" ? (
           <div className="card-premium overflow-hidden">
@@ -395,114 +491,53 @@ const StudentsPage = () => {
             </div>
           </div>
         ) : (
-          /* CARD VIEW */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          /* ── CARD VIEW (screenshot style) ── */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {filtered.map((student) => {
               const status = student.overall_status as StatusType;
-              const config = statusConfig[status];
-              const subjects = progressByStudent.get(student.id) || [];
-              const topSubjects = subjects.slice(0, 3);
-              const missingCount = subjects.reduce((acc, s) => acc + (s.missingItems?.length || 0), 0);
+              const rows = (subjectRowsByStudent.get(student.id) || []) as (SubjectRow & { __noData?: boolean })[];
+              const greenN = rows.filter(r => !r.__noData && r.status === "green").length;
+              const yellowN = rows.filter(r => !r.__noData && r.status === "yellow").length;
+              const redN = rows.filter(r => !r.__noData && r.status === "red").length;
 
               return (
-                <div key={student.id} className={`card-premium overflow-hidden group ${selected.has(student.id) ? "ring-2 ring-primary/30" : ""}`}>
-                  <div className={`h-[3px] ${config.dotClass} opacity-60`} />
-                  <div className="p-4">
-                    {/* Top row: avatar, name, score */}
-                    <div className="flex items-start gap-3 mb-3">
-                      <InitialsAvatar name={student.full_name} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-foreground leading-tight truncate">{student.full_name}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
-                      </div>
-                      <div className="flex flex-col items-end shrink-0">
-                        <div className="flex items-center gap-1">
-                          <span className="text-[18px] font-bold text-foreground tabular-nums">{student.avg_score || "—"}</span>
-                          {student.trend === "up" && <TrendingUp className="h-3 w-3 text-success" strokeWidth={2} />}
-                          {student.trend === "down" && <TrendingDown className="h-3 w-3 text-destructive" strokeWidth={2} />}
-                          {student.trend === "stable" && <Minus className="h-3 w-3 text-muted-foreground/50" strokeWidth={2} />}
-                        </div>
-                        <span className="text-[9px] text-muted-foreground">ממוצע</span>
-                      </div>
+                <div
+                  key={student.id}
+                  onClick={() => navigate(`/students/${student.id}`)}
+                  className={`bg-card rounded-2xl border-[1.5px] ${STATUS_BORDER[status]} p-4 cursor-pointer hover:shadow-md transition-all`}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-2 mb-3" dir="rtl">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-bold text-foreground leading-tight truncate">{student.full_name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
                     </div>
-
-                    {/* Status bar */}
-                    <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${config.bgClass} mb-2.5`}>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                        <span className={`text-[12px] font-semibold ${config.textClass}`}>{config.label}</span>
-                      </div>
-                      <span className={`text-[11px] font-medium ${config.textClass} opacity-70`}>{student.completion_percent}%</span>
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => setQuickEditStudent(student)} className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground" title="עריכה">
+                        <Pencil className="h-3 w-3" strokeWidth={1.5} />
+                      </button>
                     </div>
+                  </div>
 
-                    {/* Quick stats row */}
-                    <div className="grid grid-cols-3 gap-1.5 mb-2.5">
-                      <div className="flex flex-col items-center justify-center bg-accent/40 rounded-lg py-1.5">
-                        <div className="flex items-center gap-0.5">
-                          <CalendarCheck className="h-2.5 w-2.5 text-muted-foreground" strokeWidth={1.8} />
-                          <span className="text-[11px] font-semibold text-foreground tabular-nums">{student.attendance_percent ?? "—"}%</span>
-                        </div>
-                        <span className="text-[8.5px] text-muted-foreground/80">נוכחות</span>
-                      </div>
-                      <div className="flex flex-col items-center justify-center bg-accent/40 rounded-lg py-1.5">
-                        <div className="flex items-center gap-0.5">
-                          <Activity className="h-2.5 w-2.5 text-muted-foreground" strokeWidth={1.8} />
-                          <span className="text-[11px] font-semibold text-foreground tabular-nums">{student.sessions_completed ?? 0}</span>
-                        </div>
-                        <span className="text-[8.5px] text-muted-foreground/80">שיעורי תגבור</span>
-                      </div>
-                      <div className={`flex flex-col items-center justify-center rounded-lg py-1.5 ${(student.open_requests ?? 0) > 0 ? "bg-warning/15" : "bg-accent/40"}`}>
-                        <div className="flex items-center gap-0.5">
-                          <MessageCircle className={`h-2.5 w-2.5 ${(student.open_requests ?? 0) > 0 ? "text-warning" : "text-muted-foreground"}`} strokeWidth={1.8} />
-                          <span className={`text-[11px] font-semibold tabular-nums ${(student.open_requests ?? 0) > 0 ? "text-warning" : "text-foreground"}`}>{student.open_requests ?? 0}</span>
-                        </div>
-                        <span className="text-[8.5px] text-muted-foreground/80">פניות פתוחות</span>
-                      </div>
-                    </div>
+                  {/* Subject list */}
+                  <ul className="space-y-0 mb-3">
+                    {rows.map((row) => <SubjectLine key={row.subjectName} row={row} />)}
+                  </ul>
 
-                    {/* Primary support subject */}
-                    {student.primary_support_subject && (
-                      <div className="mb-2 px-2.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-1.5">
-                        <BookOpen className="h-2.5 w-2.5 text-primary shrink-0" strokeWidth={1.8} />
-                        <span className="text-[10px] text-muted-foreground">תמיכה ראשית:</span>
-                        <span className="text-[10.5px] font-semibold text-primary truncate">{student.primary_support_subject}</span>
-                      </div>
-                    )}
-
-                    {/* Subject chips */}
-                    {topSubjects.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2.5">
-                        {topSubjects.map((subj, i) => {
-                          const subjConfig = statusConfig[(subj.status as StatusType)] || statusConfig.green;
-                          return (
-                            <span key={i} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium ${subjConfig.bgClass} ${subjConfig.textClass}`}>
-                              <span className={`w-1 h-1 rounded-full ${subjConfig.dotClass}`} />
-                              {subj.subjectName}
-                            </span>
-                          );
-                        })}
-                        {subjects.length > 3 && <span className="text-[10px] text-muted-foreground/50 px-1 py-0.5">+{subjects.length - 3}</span>}
-                      </div>
-                    )}
-                    {missingCount > 0 && (
-                      <p className="text-[10px] text-destructive/70 mb-2 flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5" strokeWidth={1.5} />חוסרים: {missingCount}</p>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1.5 pt-2 border-t border-border/50">
-                      <Button size="sm" variant="outline" className="flex-1 h-7 text-[11px] gap-1" onClick={() => navigate(`/students/${student.id}`)}>
-                        <Eye className="h-3 w-3" />
-                        כניסה לפרופיל
-                      </Button>
-                      <Button size="icon" variant="outline" className="h-7 w-7 shrink-0" onClick={() => setQuickEditStudent(student)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      {isAdmin && (
-                        <Button size="icon" variant="outline" className="h-7 w-7 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20" onClick={() => setDeleteTarget(student)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
+                  {/* Footer counts */}
+                  <div className="flex items-center justify-center gap-4 pt-2 border-t border-border/60">
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT.red}`} />
+                      <span className="tabular-nums font-semibold text-foreground">{redN}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT.yellow}`} />
+                      <span className="tabular-nums font-semibold text-foreground">{yellowN}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT.green}`} />
+                      <span className="tabular-nums font-semibold text-foreground">{greenN}</span>
+                    </span>
                   </div>
                 </div>
               );
@@ -528,7 +563,6 @@ const StudentsPage = () => {
         destructive
         loading={deleteStudent.isPending}
       />
-      
       <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
     </div>
   );
