@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BookOpen, Award, Home, Map, Menu, X, Notebook, LogOut, Target, Compass, Microscope, BarChart3, Send, FolderOpen } from 'lucide-react';
-import { useCivics } from '../../CivicsBridge';
+import { useCivics } from '../CivicsBridge';
 
 const TOP_NAV = [
   { key: 'dashboard', label: 'מסלול',         icon: Map        },
