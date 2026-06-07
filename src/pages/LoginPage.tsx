@@ -227,12 +227,13 @@ const LoginPage = () => {
             type="button"
             onClick={async () => {
               setError(null);
-              const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                  redirectTo: `${window.location.origin}/onboarding`,
+                },
               });
-              if (result.error) {
-                setError("ההתחברות עם Google נכשלה. נסה/י שוב.");
-              }
+              if (error) setError("ההתחברות עם Google נכשלה. נסה/י שוב.");
             }}
             className="w-full border border-border rounded-xl py-2.5 text-[13px] text-foreground/80 hover:bg-accent transition-colors flex items-center justify-center gap-2"
           >
