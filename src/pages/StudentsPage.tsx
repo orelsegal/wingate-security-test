@@ -109,12 +109,14 @@ const StudentsPage = () => {
       if (!sid || !name) return;
       if (!progressMap.has(sid)) progressMap.set(sid, new Map());
       const grade = typeof p.grade === "number" ? p.grade : Number(p.grade) || 0;
+      const bagrut = typeof p.completion_percent === "number" ? p.completion_percent : Number(p.completion_percent) || 0;
       const status = (p.status as StatusType) || "green";
       progressMap.get(sid)!.set(name, {
         subjectName: name,
         grade: grade > 0 ? grade : null,
+        bagrutPercent: bagrut > 0 ? bagrut : null,
         status,
-        gradeLabel: grade > 0 ? `בגרות ${grade}%` : null,
+        gradeLabel: bagrut > 0 ? `בגרות ${bagrut}%` : null,
       });
     });
 
