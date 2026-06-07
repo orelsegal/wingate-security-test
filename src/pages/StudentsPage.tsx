@@ -25,7 +25,7 @@ import EmptyState from "@/components/EmptyState";
 const grades = ["ט׳", "י׳", "י״א", "י״ב"];
 
 type ViewMode = "cards" | "table" | "summary";
-type SubjectRow = { subjectName: string; grade: number | null; status: StatusType; gradeLabel?: string | null };
+type SubjectRow = { subjectName: string; grade: number | null; bagrutPercent: number | null; status: StatusType; gradeLabel?: string | null };
 
 const STATUS_BORDER: Record<StatusType, string> = {
   green: "border-success/45",
@@ -109,12 +109,14 @@ const StudentsPage = () => {
       if (!sid || !name) return;
       if (!progressMap.has(sid)) progressMap.set(sid, new Map());
       const grade = typeof p.grade === "number" ? p.grade : Number(p.grade) || 0;
+      const bagrut = typeof p.completion_percent === "number" ? p.completion_percent : Number(p.completion_percent) || 0;
       const status = (p.status as StatusType) || "green";
       progressMap.get(sid)!.set(name, {
         subjectName: name,
         grade: grade > 0 ? grade : null,
+        bagrutPercent: bagrut > 0 ? bagrut : null,
         status,
-        gradeLabel: grade > 0 ? `בגרות ${grade}%` : null,
+        gradeLabel: bagrut > 0 ? `בגרות ${bagrut}%` : null,
       });
     });
 
@@ -125,7 +127,7 @@ const StudentsPage = () => {
         const row = m?.get(name);
         if (row) return row;
         // No data → gray placeholder. Use yellow as neutral status for sorting? — keep as a no-data row using "green" but rendered gray via flag.
-        return { subjectName: name, grade: null, status: "green" as StatusType, gradeLabel: null };
+        return { subjectName: name, grade: null, bagrutPercent: null, status: "green" as StatusType, gradeLabel: null };
       });
       // Mark rows with no data by null grade AND no entry — preserve a "noData" flag via gradeLabel absence + status check.
       // We'll re-tag via separate visual handling: rows missing in `m` should be rendered gray.
@@ -270,12 +272,21 @@ const StudentsPage = () => {
           <span className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
           <span className={`text-[12px] ${noData ? "text-muted-foreground/60" : "text-foreground"} truncate`}>{row.subjectName}</span>
         </div>
-        {/* Left side: optional grade chip */}
-        {!noData && row.gradeLabel && (
-          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[row.status]}`}>
-            <Check className="h-2.5 w-2.5" strokeWidth={2.2} />
-            {row.gradeLabel}
-          </span>
+        {/* Left side: ציון + צ׳יפ בגרות (מופרדים) */}
+        {!noData && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {row.grade != null && (
+              <span className="text-[11px] tabular-nums text-foreground font-semibold">
+                {row.grade}
+                <span className="text-[9px] text-muted-foreground font-normal mr-0.5">ציון</span>
+              </span>
+            )}
+            {row.bagrutPercent != null && (
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[row.status]}`}>
+                בגרות {row.bagrutPercent}%
+              </span>
+            )}
+          </div>
         )}
       </li>
     );
@@ -467,12 +478,27 @@ const StudentsPage = () => {
                           const dot = noData ? STATUS_DOT.gray : STATUS_DOT[r!.status];
                           return (
                             <td key={name} className="p-3 text-center border-b border-border/60">
-                              <div className="inline-flex items-center justify-center gap-1.5">
-                                <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
-                                <span className={`tabular-nums ${noData ? "text-muted-foreground/50" : "text-foreground font-semibold"}`}>
-                                  {noData ? "—" : (r!.grade ?? "—")}
-                                </span>
-                              </div>
+                              {noData ? (
+                                <div className="inline-flex items-center justify-center gap-1.5">
+                                  <span className={`w-2 h-2 rounded-full ${dot}`} />
+                                  <span className="text-muted-foreground/50">—</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-1">
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${dot}`} />
+                                    <span className="tabular-nums text-foreground font-semibold">
+                                      {r!.grade ?? "—"}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">ציון</span>
+                                  </div>
+                                  {r!.bagrutPercent != null && (
+                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[r!.status]}`}>
+                                      בגרות {r!.bagrutPercent}%
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
                           );
                         })}
