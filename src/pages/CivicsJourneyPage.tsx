@@ -18,6 +18,7 @@ import Station3  from '@/civics/pages/stations/Station3.jsx';
 import Station4  from '@/civics/pages/stations/Station4.jsx';
 import Station5  from '@/civics/pages/stations/Station5.jsx';
 import Station6  from '@/civics/pages/stations/Station6.jsx';
+import CivicsNavigation from '@/civics/components/Navigation.jsx';
 
 function CivicsRouter() {
   const { page } = useCivics();
@@ -35,6 +36,7 @@ function CivicsRouter() {
   };
   return (
     <div dir="rtl" className="min-h-screen font-heebo bg-[#F8F6F2]">
+      <CivicsNavigation />
       <main>{render()}</main>
     </div>
   );
