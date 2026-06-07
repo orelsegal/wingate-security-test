@@ -87,6 +87,8 @@ const StudentsPage = () => {
   const [sortBy, setSortBy] = useState<"name" | "avg" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [classFilter, setClassFilter] = useState<string | null>(null);
+  const [gradeEntryFilter, setGradeEntryFilter] = useState<"all" | "with" | "without">("all");
 
   // CRUD modals
   const [formOpen, setFormOpen] = useState(false);
