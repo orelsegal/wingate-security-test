@@ -469,12 +469,27 @@ const StudentsPage = () => {
                           const dot = noData ? STATUS_DOT.gray : STATUS_DOT[r!.status];
                           return (
                             <td key={name} className="p-3 text-center border-b border-border/60">
-                              <div className="inline-flex items-center justify-center gap-1.5">
-                                <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
-                                <span className={`tabular-nums ${noData ? "text-muted-foreground/50" : "text-foreground font-semibold"}`}>
-                                  {noData ? "—" : (r!.grade ?? "—")}
-                                </span>
-                              </div>
+                              {noData ? (
+                                <div className="inline-flex items-center justify-center gap-1.5">
+                                  <span className={`w-2 h-2 rounded-full ${dot}`} />
+                                  <span className="text-muted-foreground/50">—</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-1">
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <span className={`w-2 h-2 rounded-full ${dot}`} />
+                                    <span className="tabular-nums text-foreground font-semibold">
+                                      {r!.grade ?? "—"}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">ציון</span>
+                                  </div>
+                                  {r!.bagrutPercent != null && (
+                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${STATUS_CHIP_BG[r!.status]}`}>
+                                      בגרות {r!.bagrutPercent}%
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
                           );
                         })}
