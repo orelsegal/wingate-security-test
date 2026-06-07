@@ -100,6 +100,7 @@ const StudentsPage = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const branches = useMemo(() => Array.from(new Set(students.map(s => s.sport))).sort(), [students]);
+  const classOptions = useMemo(() => Array.from(new Set(students.map(s => s.class_name).filter(Boolean))).sort(), [students]);
   const allSubjectNames = useMemo(() => subjectsList.map((s: any) => s.subject_name as string), [subjectsList]);
 
   /** Map: student.id → all subject rows (one per subject in the system). */
