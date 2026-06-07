@@ -484,6 +484,8 @@ const StudentsPage = () => {
             </div>
           </div>
         ) : viewMode === "table" ? (
+          <div className="card-premium overflow-hidden">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
