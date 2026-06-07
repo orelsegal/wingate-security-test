@@ -116,6 +116,9 @@ const App = () => (
               {/* Literature-specific deep routes — must come BEFORE the generic :partId catch-all */}
               <Route path="/subjects/:subjectName/assessment-30"                    element={<Assessment30Page />} />
               <Route path="/subjects/:subjectName/assessment-30/larutz-im-milim"   element={<LarutzImMilimPage />} />
+              {/* Civics deep routes — mirror literature structure */}
+              <Route path="/subjects/:subjectName/civics-30"                       element={<CivicsAssessmentPage />} />
+              <Route path="/subjects/:subjectName/civics-30/journey"               element={<CivicsJourneyPage />} />
               <Route path="/subjects/:subjectName/:partId"      element={<SubjectPartPage />} />
               <Route path="/teacher-subjects"                   element={<TeacherSubjectEditorPage />} />
               <Route path="/history-course"                     element={<HistoryCoursePage />} />
