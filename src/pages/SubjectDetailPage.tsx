@@ -170,6 +170,33 @@ const SubjectDetailPage = () => {
         </div>
       </div>
 
+      {/* מפת קורס ספרות — מוטמעת מ-seferut-bagrut */}
+      {decoded === "ספרות" && (
+        <div className="mb-6 bg-card rounded-3xl border border-border shadow-[var(--shadow-card)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2">
+              <span className="text-[15px]">📚</span>
+              <span className="text-[13px] font-semibold text-foreground">מפת קורס ספרות לבגרות</span>
+            </div>
+            <a
+              href="https://seferut-bagrut.web.app/roadmap"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] text-primary hover:underline"
+            >
+              פתח בחלון נפרד ↗
+            </a>
+          </div>
+          <iframe
+            src="https://seferut-bagrut.web.app/roadmap"
+            className="w-full"
+            style={{ height: "600px", border: "none" }}
+            title="מפת קורס ספרות"
+            allow="fullscreen"
+          />
+        </div>
+      )}
+
       {/* Scenic roadmap (full width) */}
       <div className="mb-6">
         <ScenicRoadmap
