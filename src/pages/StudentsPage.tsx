@@ -464,11 +464,95 @@ const StudentsPage = () => {
                 <thead className="bg-muted/40">
                   <tr>
                     <th className="text-right p-3 font-semibold text-foreground sticky right-0 bg-muted/40 z-10 border-b border-border min-w-[180px]">שם התלמיד</th>
-                    <th className="text-right p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">כיתה</th>
-                    <th className="text-right p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">ענף</th>
-                    {allSubjectNames.map((name) => (
-                      <th key={name} className="text-center p-3 font-semibold text-foreground border-b border-border whitespace-nowrap min-w-[110px]">{name}</th>
-                    ))}
+                    <th className="text-right p-2 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/50 text-foreground">
+                            <span>כיתה</span>
+                            {classFilter && <span className="text-[10px] text-primary">({classFilter})</span>}
+                            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={1.5} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-[160px] max-h-[300px] overflow-y-auto">
+                          <DropdownMenuItem onClick={() => setClassFilter(null)} className="text-[12px]">
+                            <Check className={`h-3 w-3 ml-2 ${!classFilter ? "opacity-100" : "opacity-0"}`} />
+                            כל הכיתות
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {classOptions.map((c) => (
+                            <DropdownMenuItem key={c} onClick={() => setClassFilter(c)} className="text-[12px]">
+                              <Check className={`h-3 w-3 ml-2 ${classFilter === c ? "opacity-100" : "opacity-0"}`} />
+                              {c}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </th>
+                    <th className="text-right p-2 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/50 text-foreground">
+                            <span>ענף</span>
+                            {branchFilters.length > 0 && <span className="text-[10px] text-primary">({branchFilters.length})</span>}
+                            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={1.5} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-[180px] max-h-[300px] overflow-y-auto">
+                          <DropdownMenuItem onClick={() => setBranchFilters([])} className="text-[12px]">
+                            <Check className={`h-3 w-3 ml-2 ${branchFilters.length === 0 ? "opacity-100" : "opacity-0"}`} />
+                            כל הענפים
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {branches.map((b) => (
+                            <DropdownMenuCheckboxItem
+                              key={b}
+                              checked={branchFilters.includes(b)}
+                              onCheckedChange={(checked) => {
+                                setBranchFilters(checked ? [...branchFilters, b] : branchFilters.filter(x => x !== b));
+                              }}
+                              className="text-[12px]"
+                            >
+                              {b}
+                            </DropdownMenuCheckboxItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </th>
+                    {allSubjectNames.map((name) => {
+                      const isActive = subjectFilter === name;
+                      return (
+                        <th key={name} className="text-center p-2 font-semibold text-foreground border-b border-border whitespace-nowrap min-w-[110px]">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className={`inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/50 ${isActive ? "bg-primary/10 text-primary" : ""}`}>
+                                <span>{name}</span>
+                                <ChevronDown className="h-3 w-3 opacity-60" strokeWidth={1.5} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="center" className="min-w-[200px]">
+                              <DropdownMenuLabel className="text-[11px] text-muted-foreground">סינון לפי {name}</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => { setSubjectFilter(null); setGradeEntryFilter("all"); }} className="text-[12px]">
+                                <Check className={`h-3 w-3 ml-2 ${!isActive ? "opacity-100" : "opacity-0"}`} />
+                                הצג הכל
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => { setSubjectFilter(name); setGradeEntryFilter("with"); }} className="text-[12px]">
+                                <Check className={`h-3 w-3 ml-2 ${isActive && gradeEntryFilter === "with" ? "opacity-100" : "opacity-0"}`} />
+                                רק עם ציון
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSubjectFilter(name); setGradeEntryFilter("without"); }} className="text-[12px]">
+                                <Check className={`h-3 w-3 ml-2 ${isActive && gradeEntryFilter === "without" ? "opacity-100" : "opacity-0"}`} />
+                                רק ללא ציון
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSubjectFilter(name); setGradeEntryFilter("all"); }} className="text-[12px]">
+                                <Check className={`h-3 w-3 ml-2 ${isActive && gradeEntryFilter === "all" ? "opacity-100" : "opacity-0"}`} />
+                                כל הרשומים במקצוע
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
