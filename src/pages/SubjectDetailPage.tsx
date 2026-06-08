@@ -183,7 +183,7 @@ const SubjectDetailPage = () => {
               </div>
             </div>
             <a
-              href="https://seferut-bagrut.web.app/?guest=1"
+              href="https://seferut-bagrut.vercel.app/?guest=1"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-2xl font-semibold text-[13px] hover:bg-primary/90 transition-colors shrink-0"
