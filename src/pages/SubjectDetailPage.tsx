@@ -170,33 +170,28 @@ const SubjectDetailPage = () => {
         </div>
       </div>
 
-      {/* מפת קורס ספרות — מוטמעת מ-seferut-bagrut */}
+      {/* מפת קורס ספרות */}
       {decoded === "ספרות" && (
-        <div className="mb-6 bg-card rounded-3xl border border-border shadow-[var(--shadow-card)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
-            <div className="flex items-center gap-3">
-              <span className="text-[15px]">📚</span>
+        <div className="mb-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl border border-amber-200 shadow-[var(--shadow-card)] p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span className="text-[32px]">📚</span>
               <div>
-                <span className="text-[13px] font-semibold text-foreground">מפת קורס ספרות לבגרות</span>
-                <span className="mr-2 text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">70% — חלק ב׳</span>
+                <h3 className="text-[16px] font-bold text-foreground">מפת קורס ספרות לבגרות</h3>
+                <p className="text-[12px] text-muted-foreground mt-1">30 יחידות עם 10 יצירות חובה ואפליקציות אינטראקטיביות</p>
+                <span className="inline-block mt-2 text-[11px] bg-amber-200 text-amber-900 px-3 py-1 rounded-full font-semibold">70% — חלק שני</span>
               </div>
             </div>
             <a
-              href="https://seferut-bagrut.web.app/roadmap?guest=1"
+              href="https://seferut-bagrut.web.app/?guest=1"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[11px] text-primary hover:underline"
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-2xl font-semibold text-[13px] hover:bg-primary/90 transition-colors shrink-0"
             >
-              פתח בחלון נפרד ↗
+              <span>פתח מפת קורס</span>
+              <span>↗</span>
             </a>
           </div>
-          <iframe
-            src="https://seferut-bagrut.web.app/roadmap?guest=1"
-            className="w-full"
-            style={{ height: "600px", border: "none" }}
-            title="מפת קורס ספרות"
-            allow="fullscreen"
-          />
         </div>
       )}
 
