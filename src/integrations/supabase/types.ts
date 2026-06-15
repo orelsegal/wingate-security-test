@@ -118,6 +118,83 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_quiz_cache: {
+        Row: {
+          created_at: string
+          id: string
+          questions: Json
+          quiz_date: string
+          subject: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          questions: Json
+          quiz_date: string
+          subject: string
+          topic?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          questions?: Json
+          quiz_date?: string
+          subject?: string
+          topic?: string
+        }
+        Relationships: []
+      }
+      daily_quiz_results: {
+        Row: {
+          class_name: string
+          correct: number
+          created_at: string
+          daily_point: boolean
+          id: string
+          quiz_date: string
+          score: number
+          seconds: number
+          student_id: string
+          subject: string
+          total: number
+        }
+        Insert: {
+          class_name: string
+          correct?: number
+          created_at?: string
+          daily_point?: boolean
+          id?: string
+          quiz_date: string
+          score?: number
+          seconds?: number
+          student_id: string
+          subject: string
+          total?: number
+        }
+        Update: {
+          class_name?: string
+          correct?: number
+          created_at?: string
+          daily_point?: boolean
+          id?: string
+          quiz_date?: string
+          score?: number
+          seconds?: number
+          student_id?: string
+          subject?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_quiz_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
