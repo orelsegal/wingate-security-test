@@ -26,13 +26,13 @@ const LiteratureHubPage = () => {
     {
       id: "70",
       title: "בגרות חיצונית · 70%",
-      subtitle: "חומר הבגרות החיצוני — שירה, פרוזה ומאמרים",
-      meta: "בקרוב",
+      subtitle: "8 יחידות בגרות — פרוזה, שירה ודרמה",
+      meta: "פעיל",
       Icon: GraduationCap,
       iconBg: "bg-[hsl(35,30%,94%)]",
       iconColor: "text-[hsl(35,40%,45%)]",
-      onClick: () => {},
-      disabled: true,
+      onClick: () => navigate(`/subjects/${encodeURIComponent(decoded)}/literature/70`),
+      disabled: false,
     },
   ];
 
