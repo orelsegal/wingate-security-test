@@ -56,21 +56,8 @@ const Literature70RoadmapPage = () => {
   };
 
   return (
+    <Literature70Shell active="dashboard">
     <div className="p-5 md:p-8 lg:p-10 max-w-[1200px] mx-auto" dir="rtl">
-      <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-5 flex-wrap">
-        <button
-          onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/literature`)}
-          className="inline-flex items-center gap-1 hover:text-foreground transition-colors font-medium"
-        >
-          <ArrowRight className="h-3 w-3" strokeWidth={1.5} />
-          חזרה ל{decoded}
-        </button>
-        <span className="text-border">|</span>
-        <span>{decoded}</span>
-        <span>›</span>
-        <span className="text-foreground font-semibold">בגרות חיצונית 70% · מפת הדרכים</span>
-      </div>
-
       <div className="mb-5">
         <h1 className="text-[20px] font-semibold text-foreground tracking-tight leading-tight font-heading">
           ספרות לבגרות — 70%
@@ -87,7 +74,9 @@ const Literature70RoadmapPage = () => {
         continueLabel="המשך ליחידה הבאה"
       />
     </div>
+    </Literature70Shell>
   );
 };
+
 
 export default Literature70RoadmapPage;
