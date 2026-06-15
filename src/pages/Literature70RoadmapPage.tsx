@@ -3,10 +3,11 @@
  * מבוססת על תוכן מהאתר seferut-bagrut.vercel.app — 8 יחידות בגרות.
  */
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 
 import ScenicRoadmap, { ScenicNode } from "@/components/ScenicRoadmap";
+import Literature70Shell from "@/components/Literature70Shell";
 import units from "@/lib/literature70Units.json";
+
 
 type Unit = {
   id: string;
