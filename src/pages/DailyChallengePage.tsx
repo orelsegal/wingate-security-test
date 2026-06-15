@@ -3,11 +3,17 @@ import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import {
   Clock, Zap, Trophy, Sparkles, Heart, ChevronLeft, CheckCircle2,
-  X as XIcon, Crown, RefreshCw, ArrowRight,
+  X as XIcon, Crown, RefreshCw, ArrowRight, Loader2, Medal,
 } from "lucide-react";
 import {
-  getTodayChallenge, DCTask, loadSettings, saveResult,
+  getTodayChallenge, DCTask, loadSettings, saveResult, type DailyChallenge,
 } from "@/lib/dailyChallenge";
+import {
+  loadTodayQuiz, toDCTasks, saveQuizResult, getClassLeaderboard,
+  getStudentStreakPoints, type LeaderRow,
+} from "@/lib/dailyQuiz";
+import { useAuth } from "@/context/AuthContext";
+import { useStudent } from "@/hooks/useStudents";
 import MonsterBurst from "@/components/MonsterBurst";
 
 /* shuffle helper */
