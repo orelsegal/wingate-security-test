@@ -4,9 +4,11 @@
  */
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, BookOpen, Target, Sparkles, CheckCircle2, Circle, ChevronDown } from "lucide-react";
+import { BookOpen, Target, Sparkles, CheckCircle2, Circle, ChevronDown } from "lucide-react";
 
 import units from "@/lib/literature70Units.json";
+import Literature70Shell from "@/components/Literature70Shell";
+
 
 type Task = {
   id: string;
