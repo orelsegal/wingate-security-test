@@ -8,8 +8,6 @@ import { ArrowRight } from "lucide-react";
 
 import ScenicRoadmap, { ScenicNode } from "@/components/ScenicRoadmap";
 import { NOVEL_STATIONS } from "@/larutz/data/content.js";
-import { useApp as _useApp } from "@/larutz/LarutzBridge";
-import { useAuth } from "@/context/AuthContext";
 
 const Literature30RoadmapPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
