@@ -246,7 +246,9 @@ const Literature70UnitPage = () => {
         </section>
       )}
     </div>
+    </Literature70Shell>
   );
+
 };
 
 export default Literature70UnitPage;
