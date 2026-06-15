@@ -143,7 +143,7 @@ const BlitzPlayPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-violet-50/60 via-white to-violet-50/30 p-5 md:p-8" dir="rtl">
         {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
-        <div className="max-w-[760px] mx-auto">
+        <div className={`mx-auto ${game.sourceText ? "max-w-[1180px]" : "max-w-[760px]"}`}>
 
           {/* Top bar */}
           <div className="bg-white rounded-2xl ring-1 ring-border p-4 shadow-[var(--shadow-card)] mb-4">
@@ -168,6 +168,8 @@ const BlitzPlayPage = () => {
               עוד 80 XP ואתם עולים מקום בדירוג הכיתתי
             </p>
           </div>
+
+          <div className={game.sourceText ? "grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 items-start" : ""}>
 
           {/* Question */}
           <div className="bg-white rounded-3xl ring-1 ring-border p-6 md:p-8 shadow-[var(--shadow-card)]">
@@ -227,6 +229,31 @@ const BlitzPlayPage = () => {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Poem / source text — always visible during play */}
+          {game.sourceText && (
+            <aside className="bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-4 self-start">
+              <div className="flex items-center gap-1.5 text-violet-700 mb-2">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span className="text-[11px] font-bold">טקסט המקור</span>
+              </div>
+              {(game.sourceTitle || game.sourceAuthor) && (
+                <div className="mb-2">
+                  {game.sourceTitle && (
+                    <p className="text-[13px] font-bold text-foreground">״{game.sourceTitle}״</p>
+                  )}
+                  {game.sourceAuthor && (
+                    <p className="text-[11px] text-muted-foreground">{game.sourceAuthor}</p>
+                  )}
+                </div>
+              )}
+              <pre className="whitespace-pre-wrap font-sans text-[13px] leading-[1.85] text-foreground/90 max-h-[60vh] overflow-auto pe-1">
+{game.sourceText}
+              </pre>
+            </aside>
+          )}
+
           </div>
         </div>
       </div>
