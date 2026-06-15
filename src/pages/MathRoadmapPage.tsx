@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { ChevronDown, PlayCircle, Sigma, Dumbbell, BookOpen, ExternalLink, Map as MapIcon, Star, Lock, Flag, Trophy, ArrowRight } from "lucide-react";
+import ScenicRoadmap, { ScenicNode } from "@/components/ScenicRoadmap";
 import unitsData from "@/lib/mathRoadmap.json";
 
 type VideoLink = { url: string; label: string };
