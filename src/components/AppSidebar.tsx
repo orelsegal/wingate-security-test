@@ -158,7 +158,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               { name: "אנגלית",      icon: Globe,      path: "/subjects/" + encodeURIComponent("אנגלית") },
               { name: "מתמטיקה",     icon: Calculator, path: "/roadmaps/math" },
               { name: "חינוך גופני", icon: Dumbbell,   path: "/subjects/" + encodeURIComponent("חינוך גופני") },
-              { name: "ספרות",       icon: Feather,    path: "/subjects/" + encodeURIComponent("ספרות") },
+              { name: "ספרות",       icon: Feather,    path: "/subjects/" + encodeURIComponent("ספרות") + "/literature" },
               { name: "אזרחות",      icon: Scale,      path: "/subjects/" + encodeURIComponent("אזרחות") },
             ];
             return (
