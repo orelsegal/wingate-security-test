@@ -7,7 +7,7 @@
  * localStorage for progress (same keys → data already persisted by students).
  */
 
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
 /* ── Bridge + CSS ── */
@@ -110,8 +110,10 @@ function LarutzRouter() {
 /* ── Outer wrapper — provides breadcrumb back to Wingate ── */
 export default function LarutzImMilimPage() {
   const { subjectName } = useParams<{ subjectName: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const decoded = decodeURIComponent(subjectName || 'ספרות');
+  const initialPage = searchParams.get('page') || undefined;
 
   return (
     <>
@@ -121,11 +123,11 @@ export default function LarutzImMilimPage() {
         className="flex items-center gap-2 px-4 py-2 bg-white border-b border-border text-[11px] text-muted-foreground sticky top-0 z-[55]"
       >
         <button
-          onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/assessment-30`)}
+          onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/literature/30`)}
           className="inline-flex items-center gap-1 hover:text-foreground transition-colors font-medium"
         >
           <ArrowRight className="h-3 w-3" strokeWidth={1.5} />
-          חזרה להערכה פנימית 30%
+          חזרה למפת הדרכים — ספרות 30%
         </button>
         <span className="text-border">|</span>
         <span>{decoded}</span>
@@ -136,7 +138,7 @@ export default function LarutzImMilimPage() {
       </div>
 
       {/* The actual larutz app */}
-      <LarutzBridge>
+      <LarutzBridge initialPage={initialPage}>
         <LarutzRouter />
       </LarutzBridge>
     </>
