@@ -143,7 +143,7 @@ const BlitzPlayPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-violet-50/60 via-white to-violet-50/30 p-5 md:p-8" dir="rtl">
         {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
-        <div className="max-w-[760px] mx-auto">
+        <div className={`mx-auto ${game.sourceText ? "max-w-[1180px]" : "max-w-[760px]"}`}>
 
           {/* Top bar */}
           <div className="bg-white rounded-2xl ring-1 ring-border p-4 shadow-[var(--shadow-card)] mb-4">
@@ -168,6 +168,8 @@ const BlitzPlayPage = () => {
               עוד 80 XP ואתם עולים מקום בדירוג הכיתתי
             </p>
           </div>
+
+          <div className={game.sourceText ? "grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 items-start" : ""}>
 
           {/* Question */}
           <div className="bg-white rounded-3xl ring-1 ring-border p-6 md:p-8 shadow-[var(--shadow-card)]">
