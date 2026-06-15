@@ -12,7 +12,7 @@ import { NOVEL_STATIONS } from "@/larutz/data/content.js";
 const Literature30RoadmapPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const decoded = decodeURIComponent(subjectName || "ספרות");
   const decoded = decodeURIComponent(subjectName || "ספרות");
 
   // Read progress straight from the localStorage keys that LarutzBridge writes,
