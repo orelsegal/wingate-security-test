@@ -26,7 +26,7 @@ const allMenuItems: MenuItemDef[] = [
   { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["developer", "admin", "teacher"] },
   { key: "dataEntry",      icon: ClipboardEdit, path: "/data-entry",     roles: ["developer", "admin", "teacher", "coach"] },
   { key: "gradeEntry",     icon: BookOpen,     path: "/grade-entry",     roles: ["developer", "admin", "teacher"] },
-  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher"] },
+  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher", "student"] },
   { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["developer", "admin"] },
   { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["developer", "admin"] },
   { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels",    roles: ["developer", "admin"] },
