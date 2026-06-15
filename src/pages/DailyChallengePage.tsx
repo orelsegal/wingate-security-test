@@ -40,8 +40,13 @@ const fireConfetti = () => {
 
 export default function DailyChallengePage() {
   const navigate = useNavigate();
-  const challenge = useMemo(() => getTodayChallenge(), []);
   const settings = useMemo(() => loadSettings(), []);
+  const { user } = useAuth();
+  const studentId = user?.scopeFilter?.[0] || "";
+  const { data: student } = useStudent(studentId);
+
+  const [challenge, setChallenge] = useState<DailyChallenge | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [idx, setIdx] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -51,14 +56,65 @@ export default function DailyChallengePage() {
   const [finished, setFinished] = useState(false);
   const [showMonsters, setShowMonsters] = useState(false);
 
-  // overall timer (5 min default)
-  const [secondsLeft, setSecondsLeft] = useState(challenge.minutes * 60);
+  const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
+  const [streakDays, setStreakDays] = useState<number>(0);
+
+  // Load today's quiz from edge function (AI-generated, cached)
   useEffect(() => {
-    if (finished) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const quiz = await loadTodayQuiz();
+        if (cancelled) return;
+        const tasks = toDCTasks(quiz.questions);
+        const base = getTodayChallenge(); // for hook/rivalClass/etc
+        setChallenge({
+          ...base,
+          id: quiz.date,
+          date: quiz.date,
+          subject: quiz.subject,
+          topic: quiz.topic,
+          minutes: 7,
+          tasks,
+        });
+      } catch (e: any) {
+        setLoadError(e?.message || "טעינת השאלון נכשלה");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // overall timer
+  const totalSeconds = (challenge?.minutes ?? 7) * 60;
+  const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
+  useEffect(() => { if (challenge) setSecondsLeft(challenge.minutes * 60); }, [challenge?.id]);
+  useEffect(() => {
+    if (!challenge || finished) return;
     if (secondsLeft <= 0) { finish(); return; }
     const t = setTimeout(() => setSecondsLeft(s => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [secondsLeft, finished]);
+  }, [secondsLeft, finished, challenge?.id]);
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6" dir="rtl">
+        <div className="text-center max-w-md">
+          <p className="text-rose-600 font-semibold mb-2">{loadError}</p>
+          <button onClick={() => location.reload()} className="bg-foreground text-background rounded-xl px-4 py-2 text-sm">נסה שוב</button>
+        </div>
+      </div>
+    );
+  }
+  if (!challenge) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 mx-auto text-violet-500 animate-spin mb-3" />
+          <p className="text-[13px] text-muted-foreground">מכינים שאלון יומי טרי…</p>
+        </div>
+      </div>
+    );
+  }
 
   const task = challenge.tasks[idx];
   const total = challenge.tasks.length;
@@ -81,23 +137,36 @@ export default function DailyChallengePage() {
     else setIdx(i => i + 1);
   };
 
-  const finish = () => {
+  async function finish() {
     if (finished) return;
     const finalXp = xp + settings.pointsCompletion;
     const finalClass = classXp + Math.round(settings.pointsCompletion * 0.7);
     setXp(finalXp); setClassXp(finalClass);
     const passPct = Math.round((correctCount / total) * 100);
     const passed = passPct >= settings.passThreshold;
+    const seconds = Math.round((Date.now() - startedAt) / 1000);
     saveResult({
-      date: challenge.id,
-      correct: correctCount, total,
-      xp: finalXp, classXp: finalClass,
-      seconds: Math.round((Date.now() - startedAt) / 1000),
-      passed,
+      date: challenge.id, correct: correctCount, total,
+      xp: finalXp, classXp: finalClass, seconds, passed,
     });
+    // Save to Supabase for class leaderboard + yearly streak
+    if (studentId && student?.class_name) {
+      try {
+        await saveQuizResult({
+          studentId, className: student.class_name, subject: challenge.subject,
+          correct: correctCount, total, seconds,
+        });
+        const [lb, streak] = await Promise.all([
+          getClassLeaderboard(student.class_name),
+          getStudentStreakPoints(studentId),
+        ]);
+        setLeaderboard(lb);
+        setStreakDays(streak);
+      } catch (e) { console.error(e); }
+    }
     setFinished(true);
     if (passed) setTimeout(fireConfetti, 250);
-  };
+  }
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
