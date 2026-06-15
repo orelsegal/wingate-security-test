@@ -135,7 +135,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
           )}
 
           {/* Play Arena — students only */}
-          {user?.role === "student" && (
+          {(user?.role === "student" || user?.role === "admin" || user?.role === "developer") && (
             <button
               onClick={() => { navigate("/play"); onNavigate?.(); }}
               className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
