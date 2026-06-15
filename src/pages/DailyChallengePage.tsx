@@ -200,12 +200,38 @@ export default function DailyChallengePage() {
 
           <div className="bg-white rounded-3xl ring-1 ring-border shadow-sm p-5 grid grid-cols-2 gap-3">
             <Stat label="אחוז הצלחה"     value={`${passPct}%`} accent={passed ? "text-emerald-600" : "text-rose-500"} />
-            <Stat label="XP אישי"        value={xp.toLocaleString()} accent="text-violet-600" />
-            <Stat label="XP לכיתה"       value={classXp.toLocaleString()} accent="text-fuchsia-600" />
+            <Stat label="נכונות"          value={`${correctCount}/${total}`} accent="text-violet-600" />
             <Stat label="זמן משחק"       value={`${Math.round((Date.now()-startedAt)/1000)}s`} />
-            <Stat label="מיקום כיתה"     value={`#${challenge.classRank}`} accent="text-amber-600" />
-            <Stat label="שיפור אישי"     value="+50 XP" accent="text-emerald-600" />
+            <Stat label="נקודות רצף שנתי" value={`${streakDays}`} accent="text-amber-600" />
           </div>
+
+          {/* Class leaderboard */}
+          {leaderboard.length > 0 && (
+            <div className="mt-5 bg-white rounded-3xl ring-1 ring-border shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Medal className="h-4 w-4 text-amber-500" />
+                <h3 className="text-[13px] font-bold text-foreground">דירוג כיתה — {student?.class_name}</h3>
+              </div>
+              <div className="space-y-1.5">
+                {leaderboard.slice(0, 10).map((row, i) => {
+                  const isMe = row.student_id === studentId;
+                  return (
+                    <div key={row.student_id}
+                      className={`flex items-center justify-between rounded-xl px-3 py-2 text-[12.5px] ${
+                        isMe ? "bg-violet-50 ring-1 ring-violet-200 font-semibold text-violet-900"
+                             : "bg-muted/30 text-foreground"
+                      }`}>
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 text-center font-bold text-muted-foreground">{i + 1}</span>
+                        <span>{row.full_name}{isMe ? " (אתה)" : ""}</span>
+                      </div>
+                      <span className="tabular-nums">{row.score}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-2.5">
             {!passed && (
