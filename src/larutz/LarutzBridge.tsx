@@ -42,12 +42,13 @@ export const useApp = () => {
 interface Props {
   children: React.ReactNode;
   onExit?: () => void;
+  initialPage?: string;
 }
 
-export function LarutzBridge({ children, onExit }: Props) {
+export function LarutzBridge({ children, onExit, initialPage }: Props) {
   const { user: wingateUser } = useAuth();
 
-  const [page, setPage] = useState<string>('dashboard');
+  const [page, setPage] = useState<string>(initialPage || 'dashboard');
   const [completed, setCompleted] = useLocalStorage<Record<string, boolean>>('mlri2-done', {});
   const [answers, setAnswers] = useLocalStorage<Record<string, any>>('mlri2-answers', {});
   const [studentViewMode, setStudentViewMode] = useState(false);
