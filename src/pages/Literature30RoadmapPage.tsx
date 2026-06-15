@@ -13,7 +13,6 @@ const Literature30RoadmapPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
   const navigate = useNavigate();
   const decoded = decodeURIComponent(subjectName || "ספרות");
-  const decoded = decodeURIComponent(subjectName || "ספרות");
 
   // Read progress straight from the localStorage keys that LarutzBridge writes,
   // so the roadmap reflects work students already did inside the larutz app.
