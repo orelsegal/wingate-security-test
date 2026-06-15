@@ -4,9 +4,11 @@
  */
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, BookOpen, Target, Sparkles, CheckCircle2, Circle, ChevronDown } from "lucide-react";
+import { BookOpen, Target, Sparkles, CheckCircle2, Circle, ChevronDown } from "lucide-react";
 
 import units from "@/lib/literature70Units.json";
+import Literature70Shell from "@/components/Literature70Shell";
+
 
 type Task = {
   id: string;
@@ -80,23 +82,9 @@ const Literature70UnitPage = () => {
   }
 
   return (
+    <Literature70Shell active="unit" currentUnitId={unit.id}>
     <div className="p-5 md:p-8 lg:p-10 max-w-[980px] mx-auto" dir="rtl">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-5 flex-wrap">
-        <button
-          onClick={() => navigate(`/subjects/${encodeURIComponent(decoded)}/literature/70`)}
-          className="inline-flex items-center gap-1 hover:text-foreground transition-colors font-medium"
-        >
-          <ArrowRight className="h-3 w-3" strokeWidth={1.5} />
-          חזרה למפת הדרכים — ספרות 70%
-        </button>
-        <span className="text-border">|</span>
-        <span>{decoded}</span>
-        <span>›</span>
-        <span>בגרות 70%</span>
-        <span>›</span>
-        <span className="text-foreground font-semibold">{unit.title}</span>
-      </div>
+
 
       {/* Title card */}
       <div className="bg-card border border-border rounded-2xl p-6 mb-5">
@@ -258,7 +246,9 @@ const Literature70UnitPage = () => {
         </section>
       )}
     </div>
+    </Literature70Shell>
   );
+
 };
 
 export default Literature70UnitPage;
