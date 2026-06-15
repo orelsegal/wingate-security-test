@@ -55,6 +55,8 @@ const Assessment30Page           = lazy(() => import("./pages/Assessment30Page")
 const LarutzImMilimPage          = lazy(() => import("./pages/LarutzImMilimPage"));
 const LiteratureHubPage          = lazy(() => import("./pages/LiteratureHubPage"));
 const Literature30RoadmapPage    = lazy(() => import("./pages/Literature30RoadmapPage"));
+const Literature70RoadmapPage    = lazy(() => import("./pages/Literature70RoadmapPage"));
+const Literature70UnitPage       = lazy(() => import("./pages/Literature70UnitPage"));
 const CivicsAssessmentPage       = lazy(() => import("./pages/CivicsAssessmentPage"));
 const CivicsJourneyPage          = lazy(() => import("./pages/CivicsJourneyPage"));
 const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
