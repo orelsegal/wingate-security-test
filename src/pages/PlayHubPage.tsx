@@ -11,6 +11,7 @@ import {
 import DailyChallengePopup from "@/components/DailyChallengePopup";
 import OlympicTopPanel from "@/components/OlympicTopPanel";
 import { getTodayChallenge, wasPopupSeenToday, markPopupSeen, hasPlayedToday } from "@/lib/dailyChallenge";
+import { getStudentStreakPoints, totalSchoolDays } from "@/lib/dailyQuiz";
 import { listPublishedBlitzGames, type BlitzGame } from "@/lib/blitzGames";
 
 type Task = {
