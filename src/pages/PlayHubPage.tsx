@@ -11,6 +11,7 @@ import {
 import DailyChallengePopup from "@/components/DailyChallengePopup";
 import OlympicTopPanel from "@/components/OlympicTopPanel";
 import { getTodayChallenge, wasPopupSeenToday, markPopupSeen, hasPlayedToday } from "@/lib/dailyChallenge";
+import { getStudentStreakPoints, totalSchoolDays } from "@/lib/dailyQuiz";
 import { listPublishedBlitzGames, type BlitzGame } from "@/lib/blitzGames";
 
 type Task = {
@@ -136,9 +137,10 @@ const PlayHubPage = () => {
   const [dailyPopupOpen, setDailyPopupOpen] = useState(false);
   const openChallenges = useMemo<BlitzGame[]>(() => listPublishedBlitzGames(), []);
 
-  // Bump streak on first meaningful render (student data arrived)
+  // Pull yearly streak (days played within 1.9–20.6) from Supabase
   useEffect(() => {
-    if (studentId) setStreak(bumpStreak());
+    if (!studentId) return;
+    getStudentStreakPoints(studentId).then(setStreak).catch(() => {});
   }, [studentId]);
 
   // Show Daily Challenge popup once per day for students

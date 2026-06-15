@@ -3,11 +3,17 @@ import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import {
   Clock, Zap, Trophy, Sparkles, Heart, ChevronLeft, CheckCircle2,
-  X as XIcon, Crown, RefreshCw, ArrowRight,
+  X as XIcon, Crown, RefreshCw, ArrowRight, Loader2, Medal,
 } from "lucide-react";
 import {
-  getTodayChallenge, DCTask, loadSettings, saveResult,
+  getTodayChallenge, DCTask, loadSettings, saveResult, type DailyChallenge,
 } from "@/lib/dailyChallenge";
+import {
+  loadTodayQuiz, toDCTasks, saveQuizResult, getClassLeaderboard,
+  getStudentStreakPoints, type LeaderRow,
+} from "@/lib/dailyQuiz";
+import { useAuth } from "@/context/AuthContext";
+import { useStudent } from "@/hooks/useStudents";
 import MonsterBurst from "@/components/MonsterBurst";
 
 /* shuffle helper */
@@ -34,8 +40,13 @@ const fireConfetti = () => {
 
 export default function DailyChallengePage() {
   const navigate = useNavigate();
-  const challenge = useMemo(() => getTodayChallenge(), []);
   const settings = useMemo(() => loadSettings(), []);
+  const { user } = useAuth();
+  const studentId = user?.scopeFilter?.[0] || "";
+  const { data: student } = useStudent(studentId);
+
+  const [challenge, setChallenge] = useState<DailyChallenge | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [idx, setIdx] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -45,14 +56,65 @@ export default function DailyChallengePage() {
   const [finished, setFinished] = useState(false);
   const [showMonsters, setShowMonsters] = useState(false);
 
-  // overall timer (5 min default)
-  const [secondsLeft, setSecondsLeft] = useState(challenge.minutes * 60);
+  const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
+  const [streakDays, setStreakDays] = useState<number>(0);
+
+  // Load today's quiz from edge function (AI-generated, cached)
   useEffect(() => {
-    if (finished) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const quiz = await loadTodayQuiz();
+        if (cancelled) return;
+        const tasks = toDCTasks(quiz.questions);
+        const base = getTodayChallenge(); // for hook/rivalClass/etc
+        setChallenge({
+          ...base,
+          id: quiz.date,
+          date: quiz.date,
+          subject: quiz.subject,
+          topic: quiz.topic,
+          minutes: 7,
+          tasks,
+        });
+      } catch (e: any) {
+        setLoadError(e?.message || "טעינת השאלון נכשלה");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // overall timer
+  const totalSeconds = (challenge?.minutes ?? 7) * 60;
+  const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
+  useEffect(() => { if (challenge) setSecondsLeft(challenge.minutes * 60); }, [challenge?.id]);
+  useEffect(() => {
+    if (!challenge || finished) return;
     if (secondsLeft <= 0) { finish(); return; }
     const t = setTimeout(() => setSecondsLeft(s => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [secondsLeft, finished]);
+  }, [secondsLeft, finished, challenge?.id]);
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6" dir="rtl">
+        <div className="text-center max-w-md">
+          <p className="text-rose-600 font-semibold mb-2">{loadError}</p>
+          <button onClick={() => location.reload()} className="bg-foreground text-background rounded-xl px-4 py-2 text-sm">נסה שוב</button>
+        </div>
+      </div>
+    );
+  }
+  if (!challenge) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 mx-auto text-violet-500 animate-spin mb-3" />
+          <p className="text-[13px] text-muted-foreground">מכינים שאלון יומי טרי…</p>
+        </div>
+      </div>
+    );
+  }
 
   const task = challenge.tasks[idx];
   const total = challenge.tasks.length;
@@ -75,23 +137,36 @@ export default function DailyChallengePage() {
     else setIdx(i => i + 1);
   };
 
-  const finish = () => {
+  async function finish() {
     if (finished) return;
     const finalXp = xp + settings.pointsCompletion;
     const finalClass = classXp + Math.round(settings.pointsCompletion * 0.7);
     setXp(finalXp); setClassXp(finalClass);
     const passPct = Math.round((correctCount / total) * 100);
     const passed = passPct >= settings.passThreshold;
+    const seconds = Math.round((Date.now() - startedAt) / 1000);
     saveResult({
-      date: challenge.id,
-      correct: correctCount, total,
-      xp: finalXp, classXp: finalClass,
-      seconds: Math.round((Date.now() - startedAt) / 1000),
-      passed,
+      date: challenge.id, correct: correctCount, total,
+      xp: finalXp, classXp: finalClass, seconds, passed,
     });
+    // Save to Supabase for class leaderboard + yearly streak
+    if (studentId && student?.class_name) {
+      try {
+        await saveQuizResult({
+          studentId, className: student.class_name, subject: challenge.subject,
+          correct: correctCount, total, seconds,
+        });
+        const [lb, streak] = await Promise.all([
+          getClassLeaderboard(student.class_name),
+          getStudentStreakPoints(studentId),
+        ]);
+        setLeaderboard(lb);
+        setStreakDays(streak);
+      } catch (e) { console.error(e); }
+    }
     setFinished(true);
     if (passed) setTimeout(fireConfetti, 250);
-  };
+  }
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
@@ -125,12 +200,38 @@ export default function DailyChallengePage() {
 
           <div className="bg-white rounded-3xl ring-1 ring-border shadow-sm p-5 grid grid-cols-2 gap-3">
             <Stat label="אחוז הצלחה"     value={`${passPct}%`} accent={passed ? "text-emerald-600" : "text-rose-500"} />
-            <Stat label="XP אישי"        value={xp.toLocaleString()} accent="text-violet-600" />
-            <Stat label="XP לכיתה"       value={classXp.toLocaleString()} accent="text-fuchsia-600" />
+            <Stat label="נכונות"          value={`${correctCount}/${total}`} accent="text-violet-600" />
             <Stat label="זמן משחק"       value={`${Math.round((Date.now()-startedAt)/1000)}s`} />
-            <Stat label="מיקום כיתה"     value={`#${challenge.classRank}`} accent="text-amber-600" />
-            <Stat label="שיפור אישי"     value="+50 XP" accent="text-emerald-600" />
+            <Stat label="נקודות רצף שנתי" value={`${streakDays}`} accent="text-amber-600" />
           </div>
+
+          {/* Class leaderboard */}
+          {leaderboard.length > 0 && (
+            <div className="mt-5 bg-white rounded-3xl ring-1 ring-border shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Medal className="h-4 w-4 text-amber-500" />
+                <h3 className="text-[13px] font-bold text-foreground">דירוג כיתה — {student?.class_name}</h3>
+              </div>
+              <div className="space-y-1.5">
+                {leaderboard.slice(0, 10).map((row, i) => {
+                  const isMe = row.student_id === studentId;
+                  return (
+                    <div key={row.student_id}
+                      className={`flex items-center justify-between rounded-xl px-3 py-2 text-[12.5px] ${
+                        isMe ? "bg-violet-50 ring-1 ring-violet-200 font-semibold text-violet-900"
+                             : "bg-muted/30 text-foreground"
+                      }`}>
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 text-center font-bold text-muted-foreground">{i + 1}</span>
+                        <span>{row.full_name}{isMe ? " (אתה)" : ""}</span>
+                      </div>
+                      <span className="tabular-nums">{row.score}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-2.5">
             {!passed && (
