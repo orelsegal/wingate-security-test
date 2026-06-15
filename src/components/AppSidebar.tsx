@@ -26,7 +26,7 @@ const allMenuItems: MenuItemDef[] = [
   { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["developer", "admin", "teacher"] },
   { key: "dataEntry",      icon: ClipboardEdit, path: "/data-entry",     roles: ["developer", "admin", "teacher", "coach"] },
   { key: "gradeEntry",     icon: BookOpen,     path: "/grade-entry",     roles: ["developer", "admin", "teacher"] },
-  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher"] },
+  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher", "student"] },
   { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["developer", "admin"] },
   { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["developer", "admin"] },
   { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels",    roles: ["developer", "admin"] },
@@ -135,7 +135,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
           )}
 
           {/* Play Arena — students only */}
-          {user?.role === "student" && (
+          {(user?.role === "student" || user?.role === "admin" || user?.role === "developer") && (
             <button
               onClick={() => { navigate("/play"); onNavigate?.(); }}
               className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
