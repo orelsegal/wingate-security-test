@@ -55,6 +55,8 @@ const Assessment30Page           = lazy(() => import("./pages/Assessment30Page")
 const LarutzImMilimPage          = lazy(() => import("./pages/LarutzImMilimPage"));
 const LiteratureHubPage          = lazy(() => import("./pages/LiteratureHubPage"));
 const Literature30RoadmapPage    = lazy(() => import("./pages/Literature30RoadmapPage"));
+const Literature70RoadmapPage    = lazy(() => import("./pages/Literature70RoadmapPage"));
+const Literature70UnitPage       = lazy(() => import("./pages/Literature70UnitPage"));
 const CivicsAssessmentPage       = lazy(() => import("./pages/CivicsAssessmentPage"));
 const CivicsJourneyPage          = lazy(() => import("./pages/CivicsJourneyPage"));
 const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
@@ -120,6 +122,8 @@ const App = () => (
               {/* Literature-specific deep routes — must come BEFORE the generic :partId catch-all */}
               <Route path="/subjects/:subjectName/literature"                       element={<LiteratureHubPage />} />
               <Route path="/subjects/:subjectName/literature/30"                    element={<Literature30RoadmapPage />} />
+              <Route path="/subjects/:subjectName/literature/70"                    element={<Literature70RoadmapPage />} />
+              <Route path="/subjects/:subjectName/literature/70/:unitId"            element={<Literature70UnitPage />} />
               <Route path="/subjects/:subjectName/assessment-30"                    element={<Assessment30Page />} />
               <Route path="/subjects/:subjectName/assessment-30/larutz-im-milim"   element={<LarutzImMilimPage />} />
               {/* Civics deep routes — mirror literature structure */}
