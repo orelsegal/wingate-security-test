@@ -7,7 +7,7 @@
  * localStorage for progress (same keys → data already persisted by students).
  */
 
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
 /* ── Bridge + CSS ── */
