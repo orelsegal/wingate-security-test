@@ -118,6 +118,8 @@ const App = () => (
               <Route path="/subjects"                           element={<SubjectSelectionPage />} />
               <Route path="/subjects/:subjectName"              element={<SubjectDetailPage />} />
               {/* Literature-specific deep routes — must come BEFORE the generic :partId catch-all */}
+              <Route path="/subjects/:subjectName/literature"                       element={<LiteratureHubPage />} />
+              <Route path="/subjects/:subjectName/literature/30"                    element={<Literature30RoadmapPage />} />
               <Route path="/subjects/:subjectName/assessment-30"                    element={<Assessment30Page />} />
               <Route path="/subjects/:subjectName/assessment-30/larutz-im-milim"   element={<LarutzImMilimPage />} />
               {/* Civics deep routes — mirror literature structure */}
