@@ -5,7 +5,6 @@ import type { UserRole } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
 import EditableElement from "@/components/builder/EditableElement";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
-import { toast } from "@/hooks/use-toast";
 
 type NavKey = keyof ReturnType<typeof useUiLabels>["labels"]["nav"];
 
@@ -33,9 +32,6 @@ const allMenuItems: MenuItemDef[] = [
   { key: "adminUsers",     icon: UserCog,           path: "/admin/users",     roles: ["developer", "admin"] },
   { key: "adminSettings",  icon: Settings,          path: "/admin/settings",  roles: ["developer", "admin"] },
 ];
-
-/* Unread messages counter — 0 until messaging backend is live */
-const MESSAGES_UNREAD = 0;
 
 interface AppSidebarProps {
   onNavigate?: () => void;
@@ -188,25 +184,18 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
           })()}
 
 
-          {/* Messages — distinct orange entry with unread badge */}
+          {/* Messages — coming soon, shown as clearly disabled until backend is live */}
           {labels.visibility?.nav?.messages !== false && (
-            <button
-              onClick={() => {
-                toast({ title: labels.nav.messages, description: "התיבה עוד בפיתוח. תיפתח בקרוב." });
-                onNavigate?.();
-              }}
-              className="w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-150 text-start font-medium text-[hsl(25,85%,45%)] hover:bg-[hsl(25,85%,50%)]/10"
+            <div
+              aria-disabled="true"
+              className="w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] text-start font-medium text-sidebar-muted/45 cursor-default select-none"
             >
-              <span className="relative inline-flex items-center justify-center">
-                <Mail className="h-[15px] w-[15px] shrink-0 text-[hsl(25,85%,50%)]" strokeWidth={1.5} />
-                {MESSAGES_UNREAD > 0 && (
-                  <span className="absolute -top-1 -end-1 min-w-[14px] h-[14px] px-1 rounded-full bg-[hsl(25,90%,52%)] text-[9px] font-bold text-white flex items-center justify-center leading-none ring-2 ring-sidebar">
-                    {MESSAGES_UNREAD}
-                  </span>
-                )}
-              </span>
+              <Mail className="h-[15px] w-[15px] shrink-0 text-sidebar-muted/40" strokeWidth={1.5} />
               <span>{labels.nav.messages}</span>
-            </button>
+              <span className="ms-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sidebar-accent/60 text-sidebar-muted/60">
+                בקרוב
+              </span>
+            </div>
           )}
         </div>
       </nav>

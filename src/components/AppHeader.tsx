@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, ChevronLeft, LogOut } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import { useAuth, roleLabels } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -113,7 +113,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { crumbs, title } = useBreadcrumbs(user?.role);
+  const { title } = useBreadcrumbs(user?.role);
   const isHome = location.pathname === "/" || location.pathname === "/student-home";
 
   const handleLogout = async () => {
@@ -167,24 +167,6 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
               {roleLabels[user.role]}
             </span>
           )}
-          {/* Search — inactive until search backend is live */}
-          <button
-            className="p-2 rounded-lg text-muted-foreground/40 cursor-default"
-            title="חיפוש — בקרוב"
-            aria-disabled="true"
-            tabIndex={-1}
-          >
-            <Search className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-          {/* Bell — visible but inactive until notification backend is live */}
-          <button
-            className="p-2 rounded-lg text-muted-foreground/40 cursor-default"
-            title="התראות — בקרוב"
-            aria-disabled="true"
-            tabIndex={-1}
-          >
-            <Bell className="h-4 w-4" strokeWidth={1.5} />
-          </button>
           {user && (
             <button
               onClick={handleLogout}
@@ -199,33 +181,6 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
         </div>
       </div>
 
-      {/* Breadcrumbs row */}
-      {crumbs.length > 0 && (
-        <div className="h-[28px] flex items-center px-4 md:px-7 border-t border-border/40 bg-accent/15">
-          <nav className="flex items-center gap-1 text-[11px]">
-            {crumbs.map((crumb, i) => {
-              const isLast = i === crumbs.length - 1;
-              return (
-                <span key={i} className="flex items-center gap-1">
-                  {i > 0 && <ChevronLeft className="h-2.5 w-2.5 text-muted-foreground/25 shrink-0" strokeWidth={1.5} />}
-                  {isLast || !crumb.path ? (
-                    <span className={isLast ? "text-foreground font-medium" : "text-muted-foreground"}>
-                      {crumb.label}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => navigate(crumb.path!)}
-                      className="text-muted-foreground hover:text-foreground transition-colors duration-150"
-                    >
-                      {crumb.label}
-                    </button>
-                  )}
-                </span>
-              );
-            })}
-          </nav>
-        </div>
-      )}
     </header>
   );
 };
