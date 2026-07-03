@@ -13,11 +13,11 @@ type Unit = { id: string; number: number; title: string };
 
 type TopKey = "landing" | "dashboard" | "unit" | "rubric" | "portfolio";
 
-const TOP_NAV: { key: TopKey; label: string; icon: any }[] = [
+const TOP_NAV: { key: TopKey; label: string; icon: any; comingSoon?: boolean }[] = [
   { key: "dashboard", label: "מסלול היחידות", icon: Map },
   { key: "unit",      label: "יחידה נוכחית",  icon: BookOpen },
-  { key: "rubric",    label: "מחוון בגרות",   icon: Award },
-  { key: "portfolio", label: "מחברת",         icon: Notebook },
+  { key: "rubric",    label: "מחוון בגרות",   icon: Award,    comingSoon: true },
+  { key: "portfolio", label: "מחברת",         icon: Notebook, comingSoon: true },
 ];
 
 type Props = {
@@ -106,19 +106,32 @@ const Literature70Shell = ({ active, currentUnitId, children }: Props) => {
 
           {/* Tabs */}
           <nav className="hidden lg:flex items-center gap-0.5">
-            {TOP_NAV.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => goTab(key)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  active === key
-                    ? "bg-terracotta text-white"
-                    : "text-sand-200 hover:bg-navy-700 hover:text-white"
-                }`}
-              >
-                <Icon size={12} /> {label}
-              </button>
-            ))}
+            {TOP_NAV.map(({ key, label, icon: Icon, comingSoon }) =>
+              comingSoon ? (
+                <span
+                  key={key}
+                  aria-disabled="true"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-sand-200/40 cursor-default select-none"
+                >
+                  <Icon size={12} /> {label}
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-navy-700 text-sand-200/60">
+                    בקרוב
+                  </span>
+                </span>
+              ) : (
+                <button
+                  key={key}
+                  onClick={() => goTab(key)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    active === key
+                      ? "bg-terracotta text-white"
+                      : "text-sand-200 hover:bg-navy-700 hover:text-white"
+                  }`}
+                >
+                  <Icon size={12} /> {label}
+                </button>
+              )
+            )}
           </nav>
         </div>
 
