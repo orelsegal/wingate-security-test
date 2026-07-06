@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Loader2, UserPlus, Send, Copy, Check, Search, RefreshCw, Upload, Trash2, Mail } from "lucide-react";
+import { Loader2, UserPlus, Send, Copy, Check, Search, RefreshCw, Upload, Trash2, Mail, Link2, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import { useStudents, useSports } from "@/hooks/useStudents";
 import * as XLSX from "xlsx";
 
 type AppRole = "developer" | "admin" | "teacher" | "student" | "parent" | "coach";
@@ -18,6 +19,7 @@ interface UserRow {
   full_name: string | null;
   role: AppRole | null;
   linked_sport: string | null;
+  linked_student_id: string | null;
   created_at: string;
 }
 
@@ -39,6 +41,68 @@ const ROLE_COLORS: Record<AppRole, string> = {
   coach: "bg-red-100 text-red-700",
 };
 
+/** Role-aware link editor for one user row.
+ *  parent/student → athlete-profile dropdown (linked_student_id)
+ *  coach          → sport dropdown (linked_sport)
+ *  other roles    → no link needed. */
+const LinkCell = ({
+  u, students, sports, saving, needsLink, onSave,
+}: {
+  u: UserRow;
+  students: { id: string; full_name: string }[];
+  sports: { sport_name: string }[];
+  saving: boolean;
+  needsLink: boolean;
+  onSave: (userId: string, patch: { linked_student_id?: string | null; linked_sport?: string | null }) => void;
+}) => {
+  const selectCls =
+    "w-full bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] text-foreground outline-none focus:border-primary/40";
+
+  if (u.role === "parent" || u.role === "student") {
+    return (
+      <div className="flex items-center gap-1.5 min-w-0">
+        <select
+          className={selectCls}
+          value={u.linked_student_id ?? ""}
+          disabled={saving}
+          onChange={e => onSave(u.id, { linked_student_id: e.target.value || null })}
+        >
+          <option value="">— ללא ספורטאי —</option>
+          {students.map(s => (
+            <option key={s.id} value={s.id}>{s.full_name}</option>
+          ))}
+        </select>
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
+          : needsLink ? <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+          : <Link2 className="h-3.5 w-3.5 text-success shrink-0" />}
+      </div>
+    );
+  }
+
+  if (u.role === "coach") {
+    return (
+      <div className="flex items-center gap-1.5 min-w-0">
+        <select
+          className={selectCls}
+          value={u.linked_sport ?? ""}
+          disabled={saving}
+          onChange={e => onSave(u.id, { linked_sport: e.target.value || null })}
+        >
+          <option value="">— ללא ענף —</option>
+          {sports.map(s => (
+            <option key={s.sport_name} value={s.sport_name}>{s.sport_name}</option>
+          ))}
+        </select>
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
+          : needsLink ? <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+          : <Link2 className="h-3.5 w-3.5 text-success shrink-0" />}
+      </div>
+    );
+  }
+
+  return <span className="text-[11px] text-muted-foreground/50">לא נדרש</span>;
+};
+
 const UserManagementPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -51,6 +115,12 @@ const UserManagementPage = () => {
   const [activeTab, setActiveTab] = useState<"list" | "add" | "import">("list");
   const [copied, setCopied] = useState(false);
   const [sendingMagic, setSendingMagic] = useState<string | null>(null);
+  const [onlyUnlinked, setOnlyUnlinked] = useState(false);
+  const [savingLink, setSavingLink] = useState<string | null>(null);
+
+  // Data sources for the link dropdowns (existing hooks, admin-visible)
+  const { data: students = [] } = useStudents();
+  const { data: sports = [] } = useSports();
 
   // Add one form
   const [inviteEmail, setInviteEmail] = useState("");
@@ -74,7 +144,7 @@ const UserManagementPage = () => {
     setLoading(true);
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, email, full_name, linked_sport, created_at")
+      .select("id, email, full_name, linked_sport, linked_student_id, created_at")
       .order("created_at", { ascending: false });
 
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
@@ -175,11 +245,35 @@ const UserManagementPage = () => {
     loadUsers();
   };
 
+  // A user "needs a link" when its role requires scoping but the link is missing.
+  // parent/student → linked_student_id · coach → linked_sport · others → no link needed.
+  const needsLink = (u: UserRow): boolean => {
+    if (u.role === "parent" || u.role === "student") return !u.linked_student_id;
+    if (u.role === "coach") return !u.linked_sport;
+    return false;
+  };
+
+  // Save a single link field on a user's profile row (admin-authorized by existing RLS).
+  const saveLink = async (userId: string, patch: { linked_student_id?: string | null; linked_sport?: string | null }) => {
+    setSavingLink(userId);
+    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
+    setSavingLink(null);
+    if (error) {
+      toast({ title: "שגיאה בשמירת הקישור", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✅ הקישור נשמר" });
+      loadUsers();
+    }
+  };
+
   const filtered = users.filter(u =>
-    (u.full_name ?? "").toLowerCase().includes(query.toLowerCase()) ||
-    (u.email ?? "").toLowerCase().includes(query.toLowerCase()) ||
-    (u.role ?? "").includes(query.toLowerCase())
+    ((u.full_name ?? "").toLowerCase().includes(query.toLowerCase()) ||
+      (u.email ?? "").toLowerCase().includes(query.toLowerCase()) ||
+      (u.role ?? "").includes(query.toLowerCase())) &&
+    (!onlyUnlinked || needsLink(u))
   );
+
+  const unlinkedCount = users.filter(needsLink).length;
 
   const copyLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}/login`);
@@ -232,15 +326,28 @@ const UserManagementPage = () => {
       {/* ── Tab: רשימה ── */}
       {activeTab === "list" && (
         <>
-          <div className="relative mb-4">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="חיפוש לפי שם, אימייל או תפקיד..." className="pr-9" />
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="חיפוש לפי שם, אימייל או תפקיד..." className="pr-9" />
+            </div>
+            <button
+              onClick={() => setOnlyUnlinked(v => !v)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-medium transition-colors shrink-0 ${
+                onlyUnlinked
+                  ? "border-amber-300 bg-amber-50 text-amber-700"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {onlyUnlinked ? "מציג לא-מקושרים" : `לא מקושרים${unlinkedCount ? ` (${unlinkedCount})` : ""}`}
+            </button>
           </div>
 
           <div className="card-premium overflow-hidden">
             <div className="hidden md:grid px-5 py-3 border-b border-border bg-muted/50 text-[11px] font-medium text-muted-foreground gap-4"
-              style={{ gridTemplateColumns: "2fr 2fr 100px 120px 120px" }}>
-              <span>שם</span><span>אימייל</span><span>תפקיד</span><span>ענף</span><span>פעולות</span>
+              style={{ gridTemplateColumns: "1.8fr 1.8fr 90px 220px 70px" }}>
+              <span>שם</span><span>אימייל</span><span>תפקיד</span><span>קישור</span><span>פעולות</span>
             </div>
 
             {loading ? (
@@ -251,7 +358,7 @@ const UserManagementPage = () => {
               filtered.map(u => (
                 <div key={u.id} className="border-b border-border/50 last:border-0 hover:bg-accent/20 transition-colors">
                   <div className="hidden md:grid px-5 py-3.5 items-center gap-4"
-                    style={{ gridTemplateColumns: "2fr 2fr 100px 120px 120px" }}>
+                    style={{ gridTemplateColumns: "1.8fr 1.8fr 90px 220px 70px" }}>
                     <div className="flex items-center gap-2.5">
                       <InitialsAvatar name={u.full_name ?? u.email ?? "?"} size="sm" />
                       <span className="text-[13px] font-medium text-foreground truncate">{u.full_name ?? "—"}</span>
@@ -264,7 +371,14 @@ const UserManagementPage = () => {
                         </span>
                       ) : <span className="text-[11px] text-muted-foreground/50">—</span>}
                     </span>
-                    <span className="text-[12px] text-muted-foreground">{u.linked_sport ?? "—"}</span>
+                    <LinkCell
+                      u={u}
+                      students={students}
+                      sports={sports}
+                      saving={savingLink === u.id}
+                      needsLink={needsLink(u)}
+                      onSave={saveLink}
+                    />
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => u.email && sendMagicLink(u.email)}
@@ -278,16 +392,30 @@ const UserManagementPage = () => {
                   </div>
 
                   {/* Mobile */}
-                  <div className="md:hidden px-4 py-3 flex items-center gap-3">
-                    <InitialsAvatar name={u.full_name ?? u.email ?? "?"} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-foreground truncate">{u.full_name ?? "—"}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
+                  <div className="md:hidden px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <InitialsAvatar name={u.full_name ?? u.email ?? "?"} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-foreground truncate">{u.full_name ?? "—"}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
+                      </div>
+                      {u.role && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${ROLE_COLORS[u.role]}`}>
+                          {ROLE_LABELS[u.role]}
+                        </span>
+                      )}
                     </div>
-                    {u.role && (
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${ROLE_COLORS[u.role]}`}>
-                        {ROLE_LABELS[u.role]}
-                      </span>
+                    {(u.role === "parent" || u.role === "student" || u.role === "coach") && (
+                      <div className="mt-2.5">
+                        <LinkCell
+                          u={u}
+                          students={students}
+                          sports={sports}
+                          saving={savingLink === u.id}
+                          needsLink={needsLink(u)}
+                          onSave={saveLink}
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
