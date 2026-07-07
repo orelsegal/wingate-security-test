@@ -37,7 +37,7 @@ const navByRole: Record<string, BottomNavItem[]> = {
   student: [
     { label: "בית",       icon: Home,         path: "/student-home" },
     { label: "מקצועות",  icon: BookOpen,     path: "/subjects" },
-    { label: "משחק",     icon: Gamepad2,     path: "/play" },
+    { label: "תרגול",     icon: Gamepad2,     path: "/play" },
     { label: "לוח שנה",  icon: CalendarDays, path: "/calendar" },
   ],
   parent: [

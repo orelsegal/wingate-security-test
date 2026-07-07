@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Gamepad2, Settings } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -130,21 +130,6 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             </>
           )}
 
-          {/* Play Arena — students only */}
-          {(user?.role === "student" || user?.role === "admin" || user?.role === "developer") && (
-            <button
-              onClick={() => { navigate("/play"); onNavigate?.(); }}
-              className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
-                location.pathname.startsWith("/play")
-                  ? "bg-sidebar-primary text-white font-semibold shadow-sm"
-                  : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              }`}
-            >
-              <Gamepad2 className={`h-[15px] w-[15px] shrink-0 ${location.pathname.startsWith("/play") ? "text-white" : "text-violet-500"}`} strokeWidth={location.pathname.startsWith("/play") ? 2 : 1.6} />
-              <span>שנעלה על המסלול? גו!</span>
-            </button>
-          )}
-
           {/* Subjects list — visible to students between dashboard and messages */}
           {user?.role === "student" && (() => {
             const subjects: { name: string; icon: typeof Home; path: string }[] = [
@@ -183,6 +168,21 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             );
           })()}
 
+
+          {/* Practice area — secondary, calm styling (route unchanged) */}
+          {(user?.role === "student" || user?.role === "admin" || user?.role === "developer") && (
+            <button
+              onClick={() => { navigate("/play"); onNavigate?.(); }}
+              className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
+                location.pathname.startsWith("/play")
+                  ? "bg-sidebar-primary text-white font-semibold shadow-sm"
+                  : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              <Target className={`h-[15px] w-[15px] shrink-0 ${location.pathname.startsWith("/play") ? "text-white" : "text-sidebar-muted"}`} strokeWidth={location.pathname.startsWith("/play") ? 2 : 1.5} />
+              <span>אזור תרגול</span>
+            </button>
+          )}
 
           {/* Messages — coming soon, shown as clearly disabled until backend is live */}
           {labels.visibility?.nav?.messages !== false && (
