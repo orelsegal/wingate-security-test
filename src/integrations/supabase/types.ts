@@ -195,6 +195,47 @@ export type Database = {
           },
         ]
       }
+      pending_invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string
+          expires_at: string
+          full_name: string | null
+          linked_sport: string | null
+          linked_student_id: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          email: string
+          expires_at?: string
+          full_name?: string | null
+          linked_sport?: string | null
+          linked_student_id?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string
+          expires_at?: string
+          full_name?: string | null
+          linked_sport?: string | null
+          linked_student_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_invites_linked_student_id_fkey"
+            columns: ["linked_student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -571,6 +612,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_pending_invite: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
