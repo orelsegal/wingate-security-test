@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,17 +29,27 @@ const OnboardingPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
+  // One-shot guard: the auth listener fires multiple events during magic-link
+  // processing (SIGNED_IN / INITIAL_SESSION / TOKEN_REFRESHED); handle only the
+  // first one that carries a session, ignore the rest.
+  const handledRef = useRef(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Wait for an active session (either SIGNED_IN or INITIAL_SESSION with a user)
       if (!session?.user) return;
+      if (handledRef.current) return;
+      handledRef.current = true;
 
       setStatus("setting-up");
 
       const userId = session.user.id;
       const email = (session.user.email ?? "").toLowerCase().trim();
 
+      // Defer all Supabase calls out of the auth callback — supabase-js holds an
+      // internal auth lock while onAuthStateChange callbacks run, and awaiting
+      // client calls inside it can deadlock (same workaround as AuthContext).
+      setTimeout(async () => {
       // אם למשתמש כבר יש role — לא צריך onboarding, פשוט תעביר
       const { data: existingRolesCheck } = await supabase
         .from("user_roles")
@@ -92,6 +102,7 @@ const OnboardingPage = () => {
         setErrorMsg(msg);
         setStatus("error");
       }
+      }, 0);
     });
 
     return () => subscription.unsubscribe();
