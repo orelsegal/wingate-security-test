@@ -23,6 +23,11 @@ interface UserRow {
   created_at: string;
 }
 
+/** Roles that may be provisioned via invite. admin/developer creation stays a
+ *  separate manual admin process (also enforced server-side by pending_invites
+ *  CHECK + claim_pending_invite guard). */
+const INVITABLE_ROLES: AppRole[] = ["teacher", "coach", "parent", "student"];
+
 const ROLE_LABELS: Record<AppRole, string> = {
   developer: "מפתח",
   admin: "מנהל",
@@ -177,17 +182,24 @@ const UserManagementPage = () => {
     setInviteError(null);
     setInviteLoading(true);
 
-    // שמור pending invite
-    const pendingInvites = JSON.parse(localStorage.getItem("pending_invites") || "{}");
-    pendingInvites[inviteEmail.trim().toLowerCase()] = {
+    // שמור pending invite — server-side (admin-only table). Onboarding claims it
+    // securely via claim_pending_invite(); the invited client never picks a role.
+    const inviteEmailNorm = inviteEmail.trim().toLowerCase();
+    const { error: inviteErr } = await supabase.from("pending_invites").upsert({
+      email: inviteEmailNorm,
       full_name: inviteName.trim(),
       role: inviteRole,
-      linked_sport: inviteSport.trim() || null,
-    };
-    localStorage.setItem("pending_invites", JSON.stringify(pendingInvites));
+      linked_sport: inviteRole === "coach" ? (inviteSport.trim() || null) : null,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // refresh on re-invite
+    }, { onConflict: "email" });
+    if (inviteErr) {
+      setInviteError("שגיאה בשמירת ההזמנה: " + inviteErr.message);
+      setInviteLoading(false);
+      return; // do not send the OTP if the invite row failed
+    }
 
     const { error } = await supabase.auth.signInWithOtp({
-      email: inviteEmail.trim(),
+      email: inviteEmailNorm,
       options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/onboarding` },
     });
 
@@ -223,24 +235,31 @@ const UserManagementPage = () => {
   const handleImportAll = async () => {
     setImportLoading(true);
     setImportDone(0);
+    let failed = 0;
     for (const row of importRows) {
-      const pendingInvites = JSON.parse(localStorage.getItem("pending_invites") || "{}");
-      pendingInvites[row.email.toLowerCase()] = {
+      // Only invitable roles may be provisioned through invites
+      if (!INVITABLE_ROLES.includes(row.role)) { failed++; continue; }
+      const emailNorm = row.email.trim().toLowerCase();
+      const { error: invErr } = await supabase.from("pending_invites").upsert({
+        email: emailNorm,
         full_name: row.name,
         role: row.role,
-        linked_sport: row.sport || null,
-      };
-      localStorage.setItem("pending_invites", JSON.stringify(pendingInvites));
+        linked_sport: row.role === "coach" ? (row.sport || null) : null,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      }, { onConflict: "email" });
+      if (invErr) { failed++; continue; }
 
       await supabase.auth.signInWithOtp({
-        email: row.email.trim(),
+        email: emailNorm,
         options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/onboarding` },
       });
       setImportDone(d => d + 1);
       await new Promise(r => setTimeout(r, 300)); // throttle
     }
     setImportLoading(false);
-    toast({ title: `✅ נשלחו ${importRows.length} הזמנות בהצלחה` });
+    toast(failed > 0
+      ? { title: `נשלחו ${importRows.length - failed} הזמנות · ${failed} נכשלו/נדחו`, variant: "destructive" as const }
+      : { title: `✅ נשלחו ${importRows.length} הזמנות בהצלחה` });
     setImportRows([]);
     loadUsers();
   };
@@ -454,11 +473,9 @@ const UserManagementPage = () => {
                 onChange={e => setInviteRole(e.target.value as AppRole)}
                 className="w-full h-10 px-3 rounded-lg border border-input bg-background text-[13px] outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="student">ספורטאי</option>
-                <option value="teacher">מורה</option>
-                <option value="coach">מאמן</option>
-                <option value="parent">הורה</option>
-                <option value="admin">מנהל</option>
+                {INVITABLE_ROLES.map(r => (
+                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-1.5">

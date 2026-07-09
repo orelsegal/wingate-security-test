@@ -52,72 +52,43 @@ const OnboardingPage = () => {
         return;
       }
 
-      // Read pending invite data stored by the admin at invite time
-      let inviteData: { full_name?: string; role?: AppRole; linked_sport?: string | null } | null = null;
       try {
-        const stored = JSON.parse(localStorage.getItem("pending_invites") || "{}");
-        inviteData = stored[email] ?? null;
-      } catch { /* ignore parse errors */ }
+        // Claim the admin-created invite server-side (SECURITY DEFINER function).
+        // Role + links come ONLY from the admin-only pending_invites row matched
+        // to this user's verified email — the client cannot influence the role.
+        const { data: claimData, error: claimErr } = await (supabase.rpc as any)("claim_pending_invite");
+        if (claimErr) throw claimErr;
 
-      const fullName = inviteData?.full_name || session.user.user_metadata?.full_name || email;
-      const role: AppRole = inviteData?.role ?? "teacher";
-      const linkedSport = inviteData?.linked_sport ?? null;
+        const claim = claimData as { status: string; role?: AppRole; full_name?: string | null };
 
-      setUserName(fullName);
-
-      try {
-        // 1. Upsert profile row (may already exist from trigger, or need creation)
-        const { error: profileErr } = await supabase.from("profiles").upsert(
-          {
-            id: userId,
-            email,
-            full_name: fullName,
-            linked_sport: linkedSport,
-          },
-          { onConflict: "id" }
-        );
-        if (profileErr) throw profileErr;
-
-        // 2. Insert role (only if not already set)
-        const { data: existingRoles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId);
-
-        if (!existingRoles || existingRoles.length === 0) {
-          const { error: roleErr } = await supabase
-            .from("user_roles")
-            .insert({ user_id: userId, role });
-          if (roleErr) throw roleErr;
+        if (claim?.status === "no_invite" || claim?.status === "invite_expired") {
+          // No silent fallback role — an honest message instead
+          setErrorMsg(claim.status === "invite_expired"
+            ? "ההזמנה שקיבלת פגה תוקף. בקש/י מהמנהל לשלוח הזמנה חדשה."
+            : "לא נמצאה הזמנה עבור המייל הזה. פנה/י למנהל המערכת.");
+          setStatus("no-invite");
+          return;
         }
 
-        // 3. אם תלמיד — קשר אוטומטית לפרופיל ספורטאי לפי מייל
-        if (role === "student") {
-          const { data: studentRow } = await supabase
-            .from("students")
-            .select("id")
-            .eq("email", email)
-            .maybeSingle();
-
-          if (studentRow?.id) {
-            await supabase
-              .from("profiles")
-              .update({ linked_student_id: studentRow.id })
-              .eq("id", userId);
-          }
+        if (claim?.status === "already_has_role") {
+          const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+          const existingRole = roles?.[0]?.role as AppRole | undefined;
+          navigate(existingRole ? (ROLE_REDIRECT[existingRole] ?? "/") : "/login");
+          return;
         }
 
-        // 4. Clean up localStorage entry
-        try {
-          const stored = JSON.parse(localStorage.getItem("pending_invites") || "{}");
-          delete stored[email];
-          localStorage.setItem("pending_invites", JSON.stringify(stored));
-        } catch { /* ignore */ }
+        if (claim?.status !== "claimed" || !claim.role) {
+          throw new Error("תשובה לא צפויה מהשרת");
+        }
 
-        setRoleRedirect(ROLE_REDIRECT[role]);
+        setUserName(claim.full_name || session.user.user_metadata?.full_name || email);
+        setRoleRedirect(ROLE_REDIRECT[claim.role] ?? "/");
         setStatus("set-password");
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "שגיאה לא ידועה";
+        const msg =
+          err instanceof Error ? err.message
+          : (typeof err === "object" && err !== null && "message" in err) ? String((err as { message: unknown }).message)
+          : "שגיאה לא ידועה";
         setErrorMsg(msg);
         setStatus("error");
       }
@@ -218,7 +189,7 @@ const OnboardingPage = () => {
               <p className="text-[28px]">🤔</p>
               <p className="text-[15px] font-semibold text-foreground">לא נמצאו פרטי הזמנה</p>
               <p className="text-[12px] text-muted-foreground">
-                נראה שאתה כבר רשום/ה, או שפרטי ההזמנה לא נמצאו. פנה/י למנהל המערכת.
+                {errorMsg || "נראה שאתה כבר רשום/ה, או שפרטי ההזמנה לא נמצאו. פנה/י למנהל המערכת."}
               </p>
               <button onClick={() => navigate("/login")} className="text-[13px] text-primary hover:underline">
                 חזרה לדף ההתחברות
