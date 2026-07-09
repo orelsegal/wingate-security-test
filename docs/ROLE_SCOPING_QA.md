@@ -152,11 +152,14 @@ Prefer mutating a `@test.com` account (clearly a test identity) over a `@wingate
 | 2026-07-09 | Teacher — full invite flow + dashboard | orelman+qa-teacher@gmail.com | **PASS** | Invited via patched UI (local), claim → role=teacher, set-password, teacher dashboard renders |
 | 2026-07-09 | Coach — production invite + scoped home | orelman+qa-coach@gmail.com → טניס שולחן | **PASS** | claim → role=coach + linked_sport applied from invite; coach dashboard shows own sport; onboarding hang fixed (fa0bb6e) and re-entry to /onboarding verified in production |
 | 2026-07-09 | Parent — full production flow E2E | orelman+qa-parent@gmail.com → נעם בדיקה | **PASS** | invite → magic link (incognito) → claim → role=parent → set-password screen → unlinked ParentHome → admin link via /admin/users → ParentHome shows only נעם בדיקה |
+| 2026-07-09 | Teacher — blocked from admin tools (negative) | orelman+qa-teacher@gmail.com | **PASS** | Manual navigation to /admin/users → immediate redirect to teacher dashboard; user list / link panel never rendered (production) |
+| 2026-07-09 | Coach — out-of-sport probe blocked (negative) | orelman+qa-coach@gmail.com (טניס שולחן) | **PASS** | /students/fce9c690-83c3-465f-a0b2-caefb7f6eb00 (other-sport athlete) → "הספורטאי לא נמצא"; no name/grades/status of foreign athlete rendered (production) |
+| 2026-07-09 | Parent — other-child probe blocked (negative) | orelman+qa-parent@gmail.com (→ נעם בדיקה) | **PASS** | /students/3ba28403-3fdd-4933-8608-d2cfe752ffc9 (other child) → "הספורטאי לא נמצא"; no foreign child data rendered (production) |
 
 ## Final matrix status (2026-07-09)
 
-**student ✅ · teacher ✅ · coach ✅ · parent ✅ — all verified with real logins (no DevRoleSwitcher).**
+**student ✅ · teacher ✅ · coach ✅ · parent ✅ — all verified with real logins (no DevRoleSwitcher), positive AND negative.**
 
-Remaining optional negatives (low risk — same RLS mechanism already proven for student): teacher blocked from `/admin/*`, coach out-of-sport probe, parent out-of-scope probe.
+Negative layer complete (2026-07-09): every scoped role was probed outside its scope with direct URLs in production — teacher blocked from `/admin/*`, coach blocked from other-sport athletes, parent blocked from other children, student blocked from other students. All denials are server-side (RLS), not hidden navigation. **QA matrix fully closed.**
 
 Blockers from §9 — resolution: #1 (login credentials) resolved via Gmail-alias QA accounts (`orelman+qa-<role>@gmail.com`) created through the fixed invite flow; #4 (localStorage invite caveat) resolved end-to-end — migration `20260708134301` (`pending_invites` + `claim_pending_invite`) plus frontend commits `9b30b55` and `fa0bb6e` (onboarding hang fix). Invites now work cross-device.
