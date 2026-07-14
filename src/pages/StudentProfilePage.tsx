@@ -271,8 +271,8 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* בגרות — מפת הדרך (read-only, admin/teacher only; data from DB) */}
-      {(user?.role === "developer" || user?.role === "admin" || user?.role === "teacher") && (() => {
+      {/* בגרות — מפת הדרך (read-only, admin/developer only; data from DB) */}
+      {(user?.role === "developer" || user?.role === "admin") && (() => {
         const bd = (student as any).bagrut_data as { section?: string; values?: (string | null)[] } | null;
         if (!bd || !Array.isArray(bd.values)) return null;
         const cols = (bd.section && bagrutColumns[bd.section]) || [];
