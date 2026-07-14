@@ -6,7 +6,7 @@ import { useStudent, useStudentProgress, useStudentRoadmap, useUpdateStudent, us
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { InlineEdit, InlineSelect, ChipEditor } from "@/components/InlineEdit";
 import { EditModeToggle } from "@/components/EditModeToggle";
@@ -80,6 +80,21 @@ const StudentProfilePage = () => {
   const queryClient = useQueryClient();
   const updateStudent = useUpdateStudent();
   const { data: student, isLoading: studentLoading } = useStudent(id || "");
+
+  // Bagrut data — separate RLS-secured table, admin-only. Non-admins get 0 rows.
+  const isBagrutViewer = user?.role === "admin" || user?.role === "developer";
+  const { data: bagrutData } = useQuery({
+    queryKey: ["student_bagrut_data", id],
+    enabled: !!id && isBagrutViewer,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("student_bagrut_data" as any)
+        .select("bagrut_data")
+        .eq("student_id", id)
+        .maybeSingle();
+      return ((data as any)?.bagrut_data ?? null) as { section?: string; values?: (string | null)[] } | null;
+    },
+  });
   const { data: subjectProgress = [], isLoading: progressLoading } = useStudentProgress(id || "");
   const { data: allSubjects = [] } = useSubjects();
 
@@ -271,9 +286,9 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* בגרות — מפת הדרך (read-only, admin/developer only; data from DB) */}
-      {(user?.role === "developer" || user?.role === "admin") && (() => {
-        const bd = (student as any).bagrut_data as { section?: string; values?: (string | null)[] } | null;
+      {/* בגרות — מפת הדרך (read-only; secured table, admin-only via RLS) */}
+      {isBagrutViewer && (() => {
+        const bd = bagrutData;
         if (!bd || !Array.isArray(bd.values)) return null;
         const cols = (bd.section && bagrutColumns[bd.section]) || [];
         return (
