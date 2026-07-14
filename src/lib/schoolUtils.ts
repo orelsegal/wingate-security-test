@@ -19,6 +19,8 @@ export const classToGrade = (className: string): string => {
   )
     return "י׳";
   if (className.startsWith("ט")) return "ט׳";
+  if (className.startsWith("ח")) return "ח׳";
+  if (className.startsWith("ז")) return "ז׳";
   return className;
 };
 

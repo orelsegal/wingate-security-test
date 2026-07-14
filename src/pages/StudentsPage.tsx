@@ -25,7 +25,7 @@ import { classToGrade } from "@/lib/schoolUtils";
 import { StudentsPageSkeleton } from "@/components/PageSkeleton";
 import EmptyState from "@/components/EmptyState";
 
-const grades = ["ט׳", "י׳", "י״א", "י״ב"];
+const grades = ["ז׳", "ח׳", "ט׳", "י׳", "י״א", "י״ב"];
 
 type ViewMode = "cards" | "table" | "summary";
 type SubjectRow = { subjectName: string; grade: number | null; bagrutPercent: number | null; status: StatusType; gradeLabel?: string | null };
@@ -98,6 +98,37 @@ const StudentsPage = () => {
     (allProgress as any[]).forEach(p => { if (p.subjects?.subject_name === "אזרחות" && p.details) m.set(p.student_id, p.details); });
     return m;
   }, [allProgress]);
+
+  // ── Admin breakdowns: factual counts only (no grades/averages/statuses) ──
+  const breakdowns = useMemo(() => {
+    type Row = { total: number; bagrut: number; civics: number };
+    const bySport = new Map<string, Row>();
+    const byClass = new Map<string, Row>();
+    const byGrade = new Map<string, Row>();
+    const bump = (m: Map<string, Row>, key: string, hasB: boolean, hasC: boolean) => {
+      const r = m.get(key) || { total: 0, bagrut: 0, civics: 0 };
+      r.total++; if (hasB) r.bagrut++; if (hasC) r.civics++;
+      m.set(key, r);
+    };
+    students.filter(s => !(s as any).archived).forEach(s => {
+      const hasB = !!bagrutMap?.has(s.id);
+      const hasC = civicsMap.has(s.id);
+      bump(bySport, s.sport || "לא צוין", hasB, hasC);
+      bump(byClass, s.class_name || "—", hasB, hasC);
+      const g = classToGrade(s.class_name || "");
+      bump(byGrade, grades.includes(g) ? g : "אחר", hasB, hasC);
+    });
+    const sorted = (m: Map<string, Row>, order?: string[]) =>
+      Array.from(m.entries()).sort((a, b) =>
+        order
+          ? (order.indexOf(a[0]) === -1 ? 99 : order.indexOf(a[0])) - (order.indexOf(b[0]) === -1 ? 99 : order.indexOf(b[0]))
+          : b[1].total - a[1].total || a[0].localeCompare(b[0], "he"));
+    return {
+      sports: sorted(bySport),
+      classes: Array.from(byClass.entries()).sort((a, b) => a[0].localeCompare(b[0], "he")),
+      gradesRows: sorted(byGrade, [...grades, "אחר"]),
+    };
+  }, [students, bagrutMap, civicsMap]);
   const { data: subjectsList = [] } = useSubjects();
   const deleteStudent = useDeleteStudent();
   const updateStudent = useUpdateStudent();
@@ -377,6 +408,83 @@ const StudentsPage = () => {
           <KpiCard label="רשומות לימודיות" value={allProgress.length} icon={Rows3} accent="neutral" />
         </div>
       </section>
+
+      {/* ── Admin breakdowns: factual counts, click to filter the list ── */}
+      {isBagrutViewer && (() => {
+        const numCell = "w-12 sm:w-16 text-center tabular-nums text-[12px] shrink-0";
+        const headCell = "w-12 sm:w-16 text-center text-[10px] text-muted-foreground shrink-0 leading-tight";
+        const BreakdownCard = ({ title, cols, rows, isActive, onPick }: {
+          title: string;
+          cols: [string, string, string];
+          rows: { name: string; a: number; b: number; c: number; clickable?: boolean }[];
+          isActive: (name: string) => boolean;
+          onPick: (name: string) => void;
+        }) => (
+          <div className="card-premium overflow-hidden">
+            <div className="px-3 py-2 bg-muted/30 border-b border-border/60 flex items-center justify-between gap-2">
+              <p className="text-[12px] font-semibold text-foreground">{title}</p>
+            </div>
+            <div className="px-3 pt-1.5 flex items-center gap-2" dir="rtl">
+              <span className="flex-1 min-w-0" />
+              {cols.map((c) => <span key={c} className={headCell}>{c}</span>)}
+            </div>
+            <div className="p-1.5 space-y-0.5">
+              {rows.map((r) => {
+                const active = isActive(r.name);
+                const clickable = r.clickable !== false;
+                return (
+                  <button
+                    key={r.name}
+                    onClick={clickable ? () => onPick(r.name) : undefined}
+                    className={`w-full flex items-center gap-2 px-1.5 py-1.5 rounded-lg text-start transition-colors border ${
+                      active ? "bg-primary/10 border-primary/30" : "border-transparent"
+                    } ${clickable ? "hover:bg-accent/40 cursor-pointer" : "cursor-default"}`}
+                    dir="rtl"
+                  >
+                    <span className={`flex-1 min-w-0 break-words text-[12px] leading-snug ${active ? "text-primary font-semibold" : "text-foreground"}`}>{r.name}</span>
+                    <span className={`${numCell} font-semibold text-foreground`}>{r.a}</span>
+                    <span className={`${numCell} text-muted-foreground`}>{r.b}</span>
+                    <span className={`${numCell} text-muted-foreground`}>{r.c}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+        return (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[12px] font-semibold text-foreground">פילוח נתונים · לחיצה על שורה מסננת את הרשימה</p>
+              {hasFilters && (
+                <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors px-2">ניקוי פילטרים</button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <BreakdownCard
+                title="לפי ענף ספורט"
+                cols={["תלמידים", "מפת בגרות", "אזרחות"]}
+                rows={breakdowns.sports.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.civics }))}
+                isActive={(n) => branchFilters.length === 1 && branchFilters[0] === n}
+                onPick={(n) => setBranchFilters(branchFilters.length === 1 && branchFilters[0] === n ? [] : [n])}
+              />
+              <BreakdownCard
+                title="לפי כיתה"
+                cols={["תלמידים", "עם מפה", "ללא מפה"]}
+                rows={breakdowns.classes.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.total - r.bagrut }))}
+                isActive={(n) => classFilter === n}
+                onPick={(n) => setClassFilter(classFilter === n ? null : n)}
+              />
+              <BreakdownCard
+                title="לפי שכבה"
+                cols={["תלמידים", "עם מפה", "ללא מפה"]}
+                rows={breakdowns.gradesRows.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.total - r.bagrut, clickable: name !== "אחר" }))}
+                isActive={(n) => gradeFilter === n}
+                onPick={(n) => setGradeFilter(gradeFilter === n ? null : n)}
+              />
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ── Filters row (always visible, dropdown style) ── */}
       <section className="mb-5">
