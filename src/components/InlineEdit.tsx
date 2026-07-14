@@ -14,9 +14,11 @@ interface InlineEditProps {
   editable?: boolean;
   label?: string;
   suffix?: string;
+  /** Wrap long values across lines instead of truncating (e.g. full names on mobile). */
+  wrap?: boolean;
 }
 
-export function InlineEdit({ value, onSave, type = "text", placeholder = "—", className, displayClassName, min, max, editable = true, label, suffix }: InlineEditProps) {
+export function InlineEdit({ value, onSave, type = "text", placeholder = "—", className, displayClassName, min, max, editable = true, label, suffix, wrap }: InlineEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
@@ -42,7 +44,7 @@ export function InlineEdit({ value, onSave, type = "text", placeholder = "—", 
 
   if (!editable) {
     return (
-      <div className={cn("text-[13px] text-foreground", displayClassName)}>
+      <div className={cn("text-[13px] text-foreground", wrap && "whitespace-normal break-words min-w-0", displayClassName)}>
         {value || <span className="text-muted-foreground/50">{placeholder}</span>}
         {suffix && value && <span className="text-muted-foreground/60 mr-1">{suffix}</span>}
       </div>
@@ -89,10 +91,11 @@ export function InlineEdit({ value, onSave, type = "text", placeholder = "—", 
         "hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-150 cursor-text",
         "flex items-center justify-between gap-2",
         type === "textarea" && "h-auto min-h-[72px] py-2 items-start",
+        wrap && "h-auto min-h-9 py-1.5 items-start",
         displayClassName
       )}
     >
-      <span className={cn("truncate", !value && "text-muted-foreground/50")}>
+      <span className={cn(wrap ? "whitespace-normal break-words min-w-0" : "truncate", !value && "text-muted-foreground/50")}>
         {value || placeholder}
         {suffix && value && <span className="text-muted-foreground/60 mr-1">{suffix}</span>}
       </span>

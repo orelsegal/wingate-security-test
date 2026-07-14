@@ -22,12 +22,17 @@ import {
 import { ProfileSkeleton } from "@/components/PageSkeleton";
 import { groupBagrut, sectionForClass, BagrutGroupsView } from "@/lib/bagrutView";
 
-const ProgressRing = ({ value }: { value: number }) => {
+/** Neutral score ring: the number is a factual average, not a judgment,
+ *  so no red/green threshold colors. Gray = no data. */
+const ProgressRing = ({ value }: { value: number | null }) => {
   const radius = 40;
   const stroke = 6;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-  const color = value >= 80 ? "hsl(var(--success))" : value >= 65 ? "hsl(var(--warning))" : "hsl(var(--destructive))";
+  const pct = value == null ? 0 : Math.max(0, Math.min(100, value));
+  const offset = circumference - (pct / 100) * circumference;
+  // Theme primary is green; green means "completed" in the traffic-light
+  // legend, so the factual ring uses a neutral dark gray instead.
+  const color = value == null ? "hsl(var(--muted-foreground) / 0.35)" : "hsl(var(--foreground) / 0.55)";
 
   return (
     <div className="relative w-24 h-24 flex items-center justify-center">
@@ -35,7 +40,7 @@ const ProgressRing = ({ value }: { value: number }) => {
         <circle cx="48" cy="48" r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={stroke} />
         <circle cx="48" cy="48" r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="transition-all duration-700 ease-out" />
       </svg>
-      <span className="absolute text-[22px] font-semibold text-foreground">{value}</span>
+      <span className={`absolute text-[22px] font-semibold ${value == null ? "text-muted-foreground/60" : "text-foreground"}`}>{value == null ? "—" : value}</span>
     </div>
   );
 };
@@ -204,12 +209,18 @@ const StudentProfilePage = () => {
     return map;
   }, [roadmapItems]);
 
-  const overallProgress = useMemo(() => {
-    if (subjectProgress.length > 0) {
-      return Math.round(subjectProgress.reduce((sum, sp) => sum + (sp.grade || 0), 0) / subjectProgress.length);
-    }
-    return student?.completion_percent ?? 0;
-  }, [subjectProgress, student]);
+  // Average over subjects that actually have a grade — subjects without a
+  // grade are NOT counted as 0. null = no grades at all (shown as gray "—").
+  const gradedRows = useMemo(
+    () => (subjectProgress as any[]).filter((sp) => (sp.grade ?? 0) > 0),
+    [subjectProgress],
+  );
+  const avgExistingGrades = useMemo(
+    () => gradedRows.length
+      ? Math.round(gradedRows.reduce((sum, sp) => sum + Number(sp.grade), 0) / gradedRows.length)
+      : null,
+    [gradedRows],
+  );
 
   if (studentLoading || progressLoading) {
     return <ProfileSkeleton />;
@@ -335,47 +346,47 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* ═══ HERO CARD ═══ */}
+      {/* ═══ HERO CARD ═══
+          Mobile: vertical — avatar+name / sport+class / status / score / actions.
+          Desktop (md+): identity right, score column left. */}
       {isSectionVisible("sys-hero") && (
-      <div className="card-premium p-5 md:p-7">
-        <div className="flex flex-col sm:flex-row items-start gap-5">
-          <InitialsAvatar name={student.full_name} size="lg" />
+      <div className="card-premium p-4 sm:p-5 md:p-7">
+        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+
+          {/* Identity + fields */}
           <div className="flex-1 min-w-0 space-y-4">
-            {/* Name & Status */}
-            <div className="flex flex-wrap items-center gap-3">
-              <InlineEdit
-                value={student.full_name}
-                onSave={(v) => {
-                  const parts = v.trim().split(" ");
-                  saveField("full_name", v.trim());
-                  saveField("first_name", parts[0] || "");
-                  saveField("last_name", parts.slice(1).join(" ") || "");
-                }}
-                editable={isEditable}
-                displayClassName="text-xl md:text-2xl font-semibold text-foreground tracking-tight !h-auto !border-0 !bg-transparent !px-0 hover:!bg-primary/[0.03]"
-              />
-            </div>
-            {/* Core fields in grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="space-y-1">
-                <p className="text-[11px] text-muted-foreground font-medium">סטטוס</p>
-                <InlineSelect
-                  value={student.overall_status}
-                  options={STATUS_OPTIONS}
-                  onSave={(v) => saveField("overall_status", v)}
+            {/* Row 1: avatar + full name (wraps naturally, never clipped) */}
+            <div className="flex items-center gap-3">
+              <div className="shrink-0"><InitialsAvatar name={student.full_name} size="lg" /></div>
+              <div className="flex-1 min-w-0">
+                <InlineEdit
+                  value={student.full_name}
+                  onSave={(v) => {
+                    const parts = v.trim().split(" ");
+                    saveField("full_name", v.trim());
+                    saveField("first_name", parts[0] || "");
+                    saveField("last_name", parts.slice(1).join(" ") || "");
+                  }}
                   editable={isEditable}
+                  wrap
+                  displayClassName="text-lg sm:text-2xl font-semibold text-foreground tracking-tight leading-snug !h-auto !min-h-0 !border-0 !bg-transparent !px-0 !py-0 hover:!bg-primary/[0.03]"
                 />
               </div>
-              <div className="space-y-1">
+            </div>
+
+            {/* Row 2: sport + class */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1 min-w-0">
                 <p className="text-[11px] text-muted-foreground font-medium">ענף ספורט</p>
                 <InlineEdit
                   value={student.sport}
                   onSave={(v) => saveField("sport", v)}
                   editable={isEditable}
+                  wrap
                   placeholder="ענף ספורט"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <p className="text-[11px] text-muted-foreground font-medium">כיתה</p>
                 <InlineSelect
                   value={student.class_name}
@@ -384,38 +395,54 @@ const StudentProfilePage = () => {
                   editable={isEditable}
                 />
               </div>
-              <div className="space-y-1">
-                <p className="text-[11px] text-muted-foreground font-medium">מתמטיקה</p>
-                <InlineSelect
-                  value={String(effectiveMathLevel)}
-                  options={MATH_LEVEL_OPTIONS}
-                  onSave={(v) => handleMathLevelChange(parseInt(v))}
-                  editable={isEditable}
-                />
-              </div>
+            </div>
+
+            {/* Row 3: student status */}
+            <div className="space-y-1">
+              <p className="text-[11px] text-muted-foreground font-medium">סטטוס תלמיד</p>
+              <InlineSelect
+                value={student.overall_status}
+                options={STATUS_OPTIONS}
+                onSave={(v) => saveField("overall_status", v)}
+                editable={isEditable}
+              />
             </div>
           </div>
-          {/* Score Ring + Export */}
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <ProgressRing value={overallProgress} />
-            <span className="text-[11px] text-muted-foreground">ציון משוקלל</span>
+
+          {/* Score + actions */}
+          <div className="md:w-60 shrink-0 min-w-0 border-t md:border-t-0 md:border-s border-border/60 pt-4 md:pt-0 md:ps-6 flex flex-col items-center gap-2">
+            <p className="text-[12px] font-semibold text-foreground text-center">ממוצע ציונים קיימים</p>
+            <ProgressRing value={avgExistingGrades} />
+            {avgExistingGrades != null ? (
+              <p className="text-[11px] text-muted-foreground text-center leading-snug">
+                ממוצע ציונים קיימים: {avgExistingGrades} · לפי {gradedRows.length} מקצועות עם ציון.
+                מקצועות ללא ציון אינם נספרים.
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground text-center leading-snug inline-flex items-center justify-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 shrink-0" />
+                אפור = אין מידע (אין עדיין ציונים)
+              </p>
+            )}
             {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
-              <DataExportTools
-                student={student}
-                subjectProgress={subjectProgress.map(sp => ({
-                  subjectName: (sp as any).subjects?.subject_name || "",
-                  grade: sp.grade,
-                  status: sp.status,
-                  completionPercent: sp.completion_percent,
-                  absences: sp.absences,
-                  notes: sp.notes,
-                  missingItems: sp.missing_items || [],
-                  coveredTopics: sp.covered_topics || [],
-                }))}
-                label={student.full_name}
-                contextLabel={student.full_name}
-                compact
-              />
+              <div className="pt-1">
+                <DataExportTools
+                  student={student}
+                  subjectProgress={subjectProgress.map(sp => ({
+                    subjectName: (sp as any).subjects?.subject_name || "",
+                    grade: sp.grade,
+                    status: sp.status,
+                    completionPercent: sp.completion_percent,
+                    absences: sp.absences,
+                    notes: sp.notes,
+                    missingItems: sp.missing_items || [],
+                    coveredTopics: sp.covered_topics || [],
+                  }))}
+                  label={student.full_name}
+                  contextLabel={student.full_name}
+                  compact
+                />
+              </div>
             )}
           </div>
         </div>
