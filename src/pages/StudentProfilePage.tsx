@@ -286,37 +286,68 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* בגרות — מפת הדרך (read-only; secured table, admin-only via RLS) */}
+      {/* בגרות — מפת הדרך: every sheet column as its own row, grouped by subject.
+          Verbatim, empty = —, no invented status. Admin/developer only. */}
       {isBagrutViewer && (() => {
         const bd = bagrutData;
         if (!bd || !Array.isArray(bd.values)) return null;
         const cols = (bd.section && bagrutColumns[bd.section]) || [];
+
+        const KW: { name: string; kw: string[] }[] = [
+          { name: "תנ״ך", kw: ["תנך", 'תנ"ך', "תנ״ך"] },
+          { name: "ספרות", kw: ["ספרות"] },
+          { name: "לשון", kw: ["לשון"] },
+          { name: "היסטוריה", kw: ["היסטוריה"] },
+          { name: "אזרחות", kw: ["אזרחות"] },
+          { name: "אנגלית", kw: ["אנגלית", "E ", "שאלון G", "COBE", "שאלון F"] },
+          { name: "מתמטיקה", kw: ["מתמטיקה"] },
+          { name: "חינוך גופני", kw: ["חינוך גופני"] },
+        ];
+        const ORDER = [...KW.map(k => k.name), "אחר"];
+        const ID_COLS = ["#", "שם משפחה", "שם פרטי", "שם", 'ת"ז', "תעודת זהות", "ענף", "כיתה", "‏"];
+        const subjOf = (h: string) => { for (const s of KW) if (s.kw.some(k => h.includes(k))) return s.name; return "אחר"; };
+
+        const groups: Record<string, { label: string; value: string }[]> = {};
+        cols.forEach((h, i) => {
+          if (ID_COLS.includes(h)) return;
+          const g = subjOf(h);
+          (groups[g] = groups[g] || []).push({ label: h, value: (bd.values![i] ?? "").toString() });
+        });
+
+        // Civics file fields -> appended under אזרחות
+        const civ: any = subjectProgress.find((sp: any) => sp.subjects?.subject_name === "אזרחות");
+        const civDetails = (civ?.details || null) as Record<string, string | null> | null;
+        if (civDetails) {
+          groups["אזרחות"] = groups["אזרחות"] || [];
+          ["סמל שאלון", "שאלון", "מועד", "ציון הגשה", "אופן היבחנות", "ייגש לבחינה"].forEach(k => {
+            if (k in civDetails) groups["אזרחות"].push({ label: `${k} (קובץ אזרחות)`, value: (civDetails[k] ?? "").toString() });
+          });
+        }
+
+        const shown = ORDER.filter(g => groups[g]?.length);
         return (
-          <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] overflow-hidden">
-            <div className="px-5 py-3 border-b border-border flex items-center gap-2">
+          <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] overflow-hidden" dir="rtl">
+            <div className="px-5 py-3 border-b border-border flex items-center gap-2 flex-wrap">
               <GraduationCap className="h-4 w-4 text-primary" strokeWidth={1.6} />
               <h2 className="text-[14px] font-semibold text-foreground">בגרות — מפת הדרך</h2>
               {bd.section && <span className="text-[11px] text-muted-foreground">· {bd.section}</span>}
             </div>
-            <div className="overflow-x-auto" dir="rtl">
-              <table className="border-collapse text-[12px] min-w-max">
-                <thead>
-                  <tr>
-                    {cols.map((c, i) => (
-                      <th key={i} className="bg-muted text-start font-semibold text-foreground px-3 py-2 border-b border-l border-border whitespace-nowrap" title={c}>{c}</th>
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {shown.map(g => (
+                <div key={g} className="rounded-xl border border-border/70 bg-muted/10 overflow-hidden">
+                  <div className="px-3 py-2 bg-muted/40 text-[12.5px] font-semibold text-foreground border-b border-border/60">{g}</div>
+                  <div className="divide-y divide-border/40">
+                    {groups[g].map((row, i) => (
+                      <div key={i} className="flex items-start justify-between gap-3 px-3 py-1.5">
+                        <span className="text-[11.5px] text-muted-foreground leading-snug">{row.label}</span>
+                        <span className={`text-[12px] shrink-0 text-start ${row.value.trim() === "" ? "text-muted-foreground/40" : "text-foreground font-medium"}`}>
+                          {row.value.trim() === "" ? "—" : row.value}
+                        </span>
+                      </div>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {cols.map((_, i) => (
-                      <td key={i} className="px-3 py-1.5 border-l border-border/60 text-foreground/90 whitespace-nowrap">
-                        {bd.values![i] ?? ""}
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
