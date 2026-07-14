@@ -22,29 +22,6 @@ import {
 import { ProfileSkeleton } from "@/components/PageSkeleton";
 import { groupBagrut, sectionForClass, BagrutGroupsView } from "@/lib/bagrutView";
 
-/** Neutral score ring: the number is a factual average, not a judgment,
- *  so no red/green threshold colors. Gray = no data. */
-const ProgressRing = ({ value }: { value: number | null }) => {
-  const radius = 40;
-  const stroke = 6;
-  const circumference = 2 * Math.PI * radius;
-  const pct = value == null ? 0 : Math.max(0, Math.min(100, value));
-  const offset = circumference - (pct / 100) * circumference;
-  // Theme primary is green; green means "completed" in the traffic-light
-  // legend, so the factual ring uses a neutral dark gray instead.
-  const color = value == null ? "hsl(var(--muted-foreground) / 0.35)" : "hsl(var(--foreground) / 0.55)";
-
-  return (
-    <div className="relative w-24 h-24 flex items-center justify-center">
-      <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
-        <circle cx="48" cy="48" r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth={stroke} />
-        <circle cx="48" cy="48" r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="transition-all duration-700 ease-out" />
-      </svg>
-      <span className={`absolute text-[22px] font-semibold ${value == null ? "text-muted-foreground/60" : "text-foreground"}`}>{value == null ? "—" : value}</span>
-    </div>
-  );
-};
-
 const MATH_SUBJECT_ID = "a1111111-0000-0000-0000-000000000001";
 
 const STATUS_OPTIONS = [
@@ -209,17 +186,11 @@ const StudentProfilePage = () => {
     return map;
   }, [roadmapItems]);
 
-  // Average over subjects that actually have a grade — subjects without a
-  // grade are NOT counted as 0. null = no grades at all (shown as gray "—").
+  // Factual count only: rows that actually have a grade. No average is
+  // computed or shown anywhere on this card.
   const gradedRows = useMemo(
     () => (subjectProgress as any[]).filter((sp) => (sp.grade ?? 0) > 0),
     [subjectProgress],
-  );
-  const avgExistingGrades = useMemo(
-    () => gradedRows.length
-      ? Math.round(gradedRows.reduce((sum, sp) => sum + Number(sp.grade), 0) / gradedRows.length)
-      : null,
-    [gradedRows],
   );
 
   if (studentLoading || progressLoading) {
@@ -397,33 +368,15 @@ const StudentProfilePage = () => {
               </div>
             </div>
 
-            {/* Row 3: student status */}
-            <div className="space-y-1">
-              <p className="text-[11px] text-muted-foreground font-medium">סטטוס תלמיד</p>
-              <InlineSelect
-                value={student.overall_status}
-                options={STATUS_OPTIONS}
-                onSave={(v) => saveField("overall_status", v)}
-                editable={isEditable}
-              />
-            </div>
           </div>
 
-          {/* Score + actions */}
+          {/* Factual counts + actions — no average, no ring, no status colors */}
           <div className="md:w-60 shrink-0 min-w-0 border-t md:border-t-0 md:border-s border-border/60 pt-4 md:pt-0 md:ps-6 flex flex-col items-center gap-2">
-            <p className="text-[12px] font-semibold text-foreground text-center">ממוצע ציונים קיימים</p>
-            <ProgressRing value={avgExistingGrades} />
-            {avgExistingGrades != null ? (
-              <p className="text-[11px] text-muted-foreground text-center leading-snug">
-                ממוצע ציונים קיימים: {avgExistingGrades} · לפי {gradedRows.length} מקצועות עם ציון.
-                מקצועות ללא ציון אינם נספרים.
-              </p>
-            ) : (
-              <p className="text-[11px] text-muted-foreground text-center leading-snug inline-flex items-center justify-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 shrink-0" />
-                אפור = אין מידע (אין עדיין ציונים)
-              </p>
-            )}
+            <p className="text-[13px] font-semibold text-foreground text-center leading-snug">
+              {gradedRows.length > 0
+                ? `${gradedRows.length} ציונים קיימים מתוך ${subjectProgress.length} רשומות לימודיות`
+                : "עדיין אין ציונים"}
+            </p>
             {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
               <div className="pt-1">
                 <DataExportTools
