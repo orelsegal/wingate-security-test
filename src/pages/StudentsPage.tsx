@@ -99,24 +99,39 @@ const StudentsPage = () => {
     return m;
   }, [allProgress]);
 
-  // ── Admin breakdowns: factual counts only (no grades/averages/statuses) ──
+  // Real grades per student (only rows that actually have a grade — no fake zeros).
+  const gradesByStudent = useMemo(() => {
+    const m = new Map<string, number[]>();
+    (allProgress as any[]).forEach(p => {
+      const g = Number(p.grade);
+      if (p.student_id && g > 0) {
+        if (!m.has(p.student_id)) m.set(p.student_id, []);
+        m.get(p.student_id)!.push(g);
+      }
+    });
+    return m;
+  }, [allProgress]);
+
+  // ── Admin breakdowns: factual counts + average of EXISTING grades only ──
   const breakdowns = useMemo(() => {
-    type Row = { total: number; bagrut: number; civics: number };
+    type Row = { total: number; bagrut: number; civics: number; gradeSum: number; gradeN: number };
     const bySport = new Map<string, Row>();
     const byClass = new Map<string, Row>();
     const byGrade = new Map<string, Row>();
-    const bump = (m: Map<string, Row>, key: string, hasB: boolean, hasC: boolean) => {
-      const r = m.get(key) || { total: 0, bagrut: 0, civics: 0 };
+    const bump = (m: Map<string, Row>, key: string, hasB: boolean, hasC: boolean, gs: number[]) => {
+      const r = m.get(key) || { total: 0, bagrut: 0, civics: 0, gradeSum: 0, gradeN: 0 };
       r.total++; if (hasB) r.bagrut++; if (hasC) r.civics++;
+      r.gradeSum += gs.reduce((a, b) => a + b, 0); r.gradeN += gs.length;
       m.set(key, r);
     };
     students.filter(s => !(s as any).archived).forEach(s => {
       const hasB = !!bagrutMap?.has(s.id);
       const hasC = civicsMap.has(s.id);
-      bump(bySport, s.sport || "לא צוין", hasB, hasC);
-      bump(byClass, s.class_name || "—", hasB, hasC);
+      const gs = gradesByStudent.get(s.id) || [];
+      bump(bySport, s.sport || "לא צוין", hasB, hasC, gs);
+      bump(byClass, s.class_name || "—", hasB, hasC, gs);
       const g = classToGrade(s.class_name || "");
-      bump(byGrade, grades.includes(g) ? g : "אחר", hasB, hasC);
+      bump(byGrade, grades.includes(g) ? g : "אחר", hasB, hasC, gs);
     });
     const sorted = (m: Map<string, Row>, order?: string[]) =>
       Array.from(m.entries()).sort((a, b) =>
@@ -144,6 +159,9 @@ const StudentsPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [classFilter, setClassFilter] = useState<string | null>(null);
   const [gradeEntryFilter, setGradeEntryFilter] = useState<"all" | "with" | "without">("all");
+  // Admin-only factual filters: has a bagrut-roadmap row / has any real grade
+  const [bagrutFilter, setBagrutFilter] = useState<"with" | "without" | null>(null);
+  const [gradesFilter, setGradesFilter] = useState<"with" | "without" | null>(null);
 
   // CRUD modals
   const [formOpen, setFormOpen] = useState(false);
@@ -219,6 +237,10 @@ const StudentsPage = () => {
         if (gradeEntryFilter === "with" && !anyWithGrade) return false;
         if (gradeEntryFilter === "without" && anyWithGrade) return false;
       }
+      if (bagrutFilter === "with" && !bagrutMap?.has(s.id)) return false;
+      if (bagrutFilter === "without" && bagrutMap?.has(s.id)) return false;
+      if (gradesFilter === "with" && !gradesByStudent.has(s.id)) return false;
+      if (gradesFilter === "without" && gradesByStudent.has(s.id)) return false;
       return true;
     });
     if (sortBy) {
@@ -231,9 +253,9 @@ const StudentsPage = () => {
       });
     }
     return list;
-  }, [students, search, statusFilter, branchFilters, gradeFilter, classFilter, gradeEntryFilter, subjectFilter, sortBy, sortDir, user, subjectRowsByStudent]);
+  }, [students, search, statusFilter, branchFilters, gradeFilter, classFilter, gradeEntryFilter, subjectFilter, sortBy, sortDir, user, subjectRowsByStudent, bagrutFilter, gradesFilter, bagrutMap, gradesByStudent]);
 
-  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || classFilter || gradeEntryFilter !== "all" || subjectFilter || sortBy;
+  const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || classFilter || gradeEntryFilter !== "all" || subjectFilter || sortBy || bagrutFilter || gradesFilter;
 
   const toggleSort = (col: "name" | "avg" | "status") => {
     if (sortBy === col) {
@@ -249,6 +271,7 @@ const StudentsPage = () => {
 
   const clearAll = () => {
     setSearch(""); setStatusFilter(null); setBranchFilters([]); setGradeFilter(null); setClassFilter(null); setGradeEntryFilter("all"); setSubjectFilter(null); setSortBy(null); setSortDir("asc");
+    setBagrutFilter(null); setGradesFilter(null);
   };
 
   // ─── Aggregate totals across ALL non-archived students ────────────
@@ -409,14 +432,17 @@ const StudentsPage = () => {
         </div>
       </section>
 
-      {/* ── Admin breakdowns: factual counts, click to filter the list ── */}
+      {/* ── Admin breakdowns: factual counts + avg of existing grades, click to filter ── */}
       {isBagrutViewer && (() => {
-        const numCell = "w-12 sm:w-16 text-center tabular-nums text-[12px] shrink-0";
-        const headCell = "w-12 sm:w-16 text-center text-[10px] text-muted-foreground shrink-0 leading-tight";
+        const numCell = "w-10 sm:w-14 text-center tabular-nums text-[12px] shrink-0";
+        const avgCell = "w-14 sm:w-16 text-center tabular-nums text-[12px] shrink-0";
+        const headCell = "text-center text-[10px] text-muted-foreground shrink-0 leading-tight";
+        const fmtAvg = (r: { gradeSum: number; gradeN: number }) =>
+          r.gradeN > 0 ? `${Math.round(r.gradeSum / r.gradeN)} (${r.gradeN})` : "—";
         const BreakdownCard = ({ title, cols, rows, isActive, onPick }: {
           title: string;
           cols: [string, string, string];
-          rows: { name: string; a: number; b: number; c: number; clickable?: boolean }[];
+          rows: { name: string; a: number; b: number; c: number; avg: string; clickable?: boolean }[];
           isActive: (name: string) => boolean;
           onPick: (name: string) => void;
         }) => (
@@ -424,9 +450,10 @@ const StudentsPage = () => {
             <div className="px-3 py-2 bg-muted/30 border-b border-border/60 flex items-center justify-between gap-2">
               <p className="text-[12px] font-semibold text-foreground">{title}</p>
             </div>
-            <div className="px-3 pt-1.5 flex items-center gap-2" dir="rtl">
+            <div className="px-3 pt-1.5 flex items-center gap-1.5" dir="rtl">
               <span className="flex-1 min-w-0" />
-              {cols.map((c) => <span key={c} className={headCell}>{c}</span>)}
+              {cols.map((c) => <span key={c} className={`${headCell} w-10 sm:w-14`}>{c}</span>)}
+              <span className={`${headCell} w-14 sm:w-16`}>ממוצע</span>
             </div>
             <div className="p-1.5 space-y-0.5">
               {rows.map((r) => {
@@ -436,7 +463,7 @@ const StudentsPage = () => {
                   <button
                     key={r.name}
                     onClick={clickable ? () => onPick(r.name) : undefined}
-                    className={`w-full flex items-center gap-2 px-1.5 py-1.5 rounded-lg text-start transition-colors border ${
+                    className={`w-full flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-start transition-colors border ${
                       active ? "bg-primary/10 border-primary/30" : "border-transparent"
                     } ${clickable ? "hover:bg-accent/40 cursor-pointer" : "cursor-default"}`}
                     dir="rtl"
@@ -445,10 +472,12 @@ const StudentsPage = () => {
                     <span className={`${numCell} font-semibold text-foreground`}>{r.a}</span>
                     <span className={`${numCell} text-muted-foreground`}>{r.b}</span>
                     <span className={`${numCell} text-muted-foreground`}>{r.c}</span>
+                    <span className={`${avgCell} text-foreground`} dir="ltr">{r.avg}</span>
                   </button>
                 );
               })}
             </div>
+            <p className="px-3 pb-2 text-[10px] text-muted-foreground leading-snug">ממוצע על ציונים קיימים בלבד; בסוגריים מספר הציונים. תלמידים ללא ציון אינם נספרים כאפס.</p>
           </div>
         );
         return (
@@ -463,21 +492,21 @@ const StudentsPage = () => {
               <BreakdownCard
                 title="לפי ענף ספורט"
                 cols={["תלמידים", "מפת בגרות", "אזרחות"]}
-                rows={breakdowns.sports.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.civics }))}
+                rows={breakdowns.sports.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.civics, avg: fmtAvg(r) }))}
                 isActive={(n) => branchFilters.length === 1 && branchFilters[0] === n}
                 onPick={(n) => setBranchFilters(branchFilters.length === 1 && branchFilters[0] === n ? [] : [n])}
               />
               <BreakdownCard
                 title="לפי כיתה"
                 cols={["תלמידים", "עם מפה", "ללא מפה"]}
-                rows={breakdowns.classes.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.total - r.bagrut }))}
+                rows={breakdowns.classes.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.total - r.bagrut, avg: fmtAvg(r) }))}
                 isActive={(n) => classFilter === n}
                 onPick={(n) => setClassFilter(classFilter === n ? null : n)}
               />
               <BreakdownCard
                 title="לפי שכבה"
                 cols={["תלמידים", "עם מפה", "ללא מפה"]}
-                rows={breakdowns.gradesRows.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.total - r.bagrut, clickable: name !== "אחר" }))}
+                rows={breakdowns.gradesRows.map(([name, r]) => ({ name, a: r.total, b: r.bagrut, c: r.total - r.bagrut, avg: fmtAvg(r), clickable: name !== "אחר" }))}
                 isActive={(n) => gradeFilter === n}
                 onPick={(n) => setGradeFilter(gradeFilter === n ? null : n)}
               />
@@ -511,6 +540,28 @@ const StudentsPage = () => {
                 <DropdownMenuItem key={g} onClick={() => setGradeFilter(g)} className="text-[12px]">{g}</DropdownMenuItem>
               ))}
             </FilterSelect>
+
+            {isBagrutViewer && (
+              <FilterSelect
+                label="מפת בגרות"
+                value={bagrutFilter === "with" ? "עם מפת בגרות" : bagrutFilter === "without" ? "בלי מפת בגרות" : ""}
+                onClear={bagrutFilter ? () => setBagrutFilter(null) : undefined}
+              >
+                <DropdownMenuItem onClick={() => setBagrutFilter("with")} className="text-[12px]">עם מפת בגרות</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setBagrutFilter("without")} className="text-[12px]">בלי מפת בגרות</DropdownMenuItem>
+              </FilterSelect>
+            )}
+
+            {isBagrutViewer && (
+              <FilterSelect
+                label="ציונים"
+                value={gradesFilter === "with" ? "עם ציונים" : gradesFilter === "without" ? "בלי ציונים" : ""}
+                onClear={gradesFilter ? () => setGradesFilter(null) : undefined}
+              >
+                <DropdownMenuItem onClick={() => setGradesFilter("with")} className="text-[12px]">עם ציונים</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setGradesFilter("without")} className="text-[12px]">בלי ציונים</DropdownMenuItem>
+              </FilterSelect>
+            )}
 
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
