@@ -582,6 +582,33 @@ const StudentProfilePage = () => {
               })}
             </div>
 
+            {/* Imported grades — verbatim details for this subject (admin only). No default status shown. */}
+            {isBagrutViewer && (() => {
+              const row: any = subjectProgress.find((sp: any) => sp.subjects?.subject_name === tabSubject);
+              const details = row?.details as Record<string, string | null> | null | undefined;
+              const entries = details ? Object.entries(details).filter(([, v]) => v != null && String(v).trim() !== "") : [];
+              const hasGrade = row && row.grade != null;
+              if (entries.length === 0 && !hasGrade) return null;
+              return (
+                <div className="mb-5 rounded-xl border border-border bg-muted/20 p-4">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <GraduationCap className="h-4 w-4 text-primary" strokeWidth={1.6} />
+                    <span className="text-[13px] font-semibold text-foreground">ציונים ובגרות — {tabSubject}</span>
+                    {hasGrade && (
+                      <span className="text-[12px] text-muted-foreground">· ציון הגשה: <span className="font-semibold text-foreground">{row.grade}</span></span>
+                    )}
+                  </div>
+                  {entries.length > 0 && (
+                    <div className="flex flex-wrap gap-x-6 gap-y-1.5">
+                      {entries.map(([k, v]) => (
+                        <div key={k} className="text-[12px]"><span className="text-muted-foreground">{k}:</span> <span className="text-foreground">{String(v)}</span></div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Per-subject level selector */}
             <div className="mb-5">
               <label className="text-[11px] text-muted-foreground font-medium mb-2 block">רמת לימוד ({tabSubject})</label>
