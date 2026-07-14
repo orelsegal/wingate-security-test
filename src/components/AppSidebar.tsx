@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings, GraduationCap } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -105,6 +105,21 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               </EditableElement>
             );
           })}
+
+          {/* מפת הדרך לבגרות — admin/teacher academic snapshot (read-only) */}
+          {(user?.role === "admin" || user?.role === "developer" || user?.role === "teacher") && (
+            <button
+              onClick={() => { navigate("/bagrut-roadmap"); onNavigate?.(); }}
+              className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start font-medium ${
+                location.pathname === "/bagrut-roadmap"
+                  ? "bg-sidebar-primary text-white font-semibold shadow-sm"
+                  : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              <GraduationCap className={`h-[15px] w-[15px] shrink-0 ${location.pathname === "/bagrut-roadmap" ? "text-white" : "text-sidebar-muted"}`} strokeWidth={location.pathname === "/bagrut-roadmap" ? 2 : 1.5} />
+              <span>מפת הדרך לבגרות</span>
+            </button>
+          )}
 
           {/* Dev tools — developer only */}
           {user?.role === "developer" && (

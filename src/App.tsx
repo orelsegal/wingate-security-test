@@ -39,6 +39,7 @@ const GroupsPage                 = lazy(() => import("./pages/GroupsPage"));
 const CalendarPage               = lazy(() => import("./pages/CalendarPage"));
 const ScienceIntroPage           = lazy(() => import("./pages/ScienceIntroPage"));
 const BagrutGradingPage          = lazy(() => import("./pages/BagrutGradingPage"));
+const BagrutRoadmapPage          = lazy(() => import("./pages/BagrutRoadmapPage"));
 const TeacherCoursesPage         = lazy(() => import("./pages/TeacherCoursesPage"));
 const TeacherCourseDetailPage    = lazy(() => import("./pages/TeacherCourseDetailPage"));
 const UserActivityPage           = lazy(() => import("./pages/UserActivityPage"));
@@ -136,6 +137,7 @@ const App = () => (
               <Route path="/calendar"                           element={<CalendarPage />} />
               <Route path="/science-intro"                      element={<ScienceIntroPage />} />
               <Route path="/bagrut-grading"                     element={<BagrutGradingPage />} />
+              <Route path="/bagrut-roadmap"                     element={<BagrutRoadmapPage />} />
               <Route path="/teacher-courses"                    element={<TeacherCoursesPage />} />
               <Route path="/teacher-course/:courseId"           element={<TeacherCourseDetailPage />} />
               <Route path="/user-activity"                      element={<UserActivityPage />} />
