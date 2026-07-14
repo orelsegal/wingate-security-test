@@ -11,7 +11,10 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuCheckboxItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { groupBagrut, bagrutFilled, BagrutGroupsView } from "@/lib/bagrutView";
 import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -74,6 +77,25 @@ const StudentsPage = () => {
 
   const { data: students = [], isLoading } = useStudents();
   const { data: allProgress = [] } = useAllStudentProgress();
+
+  // ── Real bagrut-roadmap data (admin-only, RLS-secured) ──
+  const isBagrutViewer = user?.role === "admin" || user?.role === "developer";
+  const [bagrutDialog, setBagrutDialog] = useState<Student | null>(null);
+  const { data: bagrutMap } = useQuery({
+    queryKey: ["all-bagrut", user?.role],
+    enabled: isBagrutViewer,
+    queryFn: async () => {
+      const { data } = await supabase.from("student_bagrut_data" as any).select("student_id, bagrut_data");
+      const m = new Map<string, { section?: string; values?: (string | null)[] }>();
+      ((data as any[]) || []).forEach(r => m.set(r.student_id, r.bagrut_data));
+      return m;
+    },
+  });
+  const civicsMap = useMemo(() => {
+    const m = new Map<string, Record<string, string | null>>();
+    (allProgress as any[]).forEach(p => { if (p.subjects?.subject_name === "אזרחות" && p.details) m.set(p.student_id, p.details); });
+    return m;
+  }, [allProgress]);
   const { data: subjectsList = [] } = useSubjects();
   const deleteStudent = useDeleteStudent();
   const updateStudent = useUpdateStudent();
@@ -687,17 +709,15 @@ const StudentsPage = () => {
           /* ── CARD VIEW (screenshot style) ── */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {filtered.map((student) => {
-              const status = student.overall_status as StatusType;
-              const rows = (subjectRowsByStudent.get(student.id) || []) as (SubjectRow & { __noData?: boolean })[];
-              const greenN = rows.filter(r => !r.__noData && r.status === "green").length;
-              const yellowN = rows.filter(r => !r.__noData && r.status === "yellow").length;
-              const redN = rows.filter(r => !r.__noData && r.status === "red").length;
+              const bd = bagrutMap?.get(student.id);
+              const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(student.id)) : [];
+              const filled = bagrutFilled(groups);
 
               return (
                 <div
                   key={student.id}
                   onClick={() => navigate(`/students/${student.id}`)}
-                  className={`bg-card rounded-2xl border-[1.5px] ${STATUS_BORDER[status]} p-4 cursor-pointer hover:shadow-md transition-all`}
+                  className="bg-card rounded-2xl border border-border p-4 cursor-pointer hover:shadow-md transition-all"
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between gap-2 mb-3" dir="rtl">
@@ -712,41 +732,48 @@ const StudentsPage = () => {
                     </div>
                   </div>
 
-                  {/* Column headers (once per card) */}
-                  <div className="flex items-center justify-between gap-2 pb-1 mb-1 border-b border-border/40" dir="rtl">
-                    <span className="text-[10px] text-muted-foreground">מקצוע</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="w-8 text-center text-[10px] text-muted-foreground">ציון</span>
-                      <span className="w-12 text-center text-[10px] text-muted-foreground">% בגרות</span>
-                    </div>
+                  {/* Real bagrut categories — compact preview (verbatim, no invented status) */}
+                  <div className="space-y-1 mb-2" dir="rtl">
+                    {filled.slice(0, 6).map((it, i) => (
+                      <div key={i} className="flex items-start justify-between gap-2">
+                        <span className="text-[10.5px] text-muted-foreground leading-snug truncate">{it.label}</span>
+                        <span className="text-[11.5px] text-foreground font-medium shrink-0">{it.value}</span>
+                      </div>
+                    ))}
+                    {filled.length === 0 && (
+                      <p className="text-[11px] text-muted-foreground/60">{isBagrutViewer ? "אין נתונים בגיליון" : "—"}</p>
+                    )}
                   </div>
 
-                  {/* Subject list */}
-                  <ul className="space-y-0 mb-3">
-                    {rows.map((row) => <SubjectLine key={row.subjectName} row={row} />)}
-                  </ul>
-
-                  {/* Footer counts */}
-                  <div className="flex items-center justify-center gap-4 pt-2 border-t border-border/60">
-                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT.red}`} />
-                      <span className="tabular-nums font-semibold text-foreground">{redN}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT.yellow}`} />
-                      <span className="tabular-nums font-semibold text-foreground">{yellowN}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT.green}`} />
-                      <span className="tabular-nums font-semibold text-foreground">{greenN}</span>
-                    </span>
-                  </div>
+                  {isBagrutViewer && groups.length > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setBagrutDialog(student); }}
+                      className="w-full text-[11px] text-primary hover:underline pt-2 border-t border-border/60"
+                    >
+                      הצג הכל ({filled.length} רשומות · {groups.length} מקצועות)
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </section>
+
+      {/* Full bagrut roadmap — every original column, verbatim, grouped by subject */}
+      <Dialog open={!!bagrutDialog} onOpenChange={(o) => !o && setBagrutDialog(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>בגרות — מפת הדרך · {bagrutDialog?.full_name}</DialogTitle>
+            <DialogDescription>{bagrutDialog?.class_name} · {bagrutDialog?.sport}</DialogDescription>
+          </DialogHeader>
+          {bagrutDialog && (() => {
+            const bd = bagrutMap?.get(bagrutDialog.id);
+            const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(bagrutDialog.id)) : [];
+            return groups.length ? <BagrutGroupsView groups={groups} /> : <p className="text-muted-foreground text-sm">אין נתוני בגרות</p>;
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* Modals */}
       <StudentFormModal
