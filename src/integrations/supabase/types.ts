@@ -387,6 +387,7 @@ export type Database = {
           absences: number
           completion_percent: number
           covered_topics: string[] | null
+          details: Json | null
           extras: Json
           grade: number | null
           id: string
@@ -400,6 +401,7 @@ export type Database = {
           absences?: number
           completion_percent?: number
           covered_topics?: string[] | null
+          details?: Json | null
           extras?: Json
           grade?: number | null
           id?: string
@@ -413,6 +415,7 @@ export type Database = {
           absences?: number
           completion_percent?: number
           covered_topics?: string[] | null
+          details?: Json | null
           extras?: Json
           grade?: number | null
           id?: string
