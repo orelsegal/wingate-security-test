@@ -366,39 +366,13 @@ const StudentsPage = () => {
         </div>
       </section>
 
-      {/* ── KPI 4-card strip ── */}
+      {/* ── Factual counts (no invented status) ── */}
       <section className="mb-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard label="רמזורים ירוקים" value={totals.green} icon={CheckCircle2} accent="green" />
-          <KpiCard label="רמזורים אדומים" value={totals.red} icon={AlertCircle} accent="red" />
-          <KpiCard label="ספורטאים קריטיים" value={criticalCount} icon={AlertTriangle} accent="destructive" />
-          <KpiCard label='סה"כ ספורטאים' value={totalStudents} icon={Users} accent="neutral" />
-        </div>
-      </section>
-
-      {/* ── Overall stacked bar ── */}
-      <section className="mb-4">
-        <div className="card-premium p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[12px] font-semibold text-foreground">תמונת מצב כוללת</p>
-          </div>
-          <div className="w-full h-2 rounded-full bg-muted/60 overflow-hidden flex" dir="ltr">
-            {totals.total > 0 ? (
-              <>
-                <span className="h-full bg-destructive" style={{ width: `${(totals.red / totals.total) * 100}%` }} />
-                <span className="h-full bg-warning" style={{ width: `${(totals.yellow / totals.total) * 100}%` }} />
-                <span className="h-full bg-success" style={{ width: `${(totals.green / totals.total) * 100}%` }} />
-              </>
-            ) : null}
-          </div>
-          <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
-            <span>סה"כ {totals.total}</span>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-destructive" />{totals.red}</span>
-              <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-warning" />{totals.yellow}</span>
-              <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success" />{totals.green}</span>
-            </div>
-          </div>
+          <KpiCard label="מספר תלמידים" value={totalStudents} icon={Users} accent="neutral" />
+          <KpiCard label="עם מפת בגרות" value={bagrutMap ? bagrutMap.size : 0} icon={LayoutGrid} accent="neutral" />
+          <KpiCard label="עם נתוני אזרחות" value={civicsMap.size} icon={PieChart} accent="neutral" />
+          <KpiCard label="רשומות לימודיות" value={allProgress.length} icon={Rows3} accent="neutral" />
         </div>
       </section>
 
@@ -415,21 +389,6 @@ const StudentsPage = () => {
               כל הספורטאים
               <span className="tabular-nums opacity-80">({totalStudents})</span>
             </button>
-
-            <FilterSelect label="כל הרמזורים" value={statusFilter ? statusConfig[statusFilter].label : ""} onClear={statusFilter ? () => setStatusFilter(null) : undefined}>
-              {(["green", "yellow", "red"] as StatusType[]).map((t) => (
-                <DropdownMenuItem key={t} onClick={() => setStatusFilter(t)} className="text-[12px] gap-2">
-                  <span className={`w-2 h-2 rounded-full ${STATUS_DOT[t]}`} />
-                  {statusConfig[t].label}
-                </DropdownMenuItem>
-              ))}
-            </FilterSelect>
-
-            <FilterSelect label="כל המקצועות" value={subjectFilter || ""} onClear={subjectFilter ? () => setSubjectFilter(null) : undefined}>
-              {allSubjectNames.map((n) => (
-                <DropdownMenuItem key={n} onClick={() => setSubjectFilter(n)} className="text-[12px]">{n}</DropdownMenuItem>
-              ))}
-            </FilterSelect>
 
             <FilterSelect label="כל הענפים" value={branchFilters.length > 0 ? `${branchFilters.length} ענפים` : ""} onClear={branchFilters.length ? () => setBranchFilters([]) : undefined}>
               {branches.map((b) => (
@@ -465,9 +424,9 @@ const StudentsPage = () => {
         <div className="flex items-center justify-between mb-3">
           <span className="text-[12px] text-muted-foreground">מציג {filtered.length} מתוך {totalStudents} ספורטאים</span>
           <div className="flex items-center gap-1">
-            {(["name", "avg", "status"] as const).map((col) => (
+            {(["name"] as const).map((col) => (
               <button key={col} onClick={() => toggleSort(col)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-accent transition-colors">
-                {col === "name" ? "שם" : col === "avg" ? "ממוצע" : "סטטוס"}
+                שם
                 <SortIcon col={col} />
               </button>
             ))}
@@ -479,115 +438,30 @@ const StudentsPage = () => {
             <EmptyState icon={Search} title="לא נמצאו תלמידים" description="נסי לשנות את הסינון או חפשי שם אחר" />
           </div>
         ) : viewMode === "summary" ? (
-          /* ── SUMMARY PIVOT: subjects as columns ── */
+          /* ── SUMMARY: factual roster (real bagrut record counts, no invented status) ── */
           <div className="card-premium overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] border-collapse" dir="rtl">
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="text-right p-3 font-semibold text-foreground sticky right-0 bg-muted/40 z-10 border-b border-border min-w-[180px]">שם התלמיד</th>
-                    <th className="text-right p-2 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/50 text-foreground">
-                            <span>כיתה</span>
-                            {classFilter && <span className="text-[10px] text-primary">({classFilter})</span>}
-                            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={1.5} />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-[160px] max-h-[300px] overflow-y-auto">
-                          <DropdownMenuItem onClick={() => setClassFilter(null)} className="text-[12px]">
-                            <Check className={`h-3 w-3 ml-2 ${!classFilter ? "opacity-100" : "opacity-0"}`} />
-                            כל הכיתות
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {classOptions.map((c) => (
-                            <DropdownMenuItem key={c} onClick={() => setClassFilter(c)} className="text-[12px]">
-                              <Check className={`h-3 w-3 ml-2 ${classFilter === c ? "opacity-100" : "opacity-0"}`} />
-                              {c}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </th>
-                    <th className="text-right p-2 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/50 text-foreground">
-                            <span>ענף</span>
-                            {branchFilters.length > 0 && <span className="text-[10px] text-primary">({branchFilters.length})</span>}
-                            <ChevronDown className="h-3 w-3 text-muted-foreground" strokeWidth={1.5} />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-[180px] max-h-[300px] overflow-y-auto">
-                          <DropdownMenuItem onClick={() => setBranchFilters([])} className="text-[12px]">
-                            <Check className={`h-3 w-3 ml-2 ${branchFilters.length === 0 ? "opacity-100" : "opacity-0"}`} />
-                            כל הענפים
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {branches.map((b) => (
-                            <DropdownMenuCheckboxItem
-                              key={b}
-                              checked={branchFilters.includes(b)}
-                              onCheckedChange={(checked) => {
-                                setBranchFilters(checked ? [...branchFilters, b] : branchFilters.filter(x => x !== b));
-                              }}
-                              className="text-[12px]"
-                            >
-                              {b}
-                            </DropdownMenuCheckboxItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </th>
-                    {allSubjectNames.map((name) => {
-                      const isActive = subjectFilter === name;
-                      return (
-                        <th key={name} className="text-center p-2 font-semibold text-foreground border-b border-border whitespace-nowrap min-w-[110px]">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className={`inline-flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent/50 ${isActive ? "bg-primary/10 text-primary" : ""}`}>
-                                <span>{name}</span>
-                                <ChevronDown className="h-3 w-3 opacity-60" strokeWidth={1.5} />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="center" className="min-w-[200px]">
-                              <DropdownMenuLabel className="text-[11px] text-muted-foreground">סינון לפי {name}</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => { setSubjectFilter(null); setGradeEntryFilter("all"); }} className="text-[12px]">
-                                <Check className={`h-3 w-3 ml-2 ${!isActive ? "opacity-100" : "opacity-0"}`} />
-                                הצג הכל
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => { setSubjectFilter(name); setGradeEntryFilter("with"); }} className="text-[12px]">
-                                <Check className={`h-3 w-3 ml-2 ${isActive && gradeEntryFilter === "with" ? "opacity-100" : "opacity-0"}`} />
-                                רק עם ציון
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setSubjectFilter(name); setGradeEntryFilter("without"); }} className="text-[12px]">
-                                <Check className={`h-3 w-3 ml-2 ${isActive && gradeEntryFilter === "without" ? "opacity-100" : "opacity-0"}`} />
-                                רק ללא ציון
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setSubjectFilter(name); setGradeEntryFilter("all"); }} className="text-[12px]">
-                                <Check className={`h-3 w-3 ml-2 ${isActive && gradeEntryFilter === "all" ? "opacity-100" : "opacity-0"}`} />
-                                כל הרשומים במקצוע
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </th>
-                      );
-                    })}
+                    <th className="text-right p-3 font-semibold text-foreground border-b border-border min-w-[180px]">שם התלמיד</th>
+                    <th className="text-right p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">כיתה</th>
+                    <th className="text-right p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">ענף</th>
+                    <th className="text-center p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">רשומות בגיליון</th>
+                    <th className="text-center p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">מקצועות</th>
+                    <th className="text-center p-3 font-semibold text-muted-foreground border-b border-border whitespace-nowrap">נתוני אזרחות</th>
+                    <th className="text-center p-3 font-semibold text-muted-foreground border-b border-border">מפת בגרות</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((student, idx) => {
-                    const rows = (subjectRowsByStudent.get(student.id) || []) as (SubjectRow & { __noData?: boolean })[];
-                    const byName = new Map(rows.map(r => [r.subjectName, r]));
+                    const bd = bagrutMap?.get(student.id);
+                    const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(student.id)) : [];
+                    const filled = bagrutFilled(groups);
+                    const hasCivics = civicsMap.has(student.id);
                     return (
-                      <tr
-                        key={student.id}
-                        onClick={() => navigate(`/students/${student.id}`)}
-                        className={`cursor-pointer hover:bg-accent/30 transition-colors ${idx % 2 === 0 ? "bg-card" : "bg-muted/10"}`}
-                      >
-                        <td className="p-3 font-medium text-foreground sticky right-0 bg-inherit border-b border-border/60 whitespace-nowrap">
+                      <tr key={student.id} className={`hover:bg-accent/30 transition-colors ${idx % 2 === 0 ? "bg-card" : "bg-muted/10"}`}>
+                        <td onClick={() => navigate(`/students/${student.id}`)} className="p-3 font-medium text-foreground border-b border-border/60 whitespace-nowrap cursor-pointer">
                           <div className="flex items-center gap-2">
                             <InitialsAvatar name={student.full_name} size="sm" />
                             <span className="truncate">{student.full_name}</span>
@@ -595,37 +469,16 @@ const StudentsPage = () => {
                         </td>
                         <td className="p-3 text-muted-foreground border-b border-border/60 whitespace-nowrap">{student.class_name}</td>
                         <td className="p-3 text-muted-foreground border-b border-border/60 whitespace-nowrap">{student.sport}</td>
-                        {allSubjectNames.map((name) => {
-                          const r = byName.get(name);
-                          const noData = !r || (r as any).__noData;
-                          const dot = noData ? STATUS_DOT.gray : STATUS_DOT[r!.status];
-                          return (
-                            <td key={name} className="p-3 text-center border-b border-border/60">
-                              {noData ? (
-                                <div className="inline-flex items-center justify-center gap-1.5">
-                                  <span className={`w-2 h-2 rounded-full ${dot}`} />
-                                  <span className="text-muted-foreground/50">—</span>
-                                </div>
-                              ) : (
-                                <div className="inline-flex items-center gap-2">
-                                  <span className={`w-2 h-2 rounded-full ${dot}`} />
-                                  {r!.grade != null ? (
-                                    <span className="tabular-nums text-foreground font-semibold text-[13px] leading-none">{r!.grade}</span>
-                                  ) : (
-                                    <span className="tabular-nums text-muted-foreground/50 text-[13px] leading-none">—</span>
-                                  )}
-                                  {r!.bagrutPercent != null ? (
-                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium leading-none ${STATUS_CHIP_BG[r!.status]}`}>
-                                      {r!.bagrutPercent}%
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] text-muted-foreground/50">—</span>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
+                        <td className="p-3 text-center border-b border-border/60 tabular-nums">{filled.length > 0 ? filled.length : "—"}</td>
+                        <td className="p-3 text-center border-b border-border/60 tabular-nums">{groups.length > 0 ? groups.length : "—"}</td>
+                        <td className="p-3 text-center border-b border-border/60">{hasCivics ? "✓" : "—"}</td>
+                        <td className="p-3 text-center border-b border-border/60">
+                          {isBagrutViewer && groups.length > 0 ? (
+                            <button onClick={() => setBagrutDialog(student)} className="text-[11px] text-primary hover:underline">הצג הכל</button>
+                          ) : (
+                            <span className="text-muted-foreground/50">—</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -643,15 +496,16 @@ const StudentsPage = () => {
                     <TableHead className="text-right">שם</TableHead>
                     <TableHead className="text-right hidden md:table-cell">ענף</TableHead>
                     <TableHead className="text-right hidden lg:table-cell">כיתה</TableHead>
-                    <TableHead className="text-right hidden sm:table-cell">ממוצע</TableHead>
-                    <TableHead className="text-right">סטטוס</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">רשומות בגיליון</TableHead>
+                    <TableHead className="text-right">בגרות</TableHead>
                     <TableHead className="text-right">פעולות</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((student) => {
-                    const status = student.overall_status as StatusType;
-                    const config = statusConfig[status];
+                    const bd = bagrutMap?.get(student.id);
+                    const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(student.id)) : [];
+                    const filled = bagrutFilled(groups);
                     return (
                       <TableRow key={student.id} className={`cursor-pointer hover:bg-accent/30 ${selected.has(student.id) ? "bg-primary/5" : ""}`}>
                         <TableCell className="text-center hidden sm:table-cell" onClick={(e) => e.stopPropagation()}>
@@ -668,12 +522,15 @@ const StudentsPage = () => {
                         </TableCell>
                         <TableCell className="text-[12px] hidden md:table-cell">{student.sport}</TableCell>
                         <TableCell className="text-[12px] hidden lg:table-cell">{student.class_name}</TableCell>
-                        <TableCell className="text-[12px] font-semibold hidden sm:table-cell">{student.avg_score || "—"}</TableCell>
+                        <TableCell className="text-[12px] font-semibold hidden sm:table-cell tabular-nums">{filled.length > 0 ? filled.length : "—"}</TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${config.bgClass} ${config.textClass}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />
-                            {config.label}
-                          </span>
+                          {isBagrutViewer && groups.length > 0 ? (
+                            <button onClick={(e) => { e.stopPropagation(); setBagrutDialog(student); }} className="text-[11px] text-primary hover:underline">
+                              הצג הכל ({groups.length})
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-muted-foreground/50">—</span>
+                          )}
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-1">
