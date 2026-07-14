@@ -21,19 +21,37 @@ const subjOf = (h: string) => { for (const s of KW) if (s.kw.some(k => h.include
 export interface BagrutItem { label: string; value: string }
 export interface BagrutGroup { subject: string; items: BagrutItem[] }
 
-/** civicsDetails: the student_subject_progress.details jsonb for אזרחות (from the civics file). */
+/** Derive the sheet section from the roster class name (e.g. "יא 1" → שכבת י״א). */
+export function sectionForClass(className?: string | null): string | undefined {
+  const letters = (className || "").replace(/[^א-ת]/g, "");
+  if (letters.startsWith("יא")) return "שכבת י״א";
+  if (letters.startsWith("י")) return "שכבת י׳";
+  if (letters && ["ז", "ח", "ט"].includes(letters[0])) return "כיתות ז׳–ט׳";
+  return undefined;
+}
+
+/** DB shape: student_bagrut_data.data = flat { "<original column header>": value },
+ *  storing only non-empty cells. Rebuild the full column list from the section's
+ *  headers so empty columns still render as — ; any stored key not in the header
+ *  list is kept too (verbatim, nothing dropped).
+ *  civicsDetails: the student_subject_progress.details jsonb for אזרחות. */
 export function groupBagrut(
   section: string | undefined,
-  values: (string | null)[] | undefined,
+  record: Record<string, unknown> | null | undefined,
   civicsDetails?: Record<string, string | null> | null,
 ): BagrutGroup[] {
+  if (!record && !civicsDetails) return [];
+  const rec = record || {};
   const cols = (section && bagrutColumns[section]) || [];
   const groups: Record<string, BagrutItem[]> = {};
-  cols.forEach((h, i) => {
+  const push = (h: string, v: unknown) => {
     if (ID_COLS.includes(h)) return;
     const g = subjOf(h);
-    (groups[g] = groups[g] || []).push({ label: h, value: ((values?.[i]) ?? "").toString() });
-  });
+    (groups[g] = groups[g] || []).push({ label: h, value: v == null ? "" : String(v) });
+  };
+  const colSet = new Set(cols);
+  cols.forEach(h => push(h, rec[h]));
+  Object.keys(rec).forEach(h => { if (!colSet.has(h)) push(h, rec[h]); });
   if (civicsDetails) {
     groups["אזרחות"] = groups["אזרחות"] || [];
     ["סמל שאלון", "שאלון", "מועד", "ציון הגשה", "אופן היבחנות", "ייגש לבחינה"].forEach(k => {

@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { groupBagrut, bagrutFilled, BagrutGroupsView } from "@/lib/bagrutView";
+import { groupBagrut, bagrutFilled, sectionForClass, BagrutGroupsView } from "@/lib/bagrutView";
 import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -85,9 +85,11 @@ const StudentsPage = () => {
     queryKey: ["all-bagrut", user?.role],
     enabled: isBagrutViewer,
     queryFn: async () => {
-      const { data } = await supabase.from("student_bagrut_data" as any).select("student_id, bagrut_data");
-      const m = new Map<string, { section?: string; values?: (string | null)[] }>();
-      ((data as any[]) || []).forEach(r => m.set(r.student_id, r.bagrut_data));
+      // Column is `data` (flat { header: value } jsonb). Do NOT swallow errors.
+      const { data, error } = await supabase.from("student_bagrut_data" as any).select("student_id, data");
+      if (error) throw error;
+      const m = new Map<string, Record<string, unknown>>();
+      ((data as any[]) || []).forEach(r => m.set(r.student_id, r.data));
       return m;
     },
   });
@@ -456,7 +458,7 @@ const StudentsPage = () => {
                 <tbody>
                   {filtered.map((student, idx) => {
                     const bd = bagrutMap?.get(student.id);
-                    const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(student.id)) : [];
+                    const groups = bd ? groupBagrut(sectionForClass(student.class_name), bd, civicsMap.get(student.id)) : [];
                     const filled = bagrutFilled(groups);
                     const hasCivics = civicsMap.has(student.id);
                     return (
@@ -504,7 +506,7 @@ const StudentsPage = () => {
                 <TableBody>
                   {filtered.map((student) => {
                     const bd = bagrutMap?.get(student.id);
-                    const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(student.id)) : [];
+                    const groups = bd ? groupBagrut(sectionForClass(student.class_name), bd, civicsMap.get(student.id)) : [];
                     const filled = bagrutFilled(groups);
                     return (
                       <TableRow key={student.id} className={`cursor-pointer hover:bg-accent/30 ${selected.has(student.id) ? "bg-primary/5" : ""}`}>
@@ -567,7 +569,7 @@ const StudentsPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {filtered.map((student) => {
               const bd = bagrutMap?.get(student.id);
-              const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(student.id)) : [];
+              const groups = bd ? groupBagrut(sectionForClass(student.class_name), bd, civicsMap.get(student.id)) : [];
               const filled = bagrutFilled(groups);
 
               return (
@@ -626,7 +628,7 @@ const StudentsPage = () => {
           </DialogHeader>
           {bagrutDialog && (() => {
             const bd = bagrutMap?.get(bagrutDialog.id);
-            const groups = bd ? groupBagrut(bd.section, bd.values, civicsMap.get(bagrutDialog.id)) : [];
+            const groups = bd ? groupBagrut(sectionForClass(bagrutDialog.class_name), bd, civicsMap.get(bagrutDialog.id)) : [];
             return groups.length ? <BagrutGroupsView groups={groups} /> : <p className="text-muted-foreground text-sm">אין נתוני בגרות</p>;
           })()}
         </DialogContent>
