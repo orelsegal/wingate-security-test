@@ -20,6 +20,7 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import { ProfileSkeleton } from "@/components/PageSkeleton";
+import { bagrutColumns } from "@/data/bagrutColumns";
 
 const ProgressRing = ({ value }: { value: number }) => {
   const radius = 40;
@@ -269,6 +270,42 @@ const StudentProfilePage = () => {
           השינויים נשמרו
         </div>
       )}
+
+      {/* בגרות — מפת הדרך (read-only, admin/teacher only; data from DB) */}
+      {(user?.role === "developer" || user?.role === "admin" || user?.role === "teacher") && (() => {
+        const bd = (student as any).bagrut_data as { section?: string; values?: (string | null)[] } | null;
+        if (!bd || !Array.isArray(bd.values)) return null;
+        const cols = (bd.section && bagrutColumns[bd.section]) || [];
+        return (
+          <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] overflow-hidden">
+            <div className="px-5 py-3 border-b border-border flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-primary" strokeWidth={1.6} />
+              <h2 className="text-[14px] font-semibold text-foreground">בגרות — מפת הדרך</h2>
+              {bd.section && <span className="text-[11px] text-muted-foreground">· {bd.section}</span>}
+            </div>
+            <div className="overflow-x-auto" dir="rtl">
+              <table className="border-collapse text-[12px] min-w-max">
+                <thead>
+                  <tr>
+                    {cols.map((c, i) => (
+                      <th key={i} className="bg-muted text-start font-semibold text-foreground px-3 py-2 border-b border-l border-border whitespace-nowrap" title={c}>{c}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {cols.map((_, i) => (
+                      <td key={i} className="px-3 py-1.5 border-l border-border/60 text-foreground/90 whitespace-nowrap">
+                        {bd.values![i] ?? ""}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Admin Builder — entry point */}
       {(user?.role === "developer" || user?.role === "admin" || user?.role === "teacher") && (
