@@ -15,6 +15,8 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { groupBagrut, bagrutFilled, sectionForClass, BagrutGroupsView } from "@/lib/bagrutView";
+import { adminStatusConfig, ADMIN_STATUS_ORDER, type AdminStatus, type AdminStatusRow } from "@/lib/adminStatus";
+import AdminStatusEditor from "@/components/AdminStatusEditor";
 import { toast } from "sonner";
 import StudentFormModal from "@/components/StudentFormModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -99,6 +101,23 @@ const StudentsPage = () => {
     return m;
   }, [allProgress]);
 
+  // ── Admin manual traffic light (student_admin_status, RLS admin-only) ──
+  const [statusEditStudent, setStatusEditStudent] = useState<Student | null>(null);
+  const { data: adminStatusMap } = useQuery({
+    queryKey: ["admin-status"],
+    enabled: isBagrutViewer,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_admin_status" as any)
+        .select("student_id, status, status_note, status_updated_at, status_updated_by_name");
+      if (error) throw error;
+      const m = new Map<string, AdminStatusRow>();
+      ((data as any[]) || []).forEach(r => m.set(r.student_id, r));
+      return m;
+    },
+  });
+  const adminStatusOf = (id: string): AdminStatus => adminStatusMap?.get(id)?.status || "gray";
+
   // Real grades per student (only rows that actually have a grade — no fake zeros).
   const gradesByStudent = useMemo(() => {
     const m = new Map<string, number[]>();
@@ -148,9 +167,13 @@ const StudentsPage = () => {
   const deleteStudent = useDeleteStudent();
   const updateStudent = useUpdateStudent();
 
-  const initialStatus = searchParams.get("status") as StatusType | null;
+  // Manual admin status filter. Legacy dashboard links pass ?status=yellow — map to orange.
+  const rawStatusParam = searchParams.get("status");
+  const initialStatus: AdminStatus | null =
+    rawStatusParam === "yellow" ? "orange"
+    : (["gray", "green", "orange", "red"].includes(rawStatusParam || "") ? (rawStatusParam as AdminStatus) : null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusType | null>(initialStatus);
+  const [statusFilter, setStatusFilter] = useState<AdminStatus | null>(initialStatus);
   const [branchFilters, setBranchFilters] = useState<string[]>([]);
   const [gradeFilter, setGradeFilter] = useState<string | null>(null);
   const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
@@ -216,12 +239,12 @@ const StudentsPage = () => {
   }, [allProgress, students, allSubjectNames]);
 
   const filtered = useMemo(() => {
-    const statusOrder: Record<string, number> = { red: 0, yellow: 1, green: 2 };
+    const statusOrder: Record<string, number> = { red: 0, orange: 1, green: 2, gray: 3 };
     const list = students.filter((s) => {
       if ((s as any).archived) return false;
       if (user?.role === "coach" && user.scopeFilter && !user.scopeFilter.includes(s.sport)) return false;
       if (search && !s.full_name.includes(search) && !s.sport.includes(search) && !s.class_name.includes(search)) return false;
-      if (statusFilter && s.overall_status !== statusFilter) return false;
+      if (statusFilter && adminStatusOf(s.id) !== statusFilter) return false;
       if (branchFilters.length > 0 && !branchFilters.includes(s.sport)) return false;
       if (gradeFilter && classToGrade(s.class_name) !== gradeFilter) return false;
       if (classFilter && s.class_name !== classFilter) return false;
@@ -248,12 +271,12 @@ const StudentsPage = () => {
         let cmp = 0;
         if (sortBy === "name") cmp = a.full_name.localeCompare(b.full_name, "he");
         else if (sortBy === "avg") cmp = (a.avg_score || 0) - (b.avg_score || 0);
-        else if (sortBy === "status") cmp = (statusOrder[a.overall_status] ?? 2) - (statusOrder[b.overall_status] ?? 2);
+        else if (sortBy === "status") cmp = (statusOrder[adminStatusOf(a.id)] ?? 3) - (statusOrder[adminStatusOf(b.id)] ?? 3);
         return sortDir === "desc" ? -cmp : cmp;
       });
     }
     return list;
-  }, [students, search, statusFilter, branchFilters, gradeFilter, classFilter, gradeEntryFilter, subjectFilter, sortBy, sortDir, user, subjectRowsByStudent, bagrutFilter, gradesFilter, bagrutMap, gradesByStudent]);
+  }, [students, search, statusFilter, branchFilters, gradeFilter, classFilter, gradeEntryFilter, subjectFilter, sortBy, sortDir, user, subjectRowsByStudent, bagrutFilter, gradesFilter, bagrutMap, gradesByStudent, adminStatusMap]);
 
   const hasFilters = search || statusFilter || branchFilters.length > 0 || gradeFilter || classFilter || gradeEntryFilter !== "all" || subjectFilter || sortBy || bagrutFilter || gradesFilter;
 
@@ -314,16 +337,18 @@ const StudentsPage = () => {
   };
 
   const handleExport = useCallback(() => {
+    // Export factual fields + the manual admin status only (no averages, no default status)
     const data = (selected.size > 0 ? filtered.filter(s => selected.has(s.id)) : filtered).map(s => ({
       "שם מלא": s.full_name, "ענף": s.sport, "כיתה": s.class_name,
-      "ממוצע": s.avg_score || 0, "סטטוס": statusConfig[s.overall_status as StatusType]?.label || s.overall_status,
+      "סטטוס ניהולי": adminStatusConfig[adminStatusOf(s.id)].label,
+      "הערת סטטוס": adminStatusMap?.get(s.id)?.status_note || "",
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "ספורטאים");
     XLSX.writeFile(wb, "ספורטאים_ייצוא.xlsx");
     toast.success(`${data.length} ספורטאים יוצאו`);
-  }, [filtered, selected]);
+  }, [filtered, selected, adminStatusMap]);
 
   if (isLoading) return <StudentsPageSkeleton />;
 
@@ -557,6 +582,21 @@ const StudentsPage = () => {
               </FilterSelect>
             )}
 
+            {isBagrutViewer && (
+              <FilterSelect
+                label="סטטוס ניהולי"
+                value={statusFilter ? adminStatusConfig[statusFilter].label : ""}
+                onClear={statusFilter ? () => setStatusFilter(null) : undefined}
+              >
+                {ADMIN_STATUS_ORDER.map((s) => (
+                  <DropdownMenuItem key={s} onClick={() => setStatusFilter(s)} className="text-[12px] gap-2">
+                    <span className={`w-2 h-2 rounded-full ${adminStatusConfig[s].dot}`} />
+                    {adminStatusConfig[s].label}
+                  </DropdownMenuItem>
+                ))}
+              </FilterSelect>
+            )}
+
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
               <input
@@ -732,7 +772,7 @@ const StudentsPage = () => {
                   className="bg-card rounded-2xl border border-border p-4 cursor-pointer hover:shadow-md transition-all"
                 >
                   {/* Header */}
-                  <div className="flex items-start justify-between gap-2 mb-3" dir="rtl">
+                  <div className="flex items-start justify-between gap-2 mb-2" dir="rtl">
                     <div className="min-w-0">
                       <p className="text-[14px] font-bold text-foreground leading-tight truncate">{student.full_name}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
@@ -743,6 +783,25 @@ const StudentsPage = () => {
                       </button>
                     </div>
                   </div>
+
+                  {/* Manual admin status — color + text, admin sets it (never computed) */}
+                  {isBagrutViewer && (() => {
+                    const asr = adminStatusMap?.get(student.id);
+                    const st = asr?.status || "gray";
+                    const cfg = adminStatusConfig[st];
+                    return (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setStatusEditStudent(student); }}
+                        className={`mb-3 inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded-full border text-[11px] font-medium ${cfg.chip} hover:opacity-80 transition-opacity`}
+                        title="שינוי סטטוס ניהולי"
+                        dir="rtl"
+                      >
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                        <span className="shrink-0">{cfg.label}</span>
+                        {asr?.status_note && <span className="text-muted-foreground truncate">· {asr.status_note}</span>}
+                      </button>
+                    );
+                  })()}
 
                   {/* Real bagrut categories — compact preview (verbatim, no invented status) */}
                   <div className="space-y-1 mb-2" dir="rtl">
@@ -786,6 +845,16 @@ const StudentsPage = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Manual admin status editor */}
+      {isBagrutViewer && (
+        <AdminStatusEditor
+          student={statusEditStudent}
+          current={statusEditStudent ? adminStatusMap?.get(statusEditStudent.id) : null}
+          open={!!statusEditStudent}
+          onOpenChange={(o) => !o && setStatusEditStudent(null)}
+        />
+      )}
 
       {/* Modals */}
       <StudentFormModal

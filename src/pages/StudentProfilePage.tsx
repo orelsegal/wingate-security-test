@@ -21,6 +21,8 @@ import {
 } from "recharts";
 import { ProfileSkeleton } from "@/components/PageSkeleton";
 import { groupBagrut, sectionForClass, BagrutGroupsView } from "@/lib/bagrutView";
+import { adminStatusConfig, formatStatusUpdated, type AdminStatusRow } from "@/lib/adminStatus";
+import AdminStatusEditor from "@/components/AdminStatusEditor";
 
 const MATH_SUBJECT_ID = "a1111111-0000-0000-0000-000000000001";
 
@@ -65,10 +67,26 @@ const StudentProfilePage = () => {
 
   // Bagrut data — separate RLS-secured table. Admin/developer, plus a parent
   // viewing their own linked child (RLS enforces the actual row access).
+  const isAdminUser = user?.role === "admin" || user?.role === "developer";
   const isBagrutViewer =
-    user?.role === "admin" ||
-    user?.role === "developer" ||
+    isAdminUser ||
     (user?.role === "parent" && !!id && !!user.scopeFilter?.includes(id));
+
+  // Manual admin traffic light (student_admin_status, RLS admin-only)
+  const [statusEditorOpen, setStatusEditorOpen] = useState(false);
+  const { data: adminStatusRow } = useQuery({
+    queryKey: ["admin-status", id],
+    enabled: !!id && isAdminUser,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_admin_status" as any)
+        .select("status, status_note, status_updated_at, status_updated_by_name")
+        .eq("student_id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as AdminStatusRow | null) ?? null;
+    },
+  });
   const { data: bagrutData } = useQuery({
     queryKey: ["student_bagrut_data", id],
     enabled: !!id && isBagrutViewer,
@@ -376,6 +394,33 @@ const StudentProfilePage = () => {
               </div>
             </div>
 
+            {/* Manual admin status — color + text, set by admin only, never computed */}
+            {isAdminUser && (() => {
+              const st = adminStatusRow?.status || "gray";
+              const cfg = adminStatusConfig[st];
+              const updatedLine = formatStatusUpdated(adminStatusRow);
+              return (
+                <div className="space-y-1 min-w-0">
+                  <p className="text-[11px] text-muted-foreground font-medium">סטטוס ניהולי</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[12px] font-medium ${cfg.chip}`}>
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                      {cfg.label}
+                    </span>
+                    <button
+                      onClick={() => setStatusEditorOpen(true)}
+                      className="text-[11.5px] text-primary hover:underline"
+                    >
+                      שינוי סטטוס
+                    </button>
+                  </div>
+                  {adminStatusRow?.status_note && (
+                    <p className="text-[12px] text-foreground break-words">{adminStatusRow.status_note}</p>
+                  )}
+                  {updatedLine && <p className="text-[10.5px] text-muted-foreground">{updatedLine}</p>}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Factual counts + actions — no average, no ring, no status colors */}
@@ -935,6 +980,16 @@ const StudentProfilePage = () => {
 
       {/* Admin-defined custom sections */}
       <CustomSectionsRenderer studentId={student.id} />
+
+      {/* Manual admin status editor */}
+      {isAdminUser && (
+        <AdminStatusEditor
+          student={{ id: student.id, full_name: student.full_name }}
+          current={adminStatusRow}
+          open={statusEditorOpen}
+          onOpenChange={setStatusEditorOpen}
+        />
+      )}
     </div>
   );
 };
