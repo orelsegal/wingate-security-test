@@ -95,6 +95,9 @@ const StudentProfilePage = () => {
   // Admin Builder — entry point to /admin/builder; edit mode still works inline.
   const isEditable = editModeActive;
   const userRole = (user?.role || "student") as any;
+  // Study-unit levels are currently manual/default values, not real sheet data.
+  // Hide them from parents until levels come from actual student data.
+  const showManualLevels = user?.role !== "parent";
   const isSectionVisible = (id: string) => {
     const sec = builderLayout.sections.find((s) => s.id === id);
     if (!sec) return true;
@@ -405,10 +408,10 @@ const StudentProfilePage = () => {
       {/* ═══ OVERVIEW KPI STRIP ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { icon: CalendarCheck, label: "נוכחות", value: `${(student as any).attendance_percent ?? "—"}%`, accent: "text-success", bg: "bg-success/10" },
-          { icon: Activity, label: "שיעורי תגבור", value: String((student as any).sessions_completed ?? 0), accent: "text-primary", bg: "bg-primary/10" },
-          { icon: MessageCircle, label: "פניות פתוחות", value: String((student as any).open_requests ?? 0), accent: ((student as any).open_requests ?? 0) > 0 ? "text-warning" : "text-muted-foreground", bg: ((student as any).open_requests ?? 0) > 0 ? "bg-warning/10" : "bg-accent/40" },
-          { icon: (student as any).trend === "down" ? TrendingDown : (student as any).trend === "up" ? TrendingUp : Minus, label: "מגמה", value: (student as any).trend === "up" ? "שיפור" : (student as any).trend === "down" ? "ירידה" : "יציב", accent: (student as any).trend === "up" ? "text-success" : (student as any).trend === "down" ? "text-destructive" : "text-muted-foreground", bg: (student as any).trend === "up" ? "bg-success/10" : (student as any).trend === "down" ? "bg-destructive/10" : "bg-accent/40" },
+          { icon: CalendarCheck, label: "נוכחות", value: (student as any).attendance_percent != null ? `${(student as any).attendance_percent}%` : "—", accent: "text-success", bg: "bg-success/10" },
+          { icon: Activity, label: "שיעורי תגבור", value: (student as any).sessions_completed != null ? String((student as any).sessions_completed) : "—", accent: "text-primary", bg: "bg-primary/10" },
+          { icon: MessageCircle, label: "פניות פתוחות", value: (student as any).open_requests != null ? String((student as any).open_requests) : "—", accent: ((student as any).open_requests ?? 0) > 0 ? "text-warning" : "text-muted-foreground", bg: ((student as any).open_requests ?? 0) > 0 ? "bg-warning/10" : "bg-accent/40" },
+          { icon: (student as any).trend === "down" ? TrendingDown : (student as any).trend === "up" ? TrendingUp : Minus, label: "מגמה", value: (student as any).trend === "up" ? "שיפור" : (student as any).trend === "down" ? "ירידה" : "—", accent: (student as any).trend === "up" ? "text-success" : (student as any).trend === "down" ? "text-destructive" : "text-muted-foreground", bg: (student as any).trend === "up" ? "bg-success/10" : (student as any).trend === "down" ? "bg-destructive/10" : "bg-accent/40" },
         ].map((kpi, i) => (
           <div key={i} className="card-premium p-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
@@ -487,7 +490,7 @@ const StudentProfilePage = () => {
 
 
       {/* ═══ MATH LEVEL SELECTOR ═══ */}
-      {isSectionVisible("sys-math") && (
+      {isSectionVisible("sys-math") && showManualLevels && (
       <div className="card-premium p-5 md:p-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -544,9 +547,11 @@ const StudentProfilePage = () => {
                     }`}
                   >
                     <span>{s.subject_name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-primary-foreground/20" : "bg-primary/10 text-primary"}`}>
-                      {lvl} יח״ל
-                    </span>
+                    {showManualLevels && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-primary-foreground/20" : "bg-primary/10 text-primary"}`}>
+                        {lvl} יח״ל
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -580,6 +585,7 @@ const StudentProfilePage = () => {
             })()}
 
             {/* Per-subject level selector */}
+            {showManualLevels && (
             <div className="mb-5">
               <label className="text-[11px] text-muted-foreground font-medium mb-2 block">רמת לימוד ({tabSubject})</label>
               <div className="flex gap-2">
@@ -599,6 +605,7 @@ const StudentProfilePage = () => {
                 ))}
               </div>
             </div>
+            )}
 
             {/* Per-subject form (same fields as previous "פרטים נוספים") */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
@@ -707,7 +714,7 @@ const StudentProfilePage = () => {
                       </div>
                       <span className="text-[12.5px] font-semibold text-foreground truncate">{s.subject_name}</span>
                     </div>
-                    <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">{lvl} יח״ל</span>
+                    {showManualLevels && <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">{lvl} יח״ל</span>}
                   </div>
                 </button>
               );
@@ -739,7 +746,7 @@ const StudentProfilePage = () => {
                     </div>
                     <div className="min-w-0">
                       <span className="text-[13px] font-semibold text-foreground block">{subjName}</span>
-                      <span className="text-[11px] text-muted-foreground">{getSubjectLevel(subjName)} יח״ל</span>
+                      {showManualLevels && <span className="text-[11px] text-muted-foreground">{getSubjectLevel(subjName)} יח״ל</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">

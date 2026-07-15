@@ -349,12 +349,6 @@ const TeacherHome = () => {
 };
 
 /* ═══ PARENT ═══ */
-const statusBadge: Record<string, { label: string; bg: string; dot: string }> = {
-  green:  { label: "במסלול",  bg: "bg-success/10 text-success",      dot: "bg-success" },
-  yellow: { label: "פערים",   bg: "bg-warning/10 text-warning",       dot: "bg-warning" },
-  red:    { label: "בסיכון",  bg: "bg-destructive/10 text-destructive", dot: "bg-destructive" },
-};
-
 const ParentHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -372,23 +366,14 @@ const ParentHome = () => {
     );
   }
 
-  /* derive quick subject stats */
-  const graded = (progress as any[]).filter(p => (p.grade ?? 0) > 0);
-  const avgGrade = graded.length
-    ? Math.round(graded.reduce((s: number, p: any) => s + p.grade, 0) / graded.length)
-    : null;
-  const completionPct = child?.completion_percent ?? 0;
-  const status = child?.overall_status || "green";
-  const badge = statusBadge[status] || statusBadge.green;
-
-  /* subjects needing attention */
-  const atRisk = (progress as any[])
-    .filter(p => p.status === "red" || p.status === "yellow")
-    .sort((a, b) => (a.status === "red" ? -1 : 1) - (b.status === "red" ? -1 : 1))
-    .slice(0, 3);
+  // Factual only: grade rows this account is actually allowed to read.
+  // Grades/bagrut are currently admin-only in RLS, so parents get 0 rows;
+  // if that policy opens, real counts appear here automatically.
+  const totalRows = (progress as any[]).length;
+  const gradedRows = (progress as any[]).filter(p => (p.grade ?? 0) > 0).length;
 
   const cards: ActionCard[] = [
-    { id: "profile",  title: "פרופיל מלא",       description: "כל הנתונים, ציונים ומידע אישי", icon: Heart,     color: "bg-[hsl(350,25%,93%)]", iconColor: "text-[hsl(350,40%,50%)]", path: `/students/${childId}` },
+    { id: "profile",  title: "פרופיל התלמיד/ה",  description: "פרטים אישיים ומידע כללי",        icon: Heart,     color: "bg-[hsl(350,25%,93%)]", iconColor: "text-[hsl(350,40%,50%)]", path: `/students/${childId}` },
     { id: "calendar", title: "לוח שנה",           description: "משימות, מבחנים ומפגשים קרובים",  icon: Calendar,  color: "bg-secondary",          iconColor: "text-foreground/80",      path: "/calendar" },
     { id: "messages", title: "הודעות והערות",     description: "הערות מצוות החינוך",             icon: MessageSquare, color: "bg-[hsl(270,25%,93%)]", iconColor: "text-[hsl(270,35%,50%)]", comingSoon: true },
   ];
@@ -403,63 +388,27 @@ const ParentHome = () => {
           </div>
         ) : (
           <>
-            <div className="flex items-start justify-between mb-4">
-              <span className={`text-[10.5px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${badge.bg}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-                {badge.label}
-              </span>
-              <div className="text-start">
-                <h2 className="text-[16px] font-semibold text-foreground">{child?.full_name || user?.name}</h2>
-                {child?.class_name && (
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{child.class_name} · {child.sport || ""}</p>
-                )}
-              </div>
+            {/* Real fields only: name, class, sport. No status chip, no average,
+                no completion bar — those were default/invented values. */}
+            <div className="mb-4 min-w-0">
+              <h2 className="text-[16px] font-semibold text-foreground break-words leading-snug">{child?.full_name || user?.name}</h2>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                כיתה {child?.class_name || "—"} · {child?.sport || "—"}
+              </p>
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {[
-                { label: "ממוצע ציונים", value: avgGrade ?? "—" },
-                { label: "השלמת חומר",   value: `${Math.round(completionPct)}%` },
-                { label: "מקצועות",      value: (progress as any[]).length },
-              ].map((s, i) => (
-                <div key={i} className="bg-muted/30 rounded-xl p-3 text-center">
-                  <p className="text-[18px] font-bold text-foreground tabular-nums leading-none">{s.value}</p>
-                  <p className="text-[9.5px] text-muted-foreground mt-1">{s.label}</p>
-                </div>
-              ))}
+            {/* Factual grade counts, or an honest empty state */}
+            <div className="bg-muted/30 rounded-xl p-3">
+              {totalRows > 0 ? (
+                <p className="text-[13px] text-foreground">
+                  {gradedRows} ציונים קיימים מתוך {totalRows} רשומות לימודיות
+                </p>
+              ) : (
+                <p className="text-[13px] text-muted-foreground">
+                  נתוני ציונים ובגרות עדיין אינם זמינים לצפייה בחשבון הורה
+                </p>
+              )}
             </div>
-
-            {/* Progress bar */}
-            <div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mb-1.5">
-                <span>{Math.round(completionPct)}%</span>
-                <span>התקדמות כוללת</span>
-              </div>
-              <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary/70 transition-all duration-700"
-                  style={{ width: `${completionPct}%` }}
-                />
-              </div>
-            </div>
-
-            {/* At-risk subjects */}
-            {atRisk.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-border/50">
-                <p className="text-[10.5px] font-medium text-muted-foreground mb-2 text-end">מקצועות שדורשים תשומת לב</p>
-                <div className="flex gap-2 flex-wrap justify-end">
-                  {atRisk.map((p: any) => (
-                    <span
-                      key={p.subject_id}
-                      className={`text-[10px] px-2.5 py-1 rounded-full font-medium ${p.status === "red" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}
-                    >
-                      {p.subjects?.subject_name || "מקצוע"}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </>
         )}
       </div>
