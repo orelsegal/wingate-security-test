@@ -84,7 +84,7 @@ const StudentProfilePage = () => {
         .eq("student_id", id)
         .maybeSingle();
       if (error) throw error;
-      return (data as AdminStatusRow | null) ?? null;
+      return (data as unknown as AdminStatusRow | null) ?? null;
     },
   });
   const { data: bagrutData } = useQuery({
