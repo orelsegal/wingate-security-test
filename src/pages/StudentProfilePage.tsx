@@ -63,8 +63,12 @@ const StudentProfilePage = () => {
   const updateStudent = useUpdateStudent();
   const { data: student, isLoading: studentLoading } = useStudent(id || "");
 
-  // Bagrut data — separate RLS-secured table, admin-only. Non-admins get 0 rows.
-  const isBagrutViewer = user?.role === "admin" || user?.role === "developer";
+  // Bagrut data — separate RLS-secured table. Admin/developer, plus a parent
+  // viewing their own linked child (RLS enforces the actual row access).
+  const isBagrutViewer =
+    user?.role === "admin" ||
+    user?.role === "developer" ||
+    (user?.role === "parent" && !!id && !!user.scopeFilter?.includes(id));
   const { data: bagrutData } = useQuery({
     queryKey: ["student_bagrut_data", id],
     enabled: !!id && isBagrutViewer,
@@ -97,7 +101,8 @@ const StudentProfilePage = () => {
   const userRole = (user?.role || "student") as any;
   // Study-unit levels are currently manual/default values, not real sheet data.
   // Hide them from parents until levels come from actual student data.
-  const showManualLevels = user?.role !== "parent";
+  const isParentView = user?.role === "parent";
+  const showManualLevels = !isParentView;
   const isSectionVisible = (id: string) => {
     const sec = builderLayout.sections.find((s) => s.id === id);
     if (!sec) return true;
@@ -741,8 +746,9 @@ const StudentProfilePage = () => {
                   className="w-full p-4 md:p-5 flex items-center justify-between text-start group"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${statusConfig[status].bgClass}`}>
-                      <BookOpen className="h-3.5 w-3.5" style={{ color: `hsl(var(--${status === "green" ? "success" : status === "yellow" ? "warning" : "destructive"}))` }} strokeWidth={1.5} />
+                    {/* Parents see a neutral icon — the status colors come from a DB default, not real data */}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isParentView ? "bg-muted/40" : statusConfig[status].bgClass}`}>
+                      <BookOpen className="h-3.5 w-3.5" style={isParentView ? undefined : { color: `hsl(var(--${status === "green" ? "success" : status === "yellow" ? "warning" : "destructive"}))` }} strokeWidth={1.5} />
                     </div>
                     <div className="min-w-0">
                       <span className="text-[13px] font-semibold text-foreground block">{subjName}</span>
@@ -750,34 +756,40 @@ const StudentProfilePage = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-end hidden sm:block">
-                      <span className="text-[20px] font-bold text-foreground tabular-nums">{sp.grade || 0}</span>
+                    <div className="text-end">
+                      <span className="text-[20px] font-bold text-foreground tabular-nums">{(sp.grade ?? 0) > 0 ? sp.grade : "—"}</span>
                       <span className="text-[11px] text-muted-foreground block">ציון</span>
                     </div>
-                    <div className="text-end hidden sm:block">
-                      <span className="text-[14px] font-semibold text-foreground tabular-nums">{sp.completion_percent}%</span>
-                      <span className="text-[11px] text-muted-foreground block">השלמה</span>
-                    </div>
+                    {!isParentView && (
+                      <div className="text-end hidden sm:block">
+                        <span className="text-[14px] font-semibold text-foreground tabular-nums">{sp.completion_percent}%</span>
+                        <span className="text-[11px] text-muted-foreground block">השלמה</span>
+                      </div>
+                    )}
                     {sp.absences > 0 && (
                       <div className="text-end hidden md:block">
                         <span className={`text-[14px] font-semibold tabular-nums ${sp.absences > 3 ? "text-destructive" : "text-foreground"}`}>{sp.absences}</span>
                         <span className="text-[11px] text-muted-foreground block">חיסורים</span>
                       </div>
                     )}
-                    <StatusBadge type={status} />
+                    {!isParentView && <StatusBadge type={status} />}
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} strokeWidth={1.5} />
                   </div>
                 </button>
 
-                {/* Progress bar */}
+                {/* Progress bar — hidden for parents (completion defaults to 0, not real data) */}
+                {!isParentView && (
                 <div className="mx-5 -mt-2 mb-3 h-1 rounded-full bg-accent overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-500 ${statusConfig[status].dotClass}`} style={{ width: `${sp.completion_percent || 0}%` }} />
                 </div>
+                )}
 
                 {/* Expanded — full edit panel */}
                 {isOpen && (
                   <div className="px-5 pb-5 border-t border-border/50 animate-in slide-in-from-top-1 duration-200">
-                    {/* Editable fields grid */}
+                    {/* Editable fields grid — staff only; for parents the values here
+                        are edit defaults (status/completion), not real data */}
+                    {!isParentView && (
                     <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
                       <div className="space-y-1.5">
                         <label className="text-[11px] text-muted-foreground font-medium">סטטוס</label>
@@ -822,8 +834,9 @@ const StudentProfilePage = () => {
                         />
                       </div>
                     </div>
+                    )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-5 ${isParentView ? "pt-4" : ""}`}>
                       {/* Roadmap */}
                       {subjectRoadmap.length > 0 && (
                         <div>
@@ -835,11 +848,12 @@ const StudentProfilePage = () => {
                                 <div key={item.id} className="flex items-start gap-3">
                                   <div className="flex flex-col items-center">
                                     <button
-                                      onClick={(e) => { e.stopPropagation(); handleToggleRoadmapItem(item.id, item.completed); }}
-                                      className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 cursor-pointer hover:scale-110 ${
-                                        item.completed ? "bg-success/15 hover:bg-success/25" : "bg-accent hover:bg-accent/80"
-                                      }`}
-                                      title={item.completed ? "סמן כלא הושלם" : "סמן כהושלם"}
+                                      onClick={(e) => { e.stopPropagation(); if (!isParentView) handleToggleRoadmapItem(item.id, item.completed); }}
+                                      disabled={isParentView}
+                                      className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
+                                        isParentView ? "cursor-default" : "cursor-pointer hover:scale-110"
+                                      } ${item.completed ? "bg-success/15 hover:bg-success/25" : "bg-accent hover:bg-accent/80"}`}
+                                      title={isParentView ? undefined : item.completed ? "סמן כלא הושלם" : "סמן כהושלם"}
                                     >
                                       {item.completed ? (
                                         <CheckCircle2 className="h-3.5 w-3.5 text-success" strokeWidth={1.5} />
@@ -850,10 +864,11 @@ const StudentProfilePage = () => {
                                     {!isLast && <div className={`w-px h-5 ${item.completed ? "bg-success/30" : "bg-border"}`} />}
                                   </div>
                                   <button
-                                    onClick={(e) => { e.stopPropagation(); handleToggleRoadmapItem(item.id, item.completed); }}
-                                    className={`text-[12px] pt-1 text-start transition-colors duration-150 cursor-pointer hover:text-foreground ${
-                                      item.completed ? "text-muted-foreground line-through decoration-success/40" : "text-muted-foreground/70"
-                                    }`}
+                                    onClick={(e) => { e.stopPropagation(); if (!isParentView) handleToggleRoadmapItem(item.id, item.completed); }}
+                                    disabled={isParentView}
+                                    className={`text-[12px] pt-1 text-start transition-colors duration-150 ${
+                                      isParentView ? "cursor-default" : "cursor-pointer hover:text-foreground"
+                                    } ${item.completed ? "text-muted-foreground line-through decoration-success/40" : "text-muted-foreground/70"}`}
                                   >
                                     {item.topic_name}
                                   </button>
