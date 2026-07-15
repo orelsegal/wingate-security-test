@@ -290,6 +290,44 @@ export type Database = {
         }
         Relationships: []
       }
+      student_admin_status: {
+        Row: {
+          id: string
+          status: string
+          status_note: string | null
+          status_updated_at: string
+          status_updated_by: string | null
+          status_updated_by_name: string | null
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          status?: string
+          status_note?: string | null
+          status_updated_at?: string
+          status_updated_by?: string | null
+          status_updated_by_name?: string | null
+          student_id: string
+        }
+        Update: {
+          id?: string
+          status?: string
+          status_note?: string | null
+          status_updated_at?: string
+          status_updated_by?: string | null
+          status_updated_by_name?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_admin_status_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_bagrut_data: {
         Row: {
           created_at: string
