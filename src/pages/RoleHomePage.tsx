@@ -9,7 +9,6 @@ import {
   Dumbbell, ChevronLeft, GraduationCap, Layers, Play,
 } from "lucide-react";
 import WingateBadge from "@/components/WingateBadge";
-import AIInsightsPanel from "@/components/AIInsightsPanel";
 import DashboardContent from "@/components/DashboardContent";
 import EditableElement from "@/components/builder/EditableElement";
 import { roleTitles, CURRENT_SEMESTER } from "@/lib/schoolUtils";
@@ -246,13 +245,10 @@ const TeacherHome = () => {
   const navigate = useNavigate();
   const { data: students = [] } = useStudents();
 
-  const redStudents   = students.filter(s => s.overall_status === "red");
-  const yellowStudents = students.filter(s => s.overall_status === "yellow");
-  const greenStudents = students.filter(s => s.overall_status === "green");
-  const graded = students.filter(s => (s.avg_score ?? 0) > 0);
-  const avgGrade = graded.length
-    ? Math.round(graded.reduce((sum, s) => sum + (s.avg_score || 0), 0) / graded.length)
-    : 0;
+  // Factual only — no default statuses, no averages
+  const active = students.filter(s => !(s as any).archived);
+  const sportsCount = new Set(active.map(s => s.sport).filter(Boolean)).size;
+  const classesCount = new Set(active.map(s => s.class_name).filter(Boolean)).size;
 
   const quickActions = [
     { id: "courses",  title: "הקורסים שלי",    desc: "ניהול קורסים וציונים",       icon: BookOpen,     color: "bg-primary/10",   iconColor: "text-primary",      path: "/teacher-courses" },
@@ -261,71 +257,19 @@ const TeacherHome = () => {
     { id: "data",     title: "הזנת נתונים",    desc: "עדכון מידע אישי ואקדמי",    icon: Database,     color: "bg-violet-50",    iconColor: "text-violet-700",   path: "/data-entry" },
   ];
 
-  /* students that need attention — red first, then yellow if no red */
-  const atRisk = redStudents.length > 0 ? redStudents : yellowStudents;
-  const atRiskColor = redStudents.length > 0
-    ? { dot: "bg-destructive", card: "bg-destructive/5 border-destructive/10", chevron: "group-hover:text-destructive/40" }
-    : { dot: "bg-warning",     card: "bg-warning/5 border-warning/10",         chevron: "group-hover:text-warning/40" };
-  const atRiskLabel = redStudents.length > 0 ? "ספורטאים בסיכון" : "ספורטאים עם פערים";
-  const atRiskFilter = redStudents.length > 0 ? "red" : "yellow";
-
   return (
     <>
       <ContinueCard navigate={navigate} />
 
-      {/* KPI strip */}
+      {/* KPI strip — factual counts only */}
       <InsightStrip
         pageKey="home-teacher"
         items={[
-          { id: "teacher-stat-total",  label: "סה״כ ספורטאים", value: students.length,      icon: Users,         color: "text-primary" },
-          { id: "teacher-stat-red",    label: "בסיכון",         value: redStudents.length,   icon: AlertTriangle, color: "text-destructive" },
-          { id: "teacher-stat-avg",    label: "ממוצע כיתה",     value: avgGrade || "—",      icon: Target,        color: "text-success" },
-          { id: "teacher-stat-green",  label: "במסלול",         value: greenStudents.length, icon: TrendingUp,    color: "text-success" },
+          { id: "teacher-stat-total",   label: "סה״כ ספורטאים", value: active.length || "—", icon: Users,    color: "text-primary" },
+          { id: "teacher-stat-sports",  label: "ענפי ספורט",     value: sportsCount || "—",   icon: Dumbbell, color: "text-primary" },
+          { id: "teacher-stat-classes", label: "כיתות",           value: classesCount || "—",  icon: BookOpen, color: "text-primary" },
         ]}
       />
-
-      {/* At-risk students */}
-      {atRisk.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={() => navigate(`/students?status=${atRiskFilter}`)}
-              className="text-[11px] text-primary/70 hover:text-primary transition-colors"
-            >
-              הצג הכל ←
-            </button>
-            <h3 className="text-[13px] font-semibold text-foreground">{atRiskLabel}</h3>
-          </div>
-          <div className="space-y-2">
-            {atRisk.slice(0, 4).map(s => (
-              <button
-                key={s.id}
-                onClick={() => navigate(`/students/${s.id}`)}
-                className={`w-full group ${atRiskColor.card} rounded-xl border p-3 flex items-center gap-3 text-start hover:opacity-90 transition-all`}
-              >
-                <span className={`w-2 h-2 rounded-full ${atRiskColor.dot} shrink-0`} />
-                <span className="text-[13px] font-medium text-foreground flex-1">{s.full_name}</span>
-                {s.class_name && <span className="text-[10px] text-muted-foreground">{s.class_name}</span>}
-                {s.sport && (
-                  <span className="text-[9.5px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">{s.sport}</span>
-                )}
-                <ChevronLeft className={`h-3.5 w-3.5 text-border ${atRiskColor.chevron} transition-colors`} strokeWidth={1.5} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* All-green celebration */}
-      {atRisk.length === 0 && students.length > 0 && (
-        <div className="mb-6 bg-success/5 rounded-2xl border border-success/15 p-4 flex items-center gap-3">
-          <span className="text-xl">🎉</span>
-          <div>
-            <p className="text-[13px] font-semibold text-foreground">כל הספורטאים במסלול!</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">כל {students.length} הספורטאים עם סטטוס ירוק כרגע</p>
-          </div>
-        </div>
-      )}
 
       {/* Quick actions grid */}
       <div className="grid grid-cols-2 gap-3">
@@ -425,17 +369,9 @@ const CoachHome = () => {
   const { user } = useAuth();
   const { data: students = [] } = useStudents();
   const mySport = user?.scopeFilter?.[0] || "";
-  const myStudents = mySport ? students.filter((s) => s.sport === mySport) : [];
-  const redStudents    = myStudents.filter(s => s.overall_status === "red");
-  const yellowStudents = myStudents.filter(s => s.overall_status === "yellow");
-  const greenStudents  = myStudents.filter(s => s.overall_status === "green");
-
-  const atRisk = redStudents.length > 0 ? redStudents : yellowStudents;
-  const atRiskColor = redStudents.length > 0
-    ? { dot: "bg-destructive", card: "bg-destructive/5 border-destructive/10", chevron: "group-hover:text-destructive/40" }
-    : { dot: "bg-warning",     card: "bg-warning/5 border-warning/10",         chevron: "group-hover:text-warning/40" };
-  const atRiskLabel  = redStudents.length > 0 ? "ספורטאים בסיכון" : "ספורטאים עם פערים";
-  const atRiskFilter = redStudents.length > 0 ? "red" : "yellow";
+  const myStudents = mySport ? students.filter((s) => s.sport === mySport && !(s as any).archived) : [];
+  // Factual only — no default statuses, no averages
+  const myClassesCount = new Set(myStudents.map(s => s.class_name).filter(Boolean)).size;
 
   if (!mySport) {
     return (
@@ -452,52 +388,10 @@ const CoachHome = () => {
       <InsightStrip
         pageKey="home-coach"
         items={[
-          { id: "coach-stat-total",  label: `ספורטאי ${mySport}`, value: myStudents.length,   icon: Dumbbell,      color: "text-[hsl(25,50%,45%)]" },
-          { id: "coach-stat-red",    label: "בסיכון",              value: redStudents.length,  icon: AlertTriangle, color: "text-destructive" },
-          { id: "coach-stat-green",  label: "במסלול",              value: greenStudents.length, icon: TrendingUp,    color: "text-success" },
+          { id: "coach-stat-total",   label: `ספורטאי ${mySport}`, value: myStudents.length || "—", icon: Dumbbell, color: "text-[hsl(25,50%,45%)]" },
+          { id: "coach-stat-classes", label: "כיתות בענף",          value: myClassesCount || "—",    icon: BookOpen, color: "text-primary" },
         ]}
       />
-
-      {/* At-risk quick list */}
-      {atRisk.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={() => navigate(`/students?status=${atRiskFilter}`)}
-              className="text-[11px] text-primary/70 hover:text-primary transition-colors"
-            >
-              הצג הכל ←
-            </button>
-            <h3 className="text-[13px] font-semibold text-foreground">{atRiskLabel}</h3>
-          </div>
-          <div className="space-y-2">
-            {atRisk.slice(0, 3).map(s => (
-              <button
-                key={s.id}
-                onClick={() => navigate(`/students/${s.id}`)}
-                className={`w-full group ${atRiskColor.card} rounded-xl border p-3 flex items-center gap-3 text-start hover:opacity-90 transition-all`}
-              >
-                <span className={`w-2 h-2 rounded-full ${atRiskColor.dot} shrink-0`} />
-                <span className="text-[13px] font-medium text-foreground flex-1">{s.full_name}</span>
-                {s.class_name && <span className="text-[10px] text-muted-foreground">{s.class_name}</span>}
-                <ChevronLeft className={`h-3.5 w-3.5 text-border ${atRiskColor.chevron} transition-colors`} strokeWidth={1.5} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {atRisk.length === 0 && myStudents.length > 0 && (
-        <div className="mb-6 bg-success/5 rounded-2xl border border-success/15 p-4 flex items-center gap-3">
-          <span className="text-xl">🏆</span>
-          <div>
-            <p className="text-[13px] font-semibold text-foreground">כל ספורטאי הענף במסלול!</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">כל {myStudents.length} הספורטאים עם סטטוס ירוק</p>
-          </div>
-        </div>
-      )}
-
-      <AIInsightsPanel students={myStudents} role="coach" navigate={navigate} />
 
       <div className="grid grid-cols-2 gap-3">
         <button
@@ -508,7 +402,7 @@ const CoachHome = () => {
             <Users className="h-[18px] w-[18px] text-[hsl(210,45%,48%)]" strokeWidth={1.5} />
           </div>
           <h3 className="text-[13px] font-semibold text-foreground leading-tight">כל הספורטאים</h3>
-          <p className="text-[10.5px] text-muted-foreground mt-1">פרופילים וסטטוסים</p>
+          <p className="text-[10.5px] text-muted-foreground mt-1">פרופילים ופרטים אישיים</p>
         </button>
         <button
           onClick={() => navigate("/data-entry")}
