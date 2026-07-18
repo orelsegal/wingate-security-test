@@ -129,6 +129,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
     } catch { /* ignore */ }
 
+    // With a valid session, a stale Supabase auth-error fragment left in the
+    // URL (e.g. #error=access_denied&error_code=otp_expired from an old magic
+    // link) is just noise — strip it without reloading or touching the session.
+    const clearStaleAuthErrorHash = () => {
+      const h = window.location.hash;
+      if (h && /(?:^|[#&])error(?:_code|_description)?=/.test(h)) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    };
+
     // Subscribe FIRST, then check the existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
@@ -136,6 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
         return;
       }
+      clearStaleAuthErrorHash();
       // Defer DB calls to avoid deadlock inside the auth callback
       setTimeout(async () => {
         const appUser = await buildAppUserFromSession(session);
@@ -147,6 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        clearStaleAuthErrorHash();
         const appUser = await buildAppUserFromSession(session);
         setUser(appUser);
       }
