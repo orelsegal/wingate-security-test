@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
+import { useIsSystemOwner } from "@/hooks/useSystemOwner";
 import EditableElement from "@/components/builder/EditableElement";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
@@ -30,6 +31,8 @@ const allMenuItems: MenuItemDef[] = [
   { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["developer", "admin"] },
   { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels",    roles: ["developer", "admin"] },
   { key: "adminUsers",     icon: UserCog,           path: "/admin/users",     roles: ["developer", "admin"] },
+  // System-Owner only (extra gate below — role admin alone is not enough)
+  { key: "learningGroups", icon: Layers,            path: "/admin/learning-groups", roles: ["admin"] },
   { key: "adminSettings",  icon: Settings,          path: "/admin/settings",  roles: ["developer", "admin"] },
 ];
 
@@ -42,9 +45,12 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { labels } = useUiLabels();
+  const { data: isSystemOwner } = useIsSystemOwner();
 
   const menuItems = allMenuItems.filter((item) => {
     if (!user || !item.roles.includes(user.role)) return false;
+    // learning groups: System Owner only — role admin alone is not enough
+    if (item.key === "learningGroups" && !isSystemOwner) return false;
     // Honor admin-set visibility (default true when key missing)
     const v = (labels.visibility?.nav as Record<string, boolean | undefined>)[item.key];
     return v !== false;

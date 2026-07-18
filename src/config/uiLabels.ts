@@ -30,6 +30,7 @@ export interface UiLabels {
     adminLabels: string;
     adminUsers: string;
     adminSettings: string;
+    learningGroups: string;
   };
   /** Sidebar role-titled section header */
   roleTitles: {
@@ -102,6 +103,7 @@ export const defaultUiLabels: UiLabels = {
     adminLabels: "עורך תוויות",
     adminUsers: "ניהול משתמשים",
     adminSettings: "מרכז מפתחת",
+    learningGroups: "קבוצות לימוד",
   },
   roleTitles: {
     developer: "סביבת פיתוח",
