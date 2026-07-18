@@ -1,77 +1,94 @@
-import { Users, TrendingUp, ChevronLeft, Loader2, Filter } from "lucide-react";
+import { Users, ChevronLeft, Loader2, Filter, LayoutGrid, PieChart, Rows3 } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { useNavigate } from "react-router-dom";
-import { useStudents, type StatusType } from "@/hooks/useStudents";
-import { StatusBadge } from "@/components/StatusBadge";
+import { useStudents, useAllStudentProgress } from "@/hooks/useStudents";
 import { useAuth } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import DataExportTools from "@/components/DataExportTools";
-import AIInsightsPanel from "@/components/AIInsightsPanel";
-
-type FilterValue = "all" | "green" | "yellow" | "red";
+import { adminStatusConfig, ADMIN_STATUS_ORDER, type AdminStatus, type AdminStatusRow } from "@/lib/adminStatus";
 
 interface Props {
   /** When true, omits outer padding so the parent container provides spacing. */
   embedded?: boolean;
 }
 
+/** Admin "תחנת מצב": factual counts + the manual admin traffic light only.
+ *  No avg_score, no overall_status, no computed statuses of any kind. */
 const DashboardContent = ({ embedded = false }: Props) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { labels } = useUiLabels();
   const { data: students = [], isLoading } = useStudents();
-  const [statusFilter, setStatusFilter] = useState<FilterValue>("all");
-
-  /* ── Aggregate data ── */
-  const branchStats = useMemo(() => {
-    const map = new Map<string, { green: number; yellow: number; red: number }>();
-    students.forEach((s) => {
-      const b = s.sport;
-      if (!map.has(b)) map.set(b, { green: 0, yellow: 0, red: 0 });
-      const entry = map.get(b)!;
-      if (s.overall_status === "green") entry.green++;
-      else if (s.overall_status === "yellow") entry.yellow++;
-      else entry.red++;
-    });
-    return Array.from(map.entries()).map(([name, counts]) => ({
-      name,
-      ...counts,
-      total: counts.green + counts.yellow + counts.red,
-      overall: (counts.red > 0 ? "red" : counts.yellow > 0 ? "yellow" : "green") as StatusType,
-    }));
-  }, [students]);
-
-  const totalStudents = students.length;
-  const redCount   = students.filter(s => s.overall_status === "red").length;
-  const yellowCount = students.filter(s => s.overall_status === "yellow").length;
-  const greenCount  = students.filter(s => s.overall_status === "green").length;
-  const avgScore = totalStudents > 0
-    ? (students.reduce((sum, s) => sum + (s.avg_score || 0), 0) / totalStudents).toFixed(1)
-    : "—";
-
-  /* Filter applied to the alerts list */
-  const filteredAlerts = useMemo(() => {
-    const base = students
-      .filter(s => s.overall_status === "red" || s.overall_status === "yellow")
-      .sort((a, b) => (a.overall_status === "red" && b.overall_status !== "red" ? -1 : 1))
-      .slice(0, 8)
-      .map(s => ({ id: s.id, name: s.full_name, sport: s.sport, status: s.overall_status as StatusType }));
-    if (statusFilter === "all") return base;
-    return base.filter(a => a.status === statusFilter);
-  }, [students, statusFilter]);
-
+  const { data: allProgress = [] } = useAllStudentProgress();
+  const isAdminRole = user?.role === "admin" || user?.role === "developer";
   const isTeacher = user?.role === "teacher";
-  const greenPct  = totalStudents ? (greenCount / totalStudents) * 100 : 0;
-  const yellowPct = totalStudents ? (yellowCount / totalStudents) * 100 : 0;
-  const redPct    = totalStudents ? (redCount / totalStudents) * 100 : 0;
+  const [statusFilter, setStatusFilter] = useState<AdminStatus | "all">("all");
 
-  const filterLabel: Record<FilterValue, string> = {
-    all:    "כל הסטטוסים",
-    green:  "במסלול בלבד",
-    yellow: "פערים בלבד",
-    red:    "בסיכון בלבד",
-  };
+  // Factual admin-only data (RLS enforces; non-admins never run these)
+  const { data: bagrutIds } = useQuery({
+    queryKey: ["all-bagrut-ids"],
+    enabled: isAdminRole,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("student_bagrut_data" as any).select("student_id");
+      if (error) throw error;
+      return new Set(((data as any[]) || []).map(r => r.student_id));
+    },
+  });
+  const { data: adminStatusMap } = useQuery({
+    queryKey: ["admin-status"],
+    enabled: isAdminRole,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_admin_status" as any)
+        .select("student_id, status, status_note, status_updated_at, status_updated_by_name");
+      if (error) throw error;
+      const m = new Map<string, AdminStatusRow>();
+      ((data as any[]) || []).forEach(r => m.set(r.student_id, r));
+      return m;
+    },
+  });
+
+  const active = useMemo(() => students.filter(s => !(s as any).archived), [students]);
+  const totalStudents = active.length;
+  const civicsCount = useMemo(
+    () => new Set((allProgress as any[]).filter(p => p.subjects?.subject_name === "אזרחות" && p.details).map(p => p.student_id)).size,
+    [allProgress],
+  );
+
+  const statusOf = (id: string): AdminStatus => adminStatusMap?.get(id)?.status || "gray";
+  const statusCounts = useMemo(() => {
+    const c: Record<AdminStatus, number> = { gray: 0, green: 0, orange: 0, red: 0 };
+    active.forEach(s => { c[statusOf(s.id)]++; });
+    return c;
+  }, [active, adminStatusMap]);
+  const definedCount = statusCounts.green + statusCounts.orange + statusCounts.red;
+
+  /* Branch totals (factual); admin also gets manual-status counts per branch */
+  const branchStats = useMemo(() => {
+    const map = new Map<string, { total: number; gray: number; green: number; orange: number; red: number }>();
+    active.forEach((s) => {
+      const b = s.sport || "לא צוין";
+      if (!map.has(b)) map.set(b, { total: 0, gray: 0, green: 0, orange: 0, red: 0 });
+      const e = map.get(b)!;
+      e.total++; e[statusOf(s.id)]++;
+    });
+    return Array.from(map.entries())
+      .map(([name, c]) => ({ name, ...c }))
+      .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "he"));
+  }, [active, adminStatusMap]);
+
+  /* Students the admin explicitly marked as דורש טיפול / במעקב (real decisions only) */
+  const flagged = useMemo(() => {
+    const base = active
+      .map(s => ({ s, st: statusOf(s.id), note: adminStatusMap?.get(s.id)?.status_note || null }))
+      .filter(x => x.st === "red" || x.st === "orange")
+      .sort((a, b) => (a.st === "red" ? 0 : 1) - (b.st === "red" ? 0 : 1));
+    if (statusFilter === "all") return base;
+    return base.filter(x => x.st === statusFilter);
+  }, [active, adminStatusMap, statusFilter]);
 
   if (isLoading) {
     return (
@@ -84,11 +101,8 @@ const DashboardContent = ({ embedded = false }: Props) => {
   return (
     <div className={embedded ? "max-w-[1400px]" : "p-5 md:p-8 lg:p-10 max-w-[1400px]"} dir="rtl">
 
-      {/* ══════════════════════════════════════════
-          SECTION 1 — PAGE HEADER
-      ══════════════════════════════════════════ */}
+      {/* ── Header ── */}
       <section className="mb-8 md:mb-10">
-        {/* Live date */}
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">
           <span className="relative flex h-1.5 w-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success/60 opacity-75" />
@@ -97,7 +111,6 @@ const DashboardContent = ({ embedded = false }: Props) => {
           <span>{new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" })}</span>
         </div>
 
-        {/* Title row */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <h1 className="text-[24px] md:text-[28px] font-semibold text-foreground tracking-tight leading-tight">
@@ -109,25 +122,22 @@ const DashboardContent = ({ embedded = false }: Props) => {
             </p>
           </div>
 
-          {/* Controls row: filter + export */}
           <div className="flex items-center gap-2.5 flex-wrap shrink-0 self-start">
-            {/* Status filter */}
-            <label className="flex items-center gap-2 h-9 px-3.5 rounded-xl border border-border bg-card text-[12px] cursor-pointer hover:border-primary/30 transition-colors">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
-              <span className="text-muted-foreground font-medium">פילטר:</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as FilterValue)}
-                className="bg-transparent text-foreground border-0 outline-none cursor-pointer font-medium text-[12px] pr-1"
-              >
-                <option value="all">כל הסטטוסים</option>
-                <option value="green">במסלול בלבד</option>
-                <option value="yellow">פערים בלבד</option>
-                <option value="red">בסיכון בלבד</option>
-              </select>
-            </label>
-
-            {/* Export */}
+            {isAdminRole && (
+              <label className="flex items-center gap-2 h-9 px-3.5 rounded-xl border border-border bg-card text-[12px] cursor-pointer hover:border-primary/30 transition-colors">
+                <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+                <span className="text-muted-foreground font-medium">סטטוס ניהולי:</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as AdminStatus | "all")}
+                  className="bg-transparent text-foreground border-0 outline-none cursor-pointer font-medium text-[12px] pr-1"
+                >
+                  <option value="all">דורש טיפול + במעקב</option>
+                  <option value="red">דורש טיפול בלבד</option>
+                  <option value="orange">במעקב בלבד</option>
+                </select>
+              </label>
+            )}
             {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
               <DataExportTools
                 students={students}
@@ -140,101 +150,55 @@ const DashboardContent = ({ embedded = false }: Props) => {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          SECTION 2 — 4 KPI CARDS
-      ══════════════════════════════════════════ */}
-      {!isTeacher && (
+      {/* ── Factual KPI cards (admin) — no averages, no computed statuses ── */}
+      {isAdminRole && (
         <section className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-          {/* Card 1 — total students */}
-          <div className="card-premium p-5 md:p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11.5px] font-medium text-muted-foreground">ספורטאים</span>
-              <Users className="h-3.5 w-3.5 text-muted-foreground/30" strokeWidth={1.5} />
+          {[
+            { label: "תלמידים", value: totalStudents, sub: "פעילים במערכת", icon: Users },
+            { label: "עם מפת בגרות", value: bagrutIds ? bagrutIds.size : "—", sub: "מתוך גיליון מפת הדרך", icon: LayoutGrid },
+            { label: "עם נתוני אזרחות", value: civicsCount, sub: "מקובץ ציוני האזרחות", icon: PieChart },
+            { label: "רשומות לימודיות", value: (allProgress as any[]).length, sub: "רשומות מקצוע במערכת", icon: Rows3 },
+          ].map((k) => (
+            <div key={k.label} className="card-premium p-5 md:p-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11.5px] font-medium text-muted-foreground">{k.label}</span>
+                <k.icon className="h-3.5 w-3.5 text-muted-foreground/30" strokeWidth={1.5} />
+              </div>
+              <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat tabular-nums">
+                {k.value}
+              </p>
+              <p className="text-[11px] text-muted-foreground/50 mt-2.5">{k.sub}</p>
             </div>
-            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
-              {totalStudents}
-            </p>
-            <p className="text-[11px] text-muted-foreground/50 mt-2.5">פעילים במערכת</p>
-          </div>
-
-          {/* Card 2 — average score */}
-          <div className="card-premium p-5 md:p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11.5px] font-medium text-muted-foreground">ממוצע כללי</span>
-              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/30" strokeWidth={1.5} />
-            </div>
-            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
-              {avgScore}
-            </p>
-            <p className="text-[11px] text-muted-foreground/50 mt-2.5">ממוצע משוקלל</p>
-          </div>
-
-          {/* Card 3 — on track (green dot) */}
-          <div className="card-premium p-5 md:p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11.5px] font-medium text-muted-foreground">במסלול</span>
-              <span className="w-2 h-2 rounded-full bg-success/60 ring-1 ring-success/20" />
-            </div>
-            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
-              {greenCount}
-            </p>
-            <p className="text-[11px] text-muted-foreground/50 mt-2.5">
-              {totalStudents ? Math.round((greenCount / totalStudents) * 100) : 0}% מהספורטאים
-            </p>
-          </div>
-
-          {/* Card 4 — needs attention (orange dot) */}
-          <div className="card-premium p-5 md:p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11.5px] font-medium text-muted-foreground">דורשים טיפול</span>
-              <span className="w-2 h-2 rounded-full bg-warning/60 ring-1 ring-warning/20" />
-            </div>
-            <p className="text-[30px] md:text-[34px] font-semibold text-foreground leading-none tracking-tight font-stat">
-              {yellowCount + redCount}
-            </p>
-            <p className="text-[11px] text-muted-foreground/50 mt-2.5">
-              {yellowCount} פערים · {redCount} בסיכון
-            </p>
-          </div>
+          ))}
         </section>
       )}
 
-      {/* ══════════════════════════════════════════
-          SECTION 3 — DISTRIBUTION BAR
-      ══════════════════════════════════════════ */}
-      {!isTeacher && totalStudents > 0 && (
+      {/* ── Manual admin-status distribution (student_admin_status only) ── */}
+      {isAdminRole && totalStudents > 0 && (
         <section className="card-premium p-5 md:p-6 mb-8 md:mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[13px] font-medium text-foreground/70">התפלגות סטטוס כולל</h2>
-            <span className="text-[11px] text-muted-foreground/60">{totalStudents} ספורטאים</span>
+          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+            <h2 className="text-[13px] font-medium text-foreground/70">סטטוס ניהולי · נקבע ידנית בלבד</h2>
+            <span className="text-[11px] text-muted-foreground/60">
+              {definedCount} הוגדרו · {statusCounts.gray} טרם הוגדרו
+            </span>
           </div>
+          <p className="text-[11px] text-muted-foreground/60 mb-4">אינו מחושב מציונים או מנתונים; משקף החלטות של המנהלת.</p>
 
-          {/* Slim bar with light track and soft pastel segments */}
           <div className="flex h-2 rounded-full overflow-hidden bg-muted/60 gap-px mb-4">
-            {greenPct > 0 && (
-              <div className="bg-success/55 rounded-s-full transition-all duration-700" style={{ width: `${greenPct}%` }} />
-            )}
-            {yellowPct > 0 && (
-              <div className="bg-warning/55 transition-all duration-700" style={{ width: `${yellowPct}%` }} />
-            )}
-            {redPct > 0 && (
-              <div className="bg-destructive/45 rounded-e-full transition-all duration-700" style={{ width: `${redPct}%` }} />
-            )}
+            {ADMIN_STATUS_ORDER.map((st) => {
+              const pct = (statusCounts[st] / totalStudents) * 100;
+              return pct > 0 ? <div key={st} className={`${adminStatusConfig[st].dot} transition-all duration-700`} style={{ width: `${pct}%` }} /> : null;
+            })}
           </div>
 
-          {/* Legend — X/Y format */}
           <div className="flex flex-wrap items-center gap-5">
-            {[
-              { label: "במסלול",  count: greenCount,  cls: "bg-success/60"     },
-              { label: "פערים",   count: yellowCount, cls: "bg-warning/60"     },
-              { label: "בסיכון",  count: redCount,    cls: "bg-destructive/50" },
-            ].map(s => (
-              <div key={s.label} className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${s.cls} shrink-0`} />
+            {ADMIN_STATUS_ORDER.map((st) => (
+              <div key={st} className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${adminStatusConfig[st].dot} shrink-0`} />
                 <span className="text-[11.5px] text-muted-foreground">
-                  <span className="font-medium text-foreground/80 tabular-nums">{s.count}</span>
+                  <span className="font-medium text-foreground/80 tabular-nums">{statusCounts[st]}</span>
                   <span className="text-muted-foreground/40">/{totalStudents}</span>
-                  {" "}{s.label}
+                  {" "}{adminStatusConfig[st].label}
                 </span>
               </div>
             ))}
@@ -242,158 +206,126 @@ const DashboardContent = ({ embedded = false }: Props) => {
         </section>
       )}
 
-      {/* ══════════════════════════════════════════
-          SECTION 4 — AI INSIGHTS (single instance)
-      ══════════════════════════════════════════ */}
-      {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
-        <AIInsightsPanel students={students} role={user.role} navigate={navigate} />
-      )}
-
-      {/* ══════════════════════════════════════════
-          SECTION 5 — BRANCH STATUS TABLE
-      ══════════════════════════════════════════ */}
+      {/* ── Branch table: factual totals; admin also sees manual-status counts ── */}
       <section className="mb-10 md:mb-12">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-[15px] font-medium text-foreground/80">
-              {isTeacher ? "מעקב אקדמי לפי ענף" : "סטטוס לפי ענף"}
-            </h2>
-            <p className="text-[12px] text-muted-foreground mt-0.5">התפלגות מצב אקדמי לפי ענף ספורט</p>
+            <h2 className="text-[15px] font-medium text-foreground/80">תלמידים לפי ענף</h2>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              {isAdminRole ? "ספירות בלבד · סטטוס ניהולי ידני" : "ספירות בלבד"}
+            </p>
           </div>
           <button
-            onClick={() => navigate("/courses")}
+            onClick={() => navigate("/students")}
             className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
-            <span>כל המקצועות</span>
+            <span>כל הספורטאים</span>
             <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           </button>
         </div>
 
         <div className="card-premium overflow-hidden">
-          {/* ── Column headers (desktop) ── */}
+          {/* Column headers (desktop) */}
           <div
             className="hidden md:grid px-5 py-3 border-b border-border bg-muted/50 gap-4 items-center"
-            style={{ gridTemplateColumns: "1fr 52px 80px 68px 68px 1fr 80px" }}
+            style={{ gridTemplateColumns: isAdminRole ? "1fr 56px 76px 76px 92px 92px" : "1fr 80px" }}
           >
-            {[
-              { label: "ענף",        cls: "text-start" },
-              { label: 'סה"כ',      cls: "text-center" },
-              { label: "במסלול",    cls: "text-center" },
-              { label: "פערים",     cls: "text-center" },
-              { label: "בסיכון",    cls: "text-center" },
-              { label: "התפלגות",   cls: "" },
-              { label: "סטטוס",     cls: "text-center" },
-            ].map(col => (
-              <span key={col.label} className={`text-[11px] font-medium text-muted-foreground ${col.cls}`}>
-                {col.label}
-              </span>
-            ))}
+            <span className="text-[11px] font-medium text-muted-foreground text-start">ענף</span>
+            <span className="text-[11px] font-medium text-muted-foreground text-center">סה"כ</span>
+            {isAdminRole && (
+              <>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">תקין</span>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">במעקב</span>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">דורש טיפול</span>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">טרם הוגדר</span>
+              </>
+            )}
           </div>
 
-          {/* ── Branch rows ── */}
           {branchStats.length === 0 ? (
             <p className="text-[13px] text-muted-foreground py-12 text-center">אין נתונים להצגה</p>
-          ) : branchStats.map((branch) => {
-            const gPct = (branch.green / branch.total) * 100;
-            const yPct = (branch.yellow / branch.total) * 100;
-            const rPct = (branch.red / branch.total) * 100;
-            return (
-              <div key={branch.name} className="border-b border-border last:border-0">
-                {/* Mobile row */}
-                <div className="md:hidden px-4 py-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[13px] font-semibold text-foreground">{branch.name}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[12px] font-semibold text-success">{branch.green}</span>
-                      <span className="text-[12px] font-semibold text-warning">{branch.yellow}</span>
-                      {branch.red > 0 && <span className="text-[12px] font-semibold text-destructive">{branch.red}</span>}
-                      <StatusBadge type={branch.overall} />
+          ) : branchStats.map((b) => (
+            <div key={b.name} className="border-b border-border last:border-0">
+              {/* Mobile row */}
+              <div className="md:hidden px-4 py-3.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[13px] font-semibold text-foreground min-w-0 break-words">{b.name}</span>
+                  <span className="text-[12.5px] text-muted-foreground tabular-nums shrink-0">{b.total} תלמידים</span>
+                </div>
+                {isAdminRole && (
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    תקין {b.green} · במעקב {b.orange} · דורש טיפול {b.red} · טרם הוגדר {b.gray}
+                  </p>
+                )}
+              </div>
+
+              {/* Desktop row */}
+              <div
+                className="hidden md:grid px-5 py-4 items-center gap-4"
+                style={{ gridTemplateColumns: isAdminRole ? "1fr 56px 76px 76px 92px 92px" : "1fr 80px" }}
+              >
+                <span className="text-[13.5px] font-semibold text-foreground">{b.name}</span>
+                <span className="text-[13px] text-muted-foreground text-center tabular-nums">{b.total}</span>
+                {isAdminRole && (
+                  <>
+                    <span className={`text-[13px] font-semibold text-center tabular-nums ${b.green > 0 ? "text-success/80" : "text-muted-foreground/25"}`}>{b.green}</span>
+                    <span className={`text-[13px] font-semibold text-center tabular-nums ${b.orange > 0 ? "text-warning/80" : "text-muted-foreground/25"}`}>{b.orange}</span>
+                    <span className={`text-[13px] font-semibold text-center tabular-nums ${b.red > 0 ? "text-destructive/80" : "text-muted-foreground/25"}`}>{b.red}</span>
+                    <span className="text-[13px] text-center tabular-nums text-muted-foreground">{b.gray}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Students the admin flagged (manual red/orange only) ── */}
+      {isAdminRole && (
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-[15px] font-medium text-foreground/80">סומנו לטיפול או למעקב</h2>
+              <p className="text-[12px] text-muted-foreground mt-0.5">רק תלמידים שסומנו ידנית בסטטוס הניהולי</p>
+            </div>
+            <button
+              onClick={() => navigate("/students?status=red")}
+              className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span>הצג הכל</span>
+              <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="card-premium divide-y divide-border">
+            {flagged.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground py-12 text-center">
+                לא סומנו תלמידים לטיפול או למעקב
+              </p>
+            ) : (
+              flagged.slice(0, 8).map(({ s, st, note }) => (
+                <div
+                  key={s.id}
+                  onClick={() => navigate(`/students/${s.id}`)}
+                  className="flex items-center justify-between gap-3 px-5 md:px-6 py-3.5 cursor-pointer hover:bg-accent/30 transition-colors duration-100"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <InitialsAvatar name={s.full_name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-foreground leading-tight break-words">{s.full_name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 break-words">{s.sport}{note ? ` · ${note}` : ""}</p>
                     </div>
                   </div>
-                  <div className="flex h-2 rounded-full overflow-hidden bg-muted/60 gap-px">
-                    {gPct > 0 && <div className="bg-success/55 rounded-s-full" style={{ width: `${gPct}%` }} />}
-                    {yPct > 0 && <div className="bg-warning/55" style={{ width: `${yPct}%` }} />}
-                    {rPct > 0 && <div className="bg-destructive/45 rounded-e-full" style={{ width: `${rPct}%` }} />}
-                  </div>
-                </div>
-
-                {/* Desktop row */}
-                <div
-                  className="hidden md:grid px-5 py-4 items-center gap-4"
-                  style={{ gridTemplateColumns: "1fr 52px 80px 68px 68px 1fr 80px" }}
-                >
-                  <span className="text-[13.5px] font-semibold text-foreground">{branch.name}</span>
-                  <span className="text-[13px] text-muted-foreground text-center tabular-nums">{branch.total}</span>
-                  <span className="text-[13px] font-semibold text-success/75 text-center tabular-nums">{branch.green}</span>
-                  <span className={`text-[13px] font-semibold text-center tabular-nums ${branch.yellow > 0 ? "text-warning/75" : "text-muted-foreground/20"}`}>
-                    {branch.yellow}
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium shrink-0 ${adminStatusConfig[st].chip}`}>
+                    <span className={`w-2 h-2 rounded-full ${adminStatusConfig[st].dot}`} />
+                    {adminStatusConfig[st].label}
                   </span>
-                  <span className={`text-[13px] font-semibold text-center tabular-nums ${branch.red > 0 ? "text-destructive/75" : "text-muted-foreground/20"}`}>
-                    {branch.red}
-                  </span>
-                  {/* Progress bar */}
-                  <div className="flex h-2 rounded-full overflow-hidden bg-muted/60 gap-px">
-                    {gPct > 0 && <div className="bg-success/55 rounded-s-full transition-all" style={{ width: `${gPct}%` }} />}
-                    {yPct > 0 && <div className="bg-warning/55 transition-all" style={{ width: `${yPct}%` }} />}
-                    {rPct > 0 && <div className="bg-destructive/45 rounded-e-full transition-all" style={{ width: `${rPct}%` }} />}
-                  </div>
-                  <div className="flex justify-center">
-                    <StatusBadge type={branch.overall} />
-                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════
-          SECTION 6 — STUDENTS NEEDING ATTENTION
-      ══════════════════════════════════════════ */}
-      <section>
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-[15px] font-medium text-foreground/80">ספורטאים לטיפול</h2>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
-              {statusFilter === "all"
-                ? "דורשים התייחסות של הצוות החינוכי"
-                : `מוצגים: ${filterLabel[statusFilter]}`}
-            </p>
+              ))
+            )}
           </div>
-          <button
-            onClick={() => navigate("/students?status=red")}
-            className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span>הצג הכל</span>
-            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
-          </button>
-        </div>
-
-        <div className="card-premium divide-y divide-border">
-          {filteredAlerts.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground py-12 text-center">
-              {statusFilter === "all" ? "אין ספורטאים לטיפול כרגע 🎉" : "אין תוצאות לפילטר הנבחר"}
-            </p>
-          ) : (
-            filteredAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                onClick={() => navigate(`/students/${alert.id}`)}
-                className="flex items-center justify-between px-5 md:px-6 py-3.5 cursor-pointer hover:bg-accent/30 transition-colors duration-100"
-              >
-                <div className="flex items-center gap-3">
-                  <InitialsAvatar name={alert.name} size="sm" />
-                  <div>
-                    <p className="text-[13px] font-medium text-foreground leading-tight">{alert.name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{alert.sport}</p>
-                  </div>
-                </div>
-                <StatusBadge type={alert.status} />
-              </div>
-            ))
-          )}
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };
