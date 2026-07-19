@@ -23,6 +23,8 @@ import { ProfileSkeleton } from "@/components/PageSkeleton";
 import { groupBagrut, sectionForClass, BagrutGroupsView } from "@/lib/bagrutView";
 import { adminStatusConfig, formatStatusUpdated, type AdminStatusRow } from "@/lib/adminStatus";
 import AdminStatusEditor from "@/components/AdminStatusEditor";
+import StudentRelationshipsSection from "@/components/people/StudentRelationshipsSection";
+import { useIsSystemOwner } from "@/hooks/useSystemOwner";
 
 const MATH_SUBJECT_ID = "a1111111-0000-0000-0000-000000000001";
 
@@ -71,6 +73,9 @@ const StudentProfilePage = () => {
   const isBagrutViewer =
     isAdminUser ||
     (user?.role === "parent" && !!id && !!user.scopeFilter?.includes(id));
+
+  // System-Owner-only extras (relationships section). UX gate; RPCs enforce.
+  const { data: isSystemOwner } = useIsSystemOwner();
 
   // Manual admin traffic light (student_admin_status, RLS admin-only)
   const [statusEditorOpen, setStatusEditorOpen] = useState(false);
@@ -334,6 +339,11 @@ const StudentProfilePage = () => {
           </div>
         );
       })()}
+
+      {/* קשרים — הורים ומאמנים של התלמיד/ה. System Owner בלבד בשלב זה. */}
+      {isSystemOwner && (
+        <StudentRelationshipsSection studentId={student.id} studentName={student.full_name} />
+      )}
 
       {/* בגרות — מפת הדרך: every sheet column as its own row, grouped by subject.
           Verbatim, empty = —, no invented status. Admin/developer only. */}

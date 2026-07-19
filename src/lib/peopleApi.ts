@@ -51,7 +51,28 @@ const call = async <T,>(client: RpcClient, fn: string, args?: Record<string, unk
   return data as T;
 };
 
+export interface StudentGuardianRel {
+  link_id: string; guardian_id: string; full_name: string;
+  relationship_type: "mother" | "father" | "guardian" | "other";
+  is_primary_contact: boolean; is_legal_guardian: boolean; receives_updates: boolean;
+  emergency_priority: number | null; active_from: string; active_to: string | null;
+  active: boolean; is_active: boolean; has_account: boolean;
+  phone: string | null; email: string | null;
+}
+export interface StudentCoachRel {
+  assignment_id: string; staff_member_id: string; full_name: string;
+  role_type: "primary" | "assistant" | "other"; staff_roles: string[];
+  active_from: string; active_to: string | null; active: boolean;
+  is_active: boolean; has_account: boolean;
+  phone: string | null; email: string | null;
+}
+export interface StudentRelationships {
+  student_id: string; guardians: StudentGuardianRel[]; coaches: StudentCoachRel[];
+}
+
 export const peopleApi = (client: RpcClient) => ({
+  studentRelationships: (studentId: string) =>
+    call<StudentRelationships>(client, "get_student_relationships", { p_student_id: studentId }),
   /* guardians */
   listGuardians: (search: string | null, activeOnly = true) =>
     call<GuardianListItem[]>(client, "list_guardians", { p_search: search, p_active_only: activeOnly }),
