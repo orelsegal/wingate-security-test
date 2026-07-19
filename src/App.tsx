@@ -45,6 +45,8 @@ const UserActivityPage           = lazy(() => import("./pages/UserActivityPage")
 const YearPlan2026Page           = lazy(() => import("./pages/YearPlan2026Page"));
 const AdminLabelsPage            = lazy(() => import("./pages/AdminLabelsPage"));
 const LearningGroupsPage         = lazy(() => import("./pages/LearningGroupsPage"));
+const GuardiansPage              = lazy(() => import("./pages/GuardiansPage"));
+const StaffPage                  = lazy(() => import("./pages/StaffPage"));
 const AdminBuilderPage           = lazy(() => import("./pages/AdminBuilderPage"));
 const UserManagementPage         = lazy(() => import("./pages/UserManagementPage"));
 const DevSettingsPage            = lazy(() => import("./pages/DevSettingsPage"));
@@ -144,6 +146,8 @@ const App = () => (
               <Route path="/admin/labels"                       element={<AdminLabelsPage />} />
               <Route path="/admin/users"                        element={<UserManagementPage />} />
               <Route path="/admin/learning-groups"              element={<LearningGroupsPage />} />
+              <Route path="/admin/guardians"                    element={<GuardiansPage />} />
+              <Route path="/admin/staff"                        element={<StaffPage />} />
               <Route path="/admin/settings"                     element={<DevSettingsPage />} />
               <Route path="/roadmaps"                           element={<RoadmapsPage />} />
               <Route path="/roadmaps/math"                      element={<Navigate to={`/subjects/${encodeURIComponent("מתמטיקה")}`} replace />} />

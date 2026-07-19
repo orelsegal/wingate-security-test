@@ -31,6 +31,8 @@ export interface UiLabels {
     adminUsers: string;
     adminSettings: string;
     learningGroups: string;
+    guardians: string;
+    staffMgmt: string;
   };
   /** Sidebar role-titled section header */
   roleTitles: {
@@ -104,6 +106,8 @@ export const defaultUiLabels: UiLabels = {
     adminUsers: "ניהול משתמשים",
     adminSettings: "מרכז מפתחת",
     learningGroups: "קבוצות לימוד",
+    guardians: "ניהול הורים",
+    staffMgmt: "ניהול צוות",
   },
   roleTitles: {
     developer: "סביבת פיתוח",

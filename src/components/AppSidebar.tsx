@@ -33,6 +33,8 @@ const allMenuItems: MenuItemDef[] = [
   { key: "adminUsers",     icon: UserCog,           path: "/admin/users",     roles: ["developer", "admin"] },
   // System-Owner only (extra gate below — role admin alone is not enough)
   { key: "learningGroups", icon: Layers,            path: "/admin/learning-groups", roles: ["admin"] },
+  { key: "guardians",      icon: Users,             path: "/admin/guardians",       roles: ["admin"] },
+  { key: "staffMgmt",      icon: Dumbbell,          path: "/admin/staff",           roles: ["admin"] },
   { key: "adminSettings",  icon: Settings,          path: "/admin/settings",  roles: ["developer", "admin"] },
 ];
 
@@ -49,8 +51,8 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
 
   const menuItems = allMenuItems.filter((item) => {
     if (!user || !item.roles.includes(user.role)) return false;
-    // learning groups: System Owner only — role admin alone is not enough
-    if (item.key === "learningGroups" && !isSystemOwner) return false;
+    // System-Owner-only screens — role admin alone is not enough
+    if (["learningGroups", "guardians", "staffMgmt"].includes(item.key) && !isSystemOwner) return false;
     // Honor admin-set visibility (default true when key missing)
     const v = (labels.visibility?.nav as Record<string, boolean | undefined>)[item.key];
     return v !== false;
