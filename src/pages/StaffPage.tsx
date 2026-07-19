@@ -192,10 +192,12 @@ const StaffInner = () => {
         </div>
         <button onClick={() => setCreateOpen(true)} className={`${btnPrimary} inline-flex items-center gap-1.5`}>
           <Plus className="h-4 w-4" strokeWidth={1.8} />
-          איש צוות חדש/ה
+          הוספת איש צוות
         </button>
       </div>
 
+      {/* filters hidden in pristine empty state */}
+      {!(listQuery.isSuccess && (listQuery.data || []).length === 0 && !search && !showInactive) && (
       <div className="card-premium p-3 mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[150px]">
           <Search className="h-3.5 w-3.5 absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground" strokeWidth={1.6} />
@@ -206,6 +208,7 @@ const StaffInner = () => {
           כולל לא פעילים
         </label>
       </div>
+      )}
 
       {listQuery.isLoading && (
         <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="card-premium h-16 animate-pulse bg-muted/30" />)}</div>
@@ -246,7 +249,7 @@ const StaffInner = () => {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-md" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-[15px]">איש צוות חדש/ה</DialogTitle>
+            <DialogTitle className="text-[15px]">הוספת איש צוות</DialogTitle>
             <DialogDescription className="text-[12px]">תפקידים וקישור תלמידים נעשים מעמוד איש הצוות לאחר היצירה.</DialogDescription>
           </DialogHeader>
           {createOpen && (

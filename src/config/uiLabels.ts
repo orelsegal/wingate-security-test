@@ -33,6 +33,7 @@ export interface UiLabels {
     learningGroups: string;
     guardians: string;
     staffMgmt: string;
+    dataImport: string;
   };
   /** Sidebar role-titled section header */
   roleTitles: {
@@ -92,7 +93,7 @@ export const defaultUiLabels: UiLabels = {
     yearPlan: "שנת 2026",
     teacherCourses: "הקורסים שלי",
     students: "ספורטאים",
-    groups: "קבוצות",
+    groups: "כיתות",
     courses: "התקדמות לימודית",
     dataEntry: "הזנת נתונים",
     gradeEntry: "הזנת ציונים",
@@ -108,6 +109,7 @@ export const defaultUiLabels: UiLabels = {
     learningGroups: "קבוצות לימוד",
     guardians: "ניהול הורים",
     staffMgmt: "ניהול צוות",
+    dataImport: "ייבוא ועדכון נתונים",
   },
   roleTitles: {
     developer: "סביבת פיתוח",

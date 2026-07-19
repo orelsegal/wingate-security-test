@@ -174,7 +174,7 @@ const LearningGroupsPage = () => {
                   <div className="min-w-0">
                     <h1 className="text-[18px] sm:text-[20px] font-semibold text-foreground break-words leading-snug">{g.name}</h1>
                     <p className="text-[12.5px] text-muted-foreground mt-1">
-                      {subjName} · {yearLabel(g.academic_year_start)}{g.grade_code ? ` · שכבה ${g.grade_code}` : ""}
+                      {subjName} · <span dir="ltr">{yearLabel(g.academic_year_start)}</span>{g.grade_code ? ` · שכבה ${g.grade_code}` : ""}
                     </p>
                     <div className="mt-2"><StatusChip status={g.status} /></div>
                   </div>
@@ -282,13 +282,14 @@ const LearningGroupsPage = () => {
         </button>
       </div>
 
-      {/* Filters */}
+      {/* Filters — hidden in the pristine empty state (single CTA stays) */}
+      {!(listQuery.isSuccess && groups.length === 0 && !search && !yearFilter && statusFilter === "active") && (
       <div className="card-premium p-3 mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[140px]">
           <Search className="h-3.5 w-3.5 absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground" strokeWidth={1.6} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש בשם הקבוצה" aria-label="חיפוש בשם הקבוצה" className={`${fieldCls} pe-9`} />
         </div>
-        <select value={yearFilter ?? ""} onChange={e => setYearFilter(e.target.value ? Number(e.target.value) : null)} aria-label="שנת לימודים" className={`${fieldCls} w-auto`}>
+        <select value={yearFilter ?? ""} onChange={e => setYearFilter(e.target.value ? Number(e.target.value) : null)} aria-label="שנת לימודים" dir="ltr" className={`${fieldCls} w-auto`}>
           <option value="">כל השנים</option>
           {YEAR_OPTIONS.map(y => <option key={y} value={y}>{yearLabel(y)}</option>)}
         </select>
@@ -298,6 +299,7 @@ const LearningGroupsPage = () => {
           <option value="all">הכול</option>
         </select>
       </div>
+      )}
 
       {listQuery.isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -329,7 +331,7 @@ const LearningGroupsPage = () => {
                 <StatusChip status={g.status} />
               </div>
               <p className="text-[12px] text-muted-foreground mt-1">
-                {g.subject_name} · {yearLabel(g.academic_year_start)}{g.grade_code ? ` · שכבה ${g.grade_code}` : ""}
+                {g.subject_name} · <span dir="ltr">{yearLabel(g.academic_year_start)}</span>{g.grade_code ? ` · שכבה ${g.grade_code}` : ""}
               </p>
               <div className="flex flex-wrap gap-1.5 mt-2 min-h-[22px]">
                 {g.teachers.length === 0
@@ -437,7 +439,7 @@ const GroupForm = ({ initial, subjects, saving, submitLabel, onSubmit }: {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-[11.5px] text-muted-foreground font-medium block mb-1" htmlFor="lg-year">שנת לימודים</label>
-          <select id="lg-year" value={year} onChange={e => setYear(Number(e.target.value))} className={fieldCls}>
+          <select id="lg-year" value={year} onChange={e => setYear(Number(e.target.value))} dir="ltr" className={fieldCls}>
             {YEAR_OPTIONS.map(y => <option key={y} value={y}>{yearLabel(y)}</option>)}
           </select>
         </div>
@@ -650,7 +652,7 @@ const DuplicateDialog = ({ open, onOpenChange, saving, onDuplicate }: {
         </DialogHeader>
         <div>
           <label className="text-[11.5px] text-muted-foreground font-medium block mb-1" htmlFor="dup-year">שנת לימודים חדשה</label>
-          <select id="dup-year" value={year} onChange={e => setYear(Number(e.target.value))} className={fieldCls}>
+          <select id="dup-year" value={year} onChange={e => setYear(Number(e.target.value))} dir="ltr" className={fieldCls}>
             {YEAR_OPTIONS.map(y => <option key={y} value={y}>{yearLabel(y)}</option>)}
           </select>
         </div>

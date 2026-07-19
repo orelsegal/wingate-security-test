@@ -174,10 +174,12 @@ const GuardiansInner = () => {
         </div>
         <button onClick={() => setCreateOpen(true)} className={`${btnPrimary} inline-flex items-center gap-1.5`}>
           <Plus className="h-4 w-4" strokeWidth={1.8} />
-          הורה חדש/ה
+          הוספת הורה
         </button>
       </div>
 
+      {/* filters hidden in pristine empty state */}
+      {!(listQuery.isSuccess && (listQuery.data || []).length === 0 && !search && !showInactive) && (
       <div className="card-premium p-3 mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[150px]">
           <Search className="h-3.5 w-3.5 absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground" strokeWidth={1.6} />
@@ -188,6 +190,7 @@ const GuardiansInner = () => {
           כולל לא פעילים
         </label>
       </div>
+      )}
 
       {listQuery.isLoading && (
         <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="card-premium h-16 animate-pulse bg-muted/30" />)}</div>
@@ -226,7 +229,7 @@ const GuardiansInner = () => {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-md" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-[15px]">הורה חדש/ה</DialogTitle>
+            <DialogTitle className="text-[15px]">הוספת הורה</DialogTitle>
             <DialogDescription className="text-[12px]">קישור לילדים נעשה מעמוד ההורה לאחר היצירה.</DialogDescription>
           </DialogHeader>
           {createOpen && (

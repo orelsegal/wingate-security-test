@@ -35,6 +35,7 @@ const allMenuItems: MenuItemDef[] = [
   { key: "learningGroups", icon: Layers,            path: "/admin/learning-groups", roles: ["admin"] },
   { key: "guardians",      icon: Users,             path: "/admin/guardians",       roles: ["admin"] },
   { key: "staffMgmt",      icon: Dumbbell,          path: "/admin/staff",           roles: ["admin"] },
+  { key: "dataImport",     icon: Database,          path: "/admin/data-import",     roles: ["admin"] },
   { key: "adminSettings",  icon: Settings,          path: "/admin/settings",  roles: ["developer", "admin"] },
 ];
 
@@ -52,7 +53,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   const menuItems = allMenuItems.filter((item) => {
     if (!user || !item.roles.includes(user.role)) return false;
     // System-Owner-only screens — role admin alone is not enough
-    if (["learningGroups", "guardians", "staffMgmt"].includes(item.key) && !isSystemOwner) return false;
+    if (["learningGroups", "guardians", "staffMgmt", "dataImport"].includes(item.key) && !isSystemOwner) return false;
     // Honor admin-set visibility (default true when key missing)
     const v = (labels.visibility?.nav as Record<string, boolean | undefined>)[item.key];
     return v !== false;
