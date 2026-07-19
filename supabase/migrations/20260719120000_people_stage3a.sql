@@ -147,34 +147,31 @@ DROP TRIGGER IF EXISTS sm_touch ON public.staff_members;
 CREATE TRIGGER sm_touch BEFORE UPDATE ON public.staff_members
   FOR EACH ROW EXECUTE FUNCTION public.ppl_touch_updated_at();
 
--- ── 4. Sport aliases seed — targets must already exist in public.sports;
---     a missing target is reported, never auto-created. No PII.
+-- ── 4. Sport aliases seed — ATOMIC: every target must already exist in
+--     public.sports, otherwise the whole migration fails (no partial
+--     seed, targets never auto-created). Idempotent on re-run.
 DO $$
-DECLARE a record; v_id uuid; v_missing text := '';
+DECLARE v_missing text;
 BEGIN
-  FOR a IN SELECT * FROM (VALUES
+  SELECT string_agg(t.target, '; ') INTO v_missing
+  FROM (VALUES ('סיוף'), ('טיפוס'), ('אתלטיקה'), ('טניס שולחן'), ('כדורעף בנים'), ('כדורעף בנות')) t(target)
+  WHERE NOT EXISTS (SELECT 1 FROM public.sports s WHERE s.sport_name = t.target);
+  IF v_missing IS NOT NULL THEN
+    RAISE EXCEPTION 'ALIAS_SEED_ABORTED: missing target sports (create them first, never auto-created): %', v_missing;
+  END IF;
+  INSERT INTO public.sport_aliases (alias_normalized, sport_id)
+  SELECT a.alias, s.id
+  FROM (VALUES
       ('סייף',      'סיוף'),
       ('קיר טיפוס', 'טיפוס'),
       ('אטלתיקה',   'אתלטיקה'),
       ('טנ"ש',      'טניס שולחן'),
       ('עף בנים',   'כדורעף בנים'),
       ('עף בנות',   'כדורעף בנות')
-    ) t(alias, target)
-  LOOP
-    SELECT id INTO v_id FROM public.sports WHERE sport_name = a.target;
-    IF v_id IS NULL THEN
-      v_missing := v_missing || a.target || '; ';
-    ELSE
-      INSERT INTO public.sport_aliases (alias_normalized, sport_id)
-      VALUES (a.alias, v_id)
-      ON CONFLICT (alias_normalized) DO UPDATE SET sport_id = EXCLUDED.sport_id;
-    END IF;
-  END LOOP;
-  IF v_missing <> '' THEN
-    RAISE NOTICE 'ALIAS_SEED: missing target sports (NOT created): %', v_missing;
-  ELSE
-    RAISE NOTICE 'ALIAS_SEED: all alias targets found and seeded';
-  END IF;
+    ) a(alias, target)
+  JOIN public.sports s ON s.sport_name = a.target
+  ON CONFLICT (alias_normalized) DO UPDATE SET sport_id = EXCLUDED.sport_id;
+  RAISE NOTICE 'ALIAS_SEED: all 6 alias targets verified and seeded atomically';
 END $$;
 
 -- ── 5. Internal helpers ──
@@ -222,13 +219,19 @@ GRANT EXECUTE ON FUNCTION public.has_guardian_scope(uuid, uuid) TO authenticated
 GRANT EXECUTE ON FUNCTION public.has_coach_scope(uuid, uuid) TO authenticated;
 
 -- ── 7. RPCs — guardians ──
+-- Contact details (phone/email) are returned ONLY to callers holding the
+-- manage permission (System Owner passes via the has_permission bypass);
+-- view-only callers get NULLs until a contact-exposure policy is decided.
 CREATE OR REPLACE FUNCTION public.list_guardians(p_search text DEFAULT NULL, p_active_only boolean DEFAULT true)
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
-DECLARE v jsonb;
+DECLARE v jsonb; v_contact boolean;
 BEGIN
   PERFORM public.ppl_assert('people.guardians.view');
+  v_contact := public.has_permission(auth.uid(), 'people.guardians.manage');
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'id', g.id, 'full_name', g.full_name, 'phone', g.phone, 'email', g.email,
+      'id', g.id, 'full_name', g.full_name,
+      'phone', CASE WHEN v_contact THEN g.phone END,
+      'email', CASE WHEN v_contact THEN g.email END,
       'is_active', g.is_active, 'has_account', g.auth_user_id IS NOT NULL,
       'linked_students', (SELECT count(*) FROM public.student_guardians sg
                           WHERE sg.guardian_id = g.id AND sg.active_to IS NULL)
@@ -246,7 +249,12 @@ DECLARE v jsonb;
 BEGIN
   PERFORM public.ppl_assert('people.guardians.view');
   SELECT jsonb_build_object(
-    'guardian', to_jsonb(g),
+    'guardian', jsonb_build_object(
+      'id', g.id, 'full_name', g.full_name,
+      'phone', CASE WHEN public.has_permission(auth.uid(), 'people.guardians.manage') THEN g.phone END,
+      'email', CASE WHEN public.has_permission(auth.uid(), 'people.guardians.manage') THEN g.email END,
+      'is_active', g.is_active, 'has_account', g.auth_user_id IS NOT NULL,
+      'created_at', g.created_at, 'updated_at', g.updated_at),
     'links', COALESCE((SELECT jsonb_agg(jsonb_build_object(
         'link_id', sg.id, 'student_id', sg.student_id, 'student_name', st.full_name,
         'relationship_type', sg.relationship_type, 'is_primary_contact', sg.is_primary_contact,
@@ -346,7 +354,9 @@ DECLARE v jsonb;
 BEGIN
   PERFORM public.ppl_assert('people.staff.view');
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'id', s.id, 'full_name', s.full_name, 'phone', s.phone, 'email', s.email,
+      'id', s.id, 'full_name', s.full_name,
+      'phone', CASE WHEN public.has_permission(auth.uid(), 'people.staff.manage') THEN s.phone END,
+      'email', CASE WHEN public.has_permission(auth.uid(), 'people.staff.manage') THEN s.email END,
       'is_active', s.is_active, 'has_account', s.auth_user_id IS NOT NULL,
       'roles', COALESCE((SELECT array_agg(r.role_type) FROM public.staff_member_roles r WHERE r.staff_member_id = s.id), '{}'),
       'linked_students', (SELECT count(*) FROM public.student_coach_assignments a
@@ -365,7 +375,12 @@ DECLARE v jsonb;
 BEGIN
   PERFORM public.ppl_assert('people.staff.view');
   SELECT jsonb_build_object(
-    'staff', to_jsonb(s),
+    'staff', jsonb_build_object(
+      'id', s.id, 'full_name', s.full_name,
+      'phone', CASE WHEN public.has_permission(auth.uid(), 'people.staff.manage') THEN s.phone END,
+      'email', CASE WHEN public.has_permission(auth.uid(), 'people.staff.manage') THEN s.email END,
+      'is_active', s.is_active, 'has_account', s.auth_user_id IS NOT NULL,
+      'created_at', s.created_at, 'updated_at', s.updated_at),
     'roles', COALESCE((SELECT jsonb_agg(r.role_type) FROM public.staff_member_roles r WHERE r.staff_member_id = s.id), '[]'::jsonb),
     'assignments', COALESCE((SELECT jsonb_agg(jsonb_build_object(
         'assignment_id', a.id, 'student_id', a.student_id, 'student_name', st.full_name,
@@ -492,7 +507,8 @@ END $$;
 
 -- ── 10. Self-tests (no people created; sub-transaction rolls back) ──
 DO $$
-DECLARE v_perms int; v_grants int; v_alias int; t1 boolean; t2 boolean; t3 boolean;
+DECLARE v_perms int; v_grants int; v_alias int; v_auth_rpcs int;
+        t1 boolean; t2 boolean; t3 boolean; t4 boolean;
 BEGIN
   SELECT count(*) INTO v_perms FROM public.permissions WHERE category = 'people';
   SELECT count(*) INTO v_grants FROM public.role_permissions WHERE permission_key LIKE 'people.%';
@@ -505,6 +521,18 @@ BEGIN
     t3 := false;
   EXCEPTION WHEN OTHERS THEN t3 := true;
   END;
-  RAISE NOTICE 'STAGE3A: people_permissions=% (expected 5) role_grants=% (expected 0) aliases=% (expected 6) guardian_scope_false=% coach_scope_false=% audit_append_only=%',
-    v_perms, v_grants, v_alias, t1, t2, t3;
+  -- PROOF: none of the 15 people RPCs assigns auth_user_id (reads like
+  -- "auth_user_id IS NOT NULL" for has_account are fine); account
+  -- linking arrives only in stage 3E.
+  SELECT count(*) INTO v_auth_rpcs
+  FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname IN ('list_guardians','get_guardian_details','create_guardian','update_guardian',
+                      'link_guardian_to_student','update_student_guardian_relationship','unlink_guardian_from_student',
+                      'list_staff_members','get_staff_member_details','create_staff_member','update_staff_member',
+                      'set_staff_member_roles','link_coach_to_student','update_student_coach_assignment','unlink_coach_from_student')
+    AND p.prosrc ~* 'auth_user_id\s*=';
+  t4 := (v_auth_rpcs = 0);
+  RAISE NOTICE 'STAGE3A: people_permissions=% (expected 5) role_grants=% (expected 0) aliases=% (expected 6) guardian_scope_false=% coach_scope_false=% audit_append_only=% no_rpc_touches_auth_user_id=%',
+    v_perms, v_grants, v_alias, t1, t2, t3, t4;
 END $$;
