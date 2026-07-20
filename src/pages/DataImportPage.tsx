@@ -8,9 +8,11 @@ import { peopleApi } from "@/lib/peopleApi";
 import {
   parseAcademyBlocks, parseAthletes, parseStaffSheet, matchIdentities, normalizeNid,
   previewGuardians, previewStaff, previewLinks, countBy, maskId, maskPhone, maskEmail, resolveSport,
+  buildDryRunPayload, expectedDryRunCounts, compareDryRun,
   type AOA, type MatchReport, type GuardianPreviewItem, type CoachPreviewItem,
-  type LinksReport, type ExistingLinksInput,
+  type LinksReport, type ExistingLinksInput, type DryRunCounts,
 } from "@/lib/importPreview";
+import type { DryRunResult } from "@/lib/peopleApi";
 import { OwnerGate, fieldCls, btnPrimary, btnGhost } from "@/components/people/PeopleShared";
 
 const api = peopleApi(supabase as any);
@@ -97,6 +99,7 @@ const ImportInner = () => {
 
   const onFile = async (file: File | null) => {
     setParseError(null); setParsed(null); setDecisions({});
+    setDryRun(null); setDryRunError(null);
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".xlsx")) {
       setParseError("אפשר להעלות רק קובץ Excel בסיומת xlsx.");
@@ -196,6 +199,30 @@ const ImportInner = () => {
       key: `C-${i}`, area: "מאמנים", name: s.name, note: (s.note || "") + (s.candidates?.length ? ` · מועמדים: ${s.candidates.join(", ")}` : "") })),
   ], [parsed]);
   const decidedCount = conflicts.filter(c => decisions[c.key]).length;
+
+  // server dry-run: read-only re-verification; never enables import
+  const [dryRun, setDryRun] = useState<{ server: DryRunResult; expected: DryRunCounts; mismatches: string[] } | null>(null);
+  const [dryRunBusy, setDryRunBusy] = useState(false);
+  const [dryRunError, setDryRunError] = useState<string | null>(null);
+  const runDryRun = async () => {
+    if (!parsed || !controlsPassed || !linksReport) return;
+    setDryRunBusy(true); setDryRunError(null); setDryRun(null);
+    try {
+      const payload = buildDryRunPayload(parsed.reportA, linksReport, conflicts.map(c => c.key), decisions);
+      const server = await api.dryRunImport(payload);
+      const expected = expectedDryRunCounts(parsed.reportA, linksReport, conflicts.length, decisions);
+      setDryRun({ server, expected, mismatches: compareDryRun(expected, server.counts) });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      setDryRunError(
+        msg.includes("prepare_people_import_dry_run") || msg.includes("does not exist") || msg.includes("404")
+          ? "ה-RPC של ה-Dry Run טרם הוחל במסד. יש להריץ את המיגרציה ואז לנסות שוב."
+          : msg === "not_authorized" ? "אין הרשאה להריץ Dry Run."
+          : "בדיקת ה-Dry Run נכשלה. אפשר לנסות שוב.");
+    } finally {
+      setDryRunBusy(false);
+    }
+  };
 
   const filteredMatches = (activeReport?.rows || []).filter(m =>
     (studentFilter === "all" || m.identity === studentFilter) &&
@@ -567,11 +594,14 @@ const ImportInner = () => {
                             <div className="flex flex-wrap gap-1.5 mt-2">
                               {DECISION_OPTS.map(o => (
                                 <button key={o.v}
-                                  onClick={() => setDecisions(p => {
-                                    const next = { ...p };
-                                    if (next[c.key] === o.v) delete next[c.key]; else next[c.key] = o.v;
-                                    return next;
-                                  })}
+                                  onClick={() => {
+                                    setDryRun(null);
+                                    setDecisions(p => {
+                                      const next = { ...p };
+                                      if (next[c.key] === o.v) delete next[c.key]; else next[c.key] = o.v;
+                                      return next;
+                                    });
+                                  }}
                                   className={`h-7 px-2.5 rounded-lg text-[11px] border transition-colors ${
                                     d === o.v ? "bg-primary/10 text-primary border-primary/30 font-medium" : "border-border text-muted-foreground hover:border-primary/30"}`}>
                                   {o.label}
@@ -604,6 +634,66 @@ const ImportInner = () => {
                   {" "}מאמנים שניתן לקשר כרגע: {linksReport?.coaches.linkableNow ?? 0} · קשרי מאמן-תלמיד: {linksReport?.coaches.plannedLinks ?? 0} ·
                   {" "}צוות: {parsed.staffCount} · החלטות: {decidedCount}/{conflicts.length}
                 </p>
+                {/* server dry-run: read-only, blocks continuation on mismatch */}
+                <div className="rounded-xl border border-border/70 p-3 mb-3">
+                  <p className="text-[12.5px] font-medium text-foreground mb-1.5">בדיקת Dry Run בשרת</p>
+                  <p className="text-[11.5px] text-muted-foreground mb-2">
+                    השרת בודק מחדש מול המסד מה חדש, מה קיים ומה קונפליקט, בלי לכתוב דבר.
+                    מקרים שלא הוחלטו נשארים מדולגים.
+                  </p>
+                  <button onClick={runDryRun} disabled={dryRunBusy || !controlsPassed}
+                    className={`${btnGhost} ${dryRunBusy || !controlsPassed ? "opacity-50 cursor-not-allowed" : ""}`}>
+                    {dryRunBusy ? "בודקת מול השרת..." : "בדיקת Dry Run בשרת"}
+                  </button>
+                  {dryRunError && <p className="text-[12px] text-destructive mt-2">{dryRunError}</p>}
+                  {dryRun && (
+                    <div className="mt-3">
+                      <div className="overflow-x-auto">
+                        <table className="text-[12px] w-full min-w-[380px]">
+                          <thead>
+                            <tr className="text-muted-foreground">
+                              <th className="text-start font-medium pb-1">מדד</th>
+                              <th className="text-start font-medium pb-1">Preview בדפדפן</th>
+                              <th className="text-start font-medium pb-1">Dry Run בשרת</th>
+                              <th className="text-start font-medium pb-1">תואם</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {([["חדשים", "new"], ["ללא שינוי", "unchanged"], ["עדכונים", "updates"],
+                               ["היסטוריים", "historical"], ["קונפליקטים", "conflicts"], ["מדולגים", "skipped"]] as const)
+                              .map(([label, k]) => (
+                              <tr key={k} className="border-t border-border/50">
+                                <td className="py-1">{label}</td>
+                                <td className="py-1 tabular-nums">{dryRun.expected[k]}</td>
+                                <td className="py-1 tabular-nums">{dryRun.server.counts?.[k] ?? "?"}</td>
+                                <td className="py-1">{dryRun.expected[k] === dryRun.server.counts?.[k] ? "✓" : "✗"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-2" dir="ltr">
+                        fingerprint: {dryRun.server.fingerprint?.slice(0, 16)}…
+                      </p>
+                      {dryRun.server.blockers?.length > 0 && (
+                        <p className="text-[12px] text-destructive mt-1">
+                          חסימות מהשרת: {dryRun.server.blockers.join(" · ")}
+                        </p>
+                      )}
+                      {(dryRun.mismatches.length > 0 || !dryRun.server.conservation_passed) ? (
+                        <p className="text-[12px] text-destructive font-medium mt-2 flex items-center gap-1.5">
+                          <AlertTriangle className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+                          אי-התאמה בין ה-Preview בדפדפן ל-Dry Run בשרת. ההמשך חסום עד לבירור.
+                          {dryRun.mismatches.length > 0 ? ` (${dryRun.mismatches.join(" · ")})` : ""}
+                        </p>
+                      ) : (
+                        <p className="text-[12px] text-primary font-medium mt-2">
+                          הבדיקה בשרת תואמת את ה-Preview. הייבוא עצמו עדיין סגור בשלב זה.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button onClick={downloadExcel} className={`${btnPrimary} inline-flex items-center gap-1.5`}>
                     <Download className="h-4 w-4" strokeWidth={1.7} />

@@ -86,11 +86,23 @@ export interface AllCoachLink {
 }
 export interface AllPeopleLinks { guardian_links: AllGuardianLink[]; coach_links: AllCoachLink[] }
 
+/* server dry-run (prepare_people_import_dry_run) — read-only re-verification
+   of a planned import; can_import is always false at this stage */
+export interface DryRunResult {
+  fingerprint: string;
+  counts: { new: number; unchanged: number; updates: number; historical: number; conflicts: number; skipped: number };
+  conservation_passed: boolean;
+  blockers: string[];
+  can_import: boolean;
+}
+
 export const peopleApi = (client: RpcClient) => ({
   studentRelationships: (studentId: string) =>
     call<StudentRelationships>(client, "get_student_relationships", { p_student_id: studentId }),
   allPeopleLinks: () =>
     call<AllPeopleLinks>(client, "get_all_people_links"),
+  dryRunImport: (payload: unknown) =>
+    call<DryRunResult>(client, "prepare_people_import_dry_run", { p_payload: payload }),
   /* guardians */
   listGuardians: (search: string | null, activeOnly = true) =>
     call<GuardianListItem[]>(client, "list_guardians", { p_search: search, p_active_only: activeOnly }),

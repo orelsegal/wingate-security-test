@@ -18,7 +18,8 @@ await build({
 });
 const lib = await import(pathToFileURL(tmp).href);
 fs.unlinkSync(tmp);
-const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail } = lib;
+const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail,
+        buildDryRunPayload, expectedDryRunCounts, compareDryRun } = lib;
 
 let pass = 0, fail = 0;
 const t = (name, cond) => { cond ? pass++ : (fail++, console.error("REGRESSION FAIL:", name)); };
@@ -184,6 +185,28 @@ t("conflict pair still covers both sides", r2.controls.passed === true);
   // masking helpers never leak full values
   t("maskPhone hides middle digits", maskPhone("0501234567") === "050***67");
   t("maskEmail keeps first char only", maskEmail("parent@mail.com") === "p***");
+
+  /* ── server dry-run: payload builder + browser expectation + compare ── */
+  // planned arrays include exactly the importable pairs (no conflict/unlinkable)
+  t("planned guardian links exclude conflict+unlinkable",
+    lr.planned.guardianLinks.length === cat("guardian", "new") + cat("guardian", "unchanged") + cat("guardian", "update") + cat("guardian", "historical"));
+  t("planned coach links exclude unlinkable",
+    lr.planned.coachLinks.length === cat("coach", "new") + cat("coach", "unchanged") + cat("coach", "update") + cat("coach", "historical"));
+  t("planned links carry db student ids", lr.planned.guardianLinks.every(g => typeof g.studentId === "string" && g.studentId.length > 0));
+  const fakeReportA = { rows: [
+    { identity: "source_only", file: { first: "א", last: "ב", nid: "987654325", cls: "י", sport: "סיוף", birth: "01/01/2010", phone: "", email: "" }, changes: [] },
+    { identity: "exact", file: { first: "ג", last: "ד", nid: "123456782", cls: "ט", sport: "", birth: "", phone: "", email: "" }, db: { id: "x" }, changes: [] },
+  ], counts: { source_only: 1 } };
+  const payload = buildDryRunPayload(fakeReportA, lr, ["A-0", "B-0"], { "A-0": "link" });
+  t("payload holds only source_only students", payload.students.length === 1 && payload.students[0].birth_year === 2010);
+  t("payload carries conflict cases + decisions", payload.conflicts.length === 2 && payload.decisions.length === 1);
+  t("payload version pinned", payload.version === 1);
+  const exp = expectedDryRunCounts(fakeReportA, lr, 2, { "A-0": "link" });
+  t("expected: decided counts as conflict, rest skipped", exp.conflicts === 1 && exp.skipped === 1);
+  t("expected new = students + new links", exp.new === 1 + cat("guardian", "new") + cat("coach", "new"));
+  t("compare: identical → no mismatches", compareDryRun(exp, { ...exp }).length === 0);
+  t("compare: server drift detected", compareDryRun(exp, { ...exp, new: exp.new + 1 }).length === 1);
+  t("compare: missing server counts detected", compareDryRun(exp, undefined).length === 6);
 }
 
 if (fail > 0) {

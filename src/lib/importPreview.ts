@@ -189,7 +189,7 @@ export interface MatchReport {
   };
   controls: { fileTotal: number; dbTotal: number; fileCovered: number; dbCovered: number; passed: boolean; errors: string[] };
 }
-const birthYear = (birth: string): number | null => {
+export const birthYear = (birth: string): number | null => {
   const m = birth.match(/(\d{4})\s*$/) || birth.match(/\/(\d{4})/);
   if (!m) return null;
   const y = Number(m[1]);
@@ -407,6 +407,12 @@ export interface LinksReport {
   guardians: { unique: number; linkableNow: number; unlinkable: number; conflicts: number; plannedLinks: number };
   coaches: { unique: number; linkableNow: number; unlinkable: number; plannedLinks: number };
   controls: { plannedTotal: number; existingActiveTotal: number; plannedCovered: number; existingCovered: number; passed: boolean; errors: string[] };
+  /** importable pairs (matched student, no conflict) — the exact rows a
+   *  server dry-run payload is built from; conflict/unlinkable stay out */
+  planned: {
+    guardianLinks: { name: string; phone: string; studentId: string; rel: "father" | "mother" }[];
+    coachLinks: { name: string; studentId: string }[];
+  };
 }
 export function previewLinks(
   athleteRows: IdentityRow[], dbGuardians: DbGuardian[], dbStaff: DbStaffItem[],
@@ -447,6 +453,8 @@ export function previewLinks(
     }
   }
 
+  const plannedGuardianLinks: LinksReport["planned"]["guardianLinks"] = [];
+  const plannedCoachLinks: LinksReport["planned"]["coachLinks"] = [];
   let gConflicts = 0, gLinkable = 0, gUnlinkable = 0, plannedG = 0;
   for (const a of gAgg.values()) {
     const masked = a.phone ? maskPhone(a.phone) : "ללא טלפון";
@@ -459,6 +467,7 @@ export function previewLinks(
       plannedG++;
       if (!e.matched) { items.push({ kind: "guardian", category: "unlinkable", person: name, phoneMasked: masked, student: e.student, note: "התלמיד אינו מותאם, הקשר לא ניתן לקישור בשלב זה" }); continue; }
       if (conflict) { items.push({ kind: "guardian", category: "conflict", person: name, phoneMasked: masked, student: e.student, note: "אותו טלפון עם שמות שונים, דורש החלטה" }); continue; }
+      plannedGuardianLinks.push({ name, phone: a.phone, studentId: e.dbId!, rel: e.rel });
       if (!dbG) { items.push({ kind: "guardian", category: "new", person: name, phoneMasked: masked, student: e.student }); continue; }
       const pair = gl.filter(l => l.guardian_id === dbG.id && l.student_id === e.dbId);
       const act = pair.find(l => l.active);
@@ -485,6 +494,7 @@ export function previewLinks(
     for (const e of a.entries) {
       plannedC++;
       if (!e.matched) { items.push({ kind: "coach", category: "unlinkable", person: a.name, student: e.student, note: "התלמיד אינו מותאם, הקשר לא ניתן לקישור בשלב זה" }); continue; }
+      plannedCoachLinks.push({ name: a.name, studentId: e.dbId! });
       if (!sm) { items.push({ kind: "coach", category: "new", person: a.name, student: e.student, note: "המאמן/ת טרם קיים/ת במערכת" }); continue; }
       const pair = cl.filter(l => l.staff_member_id === sm.id && l.student_id === e.dbId);
       const act = pair.find(l => l.active);
@@ -510,7 +520,73 @@ export function previewLinks(
     guardians: { unique: gAgg.size, linkableNow: gLinkable, unlinkable: gUnlinkable, conflicts: gConflicts, plannedLinks: plannedG },
     coaches: { unique: cAgg.size, linkableNow: cLinkable, unlinkable: cUnlinkable, plannedLinks: plannedC },
     controls: { plannedTotal, existingActiveTotal, plannedCovered, existingCovered, passed: errors.length === 0, errors },
+    planned: { guardianLinks: plannedGuardianLinks, coachLinks: plannedCoachLinks },
   };
+}
+
+/* ── 8b. server dry-run: payload + browser-side expectation ──
+   The browser builds ONE payload (planned records + conflict cases +
+   human decisions) and computes the counts it EXPECTS the server to
+   return. The server re-verifies everything independently; any gap
+   between the two blocks continuation. can_import is always false at
+   this stage. */
+export interface DryRunPayload {
+  version: 1;
+  students: { national_id: string; full_name: string; class_name: string; sport: string; birth_year: number | null }[];
+  guardian_links: { guardian_name: string; guardian_phone: string; student_id: string; relationship_type: "father" | "mother" }[];
+  coach_links: { coach_name: string; student_id: string; role_type: "primary" }[];
+  conflicts: { key: string }[];
+  decisions: { key: string; decision: string }[];
+}
+export interface DryRunCounts {
+  new: number; unchanged: number; updates: number; historical: number; conflicts: number; skipped: number;
+}
+export function buildDryRunPayload(
+  reportA: MatchReport, links: LinksReport,
+  conflictKeys: string[], decisions: Record<string, string>,
+): DryRunPayload {
+  return {
+    version: 1,
+    students: reportA.rows
+      .filter(m => m.identity === "source_only" && m.file)
+      .map(m => ({
+        national_id: normalizeNid(m.file!.nid).nid,
+        full_name: normSpace(`${m.file!.last} ${m.file!.first}`),
+        class_name: m.file!.cls, sport: m.file!.sport,
+        birth_year: birthYear(m.file!.birth),
+      })),
+    guardian_links: links.planned.guardianLinks.map(g => ({
+      guardian_name: g.name, guardian_phone: g.phone, student_id: g.studentId, relationship_type: g.rel,
+    })),
+    coach_links: links.planned.coachLinks.map(c => ({ coach_name: c.name, student_id: c.studentId, role_type: "primary" as const })),
+    conflicts: conflictKeys.map(key => ({ key })),
+    decisions: Object.entries(decisions).map(([key, decision]) => ({ key, decision })),
+  };
+}
+/** counts the browser expects the server dry-run to return for the payload */
+export function expectedDryRunCounts(
+  reportA: MatchReport, links: LinksReport,
+  conflictsTotal: number, decisions: Record<string, string>,
+): DryRunCounts {
+  const li = (k: LinkCategory) => links.items.filter(i => i.category === k).length;
+  const decided = Object.values(decisions).filter(v => v === "link" || v === "create").length;
+  return {
+    new: reportA.counts.source_only + li("new"),
+    unchanged: li("unchanged"),
+    updates: li("update"),
+    historical: li("historical"),
+    conflicts: decided,
+    skipped: conflictsTotal - decided,
+  };
+}
+export function compareDryRun(expected: DryRunCounts, server: DryRunCounts): string[] {
+  const labels: Record<keyof DryRunCounts, string> = {
+    new: "חדשים", unchanged: "ללא שינוי", updates: "עדכונים",
+    historical: "היסטוריים", conflicts: "קונפליקטים", skipped: "מדולגים",
+  };
+  return (Object.keys(labels) as (keyof DryRunCounts)[])
+    .filter(k => expected[k] !== (server?.[k] ?? -1))
+    .map(k => `${labels[k]}: דפדפן ${expected[k]} מול שרת ${server?.[k] ?? "חסר"}`);
 }
 
 /* ── 9. counts helper for section chips ── */
