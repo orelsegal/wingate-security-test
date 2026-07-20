@@ -9,6 +9,11 @@ export const digits = (v: string | null | undefined) => (v || "").replace(/\D/g,
 export const normSpace = (v: string | null | undefined) => (v || "").replace(/\s+/g, " ").trim();
 export const normClass = (v: string | null | undefined) => (v || "").replace(/[\s'׳"״]/g, "");
 export const maskId = (nid: string) => (nid.length >= 5 ? nid.slice(0, 3) + "***" + nid.slice(-1) : "***");
+export const maskPhone = (p: string | null | undefined) => {
+  const d = digits(p);
+  return d.length >= 5 ? d.slice(0, 3) + "***" + d.slice(-2) : d ? "***" : "";
+};
+export const maskEmail = (e: string | null | undefined) => (e ? e[0] + "***" : "");
 const normKey = (v: string) => normSpace(v).replace(/[\s'׳"״-]/g, "").replace(/יי/g, "י");
 
 /** Israeli id normalization: strip non-digits, LEFT-PAD lost leading zeros
@@ -380,7 +385,135 @@ export function previewStaff(fileStaff: FileStaff[], coachNames: Map<string, num
   return out;
 }
 
-/* ── 8. counts helper for section chips ── */
+/* ── 8. links preview — planned guardian/coach links vs EXISTING links ──
+   Existing links arrive in ONE get_all_people_links call (ids + type +
+   flags only; no PII). Every planned parent/coach-student pair lands in
+   exactly one category, and every existing ACTIVE link is either matched
+   by a planned pair or reported as db_only — the conservation controls
+   verify both directions so no link disappears or is counted twice.
+   Pass existing=null when the RPC is not applied yet: classification
+   then runs without existing-link recognition (everything is "new"). */
+export interface ExistingLinksInput {
+  guardian_links: { link_id: string; guardian_id: string; student_id: string; relationship_type: string; active: boolean }[];
+  coach_links: { assignment_id: string; staff_member_id: string; student_id: string; role_type: string; active: boolean }[];
+}
+export type LinkCategory = "new" | "unchanged" | "update" | "historical" | "conflict" | "db_only" | "unlinkable";
+export interface LinkItem {
+  kind: "guardian" | "coach"; category: LinkCategory;
+  person: string; phoneMasked?: string; student: string; note?: string;
+}
+export interface LinksReport {
+  items: LinkItem[];
+  guardians: { unique: number; linkableNow: number; unlinkable: number; conflicts: number; plannedLinks: number };
+  coaches: { unique: number; linkableNow: number; unlinkable: number; plannedLinks: number };
+  controls: { plannedTotal: number; existingActiveTotal: number; plannedCovered: number; existingCovered: number; passed: boolean; errors: string[] };
+}
+export function previewLinks(
+  athleteRows: IdentityRow[], dbGuardians: DbGuardian[], dbStaff: DbStaffItem[],
+  existing: ExistingLinksInput | null, studentNameById?: Map<string, string>,
+): LinksReport {
+  const items: LinkItem[] = [];
+  const gl = existing?.guardian_links || [];
+  const cl = existing?.coach_links || [];
+  const usedG = new Set<string>(), usedC = new Set<string>();
+  const dbGByPhone = new Map(dbGuardians.filter(g => g.phone).map(g => [digits(g.phone!), g]));
+  const dbSByName = new Map(dbStaff.map(s => [normKey(s.full_name), s]));
+
+  // group file parents by phone (or name when no phone) — one guardian per key
+  interface GAgg { names: Set<string>; phone: string; entries: { matched: boolean; dbId?: string; student: string; rel: "father" | "mother" }[] }
+  const gAgg = new Map<string, GAgg>();
+  interface CAgg { name: string; entries: { matched: boolean; dbId?: string; student: string }[] }
+  const cAgg = new Map<string, CAgg>();
+  for (const m of athleteRows) {
+    const f = m.file as unknown as FileAthlete | undefined;
+    if (!f) continue;
+    const matched = (m.identity === "exact" || m.identity === "strong") && !!m.db;
+    const student = matched ? m.db!.full_name : normSpace(`${f.last} ${f.first}`);
+    if (f.father !== undefined || f.mother !== undefined) {
+      for (const [nm, ph, rel] of [[f.father, f.father_phone, "father"], [f.mother, f.mother_phone, "mother"]] as const) {
+        if (!normSpace(nm) && !ph) continue;
+        const key = ph ? `p:${ph}` : `n:${normKey(nm)}`;
+        if (!gAgg.has(key)) gAgg.set(key, { names: new Set(), phone: ph || "", entries: [] });
+        const a = gAgg.get(key)!;
+        if (normSpace(nm)) a.names.add(normSpace(nm));
+        a.entries.push({ matched, dbId: matched ? m.db!.id : undefined, student, rel });
+      }
+    }
+    const coach = normSpace(f.coach);
+    if (coach && coach !== "וינגייט") {
+      const key = normKey(coach);
+      if (!cAgg.has(key)) cAgg.set(key, { name: coach, entries: [] });
+      cAgg.get(key)!.entries.push({ matched, dbId: matched ? m.db!.id : undefined, student });
+    }
+  }
+
+  let gConflicts = 0, gLinkable = 0, gUnlinkable = 0, plannedG = 0;
+  for (const a of gAgg.values()) {
+    const masked = a.phone ? maskPhone(a.phone) : "ללא טלפון";
+    const conflict = a.names.size > 1;
+    if (conflict) gConflicts++;
+    const name = Array.from(a.names).join(" / ") || "ללא שם";
+    if (a.entries.some(e => e.matched)) gLinkable++; else gUnlinkable++;
+    const dbG = a.phone ? dbGByPhone.get(a.phone) : undefined;
+    for (const e of a.entries) {
+      plannedG++;
+      if (!e.matched) { items.push({ kind: "guardian", category: "unlinkable", person: name, phoneMasked: masked, student: e.student, note: "התלמיד אינו מותאם, הקשר לא ניתן לקישור בשלב זה" }); continue; }
+      if (conflict) { items.push({ kind: "guardian", category: "conflict", person: name, phoneMasked: masked, student: e.student, note: "אותו טלפון עם שמות שונים, דורש החלטה" }); continue; }
+      if (!dbG) { items.push({ kind: "guardian", category: "new", person: name, phoneMasked: masked, student: e.student }); continue; }
+      const pair = gl.filter(l => l.guardian_id === dbG.id && l.student_id === e.dbId);
+      const act = pair.find(l => l.active);
+      if (act) {
+        usedG.add(act.link_id);
+        const same = act.relationship_type === e.rel;
+        items.push({ kind: "guardian", category: same ? "unchanged" : "update", person: name, phoneMasked: masked, student: e.student, note: same ? "קשר קיים ללא שינוי" : "סוג הקשר שונה מהרשום, עדכון מוצע" });
+      } else if (pair.length > 0) {
+        items.push({ kind: "guardian", category: "historical", person: name, phoneMasked: masked, student: e.student, note: "קיים קשר היסטורי שנסגר, חיבור מחדש דורש החלטה" });
+      } else {
+        items.push({ kind: "guardian", category: "new", person: name, phoneMasked: masked, student: e.student });
+      }
+    }
+  }
+  for (const l of gl) {
+    if (!l.active || usedG.has(l.link_id)) continue;
+    items.push({ kind: "guardian", category: "db_only", person: "הורה מקושר במערכת", student: studentNameById?.get(l.student_id) || "תלמיד/ה", note: "קשר פעיל ב-DB שאינו מופיע בקובץ, לא ייסגר אוטומטית" });
+  }
+
+  let cLinkable = 0, cUnlinkable = 0, plannedC = 0;
+  for (const a of cAgg.values()) {
+    if (a.entries.some(e => e.matched)) cLinkable++; else cUnlinkable++;
+    const sm = dbSByName.get(normKey(a.name));
+    for (const e of a.entries) {
+      plannedC++;
+      if (!e.matched) { items.push({ kind: "coach", category: "unlinkable", person: a.name, student: e.student, note: "התלמיד אינו מותאם, הקשר לא ניתן לקישור בשלב זה" }); continue; }
+      if (!sm) { items.push({ kind: "coach", category: "new", person: a.name, student: e.student, note: "המאמן/ת טרם קיים/ת במערכת" }); continue; }
+      const pair = cl.filter(l => l.staff_member_id === sm.id && l.student_id === e.dbId);
+      const act = pair.find(l => l.active);
+      if (act) { usedC.add(act.assignment_id); items.push({ kind: "coach", category: "unchanged", person: a.name, student: e.student, note: "שיוך קיים ללא שינוי" }); }
+      else if (pair.length > 0) items.push({ kind: "coach", category: "historical", person: a.name, student: e.student, note: "קיים שיוך היסטורי שנסגר, חיבור מחדש דורש החלטה" });
+      else items.push({ kind: "coach", category: "new", person: a.name, student: e.student });
+    }
+  }
+  for (const l of cl) {
+    if (!l.active || usedC.has(l.assignment_id)) continue;
+    items.push({ kind: "coach", category: "db_only", person: "מאמן/ת מקושר/ת במערכת", student: studentNameById?.get(l.student_id) || "תלמיד/ה", note: "שיוך פעיל ב-DB שאינו מופיע בקובץ, לא ייסגר אוטומטית" });
+  }
+
+  const plannedTotal = plannedG + plannedC;
+  const plannedCovered = items.filter(i => i.category !== "db_only").length;
+  const existingActiveTotal = gl.filter(l => l.active).length + cl.filter(l => l.active).length;
+  const existingCovered = usedG.size + usedC.size + items.filter(i => i.category === "db_only").length;
+  const errors: string[] = [];
+  if (plannedCovered !== plannedTotal) errors.push(`כיסוי קשרים מהקובץ: ${plannedCovered}/${plannedTotal}`);
+  if (existingCovered !== existingActiveTotal) errors.push(`כיסוי קשרים פעילים ב-DB: ${existingCovered}/${existingActiveTotal}`);
+  return {
+    items,
+    guardians: { unique: gAgg.size, linkableNow: gLinkable, unlinkable: gUnlinkable, conflicts: gConflicts, plannedLinks: plannedG },
+    coaches: { unique: cAgg.size, linkableNow: cLinkable, unlinkable: cUnlinkable, plannedLinks: plannedC },
+    controls: { plannedTotal, existingActiveTotal, plannedCovered, existingCovered, passed: errors.length === 0, errors },
+  };
+}
+
+/* ── 9. counts helper for section chips ── */
 export function countBy<T extends { category: string }>(items: T[]): Record<string, number> {
   const c: Record<string, number> = {};
   for (const it of items) c[it.category] = (c[it.category] || 0) + 1;

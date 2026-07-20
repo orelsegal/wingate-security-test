@@ -70,9 +70,27 @@ export interface StudentRelationships {
   student_id: string; guardians: StudentGuardianRel[]; coaches: StudentCoachRel[];
 }
 
+/* all links in one call (get_all_people_links) — ids, type, flags and dates
+   only; the RPC never returns auth_user_id, national id, phone or email */
+export interface AllGuardianLink {
+  link_id: string; guardian_id: string; student_id: string;
+  relationship_type: "mother" | "father" | "guardian" | "other";
+  is_primary_contact: boolean; is_legal_guardian: boolean; receives_updates: boolean;
+  emergency_priority: number | null;
+  active_from: string; active_to: string | null; active: boolean;
+}
+export interface AllCoachLink {
+  assignment_id: string; staff_member_id: string; student_id: string;
+  role_type: "primary" | "assistant" | "other";
+  active_from: string; active_to: string | null; active: boolean;
+}
+export interface AllPeopleLinks { guardian_links: AllGuardianLink[]; coach_links: AllCoachLink[] }
+
 export const peopleApi = (client: RpcClient) => ({
   studentRelationships: (studentId: string) =>
     call<StudentRelationships>(client, "get_student_relationships", { p_student_id: studentId }),
+  allPeopleLinks: () =>
+    call<AllPeopleLinks>(client, "get_all_people_links"),
   /* guardians */
   listGuardians: (search: string | null, activeOnly = true) =>
     call<GuardianListItem[]>(client, "list_guardians", { p_search: search, p_active_only: activeOnly }),

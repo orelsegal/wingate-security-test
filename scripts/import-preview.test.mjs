@@ -18,7 +18,7 @@ await build({
 });
 const lib = await import(pathToFileURL(tmp).href);
 fs.unlinkSync(tmp);
-const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString } = lib;
+const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail } = lib;
 
 let pass = 0, fail = 0;
 const t = (name, cond) => { cond ? pass++ : (fail++, console.error("REGRESSION FAIL:", name)); };
@@ -117,6 +117,74 @@ const r2 = matchIdentities(
 );
 t("same id, different name → human review", r2.rows.some(x => x.identity === "human_review" && x.db?.id === "d9"));
 t("conflict pair still covers both sides", r2.controls.passed === true);
+
+/* ── links preview: classification vs existing links + conservation ── */
+{
+  const mkRow = (identity, dbId, dbName, athlete) => ({
+    identity, db: dbId ? { id: dbId, full_name: dbName } : undefined, file: athlete, changes: [],
+  });
+  const rows = [
+    // matched student, mother has active identical link → unchanged
+    mkRow("exact", "s1", "כהן דנה", { first: "דנה", last: "כהן", father: "", father_phone: "", mother: "רות", mother_phone: "0501111111", coach: "לוי יוסי" }),
+    // matched student, father link exists but with different type in DB → update
+    mkRow("exact", "s2", "לוי רון", { first: "רון", last: "לוי", father: "משה", father_phone: "0502222222", mother: "", mother_phone: "", coach: "לוי יוסי" }),
+    // matched student, guardian exists in DB but link was CLOSED → historical
+    mkRow("strong", "s3", "מזרחי גל", { first: "גל", last: "מזרחי", father: "דוד", father_phone: "0503333333", mother: "", mother_phone: "", coach: "כהן אבי" }),
+    // matched student, guardian not in DB → new
+    mkRow("exact", "s4", "פרץ טל", { first: "טל", last: "פרץ", father: "יעקב", father_phone: "0504444444", mother: "", mother_phone: "", coach: "" }),
+    // UNMATCHED student → parent + coach are unlinkable
+    mkRow("source_only", null, null, { first: "חדש", last: "לגמרי", father: "אבא", father_phone: "0505555555", mother: "", mother_phone: "", coach: "לוי יוסי" }),
+    // same phone, two different parent names → conflict (דוד/סבטלנה case)
+    mkRow("exact", "s6", "ברק עדן", { first: "עדן", last: "ברק", father: "דוד", father_phone: "0509999999", mother: "", mother_phone: "", coach: "" }),
+    mkRow("exact", "s7", "ברק נועם", { first: "נועם", last: "ברק", father: "סבטלנה", father_phone: "0509999999", mother: "", mother_phone: "", coach: "" }),
+  ];
+  const dbGuardians = [
+    { id: "g1", full_name: "רות כהן", phone: "0501111111", email: null },
+    { id: "g2", full_name: "משה לוי", phone: "0502222222", email: null },
+    { id: "g3", full_name: "דוד מזרחי", phone: "0503333333", email: null },
+  ];
+  const dbStaff = [{ id: "m1", full_name: "לוי יוסי", roles: ["coach"] }];
+  const existing = {
+    guardian_links: [
+      { link_id: "L1", guardian_id: "g1", student_id: "s1", relationship_type: "mother", active: true },
+      { link_id: "L2", guardian_id: "g2", student_id: "s2", relationship_type: "guardian", active: true },
+      { link_id: "L3", guardian_id: "g3", student_id: "s3", relationship_type: "father", active: false },
+      // active link in DB that the file does not mention → db_only, never auto-closed
+      { link_id: "L4", guardian_id: "g1", student_id: "s9", relationship_type: "mother", active: true },
+    ],
+    coach_links: [
+      { assignment_id: "A1", staff_member_id: "m1", student_id: "s1", role_type: "primary", active: true },
+    ],
+  };
+  const lr = previewLinks(rows, dbGuardians, dbStaff, existing, new Map([["s9", "אחר מישהו"]]));
+  const cat = (k, c) => lr.items.filter(i => i.kind === k && i.category === c).length;
+  t("existing identical link → unchanged", cat("guardian", "unchanged") === 1);
+  t("existing link with different type → update", cat("guardian", "update") === 1);
+  t("closed link → historical, not silently reopened", cat("guardian", "historical") === 1);
+  t("guardian not in DB → new", cat("guardian", "new") === 1);
+  t("unmatched student parent → unlinkable", cat("guardian", "unlinkable") === 1);
+  t("same phone different names → conflict on both", cat("guardian", "conflict") === 2);
+  t("active DB link not in file → db_only", cat("guardian", "db_only") === 1);
+  t("coach active assignment → unchanged", cat("coach", "unchanged") === 1);
+  t("coach for unmatched student → unlinkable", cat("coach", "unlinkable") === 1);
+  t("coach not in staff → new", cat("coach", "new") >= 1);
+  // conservation: every planned pair covered once, every existing ACTIVE link covered once
+  t("links conservation passed", lr.controls.passed === true);
+  t("planned fully covered", lr.controls.plannedCovered === lr.controls.plannedTotal);
+  t("existing active fully covered", lr.controls.existingCovered === lr.controls.existingActiveTotal && lr.controls.existingActiveTotal === 4);
+  // counts: guardians vs links are separate numbers
+  t("unique guardians counted once per phone", lr.guardians.unique === 6);
+  t("unlinkable guardian counted", lr.guardians.unlinkable === 1);
+  t("guardian conflicts counted once per guardian", lr.guardians.conflicts === 1);
+  t("planned guardian links counted per pair", lr.guardians.plannedLinks === 7);
+  // RPC not applied yet → everything classifies as new, conservation still holds
+  const lr0 = previewLinks(rows, [], [], null);
+  t("no existing data → no unchanged/update/db_only", lr0.items.every(i => !["unchanged", "update", "historical", "db_only"].includes(i.category)));
+  t("no existing data → conservation still passes", lr0.controls.passed === true);
+  // masking helpers never leak full values
+  t("maskPhone hides middle digits", maskPhone("0501234567") === "050***67");
+  t("maskEmail keeps first char only", maskEmail("parent@mail.com") === "p***");
+}
 
 if (fail > 0) {
   console.error(`import-preview regression: ${fail} failures — build blocked.`);

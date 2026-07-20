@@ -7,8 +7,9 @@ import { useStudents, useSports } from "@/hooks/useStudents";
 import { peopleApi } from "@/lib/peopleApi";
 import {
   parseAcademyBlocks, parseAthletes, parseStaffSheet, matchIdentities, normalizeNid,
-  previewGuardians, previewStaff, countBy, maskId, resolveSport,
+  previewGuardians, previewStaff, previewLinks, countBy, maskId, maskPhone, maskEmail, resolveSport,
   type AOA, type MatchReport, type GuardianPreviewItem, type CoachPreviewItem,
+  type LinksReport, type ExistingLinksInput,
 } from "@/lib/importPreview";
 import { OwnerGate, fieldCls, btnPrimary, btnGhost } from "@/components/people/PeopleShared";
 
@@ -30,6 +31,18 @@ const STAFF_LABELS: Record<string, string> = {
   staff_person: "איש צוות בקובץ", coach_sure: "מאמן תואם בוודאות",
   coach_variant: "וריאציית כתיב", coach_missing: "מאמן שאינו בצוות", noise: "ערך רעש",
 };
+const LINK_LABELS: Record<string, string> = {
+  new: "קשר חדש", unchanged: "קיים ללא שינוי", update: "עדכון קשר",
+  historical: "קשר היסטורי", conflict: "קונפליקט", db_only: "קיים רק ב-DB", unlinkable: "לא ניתן לקשר",
+};
+const DECISION_OPTS = [
+  { v: "link", label: "חיבור לרשומה הקיימת" },
+  { v: "create", label: "יצירה כרשומה חדשה בעתיד" },
+  { v: "skip", label: "דילוג" },
+  { v: "defer", label: "השארה להחלטה מאוחרת" },
+] as const;
+const UNDECIDED = "לא הוחלט, לא ייובא";
+const decisionLabel = (v: string | undefined) => DECISION_OPTS.find(o => o.v === v)?.label || UNDECIDED;
 
 const Chip = ({ label, n, tone }: { label: string; n: number; tone?: "warn" | "bad" }) => (
   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
@@ -79,9 +92,11 @@ const ImportInner = () => {
   });
   const guardiansQuery = useQuery({ queryKey: ["guardians", false], queryFn: () => api.listGuardians(null, false) });
   const staffQuery = useQuery({ queryKey: ["staff", false], queryFn: () => api.listStaff(null, false) });
+  // ONE call for all existing links; fails quietly until the migration is applied
+  const allLinksQuery = useQuery({ queryKey: ["all-people-links"], queryFn: () => api.allPeopleLinks(), retry: false });
 
   const onFile = async (file: File | null) => {
-    setParseError(null); setParsed(null);
+    setParseError(null); setParsed(null); setDecisions({});
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".xlsx")) {
       setParseError("אפשר להעלות רק קובץ Excel בסיומת xlsx.");
@@ -149,31 +164,56 @@ const ImportInner = () => {
   };
 
   const [control, setControl] = useState<"A" | "B">("A");
+  const [decisions, setDecisions] = useState<Record<string, string>>({});
   const activeReport = parsed ? (control === "A" ? parsed.reportA : parsed.reportB) : null;
+  // link classification against EXISTING links (one get_all_people_links call);
+  // until the migration is applied the query errors and we classify without it
+  const linksReport: LinksReport | null = useMemo(() => {
+    if (!parsed || parsed.missingRequired.length > 0) return null;
+    const namesById = new Map((dbStudents as any[]).map(d => [d.id as string, d.full_name as string]));
+    return previewLinks(
+      parsed.reportB.rows,
+      (guardiansQuery.data || []) as any[],
+      ((staffQuery.data || []) as any[]).map(s => ({ id: s.id, full_name: s.full_name, roles: s.roles || [] })),
+      (allLinksQuery.data as ExistingLinksInput | undefined) ?? null,
+      namesById,
+    );
+  }, [parsed, guardiansQuery.data, staffQuery.data, allLinksQuery.data, dbStudents]);
   const controlsPassed = !!parsed && parsed.missingRequired.length === 0
-    && parsed.reportA.controls.passed && parsed.reportB.controls.passed;
+    && parsed.reportA.controls.passed && parsed.reportB.controls.passed
+    && (!linksReport || linksReport.controls.passed);
   const gCounts = useMemo(() => countBy(parsed?.guardians || []), [parsed]);
   const sCounts = useMemo(() => countBy(parsed?.staffItems || []), [parsed]);
+  const gLinkCounts = useMemo(() => countBy((linksReport?.items || []).filter(i => i.kind === "guardian")), [linksReport]);
+  const cLinkCounts = useMemo(() => countBy((linksReport?.items || []).filter(i => i.kind === "coach")), [linksReport]);
   const conflicts = useMemo(() => [
-    ...(parsed?.reportA.rows || []).filter(m => m.identity === "human_review").map(m => ({
-      area: 'תלמידים (תשפ"ו)', name: m.file ? `${m.file.last} ${m.file.first}` : m.db?.full_name || "", note: m.note || "" })),
-    ...(parsed?.reportB.rows || []).filter(m => m.identity === "human_review").map(m => ({
-      area: "תלמידים (ספורטאים)", name: m.file ? `${m.file.last} ${m.file.first}` : m.db?.full_name || "", note: m.note || "" })),
-    ...(parsed?.guardians || []).filter(g => g.category === "conflict").map(g => ({ area: "הורים", name: g.name, note: g.note || "" })),
-    ...(parsed?.staffItems || []).filter(s => s.category === "coach_variant" || s.category === "coach_missing").map(s => ({
-      area: "מאמנים", name: s.name, note: (s.note || "") + (s.candidates?.length ? ` · מועמדים: ${s.candidates.join(", ")}` : "") })),
+    ...(parsed?.reportA.rows || []).filter(m => m.identity === "human_review").map((m, i) => ({
+      key: `A-${i}`, area: 'תלמידים (תשפ"ו)', name: m.file ? `${m.file.last} ${m.file.first}` : m.db?.full_name || "", note: m.note || "" })),
+    ...(parsed?.reportB.rows || []).filter(m => m.identity === "human_review").map((m, i) => ({
+      key: `B-${i}`, area: "תלמידים (ספורטאים)", name: m.file ? `${m.file.last} ${m.file.first}` : m.db?.full_name || "", note: m.note || "" })),
+    ...(parsed?.guardians || []).filter(g => g.category === "conflict").map((g, i) => ({ key: `G-${i}`, area: "הורים", name: g.name, note: g.note || "" })),
+    ...(parsed?.staffItems || []).filter(s => s.category === "coach_variant" || s.category === "coach_missing").map((s, i) => ({
+      key: `C-${i}`, area: "מאמנים", name: s.name, note: (s.note || "") + (s.candidates?.length ? ` · מועמדים: ${s.candidates.join(", ")}` : "") })),
   ], [parsed]);
+  const decidedCount = conflicts.filter(c => decisions[c.key]).length;
 
   const filteredMatches = (activeReport?.rows || []).filter(m =>
     (studentFilter === "all" || m.identity === studentFilter) &&
     (!q || (m.file && `${m.file.last} ${m.file.first}`.includes(q)) || (m.db && m.db.full_name.includes(q))));
 
+  // reports never contain a full national id, phone or email
+  const maskChange = (field: string, v: string) => {
+    if (v === "—") return v;
+    if (field === "phone") return maskPhone(v) || "—";
+    if (field === "email") return maskEmail(v) || "—";
+    return v;
+  };
   const reportItems = (r: MatchReport) => r.rows.map(m => ({
     identity: m.identity,
     name: m.file ? `${m.file.last} ${m.file.first}` : m.db?.full_name,
     id_masked: m.file?.nid ? maskId(normalizeNid(m.file.nid).nid) : (m.db?.national_id ? maskId(normalizeNid(m.db.national_id).nid) : null),
     note: m.note || null,
-    changes: m.changes.map(c => ({ field: c.label, current: c.current, proposed: c.proposed, source: c.source, reason: c.reason })),
+    changes: m.changes.map(c => ({ field: c.label, current: maskChange(c.field, c.current), proposed: maskChange(c.field, c.proposed), source: c.source, reason: c.reason })),
   }));
   const downloadReport = () => {
     if (!parsed || !controlsPassed) return;
@@ -183,8 +223,10 @@ const ImportInner = () => {
       control_a_snapshot: { counts: parsed.reportA.counts, controls: parsed.reportA.controls, items: reportItems(parsed.reportA) },
       control_b_athletes: { counts: parsed.reportB.counts, controls: parsed.reportB.controls, items: reportItems(parsed.reportB) },
       guardians: { counts: gCounts, items: parsed.guardians },
+      links: linksReport ? { guardians: linksReport.guardians, coaches: linksReport.coaches, controls: linksReport.controls } : null,
       staff: { counts: sCounts, items: parsed.staffItems },
       sports: parsed.sportRows,
+      decisions: conflicts.map(c => ({ area: c.area, name: c.name, decision: decisionLabel(decisions[c.key]) })),
     };
     const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
@@ -192,6 +234,76 @@ const ImportInner = () => {
     a.download = "wingate-import-preview.json";
     a.click();
     URL.revokeObjectURL(a.href);
+  };
+  const downloadExcel = () => {
+    if (!parsed || !controlsPassed || !linksReport) return;
+    const wb = XLSX.utils.book_new();
+    (wb as any).Workbook = { Views: [{ RTL: true }] };
+    const add = (name: string, rows: (string | number)[][], widths?: number[]) => {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      if (widths) ws["!cols"] = widths.map(wch => ({ wch }));
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    };
+    const c = parsed.reportA.counts, cb = parsed.reportB.counts;
+    add("סיכום", [
+      ["דוח Preview לייבוא נתונים (ללא ייבוא בפועל)"],
+      ["קובץ", parsed.fileName],
+      ["הופק", new Date().toLocaleString("he-IL")],
+      [],
+      ['בקרה A · תמונת מצב תשפ"ו'],
+      ["התאמה ודאית", c.exact], ["התאמה חזקה", c.strong], ["מותאמים", c.confident],
+      ["רק במקור", c.source_only], ["רק ב-DB", c.db_only], ["להחלטה אנושית", c.human_review],
+      ["בקרת כיסוי", parsed.reportA.controls.passed ? "עברה" : "נכשלה"],
+      [],
+      ["בקרה B · ספורטאים"],
+      ["התאמה ודאית", cb.exact], ["התאמה חזקה", cb.strong], ["מותאמים", cb.confident],
+      ["רק במקור", cb.source_only], ["רק ב-DB", cb.db_only], ["להחלטה אנושית", cb.human_review],
+      ["בקרת כיסוי", parsed.reportB.controls.passed ? "עברה" : "נכשלה"],
+      [],
+      ["הורים וקשרים"],
+      ["הורים ייחודיים", linksReport.guardians.unique],
+      ["הורים שניתן לקשר כרגע", linksReport.guardians.linkableNow],
+      ["הורים שלא ניתן לקשר (התלמיד אינו מותאם)", linksReport.guardians.unlinkable],
+      ["הורים בקונפליקט", linksReport.guardians.conflicts],
+      ["קשרי הורה-תלמיד", linksReport.guardians.plannedLinks],
+      [],
+      ["מאמנים וקשרים"],
+      ["מאמנים ייחודיים", linksReport.coaches.unique],
+      ["מאמנים שניתן לקשר כרגע", linksReport.coaches.linkableNow],
+      ["מאמנים שלא ניתן לקשר (התלמיד אינו מותאם)", linksReport.coaches.unlinkable],
+      ["קשרי מאמן-תלמיד", linksReport.coaches.plannedLinks],
+      ["בקרת כיסוי קשרים", linksReport.controls.passed ? "עברה" : "נכשלה"],
+      [],
+      ["החלטות קונפליקטים", `${decidedCount} מתוך ${conflicts.length}`],
+      ["כלל", "כל מקרה שלא הוחלט לא ייובא"],
+    ], [38, 24]);
+    const newRows: (string | number)[][] = [["מקור", "שם", 'ת"ז ממוסכת', "כיתה", "ענף"]];
+    for (const [label, rep] of [['בקרה A · תשפ"ו', parsed.reportA], ["בקרה B · ספורטאים", parsed.reportB]] as const)
+      for (const m of rep.rows) if (m.identity === "source_only" && m.file)
+        newRows.push([label, `${m.file.last} ${m.file.first}`, m.file.nid ? maskId(normalizeNid(m.file.nid).nid) : "", m.file.cls, m.file.sport]);
+    add("תלמידים חדשים", newRows, [18, 22, 12, 8, 14]);
+    const updRows: (string | number)[][] = [["מקור", "שם", "שדה", "ערך נוכחי", "ערך מוצע", "סיבה"]];
+    for (const rep of [parsed.reportA, parsed.reportB])
+      for (const m of rep.rows) if ((m.identity === "exact" || m.identity === "strong") && m.changes.length)
+        for (const ch of m.changes)
+          updRows.push([rep === parsed.reportA ? 'בקרה A · תשפ"ו' : "בקרה B · ספורטאים",
+            m.db?.full_name || "", ch.label, maskChange(ch.field, ch.current), maskChange(ch.field, ch.proposed), ch.reason]);
+    add("עדכוני תלמידים", updRows, [18, 22, 12, 18, 18, 20]);
+    add("הורים וקשרים", [["הורה", "טלפון ממוסך", "תלמיד/ה", "סיווג", "הערה"],
+      ...linksReport.items.filter(i => i.kind === "guardian").map(i => [i.person, i.phoneMasked || "", i.student, LINK_LABELS[i.category], i.note || ""])],
+      [22, 14, 20, 16, 30]);
+    add("צוות ומאמנים", [["סוג", "שם", "סיווג", "פרטים"],
+      ...parsed.staffItems.map(s => ["צוות/מאמן", s.name, STAFF_LABELS[s.category], (s.note || "") + (s.candidates?.length ? ` · מועמדים: ${s.candidates.join(", ")}` : "")]),
+      ...linksReport.items.filter(i => i.kind === "coach").map(i => ["קשר מאמן-תלמיד", i.person, LINK_LABELS[i.category], `${i.student}${i.note ? ` · ${i.note}` : ""}`])],
+      [16, 22, 18, 34]);
+    add("קונפליקטים", [["תחום", "שם", "פרטים", "החלטה"],
+      ...conflicts.map(cc => [cc.area, cc.name, cc.note, decisionLabel(decisions[cc.key])])],
+      [18, 22, 34, 22]);
+    add("מדולגים", [["תחום", "שם", "סיבה"],
+      ...conflicts.filter(cc => decisions[cc.key] === "skip").map(cc => [cc.area, cc.name, "סומן לדילוג בהחלטה ידנית"]),
+      [], ["טאבים מוחרגים במכוון", "מצב חירום, עוזבים, מועמדים, סיכומים, מידות, כתובות ומידע רפואי", ""]],
+      [24, 40, 24]);
+    XLSX.writeFile(wb, "wingate-import-preview.xlsx");
   };
 
   const stepDone = (i: number): boolean => {
@@ -275,7 +387,8 @@ const ImportInner = () => {
                   </p>
                   <p className="text-[12px] text-muted-foreground mt-1">
                     {[...(parsed.reportA.controls.errors.map(e => `בקרה A: ${e}`)),
-                      ...(parsed.reportB.controls.errors.map(e => `בקרה B: ${e}`))].join(" · ") || "כשל לא מזוהה"}
+                      ...(parsed.reportB.controls.errors.map(e => `בקרה B: ${e}`)),
+                      ...((linksReport?.controls.errors || []).map(e => `בקרת קשרים: ${e}`))].join(" · ") || "כשל לא מזוהה"}
                   </p>
                 </section>
               )}
@@ -348,7 +461,29 @@ const ImportInner = () => {
               {/* 4. guardians */}
               <section className="card-premium p-4 sm:p-5 mb-4">
                 <h2 className="text-[14px] font-semibold text-foreground mb-2">4. הורים וקשרים</h2>
-                <p className="text-[11.5px] text-muted-foreground mb-2">מחושב רק עבור תלמידים שהותאמו בביטחון. הייבוא עצמו ייפתח בנפרד משלב התלמידים.</p>
+                <p className="text-[11.5px] text-muted-foreground mb-2">מספר ההורים ומספר הקשרים נספרים בנפרד. הייבוא עצמו ייפתח בנפרד משלב התלמידים.</p>
+                {allLinksQuery.isError && (
+                  <p className="text-[11.5px] text-warning mb-2">
+                    זיהוי קשרים קיימים במערכת יופעל לאחר החלת מיגרציית get_all_people_links. עד אז כל הקשרים מסווגים כחדשים.
+                  </p>
+                )}
+                {linksReport && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    <Chip label="הורים ייחודיים" n={linksReport.guardians.unique} />
+                    <Chip label="הורים שניתן לקשר כרגע" n={linksReport.guardians.linkableNow} />
+                    <Chip label="הורים שלא ניתן לקשר (התלמיד אינו מותאם)" n={linksReport.guardians.unlinkable} tone="warn" />
+                    <Chip label="הורים בקונפליקט" n={linksReport.guardians.conflicts} tone="bad" />
+                    <Chip label="קשרי הורה-תלמיד" n={linksReport.guardians.plannedLinks} />
+                  </div>
+                )}
+                {linksReport && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {Object.entries(LINK_LABELS).map(([k, label]) => (
+                      <Chip key={k} label={label} n={gLinkCounts[k] || 0}
+                        tone={k === "conflict" ? "bad" : k === "unlinkable" || k === "historical" ? "warn" : undefined} />
+                    ))}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {Object.entries(GUARDIAN_LABELS).map(([k, label]) => (
                     <Chip key={k} label={label} n={gCounts[k] || 0} tone={k === "conflict" ? "bad" : k === "missing_info" ? "warn" : undefined} />
@@ -370,6 +505,14 @@ const ImportInner = () => {
               {/* 5. staff */}
               <section className="card-premium p-4 sm:p-5 mb-4">
                 <h2 className="text-[14px] font-semibold text-foreground mb-2">5. צוות ומאמנים</h2>
+                {linksReport && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    <Chip label="מאמנים ייחודיים" n={linksReport.coaches.unique} />
+                    <Chip label="מאמנים שניתן לקשר כרגע" n={linksReport.coaches.linkableNow} />
+                    <Chip label="מאמנים שלא ניתן לקשר (התלמיד אינו מותאם)" n={linksReport.coaches.unlinkable} tone="warn" />
+                    <Chip label="קשרי מאמן-תלמיד" n={linksReport.coaches.plannedLinks} />
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {Object.entries(STAFF_LABELS).map(([k, label]) => (
                     <Chip key={k} label={label} n={sCounts[k] || 0} tone={k === "coach_missing" ? "bad" : k === "coach_variant" ? "warn" : undefined} />
@@ -402,19 +545,52 @@ const ImportInner = () => {
                 </div>
               </section>
 
-              {/* 6. conflicts */}
+              {/* 6. conflicts + human decisions */}
               <section className="card-premium p-4 sm:p-5 mb-4">
-                <h2 className="text-[14px] font-semibold text-foreground mb-2">6. קונפליקטים ({conflicts.length})</h2>
+                <h2 className="text-[14px] font-semibold text-foreground mb-2">6. קונפליקטים והחלטות ({conflicts.length})</h2>
                 {conflicts.length === 0 ? (
                   <p className="text-[13px] text-muted-foreground">אין קונפליקטים.</p>
                 ) : (
-                  <div className="space-y-1.5">
-                    {conflicts.map((c, i) => (
-                      <p key={i} className="text-[12.5px] text-foreground break-words">
-                        <span className="text-muted-foreground">[{c.area}]</span> {c.name} · {c.note}
-                      </p>
-                    ))}
-                  </div>
+                  <>
+                    <p className="text-[11.5px] text-muted-foreground mb-3">
+                      ברירת המחדל לכל מקרה: {UNDECIDED}. שום החלטה אינה מתבצעת אוטומטית,
+                      הבחירות נשמרות בדוח בלבד ואינן כותבות דבר למערכת.
+                    </p>
+                    <div className="space-y-2 max-h-[480px] overflow-y-auto">
+                      {conflicts.map(c => {
+                        const d = decisions[c.key];
+                        return (
+                          <div key={c.key} className="rounded-xl border border-border/70 p-3">
+                            <p className="text-[12.5px] text-foreground break-words">
+                              <span className="text-muted-foreground">[{c.area}]</span> {c.name} · {c.note}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {DECISION_OPTS.map(o => (
+                                <button key={o.v}
+                                  onClick={() => setDecisions(p => {
+                                    const next = { ...p };
+                                    if (next[c.key] === o.v) delete next[c.key]; else next[c.key] = o.v;
+                                    return next;
+                                  })}
+                                  className={`h-7 px-2.5 rounded-lg text-[11px] border transition-colors ${
+                                    d === o.v ? "bg-primary/10 text-primary border-primary/30 font-medium" : "border-border text-muted-foreground hover:border-primary/30"}`}>
+                                  {o.label}
+                                </button>
+                              ))}
+                              {!d && (
+                                <span className="h-7 px-2.5 inline-flex items-center rounded-lg text-[11px] bg-warning/10 text-warning border border-warning/30">
+                                  {UNDECIDED}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11.5px] text-muted-foreground mt-3">
+                      הוחלטו {decidedCount} מתוך {conflicts.length} מקרים. כל מקרה שלא הוחלט לא ייובא.
+                    </p>
+                  </>
                 )}
               </section>
 
@@ -424,15 +600,20 @@ const ImportInner = () => {
                 <p className="text-[12.5px] text-muted-foreground mb-3">
                   בקרה A (תשפ"ו): {parsed.reportA.counts.exact} ודאיות · {parsed.reportA.counts.strong} חזקות · {parsed.reportA.counts.confident} מותאמות · {parsed.reportA.counts.source_only} רק במקור · {parsed.reportA.counts.db_only} רק ב-DB · {parsed.reportA.counts.human_review} להחלטה אנושית ·
                   {" "}בקרה B (ספורטאים): {parsed.reportB.counts.confident} מותאמות מתוך {parsed.reportB.controls.fileTotal} ·
-                  {" "}הורים: {parsed.guardians.length} · צוות: {parsed.staffCount}
+                  {" "}הורים שניתן לקשר כרגע: {linksReport?.guardians.linkableNow ?? 0} · קשרי הורה-תלמיד: {linksReport?.guardians.plannedLinks ?? 0} ·
+                  {" "}מאמנים שניתן לקשר כרגע: {linksReport?.coaches.linkableNow ?? 0} · קשרי מאמן-תלמיד: {linksReport?.coaches.plannedLinks ?? 0} ·
+                  {" "}צוות: {parsed.staffCount} · החלטות: {decidedCount}/{conflicts.length}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button onClick={downloadReport} className={`${btnPrimary} inline-flex items-center gap-1.5`}>
+                  <button onClick={downloadExcel} className={`${btnPrimary} inline-flex items-center gap-1.5`}>
                     <Download className="h-4 w-4" strokeWidth={1.7} />
-                    הורדת דוח Preview
+                    הורדת דוח Excel
+                  </button>
+                  <button onClick={downloadReport} className={btnGhost}>
+                    דוח JSON (טכני)
                   </button>
                   <button disabled className={`${btnGhost} opacity-50 cursor-not-allowed`} title="ייפתח בשלב הבא">
-                    אישור וייבוא — ייפתח בשלב הבא
+                    אישור וייבוא, ייפתח בשלב הבא
                   </button>
                 </div>
               </section>
