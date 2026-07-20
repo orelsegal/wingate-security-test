@@ -96,6 +96,11 @@ const ImportInner = () => {
       const aoa = (name: string): AOA => sheetNames.includes(name)
         ? (XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: false, defval: "" }) as AOA)
         : [];
+      // raw read (numbers as numbers) — used ONLY for the ת"ז column of the
+      // academy snapshots, where wrong date formatting empties the formatted value
+      const aoaRaw = (name: string): unknown[][] => sheetNames.includes(name)
+        ? (XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: "" }) as unknown[][])
+        : [];
       if (missingRequired.length > 0) {
         const empty = { rows: [], counts: { exact: 0, strong: 0, confident: 0, source_only: 0, db_only: 0, human_review: 0, with_changes: 0 }, controls: { fileTotal: 0, dbTotal: 0, fileCovered: 0, dbCovered: 0, passed: false, errors: ["לא נבדק"] } } as MatchReport;
         setParsed({
@@ -106,8 +111,8 @@ const ImportInner = () => {
         return;
       }
       const athletes = parseAthletes(aoa("ספורטאים"));
-      const snap = parseAcademyBlocks(aoa('תמונת מצב אקדמיה תשפ"ו'));
-      const snap87 = parseAcademyBlocks(aoa('תמונת מצב אקדמיה תשפ"ז'));
+      const snap = parseAcademyBlocks(aoa('תמונת מצב אקדמיה תשפ"ו'), aoaRaw('תמונת מצב אקדמיה תשפ"ו'));
+      const snap87 = parseAcademyBlocks(aoa('תמונת מצב אקדמיה תשפ"ז'), aoaRaw('תמונת מצב אקדמיה תשפ"ז'));
       const staff = parseStaffSheet(aoa("צוות"));
       const classByNid = new Map(snap.students.map(s => [normalizeNid(s.nid).nid, s.cls]).filter(([k]) => (k as string).length === 9) as [string, string][]);
       const sportRefs = (sports as any[]).map(s => ({ id: s.id, sport_name: s.sport_name }));

@@ -27,6 +27,15 @@ export function normalizeNid(v: string | null | undefined): { nid: string; valid
   return { nid: d, valid: sum % 10 === 0 };
 }
 
+/** Convert a RAW cell value (SheetJS raw:true) to a national-id string:
+ *  numbers are rendered without scientific notation, strings pass through,
+ *  errors/empty become "" (→ invalid downstream in normalizeNid). */
+export function rawCellToNidString(v: unknown): string {
+  if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v).toFixed(0);
+  if (typeof v === "string") return v.trim();
+  return "";
+}
+
 /* ── 1. block extraction from an academy-snapshot sheet ──
    Blocks are detected by every "שם משפחה" header cell; per block the record
    number column is header-1 and fields sit at fixed offsets. Rows are
@@ -35,9 +44,15 @@ export function normalizeNid(v: string | null | undefined): { nid: string; valid
 export interface FileStudent {
   first: string; last: string; sport: string; phone: string; email: string;
   birth: string; nid: string; gender: string; cls: string; coach: string;
+  /** where the national id came from: the raw cell value or the formatted text */
+  nid_lineage: "raw" | "formatted";
   source_block: string; row: number;
 }
-export function parseAcademyBlocks(aoa: AOA): { students: FileStudent[]; blocks: { title: string; count: number }[] } {
+/** rawAoa (optional): the same sheet read with raw:true. It is used ONLY for
+ *  the national-id column — some ת"ז cells are wrongly date-formatted and
+ *  their FORMATTED value comes back empty/garbage, while the raw numeric
+ *  value is the real id. All other fields keep the formatted read. */
+export function parseAcademyBlocks(aoa: AOA, rawAoa?: unknown[][]): { students: FileStudent[]; blocks: { title: string; count: number }[] } {
   let headerRow = -1;
   for (let r = 0; r < Math.min(aoa.length, 8); r++) {
     if ((aoa[r] || []).filter(c => normSpace(c) === "שם משפחה").length >= 2) { headerRow = r; break; }
@@ -60,10 +75,17 @@ export function parseAcademyBlocks(aoa: AOA): { students: FileStudent[]; blocks:
       if (r - lastRow > 5) break;
       const last = normSpace(row[c]), first = normSpace(row[c + 1]);
       if (!last && !first) continue;
+      // national id: prefer the RAW cell (survives wrong date formatting);
+      // fall back to the formatted text when no raw sheet was provided
+      const rawNid = rawAoa ? digits(rawCellToNidString(rawAoa[r]?.[c + 6])) : "";
+      const fmtNid = digits(row[c + 6]);
+      const nid = rawAoa ? (rawNid || fmtNid) : fmtNid;
       students.push({
         last, first,
         sport: normSpace(row[c + 2]), phone: normSpace(row[c + 3]), email: normSpace(row[c + 4]),
-        birth: normSpace(row[c + 5]), nid: digits(row[c + 6]), gender: normSpace(row[c + 7]).toLowerCase(),
+        birth: normSpace(row[c + 5]), nid,
+        nid_lineage: rawAoa && rawNid ? "raw" : "formatted",
+        gender: normSpace(row[c + 7]).toLowerCase(),
         cls: normSpace(row[c + 10]), coach: normSpace(row[c + 11]),
         source_block: title, row: r + 1,
       });

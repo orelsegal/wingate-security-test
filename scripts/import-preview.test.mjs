@@ -18,7 +18,7 @@ await build({
 });
 const lib = await import(pathToFileURL(tmp).href);
 fs.unlinkSync(tmp);
-const { matchIdentities, normalizeNid } = lib;
+const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString } = lib;
 
 let pass = 0, fail = 0;
 const t = (name, cond) => { cond ? pass++ : (fail++, console.error("REGRESSION FAIL:", name)); };
@@ -31,6 +31,43 @@ t("bad checksum flagged", normalizeNid("123456789").valid === false);
 t("leading zero restored", normalizeNid("12345675").nid === "012345675");
 t("padded id matches original", normalizeNid("012345675").nid === normalizeNid("12345675").nid);
 t("6 digits not padded to 9", normalizeNid("123456").nid.length !== 9);
+
+/* ── raw national-id cell recovery (date-formatted ת"ז cells) ── */
+t("raw number → plain string, no sci-notation", rawCellToNidString(338009897) === "338009897");
+t("raw large number no sci-notation", rawCellToNidString(1234567890) === "1234567890");
+t("raw string passes through", rawCellToNidString(" 220002885 ") === "220002885");
+t("raw error/empty → invalid", rawCellToNidString(undefined) === "" && normalizeNid(rawCellToNidString("")).valid === false);
+{
+  // synthetic snapshot: formatted read lost the id (date-formatted cell),
+  // raw read has the real number; plus lost leading zero, 10-digit id,
+  // #VALUE! and empty cells
+  const header = ["", "שם משפחה", "שם פרטי", "ענף", "טלפון", 'דוא"ל', "תאריך לידה", 'ת"ז', "מגדר", "L", "F", "כיתה", "מאמן",
+                  "", "", "שם משפחה", "שם", "ענף", "טלפון", 'דוא"ל', "תאריך לידה", "ת.ז.", "מגדר", "L", "F", "כיתה", "מאמן"];
+  const fmt = [
+    [], ["", "בלוק א"], header,
+    ["1", "אלף", "א", "סיוף", "", "", "", "", "f", "", "", "ט", ""],            // date-formatted: formatted value EMPTY
+    ["2", "בית", "ב", "סיוף", "", "", "", "", "f", "", "", "ט", ""],            // formatted empty, raw has lost leading zero
+    ["3", "גימל", "ג", "סיוף", "", "", "", "0336552379", "f", "", "", "ט", ""], // 10 digits — must stay invalid
+    ["4", "דלת", "ד", "סיוף", "", "", "", "#VALUE!", "f", "", "", "ט", ""],
+    ["5", "הא", "ה", "סיוף", "", "", "", "", "f", "", "", "ט", ""],             // truly empty everywhere
+  ];
+  const raw = [
+    [], [], [],
+    ["1", "אלף", "א", "", "", "", "", 123456782, "f"],
+    ["2", "בית", "ב", "", "", "", "", 12345675, "f"],
+    ["3", "גימל", "ג", "", "", "", "", "0336552379", "f"],
+    ["4", "דלת", "ד", "", "", "", "", "#VALUE!", "f"],
+    ["5", "הא", "ה", "", "", "", "", "", "f"],
+  ];
+  const { students } = parseAcademyBlocks(fmt, raw);
+  const byLast = (l) => students.find(s => s.last === l);
+  t("raw beats empty formatted", byLast("אלף")?.nid === "123456782" && byLast("אלף")?.nid_lineage === "raw");
+  t("lost leading zero recovered via normalizeNid", normalizeNid(byLast("בית")?.nid).nid === "012345675");
+  t("10-digit id stays invalid (not truncated)", normalizeNid(byLast("גימל")?.nid).nid.length === 10 && normalizeNid(byLast("גימל")?.nid).valid === false);
+  t("#VALUE! stays invalid", normalizeNid(byLast("דלת")?.nid).valid === false && byLast("דלת")?.nid === "");
+  t("empty stays invalid", byLast("הא")?.nid === "");
+  t("no raw sheet → formatted fallback lineage", parseAcademyBlocks(fmt).students[0].nid_lineage === "formatted");
+}
 
 /* ── identity vs field-changes separation ── */
 const sports = [{ id: "sp1", sport_name: "סיוף" }];
