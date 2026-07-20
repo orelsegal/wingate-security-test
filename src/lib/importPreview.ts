@@ -11,6 +11,22 @@ export const normClass = (v: string | null | undefined) => (v || "").replace(/[\
 export const maskId = (nid: string) => (nid.length >= 5 ? nid.slice(0, 3) + "***" + nid.slice(-1) : "***");
 const normKey = (v: string) => normSpace(v).replace(/[\s'׳"״-]/g, "").replace(/יי/g, "י");
 
+/** Israeli id normalization: strip non-digits, LEFT-PAD lost leading zeros
+ *  to 9 digits (numeric storage drops them), then checksum-validate. */
+export function normalizeNid(v: string | null | undefined): { nid: string; valid: boolean } {
+  let d = digits(v);
+  if (!d) return { nid: "", valid: false };
+  if (d.length >= 7 && d.length < 9) d = d.padStart(9, "0");
+  if (d.length !== 9) return { nid: d, valid: false };
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    let x = Number(d[i]) * (i % 2 === 0 ? 1 : 2);
+    if (x > 9) x -= 9;
+    sum += x;
+  }
+  return { nid: d, valid: sum % 10 === 0 };
+}
+
 /* ── 1. block extraction from an academy-snapshot sheet ──
    Blocks are detected by every "שם משפחה" header cell; per block the record
    number column is header-1 and fields sit at fixed offsets. Rows are
@@ -116,19 +132,35 @@ export function resolveSport(raw: string, sports: SportRef[], aliases: SportAlia
   return { canonical: null, viaAlias: false };
 }
 
-/* ── 5. student matching ── */
+/* ── 5. identity matching — SEPARATED from field changes ──
+   Identity buckets: exact (id), strong (name + supporting signal),
+   source_only, db_only, human_review. Field changes are attached to
+   matched rows and NEVER demote the identity bucket. Conservation
+   controls guarantee every file row and every DB row lands in exactly
+   one bucket — the UI must block results if the controls fail. */
 export interface DbStudent {
   id: string; national_id: string | null; full_name: string;
   class_name: string; sport: string; birth_year: number | null;
   phone?: string | null; email?: string | null; archived?: boolean | null;
 }
+export interface MatchInput {
+  first: string; last: string; nid: string; cls: string; sport: string;
+  birth: string; phone: string; email: string;
+}
 export interface FieldChange { field: string; label: string; current: string; proposed: string; source: string; reason: string }
-export interface StudentMatch {
-  category: "sure" | "new" | "db_only" | "changed" | "conflict" | "unmatched";
-  confidence: "ודאי" | "גבוה" | "דורש החלטה" | "";
-  file?: FileAthlete; db?: DbStudent;
+export interface IdentityRow {
+  identity: "exact" | "strong" | "source_only" | "db_only" | "human_review";
+  file?: MatchInput; db?: DbStudent;
   changes: FieldChange[];
   note?: string;
+}
+export interface MatchReport {
+  rows: IdentityRow[];
+  counts: {
+    exact: number; strong: number; confident: number;
+    source_only: number; db_only: number; human_review: number; with_changes: number;
+  };
+  controls: { fileTotal: number; dbTotal: number; fileCovered: number; dbCovered: number; passed: boolean; errors: string[] };
 }
 const birthYear = (birth: string): number | null => {
   const m = birth.match(/(\d{4})\s*$/) || birth.match(/\/(\d{4})/);
@@ -136,88 +168,120 @@ const birthYear = (birth: string): number | null => {
   const y = Number(m[1]);
   return y >= 1990 && y <= 2030 ? y : null;
 };
-export function matchStudents(fileAthletes: FileAthlete[], dbStudents: DbStudent[],
-  academyClassByNid: Map<string, string>,
-  sports: SportRef[], aliases: SportAlias[]): StudentMatch[] {
-  const out: StudentMatch[] = [];
-  const dbById = new Map<string, DbStudent>();
+export function matchIdentities(
+  fileRows: MatchInput[], dbStudents: DbStudent[],
+  opts: { classByNid?: Map<string, string>; sports: SportRef[]; aliases: SportAlias[]; sourceLabel: string },
+): MatchReport {
+  const rows: IdentityRow[] = [];
   const usedDb = new Set<string>();
-  for (const d of dbStudents) if (d.national_id && digits(d.national_id).length === 9) dbById.set(digits(d.national_id), d);
-
-  const buildChanges = (f: FileAthlete, d: DbStudent): FieldChange[] => {
+  const dbById = new Map<string, DbStudent>();
+  for (const d of dbStudents) {
+    const n = normalizeNid(d.national_id);
+    if (n.nid.length === 9 && !dbById.has(n.nid)) dbById.set(n.nid, d);
+  }
+  const nameIndex = (name: string) => normKey(name);
+  const buildChanges = (f: MatchInput, d: DbStudent): FieldChange[] => {
     const ch: FieldChange[] = [];
     const fname = normSpace(`${f.last} ${f.first}`);
-    if (fname && normKey(fname) !== normKey(d.full_name))
-      ch.push({ field: "full_name", label: "שם מלא", current: d.full_name, proposed: fname, source: "ספורטאים", reason: "שם שונה בקובץ המקור" });
-    const snapCls = academyClassByNid.get(f.nid) || "";
+    if (fname && nameIndex(fname) !== nameIndex(d.full_name) && nameIndex(`${f.first} ${f.last}`) !== nameIndex(d.full_name))
+      ch.push({ field: "full_name", label: "שם מלא", current: d.full_name, proposed: fname, source: opts.sourceLabel, reason: "שם שונה במקור" });
+    const snapCls = opts.classByNid?.get(normalizeNid(f.nid).nid) || f.cls;
     if (snapCls && normClass(snapCls) !== normClass(d.class_name))
-      ch.push({ field: "class_name", label: "כיתה", current: d.class_name || "—", proposed: snapCls, source: 'תמונת מצב תשפ"ו', reason: "שיוך כיתה שונה בתמונת המצב" });
-    const sp = resolveSport(f.sport, sports, aliases);
+      ch.push({ field: "class_name", label: "כיתה", current: d.class_name || "—", proposed: snapCls, source: opts.sourceLabel, reason: "שיוך כיתה שונה" });
+    const sp = resolveSport(f.sport, opts.sports, opts.aliases);
     if (sp.canonical && sp.canonical !== d.sport)
-      ch.push({ field: "sport", label: "ענף", current: d.sport || "—", proposed: sp.canonical + (sp.viaAlias ? ` (מנורמל מ"${f.sport}")` : ""), source: "ספורטאים", reason: sp.viaAlias ? "נרמול כתיב ענף" : "ענף שונה בקובץ" });
+      ch.push({ field: "sport", label: "ענף", current: d.sport || "—", proposed: sp.canonical + (sp.viaAlias ? ` (מנורמל מ"${f.sport}")` : ""), source: opts.sourceLabel, reason: sp.viaAlias ? "נרמול כתיב ענף" : "ענף שונה במקור" });
     if (f.phone && digits(f.phone) && digits(f.phone) !== digits(d.phone || ""))
-      ch.push({ field: "phone", label: "טלפון תלמיד", current: d.phone || "—", proposed: f.phone, source: "ספורטאים", reason: d.phone ? "טלפון שונה" : "טלפון חסר ב-DB" });
+      ch.push({ field: "phone", label: "טלפון תלמיד", current: d.phone || "—", proposed: f.phone, source: opts.sourceLabel, reason: d.phone ? "טלפון שונה" : "טלפון חסר ב-DB" });
     if (f.email && f.email.toLowerCase() !== (d.email || "").toLowerCase())
-      ch.push({ field: "email", label: "אימייל", current: d.email || "—", proposed: f.email, source: "ספורטאים", reason: d.email ? "אימייל שונה" : "אימייל חסר ב-DB" });
+      ch.push({ field: "email", label: "אימייל", current: d.email || "—", proposed: f.email, source: opts.sourceLabel, reason: d.email ? "אימייל שונה" : "אימייל חסר ב-DB" });
     const by = birthYear(f.birth);
     if (by && by !== d.birth_year)
-      ch.push({ field: "birth_year", label: "שנת לידה", current: d.birth_year ? String(d.birth_year) : "—", proposed: String(by), source: "ספורטאים", reason: "שנת לידה מהקובץ" });
+      ch.push({ field: "birth_year", label: "שנת לידה", current: d.birth_year ? String(d.birth_year) : "—", proposed: String(by), source: opts.sourceLabel, reason: "שנת לידה מהמקור" });
+    const fid = normalizeNid(f.nid);
+    if (fid.valid && !normalizeNid(d.national_id).valid)
+      ch.push({ field: "national_id", label: 'ת"ז', current: "—", proposed: maskId(fid.nid), source: opts.sourceLabel, reason: 'ת"ז חסרה ב-DB' });
     return ch;
   };
 
-  for (const f of fileAthletes) {
-    if (f.nid && f.nid.length === 9 && dbById.has(f.nid)) {
-      const d = dbById.get(f.nid)!;
+  for (const f of fileRows) {
+    const fid = normalizeNid(f.nid);
+    // exact by normalized id
+    if (fid.nid.length === 9 && dbById.has(fid.nid)) {
+      const d = dbById.get(fid.nid)!;
+      if (usedDb.has(d.id)) { rows.push({ identity: "human_review", file: f, changes: [], note: 'ת"ז מופיעה פעמיים בקובץ' }); continue; }
       usedDb.add(d.id);
-      const changes = buildChanges(f, d);
-      out.push({ category: changes.length ? "changed" : "sure", confidence: "ודאי", file: f, db: d, changes });
+      const fk1 = nameIndex(`${f.last} ${f.first}`), fk2 = nameIndex(`${f.first} ${f.last}`), dk = nameIndex(d.full_name);
+      if (fk1 !== dk && fk2 !== dk && fk1.length > 0) {
+        // same id, very different name — human decision, both sides covered
+        rows.push({ identity: "human_review", file: f, db: d, changes: [], note: 'ת"ז זהה אך השם שונה מהותית' });
+        continue;
+      }
+      rows.push({ identity: "exact", file: f, db: d, changes: buildChanges(f, d), note: fid.valid ? undefined : 'ת"ז לא עוברת ביקורת ספרת ביקורת' });
       continue;
     }
-    if (f.nid && f.nid.length !== 9 && f.nid.length > 0) {
-      out.push({ category: "conflict", confidence: "דורש החלטה", file: f, changes: [], note: `ת"ז באורך ${f.nid.length} (${maskId(f.nid)})` });
-      continue;
-    }
-    // no valid id: full name + at least two supporting signals
-    const fname = normKey(`${f.last} ${f.first}`);
-    const fnameRev = normKey(`${f.first} ${f.last}`);
-    const nameHits = dbStudents.filter(d => !usedDb.has(d.id) && (normKey(d.full_name) === fname || normKey(d.full_name) === fnameRev));
-    if (nameHits.length === 1) {
-      const d = nameHits[0];
+    // malformed id (not 9 after padding) with content — flag, but still try name fallback
+    const idNote = f.nid && fid.nid.length !== 9 ? `ת"ז באורך חריג (${maskId(fid.nid)})` : undefined;
+    // strong: unique full-name match + at least one supporting signal
+    const fk1 = nameIndex(`${f.last} ${f.first}`), fk2 = nameIndex(`${f.first} ${f.last}`);
+    const hits = dbStudents.filter(d => !usedDb.has(d.id) && (nameIndex(d.full_name) === fk1 || nameIndex(d.full_name) === fk2));
+    if (hits.length === 1) {
+      const d = hits[0];
       let signals = 0;
       if (f.cls && normClass(f.cls) === normClass(d.class_name)) signals++;
-      const sp = resolveSport(f.sport, [], []).canonical; // raw compare below
-      if (f.sport && (f.sport === d.sport || sp === d.sport)) signals++;
+      const sp = resolveSport(f.sport, opts.sports, opts.aliases);
+      if (f.sport && (f.sport === d.sport || sp.canonical === d.sport)) signals++;
       const by = birthYear(f.birth);
       if (by && by === d.birth_year) signals++;
       if (signals >= 1) {
         usedDb.add(d.id);
-        const changes = buildChanges(f, d);
-        out.push({ category: changes.length ? "changed" : "sure", confidence: "גבוה", file: f, db: d, changes, note: "הותאם לפי שם מלא + אימות נוסף (אין ת\"ז)" });
+        rows.push({ identity: "strong", file: f, db: d, changes: buildChanges(f, d), note: idNote ? idNote + " · הותאם לפי שם+אימות" : "הותאם לפי שם מלא + אימות נוסף" });
         continue;
       }
-    }
-    if (nameHits.length > 1) {
-      out.push({ category: "conflict", confidence: "דורש החלטה", file: f, changes: [], note: "שם מלא תואם ליותר מתלמיד אחד" });
+      rows.push({ identity: "human_review", file: f, changes: [], note: (idNote ? idNote + " · " : "") + "שם תואם אך ללא אות תומך (כיתה/ענף/שנת לידה)" });
       continue;
     }
-    if (!f.nid) {
-      out.push({ category: "unmatched", confidence: "", file: f, changes: [], note: "אין ת\"ז ואין התאמת שם ודאית" });
+    if (hits.length > 1) {
+      rows.push({ identity: "human_review", file: f, changes: [], note: (idNote ? idNote + " · " : "") + "שם מלא תואם ליותר מתלמיד אחד" });
       continue;
     }
-    out.push({ category: "new", confidence: "", file: f, changes: [] });
+    if (idNote) {
+      rows.push({ identity: "human_review", file: f, changes: [], note: idNote });
+      continue;
+    }
+    rows.push({ identity: "source_only", file: f, changes: [] });
   }
 
   for (const d of dbStudents) {
     if (usedDb.has(d.id)) continue;
-    if (d.full_name === "תירוש תומר" || d.full_name === "תומר תירוש") {
-      out.push({ category: "db_only", confidence: "", db: d, changes: [], note: "חריג ידוע: נשאר פעיל לפי החלטה" });
-    } else if (d.full_name === "רותם גיל") {
-      out.push({ category: "db_only", confidence: "דורש החלטה", db: d, changes: [], note: "מועמד/ת לארכוב, דורש תווית החלטה אנושית" });
-    } else {
-      out.push({ category: "db_only", confidence: "", db: d, changes: [], note: "קיים ב-DB ולא בקובץ, לא מסומן אוטומטית כעזב" });
-    }
+    if (rows.some(r => r.db?.id === d.id)) continue; // covered by a human_review pair
+    let note = "קיים ב-DB ולא במקור, לא מסומן אוטומטית כעזב";
+    if (d.full_name === "תירוש תומר" || d.full_name === "תומר תירוש") note = "חריג ידוע: נשאר פעיל לפי החלטה";
+    if (d.full_name === "רותם גיל") note = "מועמד/ת לארכוב, דורש תווית החלטה אנושית";
+    rows.push({ identity: "db_only", db: d, changes: [] });
+    rows[rows.length - 1].note = note;
   }
-  return out;
+
+  const counts = {
+    exact: rows.filter(r => r.identity === "exact").length,
+    strong: rows.filter(r => r.identity === "strong").length,
+    confident: 0,
+    source_only: rows.filter(r => r.identity === "source_only").length,
+    db_only: rows.filter(r => r.identity === "db_only").length,
+    human_review: rows.filter(r => r.identity === "human_review").length,
+    with_changes: rows.filter(r => (r.identity === "exact" || r.identity === "strong") && r.changes.length > 0).length,
+  };
+  counts.confident = counts.exact + counts.strong;
+
+  const fileCovered = rows.filter(r => r.file).length;
+  const dbCovered = new Set(rows.filter(r => r.db).map(r => r.db!.id)).size;
+  const errors: string[] = [];
+  if (fileCovered !== fileRows.length) errors.push(`כיסוי שורות מקור: ${fileCovered}/${fileRows.length}`);
+  if (dbCovered !== dbStudents.length) errors.push(`כיסוי שורות DB: ${dbCovered}/${dbStudents.length}`);
+  return {
+    rows, counts,
+    controls: { fileTotal: fileRows.length, dbTotal: dbStudents.length, fileCovered, dbCovered, passed: errors.length === 0, errors },
+  };
 }
 
 /* ── 6. guardians preview (matched students only) ── */
@@ -227,12 +291,14 @@ export interface GuardianPreviewItem {
   name: string; phoneMasked: string;
   students: string[]; note?: string;
 }
-export function previewGuardians(matches: StudentMatch[], dbGuardians: DbGuardian[]): GuardianPreviewItem[] {
-  const matched = matches.filter(m => (m.category === "sure" || m.category === "changed") && m.file && m.db);
+export function previewGuardians(matches: IdentityRow[], dbGuardians: DbGuardian[]): GuardianPreviewItem[] {
+  const matched = matches.filter(m => (m.identity === "exact" || m.identity === "strong") && m.file && m.db);
   const byPhone = new Map<string, { names: Set<string>; students: string[] }>();
   const noPhone: GuardianPreviewItem[] = [];
   for (const m of matched) {
-    const f = m.file!;
+    // parent fields exist only on athlete-registry inputs (Control B source)
+    const f = m.file as unknown as FileAthlete;
+    if (f.father === undefined && f.mother === undefined) continue;
     for (const [nm, ph] of [[f.father, f.father_phone], [f.mother, f.mother_phone]] as const) {
       if (!nm && !ph) continue;
       if (!ph) { noPhone.push({ category: "missing_info", name: nm, phoneMasked: "—", students: [m.db!.full_name], note: "הורה ללא טלפון, זיהוי לא ודאי" }); continue; }
