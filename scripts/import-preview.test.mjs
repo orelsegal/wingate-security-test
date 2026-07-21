@@ -27,6 +27,15 @@ await build({
 });
 const s360 = await import(pathToFileURL(tmp2).href);
 fs.unlinkSync(tmp2);
+// ops-board pure logic
+const tmp3 = path.join(os.tmpdir(), `opsboard-test-${Date.now()}.mjs`);
+await build({
+  entryPoints: [path.join(here, "../src/lib/opsBoard.ts")],
+  bundle: true, format: "esm", platform: "node", outfile: tmp3, logLevel: "silent",
+  alias: { "@": path.join(here, "../src") },
+});
+const ops = await import(pathToFileURL(tmp3).href);
+fs.unlinkSync(tmp3);
 const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail,
         buildDryRunPayload, expectedDryRunCounts, compareDryRun,
         buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, nameKey, nameFuzzy,
@@ -387,6 +396,42 @@ t("conflict pair still covers both sides", r2.controls.passed === true);
   t("360: relationship events sorted newest first",
     ev.length === 3 && ev[0].date === "2026-03-01" && ev[2].date === "2026-01-01");
   t("360: no relationships → no invented events", relationshipEvents(null).length === 0);
+}
+
+/* ── ops board: real, scoped alerts only (stage 4B) ── */
+{
+  const { computeOpsAlerts, opsAlertCount } = ops;
+  const students = [
+    { id: "s1", full_name: "אחת דמה", class_name: "ט", sport: "סיוף", national_id: "123456782", assigned_coach: "לוי יוסי" },
+    { id: "s2", full_name: "שתיים דמה", class_name: "י", sport: "סיוף", national_id: "12345674", assigned_coach: "" },
+    { id: "s3", full_name: "שלוש דמה", class_name: "", sport: "סיוף", national_id: "", assigned_coach: "" },
+    { id: "s4", full_name: "ארבע דמה", class_name: "ט", sport: "סיוף", national_id: "123456789", assigned_coach: "", archived: true },
+  ];
+  const statuses = [
+    { student_id: "s2", status: "yellow", status_note: "מעקב" },
+    { student_id: "s1", status: "red", status_note: null },
+    { student_id: "s9", status: "red", status_note: "לא קיים" }, // unknown id → dropped
+  ];
+  const links = {
+    guardian_links: [{ student_id: "s1", active: true }, { student_id: "s3", active: false }],
+    coach_links: [{ student_id: "s2", active: true }],
+  };
+  const a = computeOpsAlerts(students, statuses, links);
+  t("ops: red sorts before yellow, unknown ids dropped",
+    a.attention.length === 2 && a.attention[0].status === "red" && a.attention[0].name === "אחת דמה");
+  t("ops: managed coach link clears the no-coach alert",
+    a.noCoach.length === 1 && a.noCoach[0].id === "s3");
+  t("ops: inactive guardian link does not count",
+    a.noGuardians.length === 2 && a.noGuardians.every(x => ["s2", "s3"].includes(x.id)));
+  t("ops: archived students excluded from alerts and counted separately",
+    a.activeCount === 3 && a.archivedCount === 1 && !a.noCoach.some(x => x.id === "s4"));
+  t("ops: invalid or missing national id flagged (valid + padded pass)",
+    a.invalidNid.length === 1 && a.invalidNid[0].id === "s3");
+  t("ops: alert count sums visible domains", opsAlertCount(a) === 2 + 1 + 2 + 1);
+  // no links source (non-owner): guardians domain is null, not zero
+  const b = computeOpsAlerts(students, null, null);
+  t("ops: without links source guardians domain is null and coach falls back to legacy",
+    b.noGuardians === null && b.noCoach.length === 2 && opsAlertCount(b) === 0 + 2 + 0 + 1);
 }
 
 if (fail > 0) {

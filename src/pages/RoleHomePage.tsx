@@ -12,6 +12,12 @@ import WingateBadge from "@/components/WingateBadge";
 import DashboardContent from "@/components/DashboardContent";
 import EditableElement from "@/components/builder/EditableElement";
 import { roleTitles, CURRENT_SEMESTER } from "@/lib/schoolUtils";
+import OpsBoard from "@/components/home/OpsBoard";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { lgApi, yearLabel } from "@/lib/learningGroupsApi";
+
+const lgHome = lgApi(supabase as any);
 
 /* ═══ Types ═══ */
 interface ActionCard {
@@ -232,11 +238,64 @@ const AdminHome = () => {
   const navigate = useNavigate();
   return (
     <>
+      {/* Operations board: real, permission-scoped alerts first */}
+      <OpsBoard />
       {/* Quick-access navigation strip */}
       <MainEntryButtons navigate={navigate} />
       {/* Full dashboard — no extra padding, parent container provides it */}
       <DashboardContent embedded />
     </>
+  );
+};
+
+/* ═══ TEACHER: my learning groups (existing RPCs; the permission is the
+   gate — an error renders as an honest empty state, never as fake data) ═══ */
+const TeacherGroups = ({ navigate }: { navigate: (p: string) => void }) => {
+  const groupsQuery = useQuery({
+    queryKey: ["teacher-home-groups"],
+    retry: false,
+    queryFn: async () => {
+      const { data: au } = await supabase.auth.getUser();
+      const uid = au?.user?.id;
+      if (!uid) return [];
+      const groups = (await lgHome.list(null, "active")) as any[];
+      const details = await Promise.all(groups.slice(0, 40).map(g => lgHome.details(g.id).catch(() => null)));
+      return details
+        .filter((d: any) => d && d.teachers.some((t: any) => t.user_id === uid))
+        .map((d: any) => ({
+          id: d.group.id, name: d.group.name,
+          year: yearLabel(d.group.academic_year_start),
+          students: d.active_count as number,
+        }));
+    },
+  });
+  return (
+    <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] p-4 mb-6">
+      <h3 className="text-[13px] font-semibold text-foreground mb-2">קבוצות הלימוד שלי</h3>
+      {groupsQuery.isLoading ? (
+        <div className="space-y-2" aria-busy="true">
+          {[0, 1].map(i => <div key={i} className="h-9 rounded-lg bg-muted/40 animate-pulse" />)}
+        </div>
+      ) : groupsQuery.isError ? (
+        <p className="text-[12px] text-muted-foreground">צפייה בקבוצות לימוד עדיין אינה פתוחה לחשבון זה.</p>
+      ) : (groupsQuery.data || []).length === 0 ? (
+        <p className="text-[12px] text-muted-foreground">אינך משויך/ת כרגע לאף קבוצת לימוד פעילה.</p>
+      ) : (
+        <ul className="divide-y divide-border/50">
+          {groupsQuery.data!.map(g => (
+            <li key={g.id}>
+              <button onClick={() => navigate("/admin/learning-groups")}
+                className="w-full text-start py-2 flex items-center justify-between gap-2 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                <span className="text-[12.5px] text-foreground min-w-0 break-words">
+                  {g.name} <span className="text-muted-foreground" dir="ltr">({g.year})</span>
+                </span>
+                <span className="text-[11.5px] text-muted-foreground shrink-0">{g.students} תלמידים</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 
@@ -260,6 +319,8 @@ const TeacherHome = () => {
   return (
     <>
       <ContinueCard navigate={navigate} />
+
+      <TeacherGroups navigate={navigate} />
 
       {/* KPI strip — factual counts only */}
       <InsightStrip
@@ -296,8 +357,13 @@ const TeacherHome = () => {
 const ParentHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const childId = user?.scopeFilter?.[0] || "";
+  const childIds = user?.scopeFilter || [];
+  const childId = childIds[0] || "";
   const { data: child, isLoading } = useStudent(childId);
+  // additional linked children (RLS-scoped list query returns only the
+  // parent's own children; nothing about other students is readable)
+  const { data: allChildren = [] } = useStudents();
+  const otherChildren = (allChildren as any[]).filter(c => childIds.includes(c.id) && c.id !== childId);
   const { data: progress = [] } = useStudentProgress(childId);
 
   if (!childId) {
@@ -357,6 +423,26 @@ const ParentHome = () => {
         )}
       </div>
 
+      {/* additional linked children, each with a direct profile action */}
+      {otherChildren.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] p-4 mb-6">
+          <h3 className="text-[13px] font-semibold text-foreground mb-1.5">ילדים נוספים מקושרים</h3>
+          <ul className="divide-y divide-border/50">
+            {otherChildren.map((c: any) => (
+              <li key={c.id}>
+                <button onClick={() => navigate(`/students/${c.id}`)}
+                  className="w-full text-start py-2 flex items-center justify-between gap-2 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                  <span className="text-[12.5px] text-foreground min-w-0 break-words">{c.full_name}</span>
+                  <span className="text-[11.5px] text-muted-foreground shrink-0">
+                    {c.class_name || "ללא כיתה"}{c.sport ? ` · ${c.sport}` : ""}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Action cards */}
       <CardGrid cards={cards} navigate={navigate} />
     </>
@@ -383,6 +469,8 @@ const CoachHome = () => {
     );
   }
 
+  const noClass = myStudents.filter(s => !(s.class_name || "").trim());
+
   return (
     <>
       <InsightStrip
@@ -392,6 +480,43 @@ const CoachHome = () => {
           { id: "coach-stat-classes", label: "כיתות בענף",          value: myClassesCount || "—",    icon: BookOpen, color: "text-primary" },
         ]}
       />
+
+      {/* actionable: athletes without a clear class assignment (real check) */}
+      {noClass.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] p-4 mb-4">
+          <p className="text-[13px] font-medium text-foreground flex items-center gap-1.5">
+            <AlertTriangle className="h-4 w-4 text-warning" strokeWidth={1.6} />
+            {noClass.length} ספורטאים ללא שיוך כיתה
+          </p>
+          <p className="text-[11.5px] text-muted-foreground mt-0.5 break-words">
+            {noClass.slice(0, 3).map(s => s.full_name).join(", ")}{noClass.length > 3 ? ` ועוד ${noClass.length - 3}` : ""}
+          </p>
+        </div>
+      )}
+
+      {/* direct athlete profiles — the coach's own scope only */}
+      {myStudents.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] p-4 mb-4">
+          <h3 className="text-[13px] font-semibold text-foreground mb-1.5">הספורטאים שלי</h3>
+          <ul className="divide-y divide-border/50">
+            {[...myStudents].sort((a, b) => a.full_name.localeCompare(b.full_name, "he")).slice(0, 6).map(s => (
+              <li key={s.id}>
+                <button onClick={() => navigate(`/students/${s.id}`)}
+                  className="w-full text-start py-2 flex items-center justify-between gap-2 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                  <span className="text-[12.5px] text-foreground min-w-0 break-words">{s.full_name}</span>
+                  <span className="text-[11.5px] text-muted-foreground shrink-0">{s.class_name || "ללא כיתה"}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {myStudents.length > 6 && (
+            <button onClick={() => navigate("/students")}
+              className="text-[11.5px] text-primary hover:underline mt-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+              לכל {myStudents.length} הספורטאים
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <button
