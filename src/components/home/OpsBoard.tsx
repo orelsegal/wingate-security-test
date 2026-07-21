@@ -109,7 +109,7 @@ const OpsBoard = () => {
             <span className="text-[11px] text-muted-foreground">{openCount} פריטים פתוחים</span>
           )}
         </div>
-        {openCount === 0 ? (
+        {openCount === 0 && !alerts.bootstrap ? (
           <p className="text-[12.5px] text-muted-foreground py-2 flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.6} />
             אין כרגע התראות פתוחות.
@@ -142,6 +142,22 @@ const OpsBoard = () => {
                 explain="חסרה או לא עוברת בדיקת תקינות; משפיע על ייבוא עתידי"
                 action="להזנת נתונים" onAction={() => navigate("/data-entry")} />
             )}
+          </div>
+        )}
+        {alerts.bootstrap && (
+          <div className="flex items-start gap-3 py-2.5 border-t border-border/50 mt-1">
+            <span className="mt-1 w-2 h-2 rounded-full shrink-0 bg-muted-foreground/40" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium text-foreground">קשרי הורים ומאמנים טרם יובאו למערכת.</p>
+              <p className="text-[11.5px] text-muted-foreground mt-0.5">
+                לאחר השלמת הייבוא יוצגו כאן רק חוסרים אמיתיים.
+              </p>
+            </div>
+            <button onClick={() => navigate("/admin/data-import")}
+              className="shrink-0 inline-flex items-center gap-1 text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded pt-0.5">
+              לייבוא ועדכון נתונים
+              <ArrowLeft className="h-3 w-3" strokeWidth={1.8} />
+            </button>
           </div>
         )}
         {!isSystemOwner && (

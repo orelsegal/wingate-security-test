@@ -432,6 +432,24 @@ t("conflict pair still covers both sides", r2.controls.passed === true);
   const b = computeOpsAlerts(students, null, null);
   t("ops: without links source guardians domain is null and coach falls back to legacy",
     b.noGuardians === null && b.noCoach.length === 2 && opsAlertCount(b) === 0 + 2 + 0 + 1);
+  t("ops: normal links state is not bootstrap", a.bootstrap === false && b.bootstrap === false);
+
+  // bootstrap: links readable but COMPLETELY empty (import not done yet)
+  const boot = computeOpsAlerts(students, null, { guardian_links: [], coach_links: [] });
+  t("ops: empty link tables → bootstrap, mass alerts suppressed",
+    boot.bootstrap === true && boot.noCoach.length === 0 && boot.noGuardians === null);
+  t("ops: bootstrap keeps invalid-nid alert untouched", boot.invalidNid.length === 1);
+  t("ops: bootstrap contributes zero to the open-alert count", opsAlertCount(boot) === 1);
+  // a real legacy assigned_coach is a coach in every state
+  const withLegacy = computeOpsAlerts(
+    [{ id: "s1", full_name: "אחת דמה", class_name: "ט", sport: "סיוף", national_id: "123456782", assigned_coach: "לוי יוסי" }],
+    null, { guardian_links: [], coach_links: [] });
+  t("ops: legacy coach never counted as missing", withLegacy.noCoach.length === 0);
+  // the FIRST imported link ends bootstrap and resumes real classification
+  const resumed = computeOpsAlerts(students, null,
+    { guardian_links: [{ student_id: "s1", active: true }], coach_links: [] });
+  t("ops: one imported link resumes normal alerts",
+    resumed.bootstrap === false && resumed.noGuardians.length === 2 && resumed.noCoach.length === 2);
 }
 
 if (fail > 0) {

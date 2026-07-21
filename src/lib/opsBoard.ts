@@ -24,6 +24,10 @@ export interface OpsAlerts {
   noGuardians: OpsAlertStudent[] | null;
   /** active students whose national id is missing or fails normalization */
   invalidNid: OpsAlertStudent[];
+  /** bootstrap: the people/relationship tables are still EMPTY (import not
+   *  done yet). Mass "no coach / no guardian" alerts are meaningless in
+   *  this state and are suppressed in favor of one system message. */
+  bootstrap: boolean;
   activeCount: number;
   archivedCount: number;
 }
@@ -47,14 +51,21 @@ export function computeOpsAlerts(
     }))
     .filter(r => r.name); // never surface ids without a resolvable student
 
+  // bootstrap: links source readable but completely empty → relationships
+  // were never imported; suppress the mass alerts, never fake 130 problems
+  const bootstrap = !!links
+    && links.guardian_links.length === 0 && links.coach_links.length === 0;
+
   const coachLinked = new Set(
     (links?.coach_links || []).filter(l => l.active).map(l => l.student_id));
-  const noCoach = active
+  // a real legacy assigned_coach always counts as "has a coach", even
+  // before relationships are imported
+  const noCoach = bootstrap ? [] : active
     .filter(s => !(s.assigned_coach || "").trim() && !coachLinked.has(s.id))
     .map(s => ({ id: s.id, name: s.full_name }));
 
   let noGuardians: OpsAlertStudent[] | null = null;
-  if (links) {
+  if (links && !bootstrap) {
     const guardianLinked = new Set(
       links.guardian_links.filter(l => l.active).map(l => l.student_id));
     noGuardians = active
@@ -67,7 +78,7 @@ export function computeOpsAlerts(
     .map(s => ({ id: s.id, name: s.full_name }));
 
   return {
-    attention, noCoach, noGuardians, invalidNid,
+    attention, noCoach, noGuardians, invalidNid, bootstrap,
     activeCount: active.length,
     archivedCount: students.length - active.length,
   };
