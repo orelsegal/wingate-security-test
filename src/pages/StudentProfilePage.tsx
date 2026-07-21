@@ -306,6 +306,13 @@ const StudentProfilePage = () => {
     }
   };
 
+  // Hebrew display order: first name then family name (DB full_name is often
+  // family-first). Editing still writes full_name exactly as typed.
+  const displayName = (student.first_name && student.last_name)
+    ? `${student.first_name} ${student.last_name}`.trim()
+    : student.full_name;
+  const coachView = mergeCoaches((student as any).assigned_coach, relData?.coaches || null);
+
   const handleMathLevelChange = async (level: number) => {
     setMathLevel(level);
     await saveField("math_level", level);
@@ -335,12 +342,12 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* ═══ 360 HEADER — identity, status, masked id, actions ═══ */}
-      <div className="card-premium p-4 sm:p-5">
-        <div className="flex flex-col md:flex-row md:items-start gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="shrink-0"><InitialsAvatar name={student.full_name} size="lg" /></div>
-            <div className="min-w-0 flex-1">
+      {/* ═══ 360 HEADER — one calm horizontal identity band ═══ */}
+      <div className="card-premium px-4 sm:px-5 py-3.5 sm:py-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="shrink-0"><InitialsAvatar name={displayName} size="lg" /></div>
+          <div className="min-w-0 flex-1 basis-52">
+            {isEditable ? (
               <InlineEdit
                 value={student.full_name}
                 onSave={(v) => {
@@ -349,26 +356,34 @@ const StudentProfilePage = () => {
                   saveField("first_name", parts[0] || "");
                   saveField("last_name", parts.slice(1).join(" ") || "");
                 }}
-                editable={isEditable}
+                editable
                 wrap
-                displayClassName="text-lg sm:text-2xl font-semibold text-foreground tracking-tight leading-snug !h-auto !min-h-0 !border-0 !bg-transparent !px-0 !py-0 hover:!bg-primary/[0.03]"
+                displayClassName="text-[18px] sm:text-[21px] font-semibold text-foreground tracking-tight leading-snug !h-auto !min-h-0 !border-0 !bg-transparent !px-0 !py-0 hover:!bg-primary/[0.03]"
               />
-              <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap mt-1.5 text-[12.5px] text-muted-foreground">
-                <span>כיתה: <span className="text-foreground font-medium">{student.class_name || "לא צוינה"}</span></span>
-                <span>ענף: <span className="text-foreground font-medium">{student.sport || "לא צוין"}</span></span>
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11.5px] font-medium ${
-                  student.archived ? "bg-muted/50 text-muted-foreground border-border" : "bg-success/10 text-success border-success/30"}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${student.archived ? "bg-muted-foreground/50" : "bg-success"}`} />
-                  {student.archived ? "בארכיון" : "פעיל/ה"}
+            ) : (
+              <h1 className="text-[18px] sm:text-[21px] font-semibold text-foreground tracking-tight leading-snug break-words sm:truncate">
+                {displayName}
+              </h1>
+            )}
+            <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap mt-1 text-[12.5px] text-muted-foreground">
+              <span>{student.class_name || "כיתה לא צוינה"}</span>
+              <span className="text-border" aria-hidden>·</span>
+              <span>{student.sport || "ענף לא צוין"}</span>
+              <span className="text-border" aria-hidden>·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${student.archived ? "bg-muted-foreground/40" : "bg-success"}`} />
+                {student.archived ? "בארכיון" : "פעיל/ה"}
+              </span>
+              {(isAdminUser || isSystemOwner) && (student as any).national_id && (
+                <span className="text-[10.5px] text-muted-foreground/70" dir="ltr">
+                  {maskId(normalizeNid((student as any).national_id).nid)}
                 </span>
-                {(isAdminUser || isSystemOwner) && (student as any).national_id && (
-                  <span className="text-[11.5px]" dir="ltr">{maskId(normalizeNid((student as any).national_id).nid)}</span>
-                )}
-              </div>
+              )}
             </div>
           </div>
           {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
-            <div className="shrink-0">
+            <div className="shrink-0 ms-auto self-start flex flex-col items-center gap-0.5">
+              <span className="text-[10px] text-muted-foreground/80">פעולות</span>
               <DataExportTools
                 student={student}
                 subjectProgress={subjectProgress.map(sp => ({
@@ -385,129 +400,120 @@ const StudentProfilePage = () => {
           )}
         </div>
         {student.archived && (
-          <p className="text-[12px] text-muted-foreground mt-3 border-t border-border/60 pt-2.5">
+          <p className="text-[12px] text-muted-foreground mt-2.5 border-t border-border/60 pt-2">
             התלמיד/ה בארכיון. הנתונים מוצגים לקריאה, ופעולות שוטפות אינן רלוונטיות.
           </p>
         )}
       </div>
 
-      {/* ═══ 360 TABS ═══ */}
-      <nav aria-label="ניווט פרופיל תלמיד" className="flex gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1">
+      {/* ═══ 360 TABS — quiet underline navigation ═══ */}
+      <nav aria-label="ניווט פרופיל תלמיד" className="flex gap-0.5 overflow-x-auto border-b border-border -mx-1 px-1">
         {PROFILE_TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             aria-current={tab === t.id ? "page" : undefined}
-            className={`h-9 px-3.5 rounded-xl text-[12.5px] whitespace-nowrap border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-              tab === t.id
-                ? "bg-primary text-primary-foreground border-primary font-medium shadow-sm"
-                : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/30"}`}>
+            className={`relative px-3 sm:px-3.5 pt-1.5 pb-2.5 text-[13px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-t-lg ${
+              tab === t.id ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"}`}>
             {t.label}
+            {tab === t.id && <span aria-hidden className="absolute bottom-0 inset-x-2 h-[2.5px] rounded-full bg-primary" />}
           </button>
         ))}
       </nav>
 
-      {/* ═══ OVERVIEW: summary cards (real data only) ═══ */}
+      {/* ═══ OVERVIEW — asymmetric layout: wide summary, narrow status rail.
+          The admin traffic light renders exactly ONCE (here). ═══ */}
       {tab === "overview" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div className="card-premium p-4">
-            <p className="text-[11px] text-muted-foreground font-medium mb-1">כיתה ומסלול</p>
-            {isEditable ? (
-              <InlineSelect value={student.class_name} options={CLASS_OPTIONS} onSave={(v) => saveField("class_name", v)} editable />
-            ) : (
-              <p className="text-[14px] font-semibold text-foreground">{student.class_name || "לא צוינה"}</p>
-            )}
-            {sectionForClass(student.class_name) && (
-              <p className="text-[12px] text-muted-foreground mt-0.5">{sectionForClass(student.class_name)}</p>
-            )}
-          </div>
-          <div className="card-premium p-4">
-            <p className="text-[11px] text-muted-foreground font-medium mb-1">ענף ומאמן</p>
-            {isEditable ? (
-              <InlineEdit value={student.sport} onSave={(v) => saveField("sport", v)} editable wrap placeholder="ענף ספורט" />
-            ) : (
-              <p className="text-[14px] font-semibold text-foreground">{student.sport || "לא צוין"}</p>
-            )}
-            {(() => {
-              const cur = mergeCoaches((student as any).assigned_coach, relData?.coaches || null).current;
-              return cur.length > 0
-                ? <p className="text-[12px] text-muted-foreground mt-0.5 break-words">{cur.map(c => c.name).join(", ")}</p>
-                : <p className="text-[12px] text-muted-foreground mt-0.5">אין מאמן/ת משויך/ת</p>;
-            })()}
-          </div>
-          <div className="card-premium p-4">
-            <p className="text-[11px] text-muted-foreground font-medium mb-1">קבוצות לימוד פעילות</p>
-            {groupsEnabled ? (
-              groupsQuery.isLoading
-                ? <div className="h-5 w-10 rounded bg-muted/40 animate-pulse" aria-hidden />
-                : groupsQuery.isError
-                  ? <p className="text-[12px] text-muted-foreground">לא זמין בהרשאה הנוכחית</p>
-                  : <p className="text-[18px] font-bold text-foreground tabular-nums">{(groupsQuery.data || []).length}</p>
-            ) : <p className="text-[12px] text-muted-foreground">מוצג לבעלי הרשאת קבוצות</p>}
-          </div>
-          <div className="card-premium p-4">
-            <p className="text-[11px] text-muted-foreground font-medium mb-1">קשרים פעילים</p>
-            {relAvailable ? (
-              <p className="text-[13px] text-foreground">
-                {(relData?.guardians || []).filter(g => g.active).length} הורים · {(relData?.coaches || []).filter(c => c.active).length} מאמנים
-              </p>
-            ) : <p className="text-[12px] text-muted-foreground">מוצג לבעלי הרשאת קשרים</p>}
-          </div>
-          <div className="card-premium p-4">
-            <p className="text-[11px] text-muted-foreground font-medium mb-1">רשומות לימודיות</p>
-            <p className="text-[13px] text-foreground">
-              {gradedRows.length > 0
-                ? `${gradedRows.length} ציונים קיימים מתוך ${subjectProgress.length} רשומות`
-                : "עדיין אין ציונים"}
-            </p>
-          </div>
-          {isAdminUser && adminStatusRow && adminStatusRow.status !== "gray" && (
-            <div className={`card-premium p-4 ${adminStatusRow.status === "red" ? "border-destructive/40" : "border-warning/40"}`}>
-              <p className="text-[11px] text-muted-foreground font-medium mb-1">דורש תשומת לב</p>
-              <p className="text-[13px] text-foreground break-words">
-                {adminStatusConfig[adminStatusRow.status]?.label}
-                {adminStatusRow.status_note ? ` · ${adminStatusRow.status_note}` : ""}
-              </p>
+        <div className={`grid grid-cols-1 gap-4 items-start ${isAdminUser ? "lg:grid-cols-[minmax(0,1fr)_280px]" : ""}`}>
+          <div className="min-w-0 space-y-4">
+            {/* summary band: four facts, grouped by whitespace, not cards */}
+            <div className="card-premium px-4 sm:px-5 py-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-4">
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground mb-1">כיתה</p>
+                  {isEditable ? (
+                    <InlineSelect value={student.class_name} options={CLASS_OPTIONS} onSave={(v) => saveField("class_name", v)} editable />
+                  ) : (
+                    <p className="text-[15px] font-semibold text-foreground">{student.class_name || "לא צוינה"}</p>
+                  )}
+                  {sectionForClass(student.class_name) && (
+                    <p className="text-[11.5px] text-muted-foreground mt-0.5">{sectionForClass(student.class_name)}</p>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground mb-1">ענף</p>
+                  {isEditable ? (
+                    <InlineEdit value={student.sport} onSave={(v) => saveField("sport", v)} editable wrap placeholder="ענף ספורט" />
+                  ) : (
+                    <p className="text-[15px] font-semibold text-foreground break-words">{student.sport || "לא צוין"}</p>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground mb-1">מאמן/ת</p>
+                  {coachView.current.length > 0 ? (
+                    <p className="text-[15px] font-semibold text-foreground break-words">
+                      {coachView.current.map(c => c.name).join(", ")}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-[13px] text-muted-foreground">לא משויך/ת</p>
+                      <button onClick={() => setTab("sport")} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                        לפרטי הספורט
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground mb-1">קשרים פעילים</p>
+                  {relAvailable ? (
+                    <>
+                      <p className="text-[15px] font-semibold text-foreground tabular-nums">
+                        {(relData?.guardians || []).filter(g => g.active).length + (relData?.coaches || []).filter(c => c.active).length}
+                      </p>
+                      <button onClick={() => setTab("relationships")} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                        לצפייה בקשרים
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-[13px] text-muted-foreground">מוצג לבעלי הרשאה</p>
+                  )}
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* status rail — admin only; the ONLY admin-status instance */}
+          {isAdminUser && (() => {
+            const st = adminStatusRow?.status || "gray";
+            const cfg = adminStatusConfig[st];
+            const updatedLine = formatStatusUpdated(adminStatusRow);
+            return (
+              <div className="card-premium p-4" dir="rtl">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-[12px] font-semibold text-foreground">סטטוס ניהולי</p>
+                  <button onClick={() => setStatusEditorOpen(true)} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                    שינוי סטטוס
+                  </button>
+                </div>
+                <span className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[12px] font-medium ${cfg.chip}`}>
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                  {cfg.label}
+                </span>
+                {adminStatusError ? (
+                  <p className="text-[11.5px] text-destructive mt-1.5 break-words">
+                    טעינת הסטטוס נכשלה: {(adminStatusError as any)?.message || String(adminStatusError)}
+                  </p>
+                ) : (
+                  <>
+                    {adminStatusRow?.status_note && (
+                      <p className="text-[12px] text-foreground break-words mt-1.5">{adminStatusRow.status_note}</p>
+                    )}
+                    {updatedLine && <p className="text-[10.5px] text-muted-foreground mt-1">{updatedLine}</p>}
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
-
-      {/* Manual admin status — standalone card, NOT inside the builder-controlled
-          hero (sys-hero can be hidden in the page builder and must not take the
-          traffic light down with it). Always renders for admin, even with 0 rows. */}
-      {tab === "overview" && isAdminUser && (() => {
-        const st = adminStatusRow?.status || "gray";
-        const cfg = adminStatusConfig[st];
-        const updatedLine = formatStatusUpdated(adminStatusRow);
-        return (
-          <div className="bg-card rounded-2xl border border-border shadow-[var(--shadow-card)] p-4 sm:p-5" dir="rtl">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-[12px] font-semibold text-foreground">סטטוס ניהולי</p>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[12px] font-medium ${cfg.chip}`}>
-                <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
-                {cfg.label}
-              </span>
-              <button
-                onClick={() => setStatusEditorOpen(true)}
-                className="text-[11.5px] text-primary hover:underline"
-              >
-                שינוי סטטוס
-              </button>
-            </div>
-            {adminStatusError ? (
-              <p className="text-[11.5px] text-destructive mt-1.5 break-words">
-                טעינת הסטטוס נכשלה: {(adminStatusError as any)?.message || String(adminStatusError)}
-              </p>
-            ) : (
-              <>
-                {adminStatusRow?.status_note && (
-                  <p className="text-[12px] text-foreground break-words mt-1.5">{adminStatusRow.status_note}</p>
-                )}
-                {updatedLine && <p className="text-[10.5px] text-muted-foreground mt-1">{updatedLine}</p>}
-              </>
-            )}
-          </div>
-        );
-      })()}
 
       {/* ═══ RELATIONSHIPS TAB ═══ */}
       {tab === "relationships" && (
