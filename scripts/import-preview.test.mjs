@@ -18,6 +18,15 @@ await build({
 });
 const lib = await import(pathToFileURL(tmp).href);
 fs.unlinkSync(tmp);
+// student-360 pure logic (separate lib; "@/" alias resolved to src)
+const tmp2 = path.join(os.tmpdir(), `student360-test-${Date.now()}.mjs`);
+await build({
+  entryPoints: [path.join(here, "../src/lib/student360.ts")],
+  bundle: true, format: "esm", platform: "node", outfile: tmp2, logLevel: "silent",
+  alias: { "@": path.join(here, "../src") },
+});
+const s360 = await import(pathToFileURL(tmp2).href);
+fs.unlinkSync(tmp2);
 const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail,
         buildDryRunPayload, expectedDryRunCounts, compareDryRun,
         buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, nameKey, nameFuzzy,
@@ -345,6 +354,39 @@ t("conflict pair still covers both sides", r2.controls.passed === true);
   const bad = parseDecisionsDraft(JSON.stringify(buildDecisionsDraft(fp, "x", { "A-0": "hack" }, {})));
   t("invalid decision value never applied",
     bad.ok && restoreDecisions(bad.draft, ["A-0"], []).restored === 0);
+}
+
+/* ── student 360: legacy coach merge + relationship events (stage 4A) ── */
+{
+  const { mergeCoaches, relationshipEvents } = s360;
+  const relCoach = (name, active, role = "primary", from = "2026-01-01", to = null) =>
+    ({ full_name: name, role_type: role, active, active_from: from, active_to: to });
+  // legacy only → one row, clearly sourced
+  let m = mergeCoaches("לוי יוסי", []);
+  t("360: legacy-only coach shown once with legacy source",
+    m.current.length === 1 && m.current[0].sources.length === 1 && m.current[0].sources[0] === "legacy");
+  // same coach in legacy AND managed link → ONE row, both sources
+  m = mergeCoaches("לוי יוסי", [relCoach("לוי  יוסי", true)]);
+  t("360: same coach never appears twice",
+    m.current.length === 1 && m.current[0].sources.length === 2);
+  // different people → two rows, legacy kept (never dropped)
+  m = mergeCoaches("כהן אבי", [relCoach("לוי יוסי", true)]);
+  t("360: legacy coach kept alongside managed coach",
+    m.current.length === 2 && m.current.some(c => c.sources[0] === "legacy"));
+  // historical links stay separate
+  m = mergeCoaches(null, [relCoach("לוי יוסי", false, "primary", "2025-01-01", "2025-06-01")]);
+  t("360: historical assignment separated from current",
+    m.current.length === 0 && m.historical.length === 1 && m.historical[0].activeTo === "2025-06-01");
+  // events derived from real dates only, newest first
+  const ev = relationshipEvents({
+    student_id: "s", guardians: [
+      { full_name: "הורה א", relationship_type: "mother", active_from: "2026-02-01", active_to: null },
+    ],
+    coaches: [relCoach("לוי יוסי", false, "primary", "2026-01-01", "2026-03-01")],
+  });
+  t("360: relationship events sorted newest first",
+    ev.length === 3 && ev[0].date === "2026-03-01" && ev[2].date === "2026-01-01");
+  t("360: no relationships → no invented events", relationshipEvents(null).length === 0);
 }
 
 if (fail > 0) {

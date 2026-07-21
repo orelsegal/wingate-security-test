@@ -25,6 +25,23 @@ import { adminStatusConfig, formatStatusUpdated, type AdminStatusRow } from "@/l
 import AdminStatusEditor from "@/components/AdminStatusEditor";
 import StudentRelationshipsSection from "@/components/people/StudentRelationshipsSection";
 import { useIsSystemOwner } from "@/hooks/useSystemOwner";
+import { peopleApi } from "@/lib/peopleApi";
+import { maskId, normalizeNid } from "@/lib/importPreview";
+import { mergeCoaches } from "@/lib/student360";
+import { LearningGroupsCard, SportCard, ActivityCard, useStudentGroups } from "@/components/students/Student360Cards";
+
+const people = peopleApi(supabase as any);
+
+/* Student 360 internal navigation. Tabs never invent content: a domain
+   without data or permission renders an explicit empty state. */
+const PROFILE_TABS = [
+  { id: "overview", label: "תמונת מצב" },
+  { id: "academics", label: "לימודים" },
+  { id: "sport", label: "ספורט" },
+  { id: "relationships", label: "קשרים" },
+  { id: "activity", label: "פעילות והיסטוריה" },
+] as const;
+type ProfileTab = typeof PROFILE_TABS[number]["id"];
 
 const MATH_SUBJECT_ID = "a1111111-0000-0000-0000-000000000001";
 
@@ -76,6 +93,21 @@ const StudentProfilePage = () => {
 
   // System-Owner-only extras (relationships section). UX gate; RPCs enforce.
   const { data: isSystemOwner } = useIsSystemOwner();
+
+  // 360 tabs + shared relationship data (owner-permission only; the RPC is
+  // the real gate, this just avoids guaranteed-403 calls)
+  const [tab, setTab] = useState<ProfileTab>("overview");
+  const relAvailable = !!isSystemOwner;
+  const { data: relData = null } = useQuery({
+    queryKey: ["student-relationships", id],
+    enabled: !!id && relAvailable,
+    retry: false,
+    queryFn: () => people.studentRelationships(id!),
+  });
+  // learning groups: attempted only for roles that can hold the permission;
+  // the RPC enforces, an error renders as a permission empty state
+  const groupsEnabled = isAdminUser || !!isSystemOwner || user?.role === "teacher";
+  const groupsQuery = useStudentGroups(id || "", !!id && groupsEnabled);
 
   // Manual admin traffic light (student_admin_status, RLS admin-only)
   const [statusEditorOpen, setStatusEditorOpen] = useState(false);
@@ -239,6 +271,7 @@ const StudentProfilePage = () => {
 
   const hasAccess =
     user?.role === "admin" ||
+    user?.role === "developer" ||
     user?.role === "teacher" ||
     (user?.role === "parent" && user.scopeFilter?.includes(student.id)) ||
     (user?.role === "coach" && user.scopeFilter?.includes(student.sport));
@@ -302,10 +335,146 @@ const StudentProfilePage = () => {
         </div>
       )}
 
+      {/* ═══ 360 HEADER — identity, status, masked id, actions ═══ */}
+      <div className="card-premium p-4 sm:p-5">
+        <div className="flex flex-col md:flex-row md:items-start gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="shrink-0"><InitialsAvatar name={student.full_name} size="lg" /></div>
+            <div className="min-w-0 flex-1">
+              <InlineEdit
+                value={student.full_name}
+                onSave={(v) => {
+                  const parts = v.trim().split(" ");
+                  saveField("full_name", v.trim());
+                  saveField("first_name", parts[0] || "");
+                  saveField("last_name", parts.slice(1).join(" ") || "");
+                }}
+                editable={isEditable}
+                wrap
+                displayClassName="text-lg sm:text-2xl font-semibold text-foreground tracking-tight leading-snug !h-auto !min-h-0 !border-0 !bg-transparent !px-0 !py-0 hover:!bg-primary/[0.03]"
+              />
+              <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap mt-1.5 text-[12.5px] text-muted-foreground">
+                <span>כיתה: <span className="text-foreground font-medium">{student.class_name || "לא צוינה"}</span></span>
+                <span>ענף: <span className="text-foreground font-medium">{student.sport || "לא צוין"}</span></span>
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11.5px] font-medium ${
+                  student.archived ? "bg-muted/50 text-muted-foreground border-border" : "bg-success/10 text-success border-success/30"}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${student.archived ? "bg-muted-foreground/50" : "bg-success"}`} />
+                  {student.archived ? "בארכיון" : "פעיל/ה"}
+                </span>
+                {(isAdminUser || isSystemOwner) && (student as any).national_id && (
+                  <span className="text-[11.5px]" dir="ltr">{maskId(normalizeNid((student as any).national_id).nid)}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
+            <div className="shrink-0">
+              <DataExportTools
+                student={student}
+                subjectProgress={subjectProgress.map(sp => ({
+                  subjectName: (sp as any).subjects?.subject_name || "",
+                  grade: sp.grade, status: sp.status,
+                  completionPercent: sp.completion_percent, absences: sp.absences, notes: sp.notes,
+                  missingItems: sp.missing_items || [], coveredTopics: sp.covered_topics || [],
+                }))}
+                label={student.full_name}
+                contextLabel={student.full_name}
+                compact
+              />
+            </div>
+          )}
+        </div>
+        {student.archived && (
+          <p className="text-[12px] text-muted-foreground mt-3 border-t border-border/60 pt-2.5">
+            התלמיד/ה בארכיון. הנתונים מוצגים לקריאה, ופעולות שוטפות אינן רלוונטיות.
+          </p>
+        )}
+      </div>
+
+      {/* ═══ 360 TABS ═══ */}
+      <nav aria-label="ניווט פרופיל תלמיד" className="flex gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1">
+        {PROFILE_TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            aria-current={tab === t.id ? "page" : undefined}
+            className={`h-9 px-3.5 rounded-xl text-[12.5px] whitespace-nowrap border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+              tab === t.id
+                ? "bg-primary text-primary-foreground border-primary font-medium shadow-sm"
+                : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/30"}`}>
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* ═══ OVERVIEW: summary cards (real data only) ═══ */}
+      {tab === "overview" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="card-premium p-4">
+            <p className="text-[11px] text-muted-foreground font-medium mb-1">כיתה ומסלול</p>
+            {isEditable ? (
+              <InlineSelect value={student.class_name} options={CLASS_OPTIONS} onSave={(v) => saveField("class_name", v)} editable />
+            ) : (
+              <p className="text-[14px] font-semibold text-foreground">{student.class_name || "לא צוינה"}</p>
+            )}
+            {sectionForClass(student.class_name) && (
+              <p className="text-[12px] text-muted-foreground mt-0.5">{sectionForClass(student.class_name)}</p>
+            )}
+          </div>
+          <div className="card-premium p-4">
+            <p className="text-[11px] text-muted-foreground font-medium mb-1">ענף ומאמן</p>
+            {isEditable ? (
+              <InlineEdit value={student.sport} onSave={(v) => saveField("sport", v)} editable wrap placeholder="ענף ספורט" />
+            ) : (
+              <p className="text-[14px] font-semibold text-foreground">{student.sport || "לא צוין"}</p>
+            )}
+            {(() => {
+              const cur = mergeCoaches((student as any).assigned_coach, relData?.coaches || null).current;
+              return cur.length > 0
+                ? <p className="text-[12px] text-muted-foreground mt-0.5 break-words">{cur.map(c => c.name).join(", ")}</p>
+                : <p className="text-[12px] text-muted-foreground mt-0.5">אין מאמן/ת משויך/ת</p>;
+            })()}
+          </div>
+          <div className="card-premium p-4">
+            <p className="text-[11px] text-muted-foreground font-medium mb-1">קבוצות לימוד פעילות</p>
+            {groupsEnabled ? (
+              groupsQuery.isLoading
+                ? <div className="h-5 w-10 rounded bg-muted/40 animate-pulse" aria-hidden />
+                : groupsQuery.isError
+                  ? <p className="text-[12px] text-muted-foreground">לא זמין בהרשאה הנוכחית</p>
+                  : <p className="text-[18px] font-bold text-foreground tabular-nums">{(groupsQuery.data || []).length}</p>
+            ) : <p className="text-[12px] text-muted-foreground">מוצג לבעלי הרשאת קבוצות</p>}
+          </div>
+          <div className="card-premium p-4">
+            <p className="text-[11px] text-muted-foreground font-medium mb-1">קשרים פעילים</p>
+            {relAvailable ? (
+              <p className="text-[13px] text-foreground">
+                {(relData?.guardians || []).filter(g => g.active).length} הורים · {(relData?.coaches || []).filter(c => c.active).length} מאמנים
+              </p>
+            ) : <p className="text-[12px] text-muted-foreground">מוצג לבעלי הרשאת קשרים</p>}
+          </div>
+          <div className="card-premium p-4">
+            <p className="text-[11px] text-muted-foreground font-medium mb-1">רשומות לימודיות</p>
+            <p className="text-[13px] text-foreground">
+              {gradedRows.length > 0
+                ? `${gradedRows.length} ציונים קיימים מתוך ${subjectProgress.length} רשומות`
+                : "עדיין אין ציונים"}
+            </p>
+          </div>
+          {isAdminUser && adminStatusRow && adminStatusRow.status !== "gray" && (
+            <div className={`card-premium p-4 ${adminStatusRow.status === "red" ? "border-destructive/40" : "border-warning/40"}`}>
+              <p className="text-[11px] text-muted-foreground font-medium mb-1">דורש תשומת לב</p>
+              <p className="text-[13px] text-foreground break-words">
+                {adminStatusConfig[adminStatusRow.status]?.label}
+                {adminStatusRow.status_note ? ` · ${adminStatusRow.status_note}` : ""}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Manual admin status — standalone card, NOT inside the builder-controlled
           hero (sys-hero can be hidden in the page builder and must not take the
           traffic light down with it). Always renders for admin, even with 0 rows. */}
-      {isAdminUser && (() => {
+      {tab === "overview" && isAdminUser && (() => {
         const st = adminStatusRow?.status || "gray";
         const cfg = adminStatusConfig[st];
         const updatedLine = formatStatusUpdated(adminStatusRow);
@@ -340,14 +509,38 @@ const StudentProfilePage = () => {
         );
       })()}
 
-      {/* קשרים — הורים ומאמנים של התלמיד/ה. System Owner בלבד בשלב זה. */}
-      {isSystemOwner && (
-        <StudentRelationshipsSection studentId={student.id} studentName={student.full_name} />
+      {/* ═══ RELATIONSHIPS TAB ═══ */}
+      {tab === "relationships" && (
+        isSystemOwner ? (
+          <StudentRelationshipsSection studentId={student.id} studentName={student.full_name} />
+        ) : (
+          <div className="card-premium p-5 text-center">
+            <p className="text-[13px] text-foreground font-medium">קשרים</p>
+            <p className="text-[12.5px] text-muted-foreground mt-1">
+              צפייה בקשרי הורים ומאמנים זמינה למשתמשים עם הרשאת ניהול קשרים.
+            </p>
+          </div>
+        )
+      )}
+
+      {/* ═══ SPORT TAB ═══ */}
+      {tab === "sport" && (
+        <SportCard student={student} rel={relData} relAvailable={relAvailable} />
+      )}
+
+      {/* ═══ ACTIVITY TAB ═══ */}
+      {tab === "activity" && (
+        <ActivityCard rel={relData} relAvailable={relAvailable} />
+      )}
+
+      {/* ═══ ACADEMICS TAB: learning groups (existing infra, read-only) ═══ */}
+      {tab === "academics" && (
+        <LearningGroupsCard studentId={student.id} enabled={groupsEnabled} />
       )}
 
       {/* בגרות — מפת הדרך: every sheet column as its own row, grouped by subject.
           Verbatim, empty = —, no invented status. Admin/developer only. */}
-      {isBagrutViewer && (() => {
+      {tab === "academics" && isBagrutViewer && (() => {
         if (!bagrutData) return null;
         const section = sectionForClass(student?.class_name);
         // Civics file fields -> appended under אזרחות
@@ -392,113 +585,34 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* ═══ HERO CARD ═══
-          Mobile: vertical — avatar+name / sport+class / status / score / actions.
-          Desktop (md+): identity right, score column left. */}
-      {isSectionVisible("sys-hero") && (
-      <div className="card-premium p-4 sm:p-5 md:p-7">
-        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
-
-          {/* Identity + fields */}
-          <div className="flex-1 min-w-0 space-y-4">
-            {/* Row 1: avatar + full name (wraps naturally, never clipped) */}
-            <div className="flex items-center gap-3">
-              <div className="shrink-0"><InitialsAvatar name={student.full_name} size="lg" /></div>
-              <div className="flex-1 min-w-0">
-                <InlineEdit
-                  value={student.full_name}
-                  onSave={(v) => {
-                    const parts = v.trim().split(" ");
-                    saveField("full_name", v.trim());
-                    saveField("first_name", parts[0] || "");
-                    saveField("last_name", parts.slice(1).join(" ") || "");
-                  }}
-                  editable={isEditable}
-                  wrap
-                  displayClassName="text-lg sm:text-2xl font-semibold text-foreground tracking-tight leading-snug !h-auto !min-h-0 !border-0 !bg-transparent !px-0 !py-0 hover:!bg-primary/[0.03]"
-                />
+      {/* ═══ OVERVIEW KPI STRIP — rendered only for KPIs with REAL values ═══ */}
+      {tab === "overview" && (() => {
+        const kpis = [
+          { icon: CalendarCheck, label: "נוכחות", value: (student as any).attendance_percent != null ? `${(student as any).attendance_percent}%` : null, accent: "text-success", bg: "bg-success/10" },
+          { icon: Activity, label: "שיעורי תגבור", value: (student as any).sessions_completed != null ? String((student as any).sessions_completed) : null, accent: "text-primary", bg: "bg-primary/10" },
+          { icon: MessageCircle, label: "פניות פתוחות", value: (student as any).open_requests != null ? String((student as any).open_requests) : null, accent: ((student as any).open_requests ?? 0) > 0 ? "text-warning" : "text-muted-foreground", bg: ((student as any).open_requests ?? 0) > 0 ? "bg-warning/10" : "bg-accent/40" },
+          { icon: (student as any).trend === "down" ? TrendingDown : TrendingUp, label: "מגמה", value: (student as any).trend === "up" ? "שיפור" : (student as any).trend === "down" ? "ירידה" : null, accent: (student as any).trend === "up" ? "text-success" : "text-destructive", bg: (student as any).trend === "up" ? "bg-success/10" : "bg-destructive/10" },
+        ].filter(k => k.value != null);
+        if (kpis.length === 0) return null;
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {kpis.map((kpi, i) => (
+              <div key={i} className="card-premium p-4 flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
+                  <kpi.icon className={`h-4 w-4 ${kpi.accent}`} strokeWidth={1.5} />
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-[18px] font-bold leading-none tabular-nums ${kpi.accent}`}>{kpi.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">{kpi.label}</p>
+                </div>
               </div>
-            </div>
-
-            {/* Row 2: sport + class */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1 min-w-0">
-                <p className="text-[11px] text-muted-foreground font-medium">ענף ספורט</p>
-                <InlineEdit
-                  value={student.sport}
-                  onSave={(v) => saveField("sport", v)}
-                  editable={isEditable}
-                  wrap
-                  placeholder="ענף ספורט"
-                />
-              </div>
-              <div className="space-y-1 min-w-0">
-                <p className="text-[11px] text-muted-foreground font-medium">כיתה</p>
-                <InlineSelect
-                  value={student.class_name}
-                  options={CLASS_OPTIONS}
-                  onSave={(v) => saveField("class_name", v)}
-                  editable={isEditable}
-                />
-              </div>
-            </div>
-
+            ))}
           </div>
-
-          {/* Factual counts + actions — no average, no ring, no status colors */}
-          <div className="md:w-60 shrink-0 min-w-0 border-t md:border-t-0 md:border-s border-border/60 pt-4 md:pt-0 md:ps-6 flex flex-col items-center gap-2">
-            <p className="text-[13px] font-semibold text-foreground text-center leading-snug">
-              {gradedRows.length > 0
-                ? `${gradedRows.length} ציונים קיימים מתוך ${subjectProgress.length} רשומות לימודיות`
-                : "עדיין אין ציונים"}
-            </p>
-            {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
-              <div className="pt-1">
-                <DataExportTools
-                  student={student}
-                  subjectProgress={subjectProgress.map(sp => ({
-                    subjectName: (sp as any).subjects?.subject_name || "",
-                    grade: sp.grade,
-                    status: sp.status,
-                    completionPercent: sp.completion_percent,
-                    absences: sp.absences,
-                    notes: sp.notes,
-                    missingItems: sp.missing_items || [],
-                    coveredTopics: sp.covered_topics || [],
-                  }))}
-                  label={student.full_name}
-                  contextLabel={student.full_name}
-                  compact
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* ═══ OVERVIEW KPI STRIP ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { icon: CalendarCheck, label: "נוכחות", value: (student as any).attendance_percent != null ? `${(student as any).attendance_percent}%` : "—", accent: "text-success", bg: "bg-success/10" },
-          { icon: Activity, label: "שיעורי תגבור", value: (student as any).sessions_completed != null ? String((student as any).sessions_completed) : "—", accent: "text-primary", bg: "bg-primary/10" },
-          { icon: MessageCircle, label: "פניות פתוחות", value: (student as any).open_requests != null ? String((student as any).open_requests) : "—", accent: ((student as any).open_requests ?? 0) > 0 ? "text-warning" : "text-muted-foreground", bg: ((student as any).open_requests ?? 0) > 0 ? "bg-warning/10" : "bg-accent/40" },
-          { icon: (student as any).trend === "down" ? TrendingDown : (student as any).trend === "up" ? TrendingUp : Minus, label: "מגמה", value: (student as any).trend === "up" ? "שיפור" : (student as any).trend === "down" ? "ירידה" : "—", accent: (student as any).trend === "up" ? "text-success" : (student as any).trend === "down" ? "text-destructive" : "text-muted-foreground", bg: (student as any).trend === "up" ? "bg-success/10" : (student as any).trend === "down" ? "bg-destructive/10" : "bg-accent/40" },
-        ].map((kpi, i) => (
-          <div key={i} className="card-premium p-4 flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
-              <kpi.icon className={`h-4 w-4 ${kpi.accent}`} strokeWidth={1.5} />
-            </div>
-            <div className="min-w-0">
-              <p className={`text-[18px] font-bold leading-none tabular-nums ${kpi.accent}`}>{kpi.value}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">{kpi.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+        );
+      })()}
 
       {/* ═══ INSIGHTS: STRENGTHS / CHALLENGES / NEXT ACTION ═══ */}
-      {((student as any).strengths || (student as any).challenges || (student as any).next_action) && (
+      {tab === "overview" && ((student as any).strengths || (student as any).challenges || (student as any).next_action) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {(student as any).strengths && (
             <div className="card-premium p-4 border-r-2 border-success/40">
@@ -530,8 +644,8 @@ const StudentProfilePage = () => {
         </div>
       )}
 
-      {/* ═══ TIMELINE ═══ */}
-      {Array.isArray((student as any).timeline) && (student as any).timeline.length > 0 && (
+      {/* ═══ TIMELINE (existing student.timeline data, activity tab) ═══ */}
+      {tab === "activity" && Array.isArray((student as any).timeline) && (student as any).timeline.length > 0 && (
         <div className="card-premium p-5 md:p-6">
           <div className="flex items-center gap-2 mb-4">
             <History className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -562,7 +676,7 @@ const StudentProfilePage = () => {
 
 
       {/* ═══ MATH LEVEL SELECTOR ═══ */}
-      {isSectionVisible("sys-math") && showManualLevels && (
+      {tab === "academics" && isSectionVisible("sys-math") && showManualLevels && (
       <div className="card-premium p-5 md:p-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -591,7 +705,7 @@ const StudentProfilePage = () => {
       )}
 
       {/* ═══ PER-SUBJECT DETAILS TABS ═══ */}
-      {isSectionVisible("sys-subjects") && allSubjects.length > 0 && (() => {
+      {tab === "academics" && isSectionVisible("sys-subjects") && allSubjects.length > 0 && (() => {
         const tabSubject = activeSubjectTab || allSubjects[0].subject_name;
         const extras = getSubjectExtras(tabSubject);
         const tabLevel = getSubjectLevel(tabSubject);
@@ -731,7 +845,7 @@ const StudentProfilePage = () => {
       })()}
 
       {/* ═══ CHARTS ═══ */}
-      {subjectProgress.length > 0 && (
+      {tab === "academics" && subjectProgress.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="card-premium p-5 md:p-6">
             <h3 className="text-[14px] font-semibold text-foreground mb-4">ציונים לפי מקצוע</h3>
@@ -760,7 +874,7 @@ const StudentProfilePage = () => {
       )}
 
       {/* ═══ SUBJECT PROGRESS — EXPANDABLE ═══ */}
-      {isSectionVisible("sys-roadmap") && (
+      {tab === "academics" && isSectionVisible("sys-roadmap") && (
       <div>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -1000,8 +1114,8 @@ const StudentProfilePage = () => {
       </div>
       )}
 
-      {/* Admin-defined custom sections */}
-      <CustomSectionsRenderer studentId={student.id} />
+      {/* Admin-defined custom sections (academic content) */}
+      {tab === "academics" && <CustomSectionsRenderer studentId={student.id} />}
 
       {/* Manual admin status editor */}
       {isAdminUser && (
