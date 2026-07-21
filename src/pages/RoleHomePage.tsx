@@ -312,8 +312,7 @@ const TeacherHome = () => {
   const quickActions = [
     { id: "courses",  title: "הקורסים שלי",    desc: "ניהול קורסים וציונים",       icon: BookOpen,     color: "bg-primary/10",   iconColor: "text-primary",      path: "/teacher-courses" },
     { id: "grade",    title: "הזנת ציונים",    desc: "עדכון ציוני תלמידים",        icon: ClipboardEdit,color: "bg-emerald-50",   iconColor: "text-emerald-700",  path: "/grade-entry" },
-    { id: "students", title: "כל הספורטאים",   desc: "חיפוש וצפייה בפרופילים",     icon: Users,        color: "bg-sky-50",       iconColor: "text-sky-700",      path: "/students" },
-    { id: "data",     title: "הזנת נתונים",    desc: "עדכון מידע אישי ואקדמי",    icon: Database,     color: "bg-violet-50",    iconColor: "text-violet-700",   path: "/data-entry" },
+    { id: "students", title: "הספורטאים שלי",  desc: "תלמידי קבוצות הלימוד שלך",   icon: Users,        color: "bg-sky-50",       iconColor: "text-sky-700",      path: "/students" },
   ];
 
   return (

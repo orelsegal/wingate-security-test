@@ -153,7 +153,9 @@ const StudentProfilePage = () => {
   const { canEdit: editModeActive } = useEditMode();
   const { layout: builderLayout } = useBuilder();
   // Admin Builder — entry point to /admin/builder; edit mode still works inline.
-  const isEditable = editModeActive;
+  // inline editing is ADMIN-ONLY: student writes are admin-gated in RLS,
+  // so the UI never offers editable fields the server would reject
+  const isEditable = editModeActive && isAdminUser;
   const userRole = (user?.role || "student") as any;
   // Study-unit levels are currently manual/default values, not real sheet data.
   // Hide them from parents until levels come from actual student data.
@@ -381,7 +383,7 @@ const StudentProfilePage = () => {
               )}
             </div>
           </div>
-          {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
+          {(user?.role === "admin" || user?.role === "coach") && (
             <div className="shrink-0 ms-auto self-start flex flex-col items-center gap-0.5">
               <span className="text-[10px] text-muted-foreground">פעולות</span>
               <DataExportTools
@@ -419,7 +421,7 @@ const StudentProfilePage = () => {
             </button>
           ))}
         </nav>
-        {(user?.role === "developer" || user?.role === "admin" || user?.role === "teacher") && (
+        {(user?.role === "developer" || user?.role === "admin") && (
           <div className="flex items-center gap-1.5 pb-1.5 ms-auto shrink-0">
             {editModeActive && <span className="text-[11px] text-primary font-medium">מצב עריכה פעיל</span>}
             <button

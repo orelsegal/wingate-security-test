@@ -352,8 +352,10 @@ const StudentsPage = () => {
 
   if (isLoading) return <StudentsPageSkeleton />;
 
-  const canEdit = user?.role === "developer" || user?.role === "admin" || user?.role === "teacher";
-  const isAdmin = canEdit;
+  // management actions are ADMIN-ONLY. Teachers read their learning-group
+  // scope (enforced by RLS) with no create/edit/archive/export/manage.
+  const isAdmin = user?.role === "developer" || user?.role === "admin";
+  const canEdit = isAdmin;
 
   // ────────────── Render helpers ──────────────
   const KpiCard = ({ label, value, icon: Icon, accent }: { label: string; value: number; icon: any; accent: "green" | "red" | "destructive" | "neutral" }) => {
@@ -430,7 +432,7 @@ const StudentsPage = () => {
               ניהול נתונים
             </Button>
           )}
-          <DataExportTools students={filtered} label="ספורטאים" showImport />
+          {isAdmin && <DataExportTools students={filtered} label="ספורטאים" showImport />}
 
           {/* View toggle */}
           <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5 bg-card">
