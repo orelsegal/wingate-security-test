@@ -734,9 +734,11 @@ const StudentsPage = () => {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/students/${student.id}`)}>
                               <Eye className="h-3 w-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setQuickEditStudent(student)}>
-                              <Pencil className="h-3 w-3" />
-                            </Button>
+                            {isAdmin && (
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setQuickEditStudent(student)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            )}
                             {isAdmin && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -779,11 +781,13 @@ const StudentsPage = () => {
                       <p className="text-[14px] font-bold text-foreground leading-tight truncate">{student.full_name}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => setQuickEditStudent(student)} className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground" title="עריכה">
-                        <Pencil className="h-3 w-3" strokeWidth={1.5} />
-                      </button>
-                    </div>
+                    {isAdmin && (
+                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => setQuickEditStudent(student)} className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground" title="עריכה">
+                          <Pencil className="h-3 w-3" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Manual admin status — color + text, admin sets it (never computed) */}
@@ -875,7 +879,11 @@ const StudentsPage = () => {
         destructive
         loading={deleteStudent.isPending}
       />
-      <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
+      {/* general-record editing is ADMIN-ONLY; the drawer is not even
+          mounted for other roles (the DB UPDATE policy is the real gate) */}
+      {isAdmin && (
+        <QuickEditDrawer open={!!quickEditStudent} onClose={() => setQuickEditStudent(null)} student={quickEditStudent} />
+      )}
     </div>
   );
 };
