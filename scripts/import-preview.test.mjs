@@ -19,7 +19,8 @@ await build({
 const lib = await import(pathToFileURL(tmp).href);
 fs.unlinkSync(tmp);
 const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail,
-        buildDryRunPayload, expectedDryRunCounts, compareDryRun } = lib;
+        buildDryRunPayload, expectedDryRunCounts, compareDryRun,
+        buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, nameKey, nameFuzzy } = lib;
 
 let pass = 0, fail = 0;
 const t = (name, cond) => { cond ? pass++ : (fail++, console.error("REGRESSION FAIL:", name)); };
@@ -207,6 +208,52 @@ t("conflict pair still covers both sides", r2.controls.passed === true);
   t("compare: identical → no mismatches", compareDryRun(exp, { ...exp }).length === 0);
   t("compare: server drift detected", compareDryRun(exp, { ...exp, new: exp.new + 1 }).length === 1);
   t("compare: missing server counts detected", compareDryRun(exp, undefined).length === 6);
+
+  /* ── payload VERSION 2: explicit people entities + refs ── */
+  const staffFile = [{ name: "לוי יוסי", role: "מאמן סיוף", phone: "", email: "", row: 4 }];
+  const coachNames = new Map([["לוי יוסי", 2], ["כהן אבי", 1], ["וינגייט", 3]]);
+  const p2 = buildDryRunPayloadV2(fakeReportA, lr, staffFile, coachNames, ["פלוני עוזב"], ["A-0", "B-0"], { "A-0": "link" });
+  t("v2 version pinned", p2.version === 2);
+  t("v2 people are explicit: ALL unique guardians present (incl. unlinkable)",
+    p2.guardian_people.length === lr.guardians.unique);
+  t("v2 guardian links include unlinkable pairs",
+    p2.guardian_links.length === lr.guardians.plannedLinks
+    && p2.guardian_links.some(l => l.student_id === null));
+  t("v2 every link references an in-payload person ref",
+    p2.guardian_links.every(l => p2.guardian_people.some(p => p.ref === l.person_ref)));
+  t("v2 person refs unique",
+    new Set(p2.guardian_people.map(p => p.ref)).size === p2.guardian_people.length);
+  {
+    // one person (same phone) linked to two children = ONE person record, TWO links
+    const multi = p2.guardian_people.find(p => p2.guardian_links.filter(l => l.person_ref === p.ref).length === 2);
+    t("v2 one parent two children = one person, two links",
+      !!multi && p2.guardian_people.filter(p => p.phone === multi.phone).length === 1);
+  }
+  t("v2 coach candidates carry noise separately",
+    p2.coach_candidates.some(c => c.name === "וינגייט")
+    && p2.coach_candidates.length === lr.coaches.unique + 1);
+  t("v2 coach links reference candidate refs",
+    p2.coach_links.every(l => p2.coach_candidates.some(c => c.ref === l.candidate_ref)));
+  t("v2 skipped_items carry db-only students", p2.skipped_items.length === 1 && p2.skipped_items[0].kind === "student_db_only");
+  const exp2 = expectedDryRunV2(p2, lr, [], [{ id: "m1", full_name: "לוי יוסי", roles: ["coach"] }]);
+  t("v2 people conservation: new+existing+conflict+skipped = unique",
+    exp2.guardian_people.new + exp2.guardian_people.existing + exp2.guardian_people.conflict + exp2.guardian_people.skipped
+      === p2.guardian_people.length);
+  t("v2 link conservation: all six buckets = links total",
+    exp2.guardian_links.new + exp2.guardian_links.unchanged + exp2.guardian_links.updates
+      + exp2.guardian_links.historical + exp2.guardian_links.conflict + exp2.guardian_links.skipped
+      === p2.guardian_links.length);
+  t("v2 unlinkable person is skipped, not created",
+    exp2.guardian_people.skipped >= 1);
+  t("v2 candidate exact vs staff", exp2.coach_candidates.exact >= 1);
+  t("v2 candidate noise counted", exp2.coach_candidates.noise === 1);
+  t("v2 conflicts: decided vs skipped", exp2.conflicts.decided === 1 && exp2.conflicts.skipped === 1);
+  t("v2 compare: identical → clean", compareDryRunV2(exp2, { ...exp2 }).length === 0);
+  t("v2 compare: domain drift detected",
+    compareDryRunV2(exp2, { ...exp2, guardian_people: { ...exp2.guardian_people, new: exp2.guardian_people.new + 1 } }).length === 1);
+  t("v2 compare: missing server → all domains flagged", compareDryRunV2(exp2, null).length > 20);
+  t("nameFuzzy: containment matches", nameFuzzy(nameKey("אברהם לוי"), nameKey("אברהם לוי-כהן")) === true);
+  t("nameFuzzy: unrelated names do not match", nameFuzzy(nameKey("אברהם לוי"), nameKey("צבי מור")) === false);
 }
 
 if (fail > 0) {

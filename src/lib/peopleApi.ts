@@ -86,12 +86,24 @@ export interface AllCoachLink {
 }
 export interface AllPeopleLinks { guardian_links: AllGuardianLink[]; coach_links: AllCoachLink[] }
 
-/* server dry-run (prepare_people_import_dry_run) — read-only re-verification
-   of a planned import; can_import is always false at this stage */
+/* server dry-run (prepare_people_import_dry_run, payload v2) — read-only
+   re-verification with people as EXPLICIT entities; per-domain counts and
+   per-domain conservation; can_import is always false at this stage */
+export interface DomainConservation { total: number; classified: number; passed: boolean }
 export interface DryRunResult {
   fingerprint: string;
-  counts: { new: number; unchanged: number; updates: number; historical: number; conflicts: number; skipped: number };
-  conservation_passed: boolean;
+  students_counts: { new: number; existing: number; conflict: number; skipped: number };
+  guardian_people_counts: { new: number; existing: number; conflict: number; skipped: number };
+  guardian_link_counts: { new: number; unchanged: number; updates: number; historical: number; conflict: number; skipped: number };
+  staff_people_counts: { new: number; existing: number; possible_match: number; conflict: number; skipped: number };
+  coach_candidate_counts: { exact: number; possible_match: number; missing: number; noise: number; skipped: number };
+  coach_link_counts: { new: number; unchanged: number; updates: number; historical: number; conflict: number; skipped: number };
+  conflict_counts: { decided: number; skipped: number; total: number };
+  conservation: {
+    students: DomainConservation; guardian_people: DomainConservation; guardian_links: DomainConservation;
+    staff_people: DomainConservation; coach_candidates: DomainConservation; coach_links: DomainConservation;
+    conflicts: DomainConservation; passed: boolean;
+  };
   blockers: string[];
   can_import: boolean;
 }

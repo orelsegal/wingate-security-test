@@ -127,7 +127,7 @@ export function parseAthletes(aoa: AOA): FileAthlete[] {
 }
 
 /* ── 3. staff sheet (צוות): person rows only ── */
-export interface FileStaff { name: string; role: string; phone: string; email: string }
+export interface FileStaff { name: string; role: string; phone: string; email: string; row: number }
 const OFFICE_WORDS = ["מזכירות", "פקס", "חדר", "מוקד", "אקדמיה", "שער", "מרפאה"];
 export function parseStaffSheet(aoa: AOA): FileStaff[] {
   const out: FileStaff[] = [];
@@ -137,7 +137,7 @@ export function parseStaffSheet(aoa: AOA): FileStaff[] {
     if (!name) continue;
     const role = normSpace(row[2]);
     if (role === "פקס" || OFFICE_WORDS.some(w => name.includes(w))) continue;
-    out.push({ name, role, phone: normSpace(row[1]), email: normSpace(row[3]) });
+    out.push({ name, role, phone: normSpace(row[1]), email: normSpace(row[3]), row: r + 1 });
   }
   return out;
 }
@@ -413,6 +413,15 @@ export interface LinksReport {
     guardianLinks: { name: string; phone: string; studentId: string; rel: "father" | "mother" }[];
     coachLinks: { name: string; studentId: string }[];
   };
+  /** explicit PEOPLE entities with stable refs (payload v2): every unique
+   *  guardian/coach candidate from the file, including unlinkable ones,
+   *  with ALL its student pairs (studentDbId null = student unmatched) */
+  peopleModel: {
+    guardians: { ref: string; names: string[]; phone: string; sourceRows: number[];
+      entries: { studentDbId: string | null; student: string; rel: "father" | "mother" }[] }[];
+    coaches: { ref: string; name: string;
+      entries: { studentDbId: string | null; student: string }[] }[];
+  };
 }
 export function previewLinks(
   athleteRows: IdentityRow[], dbGuardians: DbGuardian[], dbStaff: DbStaffItem[],
@@ -426,7 +435,7 @@ export function previewLinks(
   const dbSByName = new Map(dbStaff.map(s => [normKey(s.full_name), s]));
 
   // group file parents by phone (or name when no phone) — one guardian per key
-  interface GAgg { names: Set<string>; phone: string; entries: { matched: boolean; dbId?: string; student: string; rel: "father" | "mother" }[] }
+  interface GAgg { names: Set<string>; phone: string; rows: number[]; entries: { matched: boolean; dbId?: string; student: string; rel: "father" | "mother" }[] }
   const gAgg = new Map<string, GAgg>();
   interface CAgg { name: string; entries: { matched: boolean; dbId?: string; student: string }[] }
   const cAgg = new Map<string, CAgg>();
@@ -439,9 +448,10 @@ export function previewLinks(
       for (const [nm, ph, rel] of [[f.father, f.father_phone, "father"], [f.mother, f.mother_phone, "mother"]] as const) {
         if (!normSpace(nm) && !ph) continue;
         const key = ph ? `p:${ph}` : `n:${normKey(nm)}`;
-        if (!gAgg.has(key)) gAgg.set(key, { names: new Set(), phone: ph || "", entries: [] });
+        if (!gAgg.has(key)) gAgg.set(key, { names: new Set(), phone: ph || "", rows: [], entries: [] });
         const a = gAgg.get(key)!;
         if (normSpace(nm)) a.names.add(normSpace(nm));
+        if (f.row) a.rows.push(f.row);
         a.entries.push({ matched, dbId: matched ? m.db!.id : undefined, student, rel });
       }
     }
@@ -521,6 +531,16 @@ export function previewLinks(
     coaches: { unique: cAgg.size, linkableNow: cLinkable, unlinkable: cUnlinkable, plannedLinks: plannedC },
     controls: { plannedTotal, existingActiveTotal, plannedCovered, existingCovered, passed: errors.length === 0, errors },
     planned: { guardianLinks: plannedGuardianLinks, coachLinks: plannedCoachLinks },
+    peopleModel: {
+      guardians: Array.from(gAgg.values()).map((a, i) => ({
+        ref: `gp-${i}`, names: Array.from(a.names), phone: a.phone, sourceRows: a.rows,
+        entries: a.entries.map(e => ({ studentDbId: e.matched ? e.dbId! : null, student: e.student, rel: e.rel })),
+      })),
+      coaches: Array.from(cAgg.values()).map((a, i) => ({
+        ref: `cc-${i}`, name: a.name,
+        entries: a.entries.map(e => ({ studentDbId: e.matched ? e.dbId! : null, student: e.student })),
+      })),
+    },
   };
 }
 
@@ -587,6 +607,165 @@ export function compareDryRun(expected: DryRunCounts, server: DryRunCounts): str
   return (Object.keys(labels) as (keyof DryRunCounts)[])
     .filter(k => expected[k] !== (server?.[k] ?? -1))
     .map(k => `${labels[k]}: דפדפן ${expected[k]} מול שרת ${server?.[k] ?? "חסר"}`);
+}
+
+/* ── 8c. payload VERSION 2 — people are EXPLICIT entities ──
+   Every guardian candidate (all of them, including unlinkable ones),
+   every canonical staff person from the צוות tab and every coach-column
+   candidate travels as its own record with a stable in-payload ref.
+   Links reference refs; nothing is ever derived implicitly from a link.
+   The server classifies every entity domain separately with its own
+   conservation, and can_import stays false. */
+export const nameKey = (v: string) => normKey(v);
+/** the exact fuzzy rule the server mirrors for coach-name variants */
+export const nameFuzzy = (a: string, b: string): boolean =>
+  a.length > 0 && b.length > 0 && (
+    a.includes(b) || b.includes(a) ||
+    (a.length > 4 && b.length > 4 && (a.slice(0, 4) === b.slice(0, 4) || a.slice(-4) === b.slice(-4))));
+
+export interface DryRunPayloadV2 {
+  version: 2;
+  students: { ref: string; national_id: string; full_name: string; class_name: string; sport: string; birth_year: number | null }[];
+  guardian_people: { ref: string; full_name: string; name_variants: string[]; phone: string; email: string; source_rows: number[]; lineage: string }[];
+  guardian_links: { ref: string; person_ref: string; student_id: string | null; relationship_type: "father" | "mother" }[];
+  staff_people: { ref: string; full_name: string; phone: string; email: string; planned_role: string; lineage: string; source_row: number }[];
+  coach_candidates: { ref: string; name: string; students_count: number }[];
+  coach_links: { ref: string; candidate_ref: string; student_id: string | null; role_type: "primary" }[];
+  conflicts: { key: string }[];
+  decisions: { key: string; decision: string }[];
+  skipped_items: { kind: string; label: string }[];
+}
+export function buildDryRunPayloadV2(
+  reportA: MatchReport, links: LinksReport, staffFile: FileStaff[],
+  coachNames: Map<string, number>, dbOnlyNames: string[],
+  conflictKeys: string[], decisions: Record<string, string>,
+): DryRunPayloadV2 {
+  const coaches = links.peopleModel.coaches;
+  const coachCount = (name: string) => coachNames.get(name)
+    ?? Array.from(coachNames.entries()).find(([n]) => nameKey(n) === nameKey(name))?.[1] ?? 0;
+  // noise values (e.g. וינגייט) are excluded from the people model but ARE
+  // candidates — appended with refs continuing the sequence, zero links
+  const noise = Array.from(coachNames.keys()).filter(n => n === "וינגייט");
+  return {
+    version: 2,
+    students: reportA.rows
+      .filter(m => m.identity === "source_only" && m.file)
+      .map((m, i) => ({
+        ref: `st-${i}`,
+        national_id: normalizeNid(m.file!.nid).nid,
+        full_name: normSpace(`${m.file!.last} ${m.file!.first}`),
+        class_name: m.file!.cls, sport: m.file!.sport,
+        birth_year: birthYear(m.file!.birth),
+      })),
+    guardian_people: links.peopleModel.guardians.map(g => ({
+      ref: g.ref, full_name: g.names[0] || "", name_variants: g.names,
+      phone: g.phone, email: "", source_rows: g.sourceRows, lineage: "ספורטאים",
+    })),
+    guardian_links: links.peopleModel.guardians.flatMap(g =>
+      g.entries.map((e, j) => ({
+        ref: `${g.ref}-l${j}`, person_ref: g.ref,
+        student_id: e.studentDbId, relationship_type: e.rel,
+      }))),
+    staff_people: staffFile.map((s, i) => ({
+      ref: `sp-${i}`, full_name: s.name, phone: s.phone, email: s.email,
+      planned_role: s.role, lineage: "צוות", source_row: s.row,
+    })),
+    coach_candidates: [
+      ...coaches.map(c => ({ ref: c.ref, name: c.name, students_count: coachCount(c.name) })),
+      ...noise.map((n, i) => ({ ref: `cc-${coaches.length + i}`, name: n, students_count: coachNames.get(n) || 0 })),
+    ],
+    coach_links: coaches.flatMap(c =>
+      c.entries.map((e, j) => ({
+        ref: `${c.ref}-l${j}`, candidate_ref: c.ref,
+        student_id: e.studentDbId, role_type: "primary" as const,
+      }))),
+    conflicts: conflictKeys.map(key => ({ key })),
+    decisions: Object.entries(decisions).map(([key, decision]) => ({ key, decision })),
+    skipped_items: dbOnlyNames.map(label => ({ kind: "student_db_only", label })),
+  };
+}
+
+export interface DryRunV2Counts {
+  students: { new: number; existing: number; conflict: number; skipped: number };
+  guardian_people: { new: number; existing: number; conflict: number; skipped: number };
+  guardian_links: { new: number; unchanged: number; updates: number; historical: number; conflict: number; skipped: number };
+  staff_people: { new: number; existing: number; possible_match: number; conflict: number; skipped: number };
+  coach_candidates: { exact: number; possible_match: number; missing: number; noise: number; skipped: number };
+  coach_links: { new: number; unchanged: number; updates: number; historical: number; conflict: number; skipped: number };
+  conflicts: { decided: number; skipped: number; total: number };
+}
+/** counts the browser expects the v2 server dry-run to return; mirrors the
+ *  server rules exactly (same normalization, same fuzzy rule) */
+export function expectedDryRunV2(
+  payload: DryRunPayloadV2, links: LinksReport, dbGuardians: DbGuardian[], dbStaff: DbStaffItem[],
+): DryRunV2Counts {
+  const dbGPhones = new Set(dbGuardians.map(g => digits(g.phone)).filter(Boolean));
+  const dbStaffKeys = dbStaff.map(s => nameKey(s.full_name));
+  const linkable = new Set(payload.guardian_links.filter(l => l.student_id).map(l => l.person_ref));
+  const gp = { new: 0, existing: 0, conflict: 0, skipped: 0 };
+  for (const p of payload.guardian_people) {
+    if (p.name_variants.filter(n => normSpace(n)).length > 1) gp.conflict++;
+    else if (p.phone && dbGPhones.has(p.phone)) gp.existing++;
+    else if (linkable.has(p.ref)) gp.new++;
+    else gp.skipped++;
+  }
+  // link expectations come from the preview classification, which already
+  // compared every pair against the EXISTING links from get_all_people_links
+  const li = (kind: "guardian" | "coach", c: LinkCategory) => links.items.filter(i => i.kind === kind && i.category === c).length;
+  const gl = {
+    new: li("guardian", "new"), unchanged: li("guardian", "unchanged"), updates: li("guardian", "update"),
+    historical: li("guardian", "historical"), conflict: li("guardian", "conflict"), skipped: li("guardian", "unlinkable"),
+  };
+  const sp = { new: 0, existing: 0, possible_match: 0, conflict: 0, skipped: 0 };
+  const seenStaff = new Set<string>();
+  for (const s of payload.staff_people) {
+    const k = nameKey(s.full_name);
+    if (seenStaff.has(k)) { sp.conflict++; continue; }
+    seenStaff.add(k);
+    if (dbStaffKeys.some(d => d === k)) sp.existing++;
+    else if (dbStaffKeys.some(d => nameFuzzy(d, k))) sp.possible_match++;
+    else sp.new++;
+  }
+  const staffKeys = payload.staff_people.map(s => nameKey(s.full_name));
+  const cc = { exact: 0, possible_match: 0, missing: 0, noise: 0, skipped: 0 };
+  for (const c of payload.coach_candidates) {
+    const k = nameKey(c.name);
+    if (c.name === "וינגייט") cc.noise++;
+    else if (staffKeys.includes(k) || dbStaffKeys.includes(k)) cc.exact++;
+    else if (staffKeys.some(s => nameFuzzy(s, k)) || dbStaffKeys.some(s => nameFuzzy(s, k))) cc.possible_match++;
+    else cc.missing++;
+  }
+  const cl = {
+    new: li("coach", "new"), unchanged: li("coach", "unchanged"), updates: li("coach", "update"),
+    historical: li("coach", "historical"), conflict: li("coach", "conflict"), skipped: li("coach", "unlinkable"),
+  };
+  const decided = payload.decisions.filter(d => d.decision === "link" || d.decision === "create").length;
+  return {
+    students: { new: payload.students.length, existing: 0, conflict: 0, skipped: 0 },
+    guardian_people: gp, guardian_links: gl, staff_people: sp,
+    coach_candidates: cc, coach_links: cl,
+    conflicts: { decided, skipped: payload.conflicts.length - decided, total: payload.conflicts.length },
+  };
+}
+export const DRY_RUN_V2_DOMAINS: { key: keyof DryRunV2Counts; label: string }[] = [
+  { key: "students", label: "תלמידים" },
+  { key: "guardian_people", label: "הורים כאנשים" },
+  { key: "guardian_links", label: "קשרי הורים" },
+  { key: "staff_people", label: "אנשי צוות" },
+  { key: "coach_candidates", label: "מועמדי מאמנים" },
+  { key: "coach_links", label: "קשרי מאמנים" },
+  { key: "conflicts", label: "קונפליקטים" },
+];
+export function compareDryRunV2(expected: DryRunV2Counts, server: Partial<DryRunV2Counts> | null | undefined): string[] {
+  const out: string[] = [];
+  for (const { key, label } of DRY_RUN_V2_DOMAINS) {
+    const e = expected[key] as Record<string, number>;
+    const s = (server?.[key] || null) as Record<string, number> | null;
+    for (const k of Object.keys(e)) {
+      if (e[k] !== (s ? s[k] : undefined)) out.push(`${label}/${k}: דפדפן ${e[k]} מול שרת ${s ? s[k] ?? "חסר" : "חסר"}`);
+    }
+  }
+  return out;
 }
 
 /* ── 9. counts helper for section chips ── */

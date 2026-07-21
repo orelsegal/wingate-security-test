@@ -8,9 +8,9 @@ import { peopleApi } from "@/lib/peopleApi";
 import {
   parseAcademyBlocks, parseAthletes, parseStaffSheet, matchIdentities, normalizeNid,
   previewGuardians, previewStaff, previewLinks, countBy, maskId, maskPhone, maskEmail, resolveSport,
-  buildDryRunPayload, expectedDryRunCounts, compareDryRun,
+  buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, DRY_RUN_V2_DOMAINS,
   type AOA, type MatchReport, type GuardianPreviewItem, type CoachPreviewItem,
-  type LinksReport, type ExistingLinksInput, type DryRunCounts,
+  type LinksReport, type ExistingLinksInput, type DryRunV2Counts, type FileStaff,
 } from "@/lib/importPreview";
 import type { DryRunResult } from "@/lib/peopleApi";
 import { OwnerGate, fieldCls, btnPrimary, btnGhost } from "@/components/people/PeopleShared";
@@ -44,6 +44,12 @@ const DECISION_OPTS = [
   { v: "defer", label: "השארה להחלטה מאוחרת" },
 ] as const;
 const UNDECIDED = "לא הוחלט, לא ייובא";
+const METRIC_LABELS: Record<string, string> = {
+  new: "חדשים", existing: "קיימים", conflict: "קונפליקטים", skipped: "מדולגים / לא ניתן לקשר",
+  unchanged: "ללא שינוי", updates: "עדכונים", historical: "היסטוריים",
+  possible_match: "התאמה אפשרית", exact: "התאמה מדויקת", missing: "לא נמצא בצוות", noise: "רעש",
+  decided: "הוחלטו", total: 'סה"כ',
+};
 const decisionLabel = (v: string | undefined) => DECISION_OPTS.find(o => o.v === v)?.label || UNDECIDED;
 
 const Chip = ({ label, n, tone }: { label: string; n: number; tone?: "warn" | "bad" }) => (
@@ -68,6 +74,8 @@ interface Parsed {
   blocks: { title: string; count: number }[];
   blocks87: { title: string; count: number }[];
   staffCount: number;
+  staffFile: FileStaff[];
+  coachNames: [string, number][];
   reportA: MatchReport;   // Control A: תמונת מצב תשפ"ו מול ה-DB
   reportB: MatchReport;   // Control B: ספורטאים מול ה-DB
   guardians: GuardianPreviewItem[];
@@ -123,7 +131,7 @@ const ImportInner = () => {
         const empty = { rows: [], counts: { exact: 0, strong: 0, confident: 0, source_only: 0, db_only: 0, human_review: 0, with_changes: 0 }, controls: { fileTotal: 0, dbTotal: 0, fileCovered: 0, dbCovered: 0, passed: false, errors: ["לא נבדק"] } } as MatchReport;
         setParsed({
           fileName: file.name, sheetNames, missingRequired,
-          athletesCount: 0, blocks: [], blocks87: [], staffCount: 0,
+          athletesCount: 0, blocks: [], blocks87: [], staffCount: 0, staffFile: [], coachNames: [],
           reportA: empty, reportB: empty, guardians: [], staffItems: [], sportRows: [],
         });
         return;
@@ -157,7 +165,8 @@ const ImportInner = () => {
       setParsed({
         fileName: file.name, sheetNames, missingRequired,
         athletesCount: athletes.length, blocks: snap.blocks, blocks87: snap87.blocks,
-        staffCount: staff.length, reportA, reportB, guardians, staffItems, sportRows,
+        staffCount: staff.length, staffFile: staff, coachNames: Array.from(coachCounts.entries()),
+        reportA, reportB, guardians, staffItems, sportRows,
       });
     } catch {
       setParseError("קריאת הקובץ נכשלה. ודאי שזה קובץ Excel תקין ונסי שוב.");
@@ -201,17 +210,29 @@ const ImportInner = () => {
   const decidedCount = conflicts.filter(c => decisions[c.key]).length;
 
   // server dry-run: read-only re-verification; never enables import
-  const [dryRun, setDryRun] = useState<{ server: DryRunResult; expected: DryRunCounts; mismatches: string[] } | null>(null);
+  const [dryRun, setDryRun] = useState<{ server: DryRunResult; expected: DryRunV2Counts; mismatches: string[] } | null>(null);
   const [dryRunBusy, setDryRunBusy] = useState(false);
   const [dryRunError, setDryRunError] = useState<string | null>(null);
+  const serverAsCounts = (s: DryRunResult): Partial<DryRunV2Counts> => ({
+    students: s.students_counts, guardian_people: s.guardian_people_counts,
+    guardian_links: s.guardian_link_counts, staff_people: s.staff_people_counts,
+    coach_candidates: s.coach_candidate_counts, coach_links: s.coach_link_counts,
+    conflicts: s.conflict_counts,
+  });
   const runDryRun = async () => {
     if (!parsed || !controlsPassed || !linksReport) return;
     setDryRunBusy(true); setDryRunError(null); setDryRun(null);
     try {
-      const payload = buildDryRunPayload(parsed.reportA, linksReport, conflicts.map(c => c.key), decisions);
+      const dbOnlyNames = parsed.reportA.rows.filter(m => m.identity === "db_only" && m.db).map(m => m.db!.full_name);
+      const payload = buildDryRunPayloadV2(
+        parsed.reportA, linksReport, parsed.staffFile, new Map(parsed.coachNames),
+        dbOnlyNames, conflicts.map(c => c.key), decisions);
       const server = await api.dryRunImport(payload);
-      const expected = expectedDryRunCounts(parsed.reportA, linksReport, conflicts.length, decisions);
-      setDryRun({ server, expected, mismatches: compareDryRun(expected, server.counts) });
+      const expected = expectedDryRunV2(
+        payload, linksReport,
+        (guardiansQuery.data || []) as any[],
+        ((staffQuery.data || []) as any[]).map(s => ({ id: s.id, full_name: s.full_name, roles: s.roles || [] })));
+      setDryRun({ server, expected, mismatches: compareDryRunV2(expected, serverAsCounts(server)) });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       setDryRunError(
@@ -648,29 +669,42 @@ const ImportInner = () => {
                   {dryRunError && <p className="text-[12px] text-destructive mt-2">{dryRunError}</p>}
                   {dryRun && (
                     <div className="mt-3">
-                      <div className="overflow-x-auto">
-                        <table className="text-[12px] w-full min-w-[380px]">
-                          <thead>
-                            <tr className="text-muted-foreground">
-                              <th className="text-start font-medium pb-1">מדד</th>
-                              <th className="text-start font-medium pb-1">Preview בדפדפן</th>
-                              <th className="text-start font-medium pb-1">Dry Run בשרת</th>
-                              <th className="text-start font-medium pb-1">תואם</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {([["חדשים", "new"], ["ללא שינוי", "unchanged"], ["עדכונים", "updates"],
-                               ["היסטוריים", "historical"], ["קונפליקטים", "conflicts"], ["מדולגים", "skipped"]] as const)
-                              .map(([label, k]) => (
-                              <tr key={k} className="border-t border-border/50">
-                                <td className="py-1">{label}</td>
-                                <td className="py-1 tabular-nums">{dryRun.expected[k]}</td>
-                                <td className="py-1 tabular-nums">{dryRun.server.counts?.[k] ?? "?"}</td>
-                                <td className="py-1">{dryRun.expected[k] === dryRun.server.counts?.[k] ? "✓" : "✗"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="overflow-x-auto space-y-3">
+                        {DRY_RUN_V2_DOMAINS.map(({ key, label }) => {
+                          const e = (dryRun.expected[key] || {}) as Record<string, number>;
+                          const s = (serverAsCounts(dryRun.server)[key] || {}) as Record<string, number>;
+                          const cons = (dryRun.server.conservation as any)?.[key];
+                          return (
+                            <div key={key}>
+                              <p className="text-[12px] font-medium text-foreground mb-1">
+                                {label}
+                                <span className={`ms-2 text-[11px] ${cons?.passed ? "text-primary" : "text-destructive"}`}>
+                                  שימור {cons?.passed ? "✓" : "✗"} <span dir="ltr">({cons?.classified ?? "?"}/{cons?.total ?? "?"})</span>
+                                </span>
+                              </p>
+                              <table className="text-[12px] w-full min-w-[380px]">
+                                <thead>
+                                  <tr className="text-muted-foreground">
+                                    <th className="text-start font-medium pb-1">מדד</th>
+                                    <th className="text-start font-medium pb-1">Preview בדפדפן</th>
+                                    <th className="text-start font-medium pb-1">Dry Run בשרת</th>
+                                    <th className="text-start font-medium pb-1">תואם</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {Object.keys(e).map(k => (
+                                    <tr key={k} className="border-t border-border/50">
+                                      <td className="py-1">{METRIC_LABELS[k] || k}</td>
+                                      <td className="py-1 tabular-nums">{e[k]}</td>
+                                      <td className="py-1 tabular-nums">{s[k] ?? "?"}</td>
+                                      <td className="py-1">{e[k] === s[k] ? "✓" : "✗"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                        })}
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-2" dir="ltr">
                         fingerprint: {dryRun.server.fingerprint?.slice(0, 16)}…
@@ -680,7 +714,7 @@ const ImportInner = () => {
                           חסימות מהשרת: {dryRun.server.blockers.join(" · ")}
                         </p>
                       )}
-                      {(dryRun.mismatches.length > 0 || !dryRun.server.conservation_passed) ? (
+                      {(dryRun.mismatches.length > 0 || !dryRun.server.conservation?.passed) ? (
                         <p className="text-[12px] text-destructive font-medium mt-2 flex items-center gap-1.5">
                           <AlertTriangle className="h-4 w-4 shrink-0" strokeWidth={1.6} />
                           אי-התאמה בין ה-Preview בדפדפן ל-Dry Run בשרת. ההמשך חסום עד לבירור.
