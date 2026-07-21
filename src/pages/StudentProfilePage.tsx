@@ -333,7 +333,7 @@ const StudentProfilePage = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 lg:p-10 space-y-5 md:space-y-6 max-w-[1200px] pb-24">
+    <div className="p-4 md:p-6 space-y-3 max-w-[1280px] pb-24">
       {/* Saved toast */}
       {savedMsg && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-success text-success-foreground px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-[13px] font-medium animate-in slide-in-from-top-2 duration-200">
@@ -375,7 +375,7 @@ const StudentProfilePage = () => {
                 {student.archived ? "בארכיון" : "פעיל/ה"}
               </span>
               {(isAdminUser || isSystemOwner) && (student as any).national_id && (
-                <span className="text-[10.5px] text-muted-foreground/70" dir="ltr">
+                <span className="text-[10.5px] text-muted-foreground" dir="ltr">
                   {maskId(normalizeNid((student as any).national_id).nid)}
                 </span>
               )}
@@ -383,7 +383,7 @@ const StudentProfilePage = () => {
           </div>
           {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
             <div className="shrink-0 ms-auto self-start flex flex-col items-center gap-0.5">
-              <span className="text-[10px] text-muted-foreground/80">פעולות</span>
+              <span className="text-[10px] text-muted-foreground">פעולות</span>
               <DataExportTools
                 student={student}
                 subjectProgress={subjectProgress.map(sp => ({
@@ -406,24 +406,39 @@ const StudentProfilePage = () => {
         )}
       </div>
 
-      {/* ═══ 360 TABS — quiet underline navigation ═══ */}
-      <nav aria-label="ניווט פרופיל תלמיד" className="flex gap-0.5 overflow-x-auto border-b border-border -mx-1 px-1">
-        {PROFILE_TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            aria-current={tab === t.id ? "page" : undefined}
-            className={`relative px-3 sm:px-3.5 pt-1.5 pb-2.5 text-[13px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-t-lg ${
-              tab === t.id ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"}`}>
-            {t.label}
-            {tab === t.id && <span aria-hidden className="absolute bottom-0 inset-x-2 h-[2.5px] rounded-full bg-primary" />}
-          </button>
-        ))}
-      </nav>
+      {/* ═══ 360 TABS + edit toolbar — one anchored row, nothing floats ═══ */}
+      <div className="flex flex-wrap items-end gap-x-3 border-b border-border -mx-1 px-1">
+        <nav aria-label="ניווט פרופיל תלמיד" className="flex gap-0.5 overflow-x-auto flex-1 min-w-0">
+          {PROFILE_TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              aria-current={tab === t.id ? "page" : undefined}
+              className={`relative px-3 sm:px-3.5 pt-1.5 pb-2.5 text-[13px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-t-lg ${
+                tab === t.id ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"}`}>
+              {t.label}
+              {tab === t.id && <span aria-hidden className="absolute bottom-0 inset-x-2 h-[2.5px] rounded-full bg-primary" />}
+            </button>
+          ))}
+        </nav>
+        {(user?.role === "developer" || user?.role === "admin" || user?.role === "teacher") && (
+          <div className="flex items-center gap-1.5 pb-1.5 ms-auto shrink-0">
+            {editModeActive && <span className="text-[11px] text-primary font-medium">מצב עריכה פעיל</span>}
+            <button
+              onClick={() => navigate("/admin/builder")}
+              className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11.5px] font-medium hover:bg-primary/15 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              <Wrench className="h-3 w-3" />
+              בונה עמודים
+            </button>
+            <EditModeToggle />
+          </div>
+        )}
+      </div>
 
       {/* ═══ OVERVIEW — asymmetric layout: wide summary, narrow status rail.
           The admin traffic light renders exactly ONCE (here). ═══ */}
       {tab === "overview" && (
-        <div className={`grid grid-cols-1 gap-4 items-start ${isAdminUser ? "lg:grid-cols-[minmax(0,1fr)_280px]" : ""}`}>
-          <div className="min-w-0 space-y-4">
+        <div className={`grid grid-cols-1 gap-3 items-stretch ${isAdminUser ? "lg:grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
+          <div className="min-w-0 space-y-3">
             {/* summary band: four facts, grouped by whitespace, not cards */}
             <div className="card-premium px-4 sm:px-5 py-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-4">
@@ -446,36 +461,58 @@ const StudentProfilePage = () => {
                     <p className="text-[15px] font-semibold text-foreground break-words">{student.sport || "לא צוין"}</p>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] text-muted-foreground mb-1">מאמן/ת</p>
-                  {coachView.current.length > 0 ? (
-                    <p className="text-[15px] font-semibold text-foreground break-words">
-                      {coachView.current.map(c => c.name).join(", ")}
-                    </p>
-                  ) : (
+                {(() => {
+                  const activeRel = relAvailable
+                    ? (relData?.guardians || []).filter(g => g.active).length + (relData?.coaches || []).filter(c => c.active).length
+                    : null;
+                  // one gentle unified empty state instead of two hollow cells
+                  if (coachView.current.length === 0 && activeRel === 0) {
+                    return (
+                      <div className="min-w-0 col-span-2">
+                        <p className="text-[11px] text-muted-foreground mb-1">מאמן/ת וקשרים</p>
+                        <p className="text-[13px] text-muted-foreground">
+                          אין עדיין שיוך מאמן/ת או קשרים פעילים.
+                          {" "}
+                          <button onClick={() => setTab("relationships")} className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                            להוספה דרך טאב הקשרים
+                          </button>
+                        </p>
+                      </div>
+                    );
+                  }
+                  return (
                     <>
-                      <p className="text-[13px] text-muted-foreground">לא משויך/ת</p>
-                      <button onClick={() => setTab("sport")} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
-                        לפרטי הספורט
-                      </button>
+                      <div className="min-w-0">
+                        <p className="text-[11px] text-muted-foreground mb-1">מאמן/ת</p>
+                        {coachView.current.length > 0 ? (
+                          <p className="text-[15px] font-semibold text-foreground break-words">
+                            {coachView.current.map(c => c.name).join(", ")}
+                          </p>
+                        ) : (
+                          <>
+                            <p className="text-[13px] text-muted-foreground">לא משויך/ת</p>
+                            <button onClick={() => setTab("sport")} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                              לפרטי הספורט
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] text-muted-foreground mb-1">קשרים פעילים</p>
+                        {relAvailable ? (
+                          <>
+                            <p className="text-[15px] font-semibold text-foreground tabular-nums">{activeRel}</p>
+                            <button onClick={() => setTab("relationships")} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
+                              לצפייה בקשרים
+                            </button>
+                          </>
+                        ) : (
+                          <p className="text-[13px] text-muted-foreground">מוצג לבעלי הרשאה</p>
+                        )}
+                      </div>
                     </>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] text-muted-foreground mb-1">קשרים פעילים</p>
-                  {relAvailable ? (
-                    <>
-                      <p className="text-[15px] font-semibold text-foreground tabular-nums">
-                        {(relData?.guardians || []).filter(g => g.active).length + (relData?.coaches || []).filter(c => c.active).length}
-                      </p>
-                      <button onClick={() => setTab("relationships")} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
-                        לצפייה בקשרים
-                      </button>
-                    </>
-                  ) : (
-                    <p className="text-[13px] text-muted-foreground">מוצג לבעלי הרשאה</p>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -568,31 +605,10 @@ const StudentProfilePage = () => {
         );
       })()}
 
-      {/* Admin Builder — entry point */}
-      {(user?.role === "developer" || user?.role === "admin" || user?.role === "teacher") && (
-        <div className="flex items-center justify-between gap-3 px-1">
-          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-            {editModeActive ? (
-              <span className="text-primary font-medium">מצב עריכה פעיל — ניתן לערוך שדות ישירות בעמוד.</span>
-            ) : (
-              <span>מצב צפייה — הפעילו עריכה לשינוי ישיר, או פתחו את הבונה לניהול פריסה ושדות.</span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate("/admin/builder")}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[12px] font-medium hover:bg-primary/15 transition"
-            >
-              <Wrench className="h-3.5 w-3.5" />
-              בונה עמודים
-            </button>
-            <EditModeToggle />
-          </div>
-        </div>
-      )}
+      {/* (builder + edit-mode controls live in the tab-bar toolbar above) */}
 
-      {/* ═══ OVERVIEW KPI STRIP — rendered only for KPIs with REAL values ═══ */}
-      {tab === "overview" && (() => {
+      {/* ═══ LEARNING KPIs — one learning-area strip, real values only ═══ */}
+      {tab === "academics" && (() => {
         const kpis = [
           { icon: CalendarCheck, label: "נוכחות", value: (student as any).attendance_percent != null ? `${(student as any).attendance_percent}%` : null, accent: "text-success", bg: "bg-success/10" },
           { icon: Activity, label: "שיעורי תגבור", value: (student as any).sessions_completed != null ? String((student as any).sessions_completed) : null, accent: "text-primary", bg: "bg-primary/10" },
@@ -601,18 +617,17 @@ const StudentProfilePage = () => {
         ].filter(k => k.value != null);
         if (kpis.length === 0) return null;
         return (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {kpis.map((kpi, i) => (
-              <div key={i} className="card-premium p-4 flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl ${kpi.bg} flex items-center justify-center shrink-0`}>
-                  <kpi.icon className={`h-4 w-4 ${kpi.accent}`} strokeWidth={1.5} />
+          <div className="card-premium px-4 sm:px-5 py-3">
+            <p className="text-[11px] text-muted-foreground font-medium mb-2">מדדי למידה</p>
+            <div className="flex flex-wrap gap-x-7 gap-y-2">
+              {kpis.map((kpi, i) => (
+                <div key={i} className="flex items-center gap-2 min-w-0">
+                  <kpi.icon className={`h-4 w-4 shrink-0 ${kpi.accent}`} strokeWidth={1.5} />
+                  <span className={`text-[15px] font-bold leading-none tabular-nums ${kpi.accent}`}>{kpi.value}</span>
+                  <span className="text-[11.5px] text-muted-foreground">{kpi.label}</span>
                 </div>
-                <div className="min-w-0">
-                  <p className={`text-[18px] font-bold leading-none tabular-nums ${kpi.accent}`}>{kpi.value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">{kpi.label}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         );
       })()}
