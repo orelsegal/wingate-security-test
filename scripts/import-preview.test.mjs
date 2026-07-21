@@ -21,7 +21,8 @@ fs.unlinkSync(tmp);
 const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail,
         buildDryRunPayload, expectedDryRunCounts, compareDryRun,
         buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, nameKey, nameFuzzy,
-        groupStaffDuplicates, resolveStaffPeople } = lib;
+        groupStaffDuplicates, resolveStaffPeople,
+        buildDecisionsDraft, parseDecisionsDraft, restoreDecisions, sha256Hex } = lib;
 
 let pass = 0, fail = 0;
 const t = (name, cond) => { cond ? pass++ : (fail++, console.error("REGRESSION FAIL:", name)); };
@@ -305,6 +306,45 @@ t("conflict pair still covers both sides", r2.controls.passed === true);
   const ee = expectedDryRunV2(pp, emptyLinks, [], []);
   t("resolved payload → zero staff conflicts expected", ee.staff_people.conflict === 1 /* only the undecided pair */
     && pp.staff_people.filter(p => p.distinct_seq !== undefined).length === 2);
+}
+
+/* ── decisions draft: save, validate, restore (stage 3D.4) ── */
+{
+  const fp = await sha256Hex("workbook-basis-a");
+  const fp2 = await sha256Hex("workbook-basis-b");
+  t("workbook fingerprint is stable", fp === await sha256Hex("workbook-basis-a"));
+  t("changed workbook → different fingerprint", fp !== fp2 && fp.length === 64);
+  const draft = buildDecisionsDraft(fp, "import-preview-3d.4",
+    { "A-0": "link", "B-3": "skip", "GONE-9": "create" },
+    { "כפולמזג": "merge", "נעלם": "separate" });
+  const text = JSON.stringify(draft);
+  // PII guard: the draft never carries an id, phone or email
+  t("draft has no 9-digit id", !/\d{9}/.test(text));
+  t("draft has no phone number", !/05\d{8}/.test(text));
+  t("draft has no email", !text.includes("@"));
+  // roundtrip
+  const parsed = parseDecisionsDraft(text);
+  t("draft roundtrip parses", parsed.ok === true && parsed.draft.workbook_fingerprint === fp);
+  const res = restoreDecisions(parsed.draft, ["A-0", "B-3", "C-1"], ["כפולמזג"]);
+  t("same keys restored exactly", res.conflict["A-0"] === "link" && res.conflict["B-3"] === "skip"
+    && res.staff["כפולמזג"] === "merge" && res.restored === 3);
+  t("decision for a key that no longer exists is NOT applied",
+    res.notFound === 2 && !("GONE-9" in res.conflict) && !("נעלם" in res.staff));
+  t("unresolved keys stay undecided", !("C-1" in res.conflict));
+  // corrupt / foreign / wrong-version files are refused with a clear error
+  t("corrupt JSON refused", parseDecisionsDraft("{not json").ok === false
+    && parseDecisionsDraft("{not json").error === "invalid_json");
+  t("foreign JSON refused", parseDecisionsDraft('{"hello":1}').error === "unsupported_kind");
+  t("unsupported version refused",
+    parseDecisionsDraft(JSON.stringify({ ...draft, version: 99 })).error === "unsupported_version");
+  t("missing fingerprint refused",
+    parseDecisionsDraft(JSON.stringify({ ...draft, workbook_fingerprint: "short" })).error === "missing_fingerprint");
+  // a different-workbook draft is detected by the caller via fingerprint diff
+  t("different workbook detected by fingerprint", draft.workbook_fingerprint !== fp2);
+  // invalid decision values are dropped, not applied
+  const bad = parseDecisionsDraft(JSON.stringify(buildDecisionsDraft(fp, "x", { "A-0": "hack" }, {})));
+  t("invalid decision value never applied",
+    bad.ok && restoreDecisions(bad.draft, ["A-0"], []).restored === 0);
 }
 
 if (fail > 0) {

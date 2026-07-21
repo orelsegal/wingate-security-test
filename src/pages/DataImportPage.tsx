@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UploadCloud, FileSpreadsheet, Search, Download, ShieldCheck, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import {
   previewGuardians, previewStaff, previewLinks, countBy, maskId, maskPhone, maskEmail, resolveSport,
   buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, DRY_RUN_V2_DOMAINS,
   groupStaffDuplicates, resolveStaffPeople,
+  buildDecisionsDraft, parseDecisionsDraft, restoreDecisions, sha256Hex,
   type AOA, type MatchReport, type GuardianPreviewItem, type CoachPreviewItem,
   type LinksReport, type ExistingLinksInput, type DryRunV2Counts, type FileStaff,
   type StaffDupDecision,
@@ -46,6 +47,7 @@ const DECISION_OPTS = [
   { v: "defer", label: "השארה להחלטה מאוחרת" },
 ] as const;
 const UNDECIDED = "לא הוחלט, לא ייובא";
+const APP_VERSION = "import-preview-3d.4";
 const STAFF_DECISION_OPTS: { v: StaffDupDecision; label: string }[] = [
   { v: "merge", label: "אותו אדם, מיזוג עם כל התפקידים" },
   { v: "separate", label: "אנשים שונים באותו שם" },
@@ -120,7 +122,7 @@ const ImportInner = () => {
 
   const onFile = async (file: File | null) => {
     setParseError(null); setParsed(null); setDecisions({}); setStaffDupDecisions({});
-    setDryRun(null); setDryRunError(null);
+    setDryRun(null); setDryRunError(null); setDraftStatus(null);
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".xlsx")) {
       setParseError("אפשר להעלות רק קובץ Excel בסיומת xlsx.");
@@ -230,6 +232,68 @@ const ImportInner = () => {
     () => parsed ? resolveStaffPeople(parsed.staffFile, staffDupDecisions) : null,
     [parsed, staffDupDecisions]);
   const staffDupDecided = staffGroups.filter(g => staffDupDecisions[g.key]).length;
+
+  // workbook fingerprint: hashed over the DECISION-FREE payload basis, so it
+  // identifies the workbook content (never the file name) and gates drafts
+  const [wbFingerprint, setWbFingerprint] = useState<string | null>(null);
+  const [draftStatus, setDraftStatus] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
+  useEffect(() => {
+    setWbFingerprint(null);
+    if (!parsed || parsed.missingRequired.length > 0 || !linksReport) return;
+    const dbOnlyNames = parsed.reportA.rows.filter(m => m.identity === "db_only" && m.db).map(m => m.db!.full_name);
+    const basis = buildDryRunPayloadV2(
+      parsed.reportA, linksReport, parsed.staffFile, new Map(parsed.coachNames),
+      dbOnlyNames, conflicts.map(c => c.key), {});
+    let alive = true;
+    sha256Hex(JSON.stringify(basis)).then(fp => { if (alive) setWbFingerprint(fp); });
+    return () => { alive = false; };
+  }, [parsed, linksReport, conflicts]);
+
+  const pendingDecisions =
+    conflicts.filter(c => !decisions[c.key]).length + staffGroups.filter(g => !staffDupDecisions[g.key]).length;
+  const downloadDraft = () => {
+    if (!wbFingerprint) return;
+    const draft = buildDecisionsDraft(wbFingerprint, APP_VERSION, decisions, staffDupDecisions as Record<string, string>);
+    const blob = new Blob([JSON.stringify(draft, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "wingate-import-decisions.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    const saved = Object.keys(decisions).length + Object.keys(staffDupDecisions).length;
+    setDraftStatus({ tone: "ok", text: `נשמרו ${saved} החלטות בקובץ הטיוטה. ${pendingDecisions} עדיין ממתינות להחלטה.` });
+  };
+  const onDraftFile = async (file: File | null) => {
+    if (!file || !wbFingerprint) return;
+    setDraftStatus(null);
+    const parsedDraft = parseDecisionsDraft(await file.text());
+    if (!parsedDraft.ok) {
+      const msg = parsedDraft.error === "invalid_json" ? "קובץ הטיוטה פגום ולא נטען."
+        : parsedDraft.error === "unsupported_kind" ? "זה אינו קובץ טיוטת החלטות של מסך הייבוא."
+        : "גרסת קובץ הטיוטה אינה נתמכת.";
+      setDraftStatus({ tone: "warn", text: msg });
+      return;
+    }
+    if (parsedDraft.draft.workbook_fingerprint !== wbFingerprint) {
+      setDraftStatus({
+        tone: "warn",
+        text: "הטיוטה נשמרה מקובץ אקסל אחר או מנתונים שהשתנו, ולכן לא נטענה. יש להעלות את אותו קובץ מקורי.",
+      });
+      return;
+    }
+    const res = restoreDecisions(parsedDraft.draft, conflicts.map(c => c.key), staffGroups.map(g => g.key));
+    setDecisions(res.conflict);
+    setStaffDupDecisions(res.staff);
+    setDryRun(null); // a fresh server dry-run is required after restoring
+    const stillPending = conflicts.filter(c => !res.conflict[c.key]).length
+      + staffGroups.filter(g => !res.staff[g.key]).length;
+    setDraftStatus({
+      tone: res.notFound > 0 ? "warn" : "ok",
+      text: `שוחזרו ${res.restored} החלטות` +
+        (res.notFound > 0 ? `, ${res.notFound} לא נמצאו בקובץ הנוכחי ולא נטענו` : "") +
+        `. ${stillPending} עדיין ממתינות להחלטה. יש להריץ שוב בדיקת Dry Run בשרת.`,
+    });
+  };
 
   // server dry-run: read-only re-verification; never enables import
   const [dryRun, setDryRun] = useState<{ server: DryRunResult; expected: DryRunV2Counts; mismatches: string[] } | null>(null);
@@ -688,6 +752,33 @@ const ImportInner = () => {
               {/* 6. conflicts + human decisions */}
               <section className="card-premium p-4 sm:p-5 mb-4">
                 <h2 className="text-[14px] font-semibold text-foreground mb-2">6. קונפליקטים והחלטות ({conflicts.length})</h2>
+                {/* decisions draft: save now, restore after management answers */}
+                <div className="rounded-xl border border-border/70 p-3 mb-3">
+                  <p className="text-[12.5px] font-medium text-foreground mb-1">טיוטת החלטות</p>
+                  <p className="text-[11.5px] text-muted-foreground mb-2">
+                    אפשר לשמור את ההחלטות שהתקבלו עד עכשיו (תלמידים, מאמנים וכפילויות צוות) לקובץ,
+                    ולטעון אותן מחדש אחרי העלאת אותו קובץ אקסל. הטיוטה כוללת מפתחות והחלטות בלבד, ללא ת"ז, טלפון או מייל.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button onClick={downloadDraft} disabled={!wbFingerprint}
+                      className={`${btnGhost} ${!wbFingerprint ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      הורדת טיוטת החלטות
+                    </button>
+                    <label className={`${btnGhost} cursor-pointer ${!wbFingerprint ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      טעינת טיוטת החלטות
+                      <input type="file" accept=".json" className="hidden" disabled={!wbFingerprint}
+                        onChange={e => { onDraftFile(e.target.files?.[0] || null); e.target.value = ""; }} />
+                    </label>
+                    <span className="text-[11.5px] text-muted-foreground">
+                      {Object.keys(decisions).length + Object.keys(staffDupDecisions).length} החלטות · {pendingDecisions} ממתינות
+                    </span>
+                  </div>
+                  {draftStatus && (
+                    <p className={`text-[12px] mt-2 ${draftStatus.tone === "warn" ? "text-destructive" : "text-primary"}`}>
+                      {draftStatus.text}
+                    </p>
+                  )}
+                </div>
                 {conflicts.length === 0 ? (
                   <p className="text-[13px] text-muted-foreground">אין קונפליקטים.</p>
                 ) : (

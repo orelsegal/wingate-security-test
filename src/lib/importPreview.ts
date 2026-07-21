@@ -873,6 +873,93 @@ export function resolveStaffPeople(
   };
 }
 
+/* ── 8e. decisions DRAFT: save all human decisions to a masked JSON file
+   and restore them later (stage 3D.4). The draft carries KEYS ONLY
+   (stable conflict keys + normalized staff group keys) and decision
+   values — never a national id, phone, email, address or medical data.
+   Restoring is gated by a workbook fingerprint: a draft saved from a
+   different workbook is refused loudly, never applied silently. */
+export const DRAFT_KIND = "wingate-import-decisions-draft";
+export interface DecisionsDraft {
+  kind: typeof DRAFT_KIND;
+  version: 1;
+  app_version: string;
+  payload_version: 2;
+  workbook_fingerprint: string;
+  saved_at: string;
+  conflict_decisions: Record<string, string>;
+  staff_decisions: Record<string, string>;
+}
+export async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+export function buildDecisionsDraft(
+  workbookFingerprint: string, appVersion: string,
+  conflictDecisions: Record<string, string>, staffDecisions: Record<string, string>,
+): DecisionsDraft {
+  return {
+    kind: DRAFT_KIND, version: 1, app_version: appVersion, payload_version: 2,
+    workbook_fingerprint: workbookFingerprint, saved_at: new Date().toISOString(),
+    conflict_decisions: { ...conflictDecisions }, staff_decisions: { ...staffDecisions },
+  };
+}
+export type DraftParseError = "invalid_json" | "unsupported_kind" | "unsupported_version" | "missing_fingerprint";
+export function parseDecisionsDraft(text: string):
+  { ok: true; draft: DecisionsDraft } | { ok: false; error: DraftParseError } {
+  let raw: unknown;
+  try { raw = JSON.parse(text); } catch { return { ok: false, error: "invalid_json" }; }
+  if (typeof raw !== "object" || raw === null) return { ok: false, error: "invalid_json" };
+  const d = raw as Record<string, unknown>;
+  if (d.kind !== DRAFT_KIND) return { ok: false, error: "unsupported_kind" };
+  if (d.version !== 1 || d.payload_version !== 2) return { ok: false, error: "unsupported_version" };
+  if (typeof d.workbook_fingerprint !== "string" || d.workbook_fingerprint.length !== 64)
+    return { ok: false, error: "missing_fingerprint" };
+  const rec = (v: unknown): Record<string, string> => {
+    if (typeof v !== "object" || v === null) return {};
+    const out: Record<string, string> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>))
+      if (typeof k === "string" && k.length <= 120 && typeof val === "string") out[k] = val;
+    return out;
+  };
+  return {
+    ok: true,
+    draft: {
+      kind: DRAFT_KIND, version: 1,
+      app_version: typeof d.app_version === "string" ? d.app_version : "",
+      payload_version: 2,
+      workbook_fingerprint: d.workbook_fingerprint,
+      saved_at: typeof d.saved_at === "string" ? d.saved_at : "",
+      conflict_decisions: rec(d.conflict_decisions),
+      staff_decisions: rec(d.staff_decisions),
+    },
+  };
+}
+const CONFLICT_DECISION_VALUES = ["link", "create", "skip", "defer"];
+const STAFF_DECISION_VALUES = ["merge", "separate", "dedupe", "skip", "defer"];
+/** applies a draft onto the CURRENT keys only; decisions whose key or value
+ *  no longer exists are reported, never silently applied */
+export function restoreDecisions(
+  draft: DecisionsDraft, currentConflictKeys: string[], currentStaffKeys: string[],
+): {
+  conflict: Record<string, string>; staff: Record<string, StaffDupDecision>;
+  restored: number; notFound: number;
+} {
+  const conflict: Record<string, string> = {};
+  const staff: Record<string, StaffDupDecision> = {};
+  let restored = 0, notFound = 0;
+  const conflictSet = new Set(currentConflictKeys), staffSet = new Set(currentStaffKeys);
+  for (const [k, v] of Object.entries(draft.conflict_decisions)) {
+    if (conflictSet.has(k) && CONFLICT_DECISION_VALUES.includes(v)) { conflict[k] = v; restored++; }
+    else notFound++;
+  }
+  for (const [k, v] of Object.entries(draft.staff_decisions)) {
+    if (staffSet.has(k) && STAFF_DECISION_VALUES.includes(v)) { staff[k] = v as StaffDupDecision; restored++; }
+    else notFound++;
+  }
+  return { conflict, staff, restored, notFound };
+}
+
 export const DRY_RUN_V2_DOMAINS: { key: keyof DryRunV2Counts; label: string }[] = [
   { key: "students", label: "תלמידים" },
   { key: "guardian_people", label: "הורים כאנשים" },
