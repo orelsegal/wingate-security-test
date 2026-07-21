@@ -20,7 +20,8 @@ const lib = await import(pathToFileURL(tmp).href);
 fs.unlinkSync(tmp);
 const { matchIdentities, normalizeNid, parseAcademyBlocks, rawCellToNidString, previewLinks, maskPhone, maskEmail,
         buildDryRunPayload, expectedDryRunCounts, compareDryRun,
-        buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, nameKey, nameFuzzy } = lib;
+        buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, nameKey, nameFuzzy,
+        groupStaffDuplicates, resolveStaffPeople } = lib;
 
 let pass = 0, fail = 0;
 const t = (name, cond) => { cond ? pass++ : (fail++, console.error("REGRESSION FAIL:", name)); };
@@ -254,6 +255,56 @@ t("conflict pair still covers both sides", r2.controls.passed === true);
   t("v2 compare: missing server → all domains flagged", compareDryRunV2(exp2, null).length > 20);
   t("nameFuzzy: containment matches", nameFuzzy(nameKey("אברהם לוי"), nameKey("אברהם לוי-כהן")) === true);
   t("nameFuzzy: unrelated names do not match", nameFuzzy(nameKey("אברהם לוי"), nameKey("צבי מור")) === false);
+}
+
+/* ── staff duplicate groups + human resolution (stage 3D.3) ── */
+{
+  const staff = [
+    { name: "יחיד רגיל", role: "מורה", phone: "0501", email: "", row: 4 },
+    { name: "כפול מזג", role: "תזונאי", phone: "0521111111", email: "", row: 5 },
+    { name: "כפול מזג", role: "תזונאי בכיר", phone: "0521111111", email: "", row: 9 },
+    { name: "כפול נפרד", role: "מחנך", phone: "0531111111", email: "", row: 6 },
+    { name: "כפול נפרד", role: "מאמן", phone: "0532222222", email: "", row: 11 },
+    { name: "כפול זהה", role: "תזונאית", phone: "", email: "", row: 7 },
+    { name: "כפול זהה", role: "תזונאית", phone: "", email: "", row: 12 },
+    { name: "כפול דלג", role: "אחר", phone: "", email: "", row: 8 },
+    { name: "כפול דלג", role: "אחר ב", phone: "", email: "", row: 13 },
+    { name: "כפול פתוח", role: "א", phone: "", email: "", row: 10 },
+    { name: "כפול פתוח", role: "ב", phone: "", email: "", row: 14 },
+  ];
+  const groups = groupStaffDuplicates(staff);
+  t("groups counted per NAME, not per row", groups.length === 5);
+  t("same phone in group → merge-supporting evidence", groups.find(g => g.name === "כפול מזג")?.evidence === "supports_merge");
+  t("different phones in group → strong warning", groups.find(g => g.name === "כפול נפרד")?.evidence === "warns_against_merge");
+  const key = (n) => groups.find(g => g.name === n).key;
+  const res = resolveStaffPeople(staff, {
+    [key("כפול מזג")]: "merge", [key("כפול נפרד")]: "separate",
+    [key("כפול זהה")]: "dedupe", [key("כפול דלג")]: "skip",
+    // "כפול פתוח" intentionally undecided
+  });
+  const byName = (n) => res.people.filter(p => p.full_name === n);
+  t("merge → one person with ALL roles kept", byName("כפול מזג").length === 1 && byName("כפול מזג")[0].planned_role === "תזונאי · תזונאי בכיר");
+  t("separate → two people with distinct_seq", byName("כפול נפרד").length === 2
+    && byName("כפול נפרד")[0].distinct_seq === 0 && byName("כפול נפרד")[1].distinct_seq === 1);
+  t("dedupe → one row kept, no distinct_seq", byName("כפול זהה").length === 1 && byName("כפול זהה")[0].distinct_seq === undefined);
+  t("skip → group not sent at all", byName("כפול דלג").length === 0);
+  t("undecided → rows sent unresolved (server keeps blocking)", byName("כפול פתוח").length === 2
+    && byName("כפול פתוח").every(p => p.distinct_seq === undefined));
+  t("plain person untouched", byName("יחיד רגיל").length === 1);
+  // conservation: every source row in exactly one bucket
+  const s = res.stats;
+  t("staff conservation accounts every source row once",
+    s.passed && s.sourceRows === 11 && s.canonical === 7 && s.mergedRows === 1
+    && s.dedupedRows === 1 && s.separateRows === 2 && s.skippedRows === 2 && s.undecidedRows === 2);
+  t("canonical + folded + skipped = source rows",
+    s.canonical + s.mergedRows + s.dedupedRows + s.skippedRows === s.sourceRows);
+  // expectation mirrors the server dedup key: separate pair is NOT conflict
+  const base = { rows: [], counts: { source_only: 0 } };
+  const emptyLinks = previewLinks([], [], [], null);
+  const pp = buildDryRunPayloadV2(base, emptyLinks, staff, new Map(), [], [], {}, res.people);
+  const ee = expectedDryRunV2(pp, emptyLinks, [], []);
+  t("resolved payload → zero staff conflicts expected", ee.staff_people.conflict === 1 /* only the undecided pair */
+    && pp.staff_people.filter(p => p.distinct_seq !== undefined).length === 2);
 }
 
 if (fail > 0) {

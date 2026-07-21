@@ -623,12 +623,19 @@ export const nameFuzzy = (a: string, b: string): boolean =>
     a.includes(b) || b.includes(a) ||
     (a.length > 4 && b.length > 4 && (a.slice(0, 4) === b.slice(0, 4) || a.slice(-4) === b.slice(-4))));
 
+export interface PayloadStaffPerson {
+  ref: string; full_name: string; phone: string; email: string;
+  planned_role: string; lineage: string; source_row: number;
+  /** set ONLY by an explicit human "different people, same name" decision;
+   *  the server dedup key becomes name+seq so the pair is not blocked */
+  distinct_seq?: number;
+}
 export interface DryRunPayloadV2 {
   version: 2;
   students: { ref: string; national_id: string; full_name: string; class_name: string; sport: string; birth_year: number | null }[];
   guardian_people: { ref: string; full_name: string; name_variants: string[]; phone: string; email: string; source_rows: number[]; lineage: string }[];
   guardian_links: { ref: string; person_ref: string; student_id: string | null; relationship_type: "father" | "mother" }[];
-  staff_people: { ref: string; full_name: string; phone: string; email: string; planned_role: string; lineage: string; source_row: number }[];
+  staff_people: PayloadStaffPerson[];
   coach_candidates: { ref: string; name: string; students_count: number }[];
   coach_links: { ref: string; candidate_ref: string; student_id: string | null; role_type: "primary" }[];
   conflicts: { key: string }[];
@@ -639,6 +646,7 @@ export function buildDryRunPayloadV2(
   reportA: MatchReport, links: LinksReport, staffFile: FileStaff[],
   coachNames: Map<string, number>, dbOnlyNames: string[],
   conflictKeys: string[], decisions: Record<string, string>,
+  staffResolved?: PayloadStaffPerson[],
 ): DryRunPayloadV2 {
   const coaches = links.peopleModel.coaches;
   const coachCount = (name: string) => coachNames.get(name)
@@ -666,7 +674,7 @@ export function buildDryRunPayloadV2(
         ref: `${g.ref}-l${j}`, person_ref: g.ref,
         student_id: e.studentDbId, relationship_type: e.rel,
       }))),
-    staff_people: staffFile.map((s, i) => ({
+    staff_people: staffResolved ?? staffFile.map((s, i) => ({
       ref: `sp-${i}`, full_name: s.name, phone: s.phone, email: s.email,
       planned_role: s.role, lineage: "צוות", source_row: s.row,
     })),
@@ -719,9 +727,11 @@ export function expectedDryRunV2(
   const sp = { new: 0, existing: 0, possible_match: 0, conflict: 0, skipped: 0 };
   const seenStaff = new Set<string>();
   for (const s of payload.staff_people) {
+    // distinct_seq encodes the explicit human "different people" decision
+    const dk = nameKey(s.full_name) + "#" + (s.distinct_seq ?? 0);
     const k = nameKey(s.full_name);
-    if (seenStaff.has(k)) { sp.conflict++; continue; }
-    seenStaff.add(k);
+    if (seenStaff.has(dk)) { sp.conflict++; continue; }
+    seenStaff.add(dk);
     if (dbStaffKeys.some(d => d === k)) sp.existing++;
     else if (dbStaffKeys.some(d => nameFuzzy(d, k))) sp.possible_match++;
     else sp.new++;
@@ -747,6 +757,122 @@ export function expectedDryRunV2(
     conflicts: { decided, skipped: payload.conflicts.length - decided, total: payload.conflicts.length },
   };
 }
+/* ── 8d. staff duplicate groups + human resolution (stage 3D.3) ──
+   The צוות tab holds the same person on several rows (different roles) and
+   possibly different people sharing a name. NOTHING is merged by name
+   alone: every group gets a human decision, and the default is
+   "undecided → not imported" (the server keeps blocking that group). */
+export interface StaffDupGroup {
+  key: string;             // normalized-name key, stable per file
+  name: string;
+  rows: FileStaff[];       // all source rows in file order
+  /** merge evidence: same non-empty phone/email supports "same person";
+   *  DIFFERENT non-empty phones/emails strongly warn against merging */
+  evidence: "supports_merge" | "warns_against_merge" | "none";
+}
+export type StaffDupDecision = "merge" | "separate" | "dedupe" | "skip" | "defer";
+export function groupStaffDuplicates(staffFile: FileStaff[]): StaffDupGroup[] {
+  const byKey = new Map<string, FileStaff[]>();
+  for (const s of staffFile) {
+    const k = nameKey(s.name);
+    if (!byKey.has(k)) byKey.set(k, []);
+    byKey.get(k)!.push(s);
+  }
+  const groups: StaffDupGroup[] = [];
+  for (const [key, rows] of byKey) {
+    if (rows.length < 2) continue;
+    const phones = new Set(rows.map(r => digits(r.phone)).filter(Boolean));
+    const emails = new Set(rows.map(r => r.email.toLowerCase()).filter(Boolean));
+    const evidence: StaffDupGroup["evidence"] =
+      phones.size > 1 || emails.size > 1 ? "warns_against_merge"
+      : (phones.size === 1 && rows.filter(r => digits(r.phone)).length > 1)
+        || (emails.size === 1 && rows.filter(r => r.email).length > 1) ? "supports_merge"
+      : "none";
+    groups.push({ key, name: rows[0].name, rows, evidence });
+  }
+  return groups;
+}
+export interface StaffResolution {
+  people: PayloadStaffPerson[];
+  /** conservation over the SOURCE rows: every row lands in exactly one bucket */
+  stats: {
+    sourceRows: number;      // all צוות rows
+    canonical: number;       // person records actually sent in the payload
+    mergedRows: number;      // rows folded into a merged person (same person)
+    dedupedRows: number;     // duplicate rows dropped (same row twice)
+    separateRows: number;    // rows kept as distinct people by decision
+    skippedRows: number;     // rows excluded by a skip decision
+    undecidedRows: number;   // rows of undecided/deferred groups (sent, still blocked)
+    accounted: number; passed: boolean;
+  };
+}
+export function resolveStaffPeople(
+  staffFile: FileStaff[], decisions: Record<string, StaffDupDecision | undefined>,
+): StaffResolution {
+  const groups = new Map(groupStaffDuplicates(staffFile).map(g => [g.key, g]));
+  const handled = new Set<string>();
+  const people: PayloadStaffPerson[] = [];
+  let mergedRows = 0, dedupedRows = 0, separateRows = 0, skippedRows = 0, undecidedRows = 0;
+  let ref = 0;
+  const push = (p: Omit<PayloadStaffPerson, "ref">) => people.push({ ref: `sp-${ref++}`, ...p });
+  for (const s of staffFile) {
+    const k = nameKey(s.name);
+    const g = groups.get(k);
+    if (!g) {
+      push({ full_name: s.name, phone: s.phone, email: s.email, planned_role: s.role, lineage: "צוות", source_row: s.row });
+      continue;
+    }
+    if (handled.has(k)) continue;
+    handled.add(k);
+    const d = decisions[k];
+    if (d === "merge") {
+      // ONE person, ALL distinct roles kept for staff_member_roles later
+      const roles = Array.from(new Set(g.rows.map(r => r.role).filter(Boolean)));
+      push({
+        full_name: g.rows[0].name,
+        phone: g.rows.find(r => digits(r.phone))?.phone || "",
+        email: g.rows.find(r => r.email)?.email || "",
+        planned_role: roles.join(" · ").slice(0, 120),
+        lineage: "צוות", source_row: g.rows[0].row,
+      });
+      mergedRows += g.rows.length - 1;
+    } else if (d === "dedupe") {
+      const r0 = g.rows[0];
+      push({ full_name: r0.name, phone: r0.phone, email: r0.email, planned_role: r0.role, lineage: "צוות", source_row: r0.row });
+      dedupedRows += g.rows.length - 1;
+    } else if (d === "separate") {
+      g.rows.forEach((r, i) => {
+        push({ full_name: r.name, phone: r.phone, email: r.email, planned_role: r.role, lineage: "צוות", source_row: r.row, distinct_seq: i });
+      });
+      separateRows += g.rows.length;
+    } else if (d === "skip") {
+      skippedRows += g.rows.length;
+    } else {
+      // undecided / deferred: rows are sent unresolved, the server keeps
+      // blocking exactly this group. Undecided is never imported.
+      for (const r of g.rows) {
+        push({ full_name: r.name, phone: r.phone, email: r.email, planned_role: r.role, lineage: "צוות", source_row: r.row });
+      }
+      undecidedRows += g.rows.length;
+    }
+  }
+  const dupRowsTotal = Array.from(groups.values()).reduce((n, g) => n + g.rows.length, 0);
+  const plainRows = staffFile.length - dupRowsTotal;
+  const canonical = people.length;
+  // every source row in exactly one bucket:
+  // plain rows + (merged: 1 canonical + folded) + (dedupe: 1 + dropped) +
+  // separate rows + skipped rows + undecided rows
+  const accounted = plainRows + mergedRows + dedupedRows + separateRows + skippedRows + undecidedRows
+    + Array.from(groups.values()).filter(g => decisions[g.key] === "merge" || decisions[g.key] === "dedupe").length;
+  return {
+    people,
+    stats: {
+      sourceRows: staffFile.length, canonical, mergedRows, dedupedRows, separateRows,
+      skippedRows, undecidedRows, accounted, passed: accounted === staffFile.length,
+    },
+  };
+}
+
 export const DRY_RUN_V2_DOMAINS: { key: keyof DryRunV2Counts; label: string }[] = [
   { key: "students", label: "תלמידים" },
   { key: "guardian_people", label: "הורים כאנשים" },

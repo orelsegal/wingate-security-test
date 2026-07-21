@@ -9,8 +9,10 @@ import {
   parseAcademyBlocks, parseAthletes, parseStaffSheet, matchIdentities, normalizeNid,
   previewGuardians, previewStaff, previewLinks, countBy, maskId, maskPhone, maskEmail, resolveSport,
   buildDryRunPayloadV2, expectedDryRunV2, compareDryRunV2, DRY_RUN_V2_DOMAINS,
+  groupStaffDuplicates, resolveStaffPeople,
   type AOA, type MatchReport, type GuardianPreviewItem, type CoachPreviewItem,
   type LinksReport, type ExistingLinksInput, type DryRunV2Counts, type FileStaff,
+  type StaffDupDecision,
 } from "@/lib/importPreview";
 import type { DryRunResult } from "@/lib/peopleApi";
 import { OwnerGate, fieldCls, btnPrimary, btnGhost } from "@/components/people/PeopleShared";
@@ -44,6 +46,17 @@ const DECISION_OPTS = [
   { v: "defer", label: "השארה להחלטה מאוחרת" },
 ] as const;
 const UNDECIDED = "לא הוחלט, לא ייובא";
+const STAFF_DECISION_OPTS: { v: StaffDupDecision; label: string }[] = [
+  { v: "merge", label: "אותו אדם, מיזוג עם כל התפקידים" },
+  { v: "separate", label: "אנשים שונים באותו שם" },
+  { v: "dedupe", label: "שורה כפולה, להשאיר אחת" },
+  { v: "skip", label: "דילוג" },
+  { v: "defer", label: "החלטה מאוחרת" },
+];
+const EVIDENCE_LABELS: Record<string, string> = {
+  supports_merge: "טלפון או מייל זהים בין השורות, ראיה התומכת במיזוג. עדיין נדרשת החלטה.",
+  warns_against_merge: "טלפון או מייל שונים בין השורות, אזהרה חזקה שלא למזג.",
+};
 const METRIC_LABELS: Record<string, string> = {
   new: "חדשים", existing: "קיימים", conflict: "קונפליקטים", skipped: "מדולגים / לא ניתן לקשר",
   unchanged: "ללא שינוי", updates: "עדכונים", historical: "היסטוריים",
@@ -106,7 +119,7 @@ const ImportInner = () => {
   const allLinksQuery = useQuery({ queryKey: ["all-people-links"], queryFn: () => api.allPeopleLinks(), retry: false });
 
   const onFile = async (file: File | null) => {
-    setParseError(null); setParsed(null); setDecisions({});
+    setParseError(null); setParsed(null); setDecisions({}); setStaffDupDecisions({});
     setDryRun(null); setDryRunError(null);
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".xlsx")) {
@@ -209,6 +222,15 @@ const ImportInner = () => {
   ], [parsed]);
   const decidedCount = conflicts.filter(c => decisions[c.key]).length;
 
+  // staff duplicate groups + human resolution (stage 3D.3); default is
+  // undecided → the server keeps blocking exactly those groups
+  const [staffDupDecisions, setStaffDupDecisions] = useState<Record<string, StaffDupDecision>>({});
+  const staffGroups = useMemo(() => parsed ? groupStaffDuplicates(parsed.staffFile) : [], [parsed]);
+  const staffResolution = useMemo(
+    () => parsed ? resolveStaffPeople(parsed.staffFile, staffDupDecisions) : null,
+    [parsed, staffDupDecisions]);
+  const staffDupDecided = staffGroups.filter(g => staffDupDecisions[g.key]).length;
+
   // server dry-run: read-only re-verification; never enables import
   const [dryRun, setDryRun] = useState<{ server: DryRunResult; expected: DryRunV2Counts; mismatches: string[] } | null>(null);
   const [dryRunBusy, setDryRunBusy] = useState(false);
@@ -226,7 +248,8 @@ const ImportInner = () => {
       const dbOnlyNames = parsed.reportA.rows.filter(m => m.identity === "db_only" && m.db).map(m => m.db!.full_name);
       const payload = buildDryRunPayloadV2(
         parsed.reportA, linksReport, parsed.staffFile, new Map(parsed.coachNames),
-        dbOnlyNames, conflicts.map(c => c.key), decisions);
+        dbOnlyNames, conflicts.map(c => c.key), decisions,
+        staffResolution?.people);
       const server = await api.dryRunImport(payload);
       const expected = expectedDryRunV2(
         payload, linksReport,
@@ -580,6 +603,75 @@ const ImportInner = () => {
                     </div>
                   ))}
                 </div>
+                {/* staff duplicate groups: human resolution before import */}
+                {staffGroups.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-[12.5px] font-medium text-foreground mb-1">
+                      כפילויות שם בטאב צוות: {staffGroups.length} קבוצות ({staffGroups.reduce((n, g) => n + g.rows.length, 0)} שורות)
+                    </p>
+                    <p className="text-[11.5px] text-muted-foreground mb-2">
+                      אין מיזוג אוטומטי לפי שם. ברירת המחדל לכל קבוצה: {UNDECIDED}, והשרת ימשיך לחסום אותה.
+                    </p>
+                    <div className="space-y-2 max-h-[480px] overflow-y-auto">
+                      {staffGroups.map(g => {
+                        const d = staffDupDecisions[g.key];
+                        return (
+                          <div key={g.key} className="rounded-xl border border-border/70 p-3">
+                            <p className="text-[12.5px] font-medium text-foreground">{g.name}</p>
+                            <div className="mt-1 space-y-0.5">
+                              {g.rows.map(r => (
+                                <p key={r.row} className="text-[11.5px] text-muted-foreground break-words">
+                                  שורה {r.row}: {r.role || "ללא תפקיד"}
+                                  {r.phone ? <span dir="ltr"> · {maskPhone(r.phone)}</span> : null}
+                                  {r.email ? <span dir="ltr"> · {maskEmail(r.email)}</span> : null}
+                                </p>
+                              ))}
+                            </div>
+                            {EVIDENCE_LABELS[g.evidence] && (
+                              <p className={`text-[11.5px] mt-1 ${g.evidence === "warns_against_merge" ? "text-destructive" : "text-muted-foreground"}`}>
+                                {EVIDENCE_LABELS[g.evidence]}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {STAFF_DECISION_OPTS.map(o => (
+                                <button key={o.v}
+                                  onClick={() => {
+                                    setDryRun(null);
+                                    setStaffDupDecisions(p => {
+                                      const next = { ...p };
+                                      if (next[g.key] === o.v) delete next[g.key]; else next[g.key] = o.v;
+                                      return next;
+                                    });
+                                  }}
+                                  className={`h-7 px-2.5 rounded-lg text-[11px] border transition-colors ${
+                                    d === o.v ? "bg-primary/10 text-primary border-primary/30 font-medium" : "border-border text-muted-foreground hover:border-primary/30"}`}>
+                                  {o.label}
+                                </button>
+                              ))}
+                              {!d && (
+                                <span className="h-7 px-2.5 inline-flex items-center rounded-lg text-[11px] bg-warning/10 text-warning border border-warning/30">
+                                  {UNDECIDED}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {staffResolution && (
+                      <p className="text-[11.5px] text-muted-foreground mt-2">
+                        הוכרעו {staffDupDecided} מתוך {staffGroups.length} קבוצות · חשבון שימור:
+                        {" "}{staffResolution.stats.sourceRows} שורות מקור =
+                        {" "}{staffResolution.stats.canonical} אנשים קנוניים
+                        {" + "}{staffResolution.stats.mergedRows} שמוזגו
+                        {" + "}{staffResolution.stats.dedupedRows} שהוסרו ככפולות
+                        {" + "}{staffResolution.stats.skippedRows} שדולגו
+                        {" "}({staffResolution.stats.separateRows} נשמרו כאנשים נפרדים, {staffResolution.stats.undecidedRows} ללא הכרעה) ·
+                        {" "}{staffResolution.stats.passed ? "השימור עבר" : "השימור נכשל"}
+                      </p>
+                    )}
+                  </div>
+                )}
                 {/* sports normalization */}
                 <p className="text-[12px] font-medium text-muted-foreground mt-4 mb-1.5">נרמול ענפים</p>
                 <div className="flex flex-wrap gap-1.5">
