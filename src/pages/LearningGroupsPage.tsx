@@ -20,6 +20,13 @@ const api = lgApi(supabase as any);
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1, CURRENT_YEAR + 2];
 const GRADE_OPTIONS = ["ז", "ח", "ט", "י", "יא", "יב"];
+const AUDIT_LABELS: Record<string, string> = {
+  "group.create": "הקבוצה נוצרה", "group.update": "פרטי הקבוצה עודכנו",
+  "group.archive": "הקבוצה הועברה לארכיון", "group.restore": "הקבוצה שוחזרה מהארכיון",
+  "group.duplicate": "הקבוצה שוכפלה", "teachers.set": "רשימת המורים עודכנה",
+  "students.add": "תלמידים נוספו", "students.add_class": "כיתה נוספה",
+  "students.remove": "תלמיד/ה הוסר/ה",
+};
 
 /* ── small shared bits ── */
 const Spinner = () => <Loader2 className="h-5 w-5 animate-spin text-primary" />;
@@ -91,7 +98,8 @@ const LearningGroupsPage = () => {
   /* list + per-group teachers (small scale: details fetched per group for names) */
   const listQuery = useQuery({
     queryKey: ["lg-list", yearFilter, statusFilter],
-    enabled: !!isOwner,
+    enabled: !ownerLoading,
+    retry: false,
     queryFn: async () => {
       const items = await api.list(yearFilter, statusFilter === "all" ? null : statusFilter);
       const withTeachers = await Promise.all(
@@ -106,9 +114,17 @@ const LearningGroupsPage = () => {
 
   const detailsQuery = useQuery({
     queryKey: ["lg-details", selectedId],
-    enabled: !!isOwner && !!selectedId,
+    enabled: !!selectedId,
+    retry: false,
     queryFn: () => api.details(selectedId!),
   });
+  const historyQuery = useQuery({
+    queryKey: ["lg-history", selectedId],
+    enabled: canManage && !!selectedId,
+    retry: false,
+    queryFn: () => api.history(selectedId!, 100),
+  });
+  const [gTab, setGTab] = useState<"students" | "teachers" | "details" | "history">("students");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["lg-list"] });
@@ -126,19 +142,12 @@ const LearningGroupsPage = () => {
     });
   const saving = mut.isPending;
 
-  /* ── access gating (UX layer; real enforcement is in the DB) ── */
+  /* ── access (UX layer; the RPCs enforce the real scope):
+     owner manages everything; a teacher gets a READ-ONLY view of the
+     active groups she is assigned to (the list RPC returns 0 otherwise) ── */
+  const canManage = !!isOwner;
   if (ownerLoading) {
     return <div className="p-10 flex justify-center"><Spinner /></div>;
-  }
-  if (!isOwner) {
-    return (
-      <div className="p-10 text-center space-y-3" dir="rtl">
-        <ShieldAlert className="h-10 w-10 text-destructive mx-auto" strokeWidth={1.5} />
-        <p className="text-foreground font-medium">אין לך הרשאה</p>
-        <p className="text-muted-foreground text-[13px]">ניהול קבוצות הלימוד זמין רק לבעלת המערכת.</p>
-        <button onClick={() => navigate("/")} className="text-primary text-[13px] hover:underline">חזרה לדף הראשי</button>
-      </div>
-    );
   }
 
   const groups = listQuery.data || [];
@@ -168,72 +177,175 @@ const LearningGroupsPage = () => {
           const activeIds = new Set(details.active_students.map(s => s.student_id));
           return (
             <>
-              {/* Header */}
-              <div className="card-premium p-4 sm:p-5 mb-4">
+              {/* Header — identity + gated actions, one calm band */}
+              <div className="card-premium px-4 sm:px-5 py-3.5 mb-3">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <h1 className="text-[18px] sm:text-[20px] font-semibold text-foreground break-words leading-snug">{g.name}</h1>
-                    <p className="text-[12.5px] text-muted-foreground mt-1">
-                      {subjName} · <span dir="ltr">{yearLabel(g.academic_year_start)}</span>{g.grade_code ? ` · שכבה ${g.grade_code}` : ""}
+                    <p className="text-[12.5px] text-muted-foreground mt-1 flex items-center gap-x-2 flex-wrap">
+                      <span>{subjName}</span>
+                      <span className="text-border" aria-hidden>·</span>
+                      <span dir="ltr">{yearLabel(g.academic_year_start)}</span>
+                      {g.grade_code && <><span className="text-border" aria-hidden>·</span><span>שכבה {g.grade_code}</span></>}
+                      <StatusChip status={g.status} />
+                      {details.teachers.find(t => t.role_in_group === "lead") && (
+                        <span>מוביל/ה: {details.teachers.find(t => t.role_in_group === "lead")!.full_name}</span>
+                      )}
                     </p>
-                    <div className="mt-2"><StatusChip status={g.status} /></div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => setEditOpen(true)} className="h-9 px-3 rounded-xl border border-border bg-card text-[12.5px] inline-flex items-center gap-1.5">
-                      <Pencil className="h-3.5 w-3.5" strokeWidth={1.6} />
-                      עריכת פרטים
-                    </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button aria-label="פעולות נוספות" className="h-9 w-9 rounded-xl border border-border bg-card inline-flex items-center justify-center">
-                          <MoreHorizontal className="h-4 w-4" strokeWidth={1.6} />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setDuplicateOpen(true)} className="text-[13px] gap-2">
-                          <CopyPlus className="h-3.5 w-3.5" />שכפול לשנה אחרת
-                        </DropdownMenuItem>
-                        {g.status === "active" && (
-                          <DropdownMenuItem onClick={() => setArchiveOpen(true)} className="text-[13px] gap-2 text-destructive">
-                            <Archive className="h-3.5 w-3.5" />העברה לארכיון
+                  {canManage && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => setEditOpen(true)} className="h-9 px-3 rounded-xl border border-border bg-card text-[12.5px] inline-flex items-center gap-1.5">
+                        <Pencil className="h-3.5 w-3.5" strokeWidth={1.6} />
+                        עריכת פרטים
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button aria-label="פעולות נוספות" className="h-9 w-9 rounded-xl border border-border bg-card inline-flex items-center justify-center">
+                            <MoreHorizontal className="h-4 w-4" strokeWidth={1.6} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setDuplicateOpen(true)} className="text-[13px] gap-2">
+                            <CopyPlus className="h-3.5 w-3.5" />שכפול לשנה אחרת
                           </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                          {g.status === "active" ? (
+                            <DropdownMenuItem onClick={() => setArchiveOpen(true)} className="text-[13px] gap-2 text-destructive">
+                              <Archive className="h-3.5 w-3.5" />העברה לארכיון
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => run(() => api.restore(g.id), "הקבוצה שוחזרה מהארכיון")} className="text-[13px] gap-2">
+                              <GraduationCap className="h-3.5 w-3.5" />שחזור מהארכיון
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Teachers */}
-              <div className="card-premium p-4 sm:p-5 mb-4">
-                <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-                  <h2 className="text-[14px] font-semibold text-foreground">מורים</h2>
-                  <button onClick={() => setTeachersOpen(true)} className="h-9 px-3 rounded-xl border border-border bg-card text-[12.5px] inline-flex items-center gap-1.5">
-                    <UserPlus className="h-3.5 w-3.5" strokeWidth={1.6} />
-                    ניהול מורים
+              {/* tab navigation — same quiet underline as the 360 profile */}
+              <nav aria-label="ניווט קבוצה" className="flex gap-0.5 overflow-x-auto border-b border-border mb-3 -mx-1 px-1">
+                {([
+                  { id: "students", label: `תלמידים (${details.active_count})` },
+                  { id: "teachers", label: "צוות הוראה" },
+                  { id: "details", label: "פרטי הקבוצה" },
+                  ...(canManage ? [{ id: "history", label: "היסטוריה" }] : []),
+                ] as { id: typeof gTab; label: string }[]).map(t => (
+                  <button key={t.id} onClick={() => setGTab(t.id)}
+                    aria-current={gTab === t.id ? "page" : undefined}
+                    className={`relative px-3 sm:px-3.5 pt-1.5 pb-2.5 text-[13px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-t-lg ${
+                      gTab === t.id ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"}`}>
+                    {t.label}
+                    {gTab === t.id && <span aria-hidden className="absolute bottom-0 inset-x-2 h-[2.5px] rounded-full bg-primary" />}
                   </button>
-                </div>
-                {details.teachers.length === 0 ? (
-                  <p className="text-[13px] text-muted-foreground">עדיין לא שויכו מורים לקבוצה.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {details.teachers.map(t => <TeacherChip key={t.user_id} t={t} />)}
-                  </div>
-                )}
-              </div>
+                ))}
+              </nav>
 
-              {/* Students */}
-              <StudentsSection
-                details={details}
-                onAddStudents={() => setAddStudentsOpen(true)}
-                onAddClass={() => setAddClassOpen(true)}
-                onRemove={(id, name) => setRemoveTarget({ id, name })}
-              />
+              {/* ── students tab ── */}
+              {gTab === "students" && (
+                <StudentsSection
+                  details={details}
+                  canManage={canManage}
+                  onAddStudents={() => setAddStudentsOpen(true)}
+                  onAddClass={() => setAddClassOpen(true)}
+                  onRemove={(id, name) => setRemoveTarget({ id, name })}
+                />
+              )}
+
+              {/* ── teaching staff tab ── */}
+              {gTab === "teachers" && (
+                <div className="card-premium p-4 sm:p-5">
+                  <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                    <h2 className="text-[14px] font-semibold text-foreground">צוות הוראה</h2>
+                    {canManage && (
+                      <button onClick={() => setTeachersOpen(true)} className="h-9 px-3 rounded-xl border border-border bg-card text-[12.5px] inline-flex items-center gap-1.5">
+                        <UserPlus className="h-3.5 w-3.5" strokeWidth={1.6} />
+                        ניהול מורים
+                      </button>
+                    )}
+                  </div>
+                  {details.teachers.length === 0 ? (
+                    <p className="text-[13px] text-muted-foreground">
+                      עדיין לא שויכו מורים לקבוצה.{canManage ? ' שיוך דרך "ניהול מורים".' : ""}
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {details.teachers.map(t => <TeacherChip key={t.user_id} t={t} />)}
+                    </div>
+                  )}
+                  {(details.past_teachers || []).length > 0 && (
+                    <>
+                      <p className="text-[12px] font-medium text-muted-foreground mt-4 mb-1.5">שיוכים שהסתיימו</p>
+                      <ul className="space-y-1">
+                        {details.past_teachers!.map((t, i) => (
+                          <li key={i} className="text-[12px] text-muted-foreground break-words">
+                            {t.full_name || "מורה"}{t.role_in_group === "lead" ? " (מוביל/ה)" : ""}
+                            {t.left_at ? ` · הסתיים ${new Date(t.left_at).toLocaleDateString("he-IL")}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* ── group details tab ── */}
+              {gTab === "details" && (
+                <div className="card-premium p-4 sm:p-5 space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-3">
+                    <div><p className="text-[11px] text-muted-foreground mb-0.5">מקצוע</p><p className="text-[13.5px] font-medium text-foreground">{subjName}</p></div>
+                    <div><p className="text-[11px] text-muted-foreground mb-0.5">שנת לימודים</p><p className="text-[13.5px] font-medium text-foreground" dir="ltr">{yearLabel(g.academic_year_start)}</p></div>
+                    <div><p className="text-[11px] text-muted-foreground mb-0.5">שכבה</p><p className="text-[13.5px] font-medium text-foreground">{g.grade_code || "לא צוינה"}</p></div>
+                    <div><p className="text-[11px] text-muted-foreground mb-0.5">סטטוס</p><StatusChip status={g.status} /></div>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-0.5">תיאור</p>
+                    {(g as any).description
+                      ? <p className="text-[13px] text-foreground break-words whitespace-pre-wrap">{(g as any).description}</p>
+                      : <p className="text-[12.5px] text-muted-foreground">אין תיאור.{canManage ? ' אפשר להוסיף דרך "עריכת פרטים".' : ""}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* ── history tab (managers only; audit is append-only) ── */}
+              {gTab === "history" && canManage && (
+                <div className="card-premium p-4 sm:p-5">
+                  <h2 className="text-[14px] font-semibold text-foreground mb-2">היסטוריית פעולות</h2>
+                  {historyQuery.isLoading ? (
+                    <div className="space-y-2 py-1" aria-busy="true">
+                      {[0, 1, 2].map(i => <div key={i} className="h-8 rounded-lg bg-muted/40 animate-pulse" />)}
+                    </div>
+                  ) : historyQuery.isError ? (
+                    <p className="text-[12.5px] text-muted-foreground">היסטוריית הפעולות אינה זמינה בהרשאה הנוכחית.</p>
+                  ) : (historyQuery.data || []).length === 0 ? (
+                    <p className="text-[12.5px] text-muted-foreground">אין עדיין פעולות מתועדות לקבוצה.</p>
+                  ) : (
+                    <ol className="relative border-r border-border/60 pr-4 space-y-2.5">
+                      {(historyQuery.data || []).map(a => (
+                        <li key={a.id} className="relative">
+                          <span className="absolute -right-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary/20 ring-2 ring-background" />
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
+                              {new Date(a.created_at).toLocaleDateString("he-IL", { day: "numeric", month: "short", year: "numeric" })}
+                            </span>
+                            <p className="text-[12.5px] text-foreground leading-snug break-words">
+                              {AUDIT_LABELS[a.action] || a.action} · {a.actor_name}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              )}
 
               {/* dialogs bound to this group */}
               <EditGroupDialog open={editOpen} onOpenChange={setEditOpen} details={details} subjects={subjects}
                 saving={saving}
-                onSave={(name, year, grade) => run(() => api.update(g.id, name, year, grade), "הפרטים נשמרו", () => setEditOpen(false))} />
+                onSave={(name: string, year: number, grade: string | null, description: string | null) =>
+                  run(() => api.update(g.id, name, year, grade, description), "הפרטים נשמרו", () => setEditOpen(false))} />
               <TeachersDialog open={teachersOpen} onOpenChange={setTeachersOpen} current={details.teachers}
                 saving={saving}
                 onSave={(list) => run(() => api.setTeachers(g.id, list), "רשימת המורים עודכנה", () => setTeachersOpen(false))} />
@@ -274,12 +386,16 @@ const LearningGroupsPage = () => {
             <GraduationCap className="h-5 w-5 text-primary" strokeWidth={1.6} />
             קבוצות לימוד
           </h1>
-          <p className="text-[13px] text-muted-foreground mt-1">יצירה וניהול של קבוצות, מורים ותלמידים</p>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            {canManage ? "יצירה וניהול של קבוצות, מורים ותלמידים" : "הקבוצות הפעילות שבהן את/ה משויך/ת כמורה"}
+          </p>
         </div>
-        <button onClick={() => setCreateOpen(true)} className={`${btnPrimary} inline-flex items-center gap-1.5`}>
-          <Plus className="h-4 w-4" strokeWidth={1.8} />
-          קבוצה חדשה
-        </button>
+        {canManage && (
+          <button onClick={() => setCreateOpen(true)} className={`${btnPrimary} inline-flex items-center gap-1.5`}>
+            <Plus className="h-4 w-4" strokeWidth={1.8} />
+            קבוצה חדשה
+          </button>
+        )}
       </div>
 
       {/* Filters — hidden in the pristine empty state (single CTA stays) */}
@@ -316,16 +432,25 @@ const LearningGroupsPage = () => {
       {listQuery.isSuccess && filtered.length === 0 && (
         <div className="card-premium p-10 text-center space-y-3">
           <GraduationCap className="h-10 w-10 text-muted-foreground/30 mx-auto" strokeWidth={1.4} />
-          <p className="text-[15px] font-semibold text-foreground">עדיין אין קבוצות לימוד</p>
-          <p className="text-[13px] text-muted-foreground">צרי את הקבוצה הראשונה, בחרי מקצוע והוסיפי מורים ותלמידים.</p>
-          <button onClick={() => setCreateOpen(true)} className={btnPrimary}>יצירת קבוצה</button>
+          {canManage ? (
+            <>
+              <p className="text-[15px] font-semibold text-foreground">עדיין אין קבוצות לימוד</p>
+              <p className="text-[13px] text-muted-foreground">צרי את הקבוצה הראשונה, בחרי מקצוע והוסיפי מורים ותלמידים.</p>
+              <button onClick={() => setCreateOpen(true)} className={btnPrimary}>יצירת קבוצה</button>
+            </>
+          ) : (
+            <>
+              <p className="text-[15px] font-semibold text-foreground">אינך משויך/ת עדיין לאף קבוצה פעילה</p>
+              <p className="text-[13px] text-muted-foreground">שיוך מורים לקבוצות נעשה על ידי מנהלת המערכת.</p>
+            </>
+          )}
         </div>
       )}
 
       {listQuery.isSuccess && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filtered.map(g => (
-            <button key={g.id} onClick={() => setSelectedId(g.id)} className="card-premium p-4 text-start hover:shadow-md transition-all">
+            <button key={g.id} onClick={() => { setSelectedId(g.id); setGTab("students"); }} className="card-premium p-4 text-start hover:shadow-md transition-all">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-[14px] font-semibold text-foreground break-words min-w-0">{g.name}</p>
                 <StatusChip status={g.status} />
@@ -348,18 +473,23 @@ const LearningGroupsPage = () => {
       )}
 
       <CreateGroupDialog open={createOpen} onOpenChange={setCreateOpen} subjects={subjects} saving={saving}
-        onCreate={(name, subjectId, year, grade) => run(async () => {
-          const id = await api.create(name, subjectId, year, grade);
-          setSelectedId(id as string);
-        }, "הקבוצה נוצרה", () => setCreateOpen(false))} />
+        onCreate={(name: string, subjectId: string, year: number, grade: string | null,
+                   description: string | null, teachers: { user_id: string; role_in_group: "lead" | "teacher" }[]) =>
+          run(async () => {
+            // ATOMIC: group + description + teachers, or nothing at all
+            const id = await api.createFull(name, subjectId, year, grade, description, teachers);
+            setSelectedId(id as string);
+            setGTab("students");
+          }, "הקבוצה נוצרה", () => setCreateOpen(false))} />
     </div>
   );
 };
 
 /* ═══════════ sections & dialogs ═══════════ */
 
-const StudentsSection = ({ details, onAddStudents, onAddClass, onRemove }: {
+const StudentsSection = ({ details, canManage, onAddStudents, onAddClass, onRemove }: {
   details: LgDetails;
+  canManage: boolean;
   onAddStudents: () => void; onAddClass: () => void;
   onRemove: (id: string, name: string) => void;
 }) => {
@@ -371,16 +501,18 @@ const StudentsSection = ({ details, onAddStudents, onAddClass, onRemove }: {
     <div className="card-premium p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <h2 className="text-[14px] font-semibold text-foreground">תלמידים · {details.active_count} פעילים</h2>
-        <div className="flex items-center gap-2">
-          <button onClick={onAddClass} className="h-9 px-3 rounded-xl border border-border bg-card text-[12.5px] inline-flex items-center gap-1.5">
-            <School className="h-3.5 w-3.5" strokeWidth={1.6} />
-            הוספת כיתה
-          </button>
-          <button onClick={onAddStudents} className="h-9 px-3 rounded-xl bg-primary text-primary-foreground text-[12.5px] inline-flex items-center gap-1.5">
-            <UserPlus className="h-3.5 w-3.5" strokeWidth={1.6} />
-            הוספת תלמידים
-          </button>
-        </div>
+        {canManage && (
+          <div className="flex items-center gap-2">
+            <button onClick={onAddClass} className="h-9 px-3 rounded-xl border border-border bg-card text-[12.5px] inline-flex items-center gap-1.5">
+              <School className="h-3.5 w-3.5" strokeWidth={1.6} />
+              הוספת כיתה
+            </button>
+            <button onClick={onAddStudents} className="h-9 px-3 rounded-xl bg-primary text-primary-foreground text-[12.5px] inline-flex items-center gap-1.5">
+              <UserPlus className="h-3.5 w-3.5" strokeWidth={1.6} />
+              הוספת תלמידים
+            </button>
+          </div>
+        )}
       </div>
       {details.active_students.length > 0 && (
         <div className="relative mb-3">
@@ -389,7 +521,9 @@ const StudentsSection = ({ details, onAddStudents, onAddClass, onRemove }: {
         </div>
       )}
       {details.active_students.length === 0 ? (
-        <p className="text-[13px] text-muted-foreground">עדיין אין תלמידים בקבוצה.</p>
+        <p className="text-[13px] text-muted-foreground">
+          עדיין אין תלמידים בקבוצה.{canManage ? ' הוספה דרך "הוספת תלמידים" או "הוספת כיתה".' : ""}
+        </p>
       ) : (
         <div className="divide-y divide-border/50">
           {list.map(s => (
@@ -397,31 +531,47 @@ const StudentsSection = ({ details, onAddStudents, onAddClass, onRemove }: {
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-foreground break-words">{s.full_name}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {s.class_name || "—"}{sportOf.get(s.student_id) ? ` · ${sportOf.get(s.student_id)}` : ""}
+                  {s.class_name || "ללא כיתה"}{sportOf.get(s.student_id) ? ` · ${sportOf.get(s.student_id)}` : ""}
+                  {s.joined_at ? ` · הצטרפות ${new Date(s.joined_at).toLocaleDateString("he-IL")}` : ""}
                 </p>
               </div>
-              <button onClick={() => onRemove(s.student_id, s.full_name)}
-                className="h-8 px-2.5 rounded-lg text-[11.5px] text-destructive hover:bg-destructive/10 shrink-0">
-                הסרה מהקבוצה
-              </button>
+              {canManage && (
+                <button onClick={() => onRemove(s.student_id, s.full_name)}
+                  className="h-8 px-2.5 rounded-lg text-[11.5px] text-destructive hover:bg-destructive/10 shrink-0">
+                  הסרה מהקבוצה
+                </button>
+              )}
             </div>
           ))}
           {list.length === 0 && <p className="text-[12px] text-muted-foreground py-3">אין תוצאות לחיפוש.</p>}
         </div>
+      )}
+      {(details.past_students || []).length > 0 && (
+        <>
+          <p className="text-[12px] font-medium text-muted-foreground mt-4 mb-1.5">חברות שהסתיימה</p>
+          <ul className="space-y-1">
+            {details.past_students!.map((s, i) => (
+              <li key={i} className="text-[12px] text-muted-foreground break-words">
+                {s.full_name} · עזב/ה {s.left_at ? new Date(s.left_at).toLocaleDateString("he-IL") : ""}
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );
 };
 
 const GroupForm = ({ initial, subjects, saving, submitLabel, onSubmit }: {
-  initial?: { name: string; subject_id: string; year: number; grade: string | null };
+  initial?: { name: string; subject_id: string; year: number; grade: string | null; description?: string | null };
   subjects: any[]; saving: boolean; submitLabel: string;
-  onSubmit: (name: string, subjectId: string, year: number, grade: string | null) => void;
+  onSubmit: (name: string, subjectId: string, year: number, grade: string | null, description: string | null) => void;
 }) => {
   const [name, setName] = useState(initial?.name || "");
   const [subjectId, setSubjectId] = useState(initial?.subject_id || "");
   const [year, setYear] = useState<number>(initial?.year || CURRENT_YEAR);
   const [grade, setGrade] = useState<string>(initial?.grade || "");
+  const [description, setDescription] = useState<string>(initial?.description || "");
   const valid = name.trim().length > 0 && subjectId;
   return (
     <div className="space-y-3">
@@ -451,24 +601,74 @@ const GroupForm = ({ initial, subjects, saving, submitLabel, onSubmit }: {
           </select>
         </div>
       </div>
-      <button disabled={!valid || saving} onClick={() => onSubmit(name.trim(), subjectId, year, grade || null)} className={`${btnPrimary} w-full`}>
+      <div>
+        <label className="text-[11.5px] text-muted-foreground font-medium block mb-1" htmlFor="lg-desc">תיאור (אופציונלי)</label>
+        <textarea id="lg-desc" value={description} onChange={e => setDescription(e.target.value.slice(0, 500))}
+          rows={2} className={`${fieldCls} !h-auto py-2 resize-none`} placeholder="למשל: קבוצת השלמה לקראת בגרות חורף" />
+      </div>
+      <button disabled={!valid || saving} onClick={() => onSubmit(name.trim(), subjectId, year, grade || null, description.trim() || null)} className={`${btnPrimary} w-full`}>
         {saving ? "שומרת..." : submitLabel}
       </button>
     </div>
   );
 };
 
-const CreateGroupDialog = ({ open, onOpenChange, subjects, saving, onCreate }: any) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-md" dir="rtl">
-      <DialogHeader>
-        <DialogTitle className="text-[15px]">קבוצה חדשה</DialogTitle>
-        <DialogDescription className="text-[12px]">שם, מקצוע ושנת לימודים. מורים ותלמידים מוסיפים בעמוד הקבוצה.</DialogDescription>
-      </DialogHeader>
-      <GroupForm subjects={subjects} saving={saving} submitLabel="יצירת קבוצה" onSubmit={onCreate} />
-    </DialogContent>
-  </Dialog>
-);
+const CreateGroupDialog = ({ open, onOpenChange, subjects, saving, onCreate }: any) => {
+  const teachersQuery = useTeachers(open);
+  const [lead, setLead] = useState<string>("");
+  const [extra, setExtra] = useState<Set<string>>(new Set());
+  const teacherList = teachersQuery.data || [];
+  const toggleExtra = (id: string) => {
+    const next = new Set(extra);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    next.delete(lead);
+    setExtra(next);
+  };
+  const buildTeachers = () => [
+    ...(lead ? [{ user_id: lead, role_in_group: "lead" as const }] : []),
+    ...Array.from(extra).filter(id => id !== lead).map(id => ({ user_id: id, role_in_group: "teacher" as const })),
+  ];
+  return (
+    <Dialog open={open} onOpenChange={(o: boolean) => { onOpenChange(o); if (!o) { setLead(""); setExtra(new Set()); } }}>
+      <DialogContent className="max-w-md" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-[15px]">קבוצה חדשה</DialogTitle>
+          <DialogDescription className="text-[12px]">
+            הקבוצה, התיאור והמורים נשמרים יחד; אם משהו נכשל, שום דבר לא נוצר.
+          </DialogDescription>
+        </DialogHeader>
+        <GroupForm subjects={subjects} saving={saving} submitLabel="יצירת קבוצה"
+          onSubmit={(name, subjectId, year, grade, description) =>
+            onCreate(name, subjectId, year, grade, description, buildTeachers())} />
+        <div className="border-t border-border/60 pt-3 space-y-2.5">
+          <div>
+            <label className="text-[11.5px] text-muted-foreground font-medium block mb-1" htmlFor="lg-lead">מורה ראשית (אופציונלי)</label>
+            <select id="lg-lead" value={lead} onChange={e => { setLead(e.target.value); setExtra(prev => { const n = new Set(prev); n.delete(e.target.value); return n; }); }} className={fieldCls}>
+              <option value="">ללא מורה ראשית כרגע</option>
+              {teacherList.map(t => <option key={t.user_id} value={t.user_id}>{t.full_name}</option>)}
+            </select>
+          </div>
+          {teacherList.filter(t => t.user_id !== lead).length > 0 && (
+            <div>
+              <p className="text-[11.5px] text-muted-foreground font-medium mb-1">מורים נוספים (אופציונלי)</p>
+              <div className="max-h-32 overflow-y-auto divide-y divide-border/40">
+                {teacherList.filter(t => t.user_id !== lead).map(t => (
+                  <label key={t.user_id} className="flex items-center gap-2 py-1.5 cursor-pointer">
+                    <input type="checkbox" checked={extra.has(t.user_id)} onChange={() => toggleExtra(t.user_id)} className="h-4 w-4 accent-[hsl(var(--primary))]" />
+                    <span className="text-[12.5px] text-foreground break-words">{t.full_name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {teachersQuery.isSuccess && teacherList.length === 0 && (
+            <p className="text-[12px] text-muted-foreground">אין עדיין משתמשי מורה במערכת; אפשר ליצור את הקבוצה ולשייך מורים בהמשך.</p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const EditGroupDialog = ({ open, onOpenChange, details, subjects, saving, onSave }: any) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
@@ -476,9 +676,9 @@ const EditGroupDialog = ({ open, onOpenChange, details, subjects, saving, onSave
       <DialogHeader><DialogTitle className="text-[15px]">עריכת פרטי הקבוצה</DialogTitle></DialogHeader>
       {open && (
         <GroupForm
-          initial={{ name: details.group.name, subject_id: details.group.subject_id, year: details.group.academic_year_start, grade: details.group.grade_code }}
+          initial={{ name: details.group.name, subject_id: details.group.subject_id, year: details.group.academic_year_start, grade: details.group.grade_code, description: (details.group as any).description }}
           subjects={subjects} saving={saving} submitLabel="שמירה"
-          onSubmit={(name, _subj, year, grade) => onSave(name, year, grade)}
+          onSubmit={(name, _subj, year, grade, description) => onSave(name, year, grade, description)}
         />
       )}
       <p className="text-[11px] text-muted-foreground">שינוי מקצוע אינו זמין לקבוצה קיימת; במקום זאת אפשר ליצור קבוצה חדשה.</p>
@@ -513,7 +713,9 @@ const TeachersDialog = ({ open, onOpenChange, current, saving, onSave }: {
       <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-[15px]">ניהול מורים</DialogTitle>
-          <DialogDescription className="text-[12px]">אפשר יותר ממורה אחד; מוביל/ה אחד/ת לכל היותר.</DialogDescription>
+          <DialogDescription className="text-[12px]">
+            אפשר יותר ממורה אחד; מוביל/ה אחד/ת לכל היותר. הסרת מורה מסיימת את השיוך ונשמרת בהיסטוריה, ומורה שהוסרה מפסיקה מיד לראות את הקבוצה.
+          </DialogDescription>
         </DialogHeader>
         {teachersQuery.isLoading && <div className="py-6 flex justify-center"><Spinner /></div>}
         {teachersQuery.isError && <p className="text-[12.5px] text-destructive">טעינת המורים נכשלה: {(teachersQuery.error as any)?.message}</p>}
@@ -561,19 +763,39 @@ const AddStudentsDialog = ({ open, onOpenChange, allStudents, activeIds, saving,
 }) => {
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<Set<string>>(new Set());
-  const candidates = allStudents.filter(s => !activeIds.has(s.id) && (!q || s.full_name.includes(q)));
+  const [clsFilter, setClsFilter] = useState("");
+  const [sportFilter, setSportFilter] = useState("");
+  const alreadyIn = allStudents.filter(s => activeIds.has(s.id)).length;
+  const archivedCount = allStudents.filter(s => !activeIds.has(s.id) && (s as any).archived).length;
+  const classes = Array.from(new Set(allStudents.map(s => (s.class_name || "").trim()).filter(Boolean))).sort((a: string, b: string) => a.localeCompare(b, "he"));
+  const sportsList = Array.from(new Set(allStudents.map(s => (s.sport || "").trim()).filter(Boolean))).sort((a: string, b: string) => a.localeCompare(b, "he"));
+  const candidates = allStudents.filter(s =>
+    !activeIds.has(s.id) && !(s as any).archived
+    && (!q || s.full_name.includes(q))
+    && (!clsFilter || (s.class_name || "").trim() === clsFilter)
+    && (!sportFilter || (s.sport || "").trim() === sportFilter));
   const togglePick = (id: string) => {
     const next = new Set(picked);
     if (next.has(id)) next.delete(id); else next.add(id);
     setPicked(next);
   };
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setPicked(new Set()); setQ(""); } }}>
+    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setPicked(new Set()); setQ(""); setClsFilter(""); setSportFilter(""); } }}>
       <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader><DialogTitle className="text-[15px]">הוספת תלמידים</DialogTitle></DialogHeader>
         <div className="relative">
           <Search className="h-3.5 w-3.5 absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground" strokeWidth={1.6} />
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="חיפוש לפי שם" aria-label="חיפוש תלמיד להוספה" className={`${fieldCls} pe-9`} autoFocus />
+        </div>
+        <div className="flex gap-2">
+          <select value={clsFilter} onChange={e => setClsFilter(e.target.value)} aria-label="סינון לפי כיתה" className={`${fieldCls} w-auto flex-1`}>
+            <option value="">כל הכיתות</option>
+            {classes.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={sportFilter} onChange={e => setSportFilter(e.target.value)} aria-label="סינון לפי ענף" className={`${fieldCls} w-auto flex-1`}>
+            <option value="">כל הענפים</option>
+            {sportsList.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
         <div className="max-h-60 overflow-y-auto divide-y divide-border/50">
           {candidates.slice(0, 60).map(s => (
@@ -584,6 +806,11 @@ const AddStudentsDialog = ({ open, onOpenChange, allStudents, activeIds, saving,
             </label>
           ))}
           {candidates.length === 0 && <p className="text-[12.5px] text-muted-foreground py-3">אין תלמידים זמינים להוספה לפי החיפוש.</p>}
+        </div>
+        {/* preview before saving: what will happen, in numbers */}
+        <div className="text-[12px] text-muted-foreground border-t border-border/60 pt-2">
+          ייתווספו {picked.size} · כבר בקבוצה {alreadyIn}
+          {archivedCount > 0 ? ` · ${archivedCount} בארכיון ואינם זמינים לשיוך` : ""}
         </div>
         <button disabled={picked.size === 0 || saving} onClick={() => onAdd(Array.from(picked))} className={`${btnPrimary} w-full`}>
           {saving ? "מוסיפה..." : `הוספת ${picked.size || ""} תלמידים`}

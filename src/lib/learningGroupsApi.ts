@@ -5,15 +5,24 @@
 export interface LgListItem {
   id: string; name: string; subject_id: string; subject_name: string;
   grade_code: string | null; academic_year_start: number; status: "active" | "archived";
+  description?: string | null;
   teacher_count: number; active_students: number;
 }
-export interface LgTeacher { user_id: string; role_in_group: "lead" | "teacher"; full_name: string | null }
+export interface LgTeacher { user_id: string; role_in_group: "lead" | "teacher"; full_name: string | null; added_at?: string }
+export interface LgPastTeacher extends LgTeacher { left_at: string }
 export interface LgStudent { student_id: string; full_name: string; class_name: string | null; joined_at: string }
+export interface LgPastStudent extends LgStudent { left_at: string }
 export interface LgDetails {
-  group: { id: string; name: string; subject_id: string; grade_code: string | null; academic_year_start: number; status: string };
+  group: { id: string; name: string; subject_id: string; grade_code: string | null; academic_year_start: number; status: string; description?: string | null };
   teachers: LgTeacher[];
+  past_teachers?: LgPastTeacher[];
   active_students: LgStudent[];
+  past_students?: LgPastStudent[];
   active_count: number;
+}
+export interface LgAuditRow {
+  id: string; action: string; target_type: string | null; created_at: string;
+  actor_name: string; old_value: unknown; new_value: unknown;
 }
 
 /** 2026 → "2026–2027" (school-year label). */
@@ -64,10 +73,21 @@ export const lgApi = (client: RpcClient) => ({
     call<LgDetails>(client, "get_learning_group_details", { p_group: groupId }),
   create: (name: string, subjectId: string, yearStart: number, gradeCode: string | null) =>
     call<string>(client, "create_learning_group", { p_name: name, p_subject_id: subjectId, p_year_start: yearStart, p_grade_code: gradeCode }),
-  update: (groupId: string, name: string, yearStart: number, gradeCode: string | null) =>
-    call<void>(client, "update_learning_group", { p_group: groupId, p_name: name, p_year_start: yearStart, p_grade_code: gradeCode }),
+  /** ATOMIC create: group + description + teachers in one transaction */
+  createFull: (name: string, subjectId: string, yearStart: number, gradeCode: string | null,
+    description: string | null, teachers: { user_id: string; role_in_group: "lead" | "teacher" }[]) =>
+    call<string>(client, "create_learning_group_full", {
+      p_name: name, p_subject_id: subjectId, p_year_start: yearStart,
+      p_grade_code: gradeCode, p_description: description, p_teachers: teachers,
+    }),
+  update: (groupId: string, name: string, yearStart: number, gradeCode: string | null, description: string | null = null) =>
+    call<void>(client, "update_learning_group", { p_group: groupId, p_name: name, p_year_start: yearStart, p_grade_code: gradeCode, p_description: description }),
   archive: (groupId: string) =>
     call<void>(client, "archive_learning_group", { p_group: groupId }),
+  restore: (groupId: string) =>
+    call<void>(client, "restore_learning_group", { p_group: groupId }),
+  history: (groupId: string, limit = 100) =>
+    call<LgAuditRow[]>(client, "get_learning_group_history", { p_group: groupId, p_limit: limit }),
   duplicate: (groupId: string, newYear: number, includeStudents: boolean) =>
     call<string>(client, "duplicate_group_for_year", { p_group: groupId, p_new_year: newYear, p_include_students: includeStudents }),
   setTeachers: (groupId: string, teachers: { user_id: string; role_in_group: "lead" | "teacher" }[]) =>
