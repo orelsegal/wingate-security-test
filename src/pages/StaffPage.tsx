@@ -327,7 +327,7 @@ const LinkCoachDialog = ({ open, onOpenChange, saving, excludeActive, onLink }: 
         </div>
         <div>
           <label className="text-[11.5px] text-muted-foreground font-medium block mb-1">תפקיד בקשר</label>
-          <select value={roleType} onChange={e => setRoleType(e.target.value)} className={fieldCls} aria-label="תפקיד בקשר">
+          <select value={roleType} onChange={e => setRoleType(e.target.value as "primary" | "assistant" | "other")} className={fieldCls} aria-label="תפקיד בקשר">
             {Object.entries(COACH_ROLE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
@@ -353,7 +353,7 @@ const ChangeRoleDialog = ({ assignment, onOpenChange, saving, onSave }: {
     <Dialog open={!!assignment} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm" dir="rtl">
         <DialogHeader><DialogTitle className="text-[15px]">שינוי תפקיד · {assignment?.student_name}</DialogTitle></DialogHeader>
-        <select value={roleType} onChange={e => setRoleType(e.target.value)} className={fieldCls} aria-label="תפקיד בקשר">
+        <select value={roleType} onChange={e => setRoleType(e.target.value as "primary" | "assistant" | "other")} className={fieldCls} aria-label="תפקיד בקשר">
           {Object.entries(COACH_ROLE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <button disabled={saving} onClick={() => onSave(roleType)} className={`${btnPrimary} w-full`}>

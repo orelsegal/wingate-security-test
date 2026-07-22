@@ -276,7 +276,7 @@ export const LinkStudentDialog = ({ open, onOpenChange, saving, excludeStudentId
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-[11.5px] text-muted-foreground font-medium block mb-1">סוג הקשר</label>
-            <select value={rel} onChange={e => setRel(e.target.value)} className={fieldCls} aria-label="סוג הקשר">
+            <select value={rel} onChange={e => setRel(e.target.value as "mother" | "father" | "guardian" | "other")} className={fieldCls} aria-label="סוג הקשר">
               {Object.entries(RELATIONSHIP_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
@@ -326,7 +326,7 @@ const EditLinkDialog = ({ link, onOpenChange, saving, onSave }: {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-[11.5px] text-muted-foreground font-medium block mb-1">סוג הקשר</label>
-            <select value={rel} onChange={e => setRel(e.target.value)} className={fieldCls} aria-label="סוג הקשר">
+            <select value={rel} onChange={e => setRel(e.target.value as "mother" | "father" | "guardian" | "other")} className={fieldCls} aria-label="סוג הקשר">
               {Object.entries(RELATIONSHIP_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>

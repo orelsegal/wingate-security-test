@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/import-preview.test.mjs && vite build",
+    "build": "node scripts/import-preview.test.mjs && tsc --noEmit -p tsconfig.app.json && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",

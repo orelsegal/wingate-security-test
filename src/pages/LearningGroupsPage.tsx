@@ -76,6 +76,10 @@ const LearningGroupsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: isOwner, isLoading: ownerLoading } = useIsSystemOwner();
+  /* access (UX layer; the RPCs enforce the real scope): owner manages,
+     a teacher gets a read-only scoped view. Declared BEFORE any query
+     that references it — a later const here is a TDZ render crash. */
+  const canManage = !!isOwner;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [yearFilter, setYearFilter] = useState<number | null>(null);
@@ -142,10 +146,6 @@ const LearningGroupsPage = () => {
     });
   const saving = mut.isPending;
 
-  /* ── access (UX layer; the RPCs enforce the real scope):
-     owner manages everything; a teacher gets a READ-ONLY view of the
-     active groups she is assigned to (the list RPC returns 0 otherwise) ── */
-  const canManage = !!isOwner;
   if (ownerLoading) {
     return <div className="p-10 flex justify-center"><Spinner /></div>;
   }

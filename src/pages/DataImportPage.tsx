@@ -268,8 +268,10 @@ const ImportInner = () => {
     setDraftStatus(null);
     const parsedDraft = parseDecisionsDraft(await file.text());
     if (!parsedDraft.ok) {
-      const msg = parsedDraft.error === "invalid_json" ? "קובץ הטיוטה פגום ולא נטען."
-        : parsedDraft.error === "unsupported_kind" ? "זה אינו קובץ טיוטת החלטות של מסך הייבוא."
+      // narrowing needs the explicit cast under this project's strict:false
+      const err = (parsedDraft as { ok: false; error: string }).error;
+      const msg = err === "invalid_json" ? "קובץ הטיוטה פגום ולא נטען."
+        : err === "unsupported_kind" ? "זה אינו קובץ טיוטת החלטות של מסך הייבוא."
         : "גרסת קובץ הטיוטה אינה נתמכת.";
       setDraftStatus({ tone: "warn", text: msg });
       return;
