@@ -57,8 +57,9 @@ const buildTrail = (
     ];
   }
 
-  if (p === "/teacher-courses") return [adminHub, { label: "המקצועות שלי" }];
-  if (p.startsWith("/teacher-course/")) return [adminHub, { label: "המקצועות שלי", to: "/teacher-courses" }, { label: "ניהול מקצוע" }];
+  if (p === "/my-groups") return [{ label: "הקבוצות שלי" }];
+  if (p === "/teacher-courses") return [adminHub, { label: "תוכן לימודי" }];
+  if (p.startsWith("/teacher-course/")) return [adminHub, { label: "תוכן לימודי", to: "/teacher-courses" }, { label: "ניהול מקצוע" }];
   if (p === "/bagrut-grading") return [adminHub, { label: "ציוני בגרות" }];
   if (p === "/history-course") return [adminHub, roadmapsHub, { label: "היסטוריה" }];
   if (p === "/science-intro") return [adminHub, roadmapsHub, { label: "מבוא למדעים" }];

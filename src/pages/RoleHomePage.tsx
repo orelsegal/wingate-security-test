@@ -284,7 +284,7 @@ const TeacherGroups = ({ navigate }: { navigate: (p: string) => void }) => {
         <ul className="divide-y divide-border/50">
           {groupsQuery.data!.map(g => (
             <li key={g.id}>
-              <button onClick={() => navigate("/admin/learning-groups")}
+              <button onClick={() => navigate("/my-groups")}
                 className="w-full text-start py-2 flex items-center justify-between gap-2 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
                 <span className="text-[12.5px] text-foreground min-w-0 break-words">
                   {g.name} <span className="text-muted-foreground" dir="ltr">({g.year})</span>
@@ -310,7 +310,8 @@ const TeacherHome = () => {
   const classesCount = new Set(active.map(s => s.class_name).filter(Boolean)).size;
 
   const quickActions = [
-    { id: "courses",  title: "הקורסים שלי",    desc: "ניהול קורסים וציונים",       icon: BookOpen,     color: "bg-primary/10",   iconColor: "text-primary",      path: "/teacher-courses" },
+    { id: "my-groups", title: "הקבוצות שלי",   desc: "קבוצות הלימוד שבהן את/ה מלמד/ת", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary",    path: "/my-groups" },
+    { id: "content",  title: "תוכן לימודי",    desc: "מקצועות, קורסים וחומרי לימוד", icon: BookOpen,     color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/teacher-courses" },
     { id: "grade",    title: "הזנת ציונים",    desc: "עדכון ציוני תלמידים",        icon: ClipboardEdit,color: "bg-emerald-50",   iconColor: "text-emerald-700",  path: "/grade-entry" },
     { id: "students", title: "הספורטאים שלי",  desc: "תלמידי קבוצות הלימוד שלך",   icon: Users,        color: "bg-sky-50",       iconColor: "text-sky-700",      path: "/students" },
   ];

@@ -16,6 +16,7 @@ export interface UiLabels {
     studentHome: string;
     yearPlan: string;
     teacherCourses: string;
+    myGroups: string;
     students: string;
     groups: string;
     courses: string;
@@ -91,7 +92,8 @@ export const defaultUiLabels: UiLabels = {
     dashboard: "תמונת מצב",
     studentHome: "תמונת מצב",
     yearPlan: "שנת 2026",
-    teacherCourses: "הקורסים שלי",
+    teacherCourses: "תוכן לימודי",
+    myGroups: "הקבוצות שלי",
     students: "ספורטאים",
     groups: "כיתות",
     courses: "התקדמות לימודית",

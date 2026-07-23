@@ -24,7 +24,7 @@ const navByRole: Record<string, BottomNavItem[]> = {
   teacher: [
     { label: "בית",       icon: Home,         path: "/" },
     { label: "תלמידים",   icon: Users,        path: "/students" },
-    { label: "קורסים",   icon: BookOpen,     path: "/teacher-courses" },
+    { label: "הקבוצות שלי", icon: Layers,    path: "/my-groups" },
     { label: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry" },
     { label: "לוח שנה",  icon: CalendarDays, path: "/calendar" },
   ],

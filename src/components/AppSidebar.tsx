@@ -20,6 +20,7 @@ const allMenuItems: MenuItemDef[] = [
   { key: "dashboard",      icon: Home,         path: "/",                roles: ["developer", "admin", "teacher", "parent", "coach"] },
   { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"] },
   { key: "yearPlan",       icon: CalendarRange, path: "/year-plan-2026", roles: ["developer", "admin"] },
+  { key: "myGroups",       icon: Layers,       path: "/my-groups",       roles: ["teacher"] },
   { key: "teacherCourses", icon: BookOpen,     path: "/teacher-courses", roles: ["teacher"] },
   { key: "students",       icon: Users,        path: "/students",        roles: ["developer", "admin", "teacher", "coach"] },
   { key: "groups",         icon: Layers,       path: "/groups",          roles: ["developer", "admin", "teacher", "coach"] },

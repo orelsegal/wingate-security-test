@@ -50,7 +50,7 @@ const TeacherCoursesPage = () => {
     <div className="p-5 md:p-10 lg:p-14 max-w-[960px] mx-auto" dir="rtl">
       <div className="mb-8">
         <h1 className="text-[20px] md:text-[24px] font-semibold text-foreground tracking-tight">
-          הקורסים שלי
+          תוכן לימודי
         </h1>
         <p className="text-[12px] text-muted-foreground mt-1">
           {courseStats.filter(c => c.studentCount > 0).length} קורסים פעילים

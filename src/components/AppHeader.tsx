@@ -60,13 +60,16 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
   } else if (path.startsWith("/calendar")) {
     crumbs.push({ label: "לוח שנה" });
     title = "לוח שנה";
+  } else if (path.startsWith("/my-groups")) {
+    crumbs.push({ label: "הקבוצות שלי" });
+    title = "הקבוצות שלי";
   } else if (path.startsWith("/teacher-course/")) {
-    crumbs.push({ label: "קורסים", path: "/teacher-courses" });
+    crumbs.push({ label: "תוכן לימודי", path: "/teacher-courses" });
     crumbs.push({ label: "פרטי קורס" });
     title = "פרטי קורס";
   } else if (path.startsWith("/teacher-courses")) {
-    crumbs.push({ label: "הקורסים שלי" });
-    title = "הקורסים שלי";
+    crumbs.push({ label: "תוכן לימודי" });
+    title = "תוכן לימודי";
   } else if (path.startsWith("/teacher-subjects")) {
     crumbs.push({ label: "עריכת מקצועות" });
     title = "עריכת מקצועות";

@@ -147,6 +147,8 @@ const App = () => (
               <Route path="/admin/labels"                       element={<AdminLabelsPage />} />
               <Route path="/admin/users"                        element={<UserManagementPage />} />
               <Route path="/admin/learning-groups"              element={<LearningGroupsPage />} />
+              {/* teacher-facing alias: same scoped page, non-admin address */}
+              <Route path="/my-groups"                          element={<LearningGroupsPage />} />
               <Route path="/admin/guardians"                    element={<GuardiansPage />} />
               <Route path="/admin/staff"                        element={<StaffPage />} />
               <Route path="/admin/data-import"                  element={<DataImportPage />} />
