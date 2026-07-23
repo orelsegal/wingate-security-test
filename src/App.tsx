@@ -110,7 +110,11 @@ const App = () => (
             {/* ── Main app (with AppLayout sidebar) ──────────── */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/"                                   element={<Index />} />
-              <Route path="/dashboard"                          element={<DashboardContent />} />
+              {/* /dashboard is a strict subset of the home (same DashboardContent,
+                  which the home renders embedded alongside OpsBoard + entries).
+                  No unique content, no nav points here — redirect to home.
+                  Route line + component kept; nothing deleted. */}
+              <Route path="/dashboard"                          element={<Navigate to="/" replace />} />
               <Route path="/students"                           element={<StudentsPage />} />
               <Route path="/students/:id"                       element={<StudentProfilePage />} />
               <Route path="/courses"                            element={<CoursesPage />} />

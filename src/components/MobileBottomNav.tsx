@@ -25,7 +25,7 @@ const navByRole: Record<string, BottomNavItem[]> = {
     { label: "בית",       icon: Home,         path: "/" },
     { label: "תלמידים",   icon: Users,        path: "/students" },
     { label: "הקבוצות שלי", icon: Layers,    path: "/my-groups" },
-    { label: "הזנת נתונים", icon: ClipboardEdit, path: "/data-entry" },
+    { label: "הזנת ציונים", icon: ClipboardEdit, path: "/grade-entry" },
     { label: "לוח שנה",  icon: CalendarDays, path: "/calendar" },
   ],
   coach: [

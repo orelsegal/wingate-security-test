@@ -13,7 +13,9 @@ const buildTrail = (
   const p = pathname;
 
   // Admin hub pages
-  const adminHub: Crumb = { label: "מרכז ניהול", to: "/dashboard" };
+  // home is "/"; the standalone /dashboard is a duplicate of the home
+  // content and is no longer linked anywhere (P0 fix)
+  const adminHub: Crumb = { label: "מרכז ניהול", to: "/" };
   const roadmapsHub: Crumb = { label: "מפות דרכים", to: "/roadmaps" };
 
   if (p === "/" || p === "/dashboard") return [{ label: "מרכז ניהול" }];

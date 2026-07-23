@@ -25,8 +25,13 @@ const DataEntryPageInner = () => {
   const navigate = useNavigate();
   const { labels } = useUiLabels();
 
+  // data-entry writes to students, which RLS allows for admin/developer
+  // only. Any other role is redirected home instead of seeing an
+  // unusable form. Owner passes as admin; server remains the real gate.
   useEffect(() => {
-    if (user && (user.role === "parent" || user.role === "student")) navigate("/", { replace: true });
+    if (user && user.role !== "admin" && user.role !== "developer") {
+      navigate("/", { replace: true });
+    }
   }, [user, navigate]);
   const { data: students, isLoading: loadingStudents } = useStudents();
   const { data: subjects, isLoading: loadingSubjects } = useSubjects();

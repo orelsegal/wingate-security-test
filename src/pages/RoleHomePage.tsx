@@ -518,7 +518,9 @@ const CoachHome = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* coach cannot edit student records (admin-gated in RLS), so the
+          old "הזנת נתונים" card was removed; only read actions remain */}
+      <div className="grid grid-cols-1 gap-3">
         <button
           onClick={() => navigate("/students")}
           className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
@@ -528,16 +530,6 @@ const CoachHome = () => {
           </div>
           <h3 className="text-[13px] font-semibold text-foreground leading-tight">כל הספורטאים</h3>
           <p className="text-[10.5px] text-muted-foreground mt-1">פרופילים ופרטים אישיים</p>
-        </button>
-        <button
-          onClick={() => navigate("/data-entry")}
-          className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-105">
-            <ClipboardEdit className="h-[18px] w-[18px] text-violet-700" strokeWidth={1.5} />
-          </div>
-          <h3 className="text-[13px] font-semibold text-foreground leading-tight">הזנת נתונים</h3>
-          <p className="text-[10.5px] text-muted-foreground mt-1">עדכון נתוני ספורטאי הענף</p>
         </button>
       </div>
     </>
