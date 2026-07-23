@@ -88,9 +88,30 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   const isActive = (path: string) =>
     location.pathname === path || (path !== "/" && path !== "/student-home" && location.pathname.startsWith(path));
 
-  // collapsible group state; default open, and the section holding the
-  // active route is always forced open so the active item stays visible
-  const [collapsed, setCollapsed] = useState<Record<NavGroup, boolean>>({ work: false, content: false, management: false });
+  // collapsible group state. Defaults: only "work" open; the section
+  // holding the ACTIVE route is always forced open (below) so the active
+  // item can never hide inside a closed group. Manual open/close choices
+  // persist in localStorage across screens and sessions.
+  const NAV_GROUPS_KEY = "maslul_nav_groups";
+  const [collapsed, setCollapsed] = useState<Record<NavGroup, boolean>>(() => {
+    const defaults: Record<NavGroup, boolean> = { work: false, content: true, management: true };
+    try {
+      const raw = localStorage.getItem(NAV_GROUPS_KEY);
+      if (!raw) return defaults;
+      const saved = JSON.parse(raw);
+      return {
+        work: typeof saved.work === "boolean" ? saved.work : defaults.work,
+        content: typeof saved.content === "boolean" ? saved.content : defaults.content,
+        management: typeof saved.management === "boolean" ? saved.management : defaults.management,
+      };
+    } catch { return defaults; }
+  });
+  const toggleGroup = (id: NavGroup) =>
+    setCollapsed(c => {
+      const next = { ...c, [id]: !c[id] };
+      try { localStorage.setItem(NAV_GROUPS_KEY, JSON.stringify(next)); } catch { /* storage unavailable */ }
+      return next;
+    });
 
   const handleLogout = async () => {
     await logout();
@@ -158,12 +179,12 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               return (
                 <div key={g.id}>
                   <button
-                    onClick={() => setCollapsed(c => ({ ...c, [g.id]: !c[g.id] }))}
-                    className="w-full flex items-center justify-between px-3 mb-1.5 group focus-visible:outline-none"
+                    onClick={() => toggleGroup(g.id)}
+                    className="w-full flex items-center justify-between px-3 py-1 mb-1 rounded-lg group hover:bg-sidebar-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-primary/50"
                     aria-expanded={open}
                   >
-                    <span className="text-[9px] font-semibold text-sidebar-muted/40 tracking-[0.12em] uppercase">{g.label}</span>
-                    <ChevronDown className={`h-3 w-3 text-sidebar-muted/40 transition-transform ${open ? "" : "-rotate-90"}`} strokeWidth={2} />
+                    <span className="text-[10px] font-semibold text-sidebar-muted/70 tracking-[0.1em]">{g.label}</span>
+                    <ChevronDown className={`h-3.5 w-3.5 text-sidebar-muted/60 transition-transform ${open ? "" : "-rotate-90"}`} strokeWidth={2} />
                   </button>
                   {open && <div className="space-y-0.5">{items.map(renderItem)}</div>}
                 </div>
