@@ -144,9 +144,10 @@ const LoginPage = () => {
 
         {/* Title */}
         <div className="text-center mb-9 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <h1 className="text-[22px] font-bold text-primary tracking-tight leading-snug mb-2.5">
-            האקדמיה למצוינות בספורט
+          <h1 className="text-[26px] font-bold text-primary tracking-tight leading-snug mb-1">
+            מסלול
           </h1>
+          <p className="text-[12.5px] text-muted-foreground/70 mb-2.5">האקדמיה למצוינות בספורט</p>
           <div className="w-10 h-[2px] rounded-full bg-primary/25 mx-auto mb-2.5" />
           <p className="text-[11px] font-light leading-relaxed tracking-wide text-muted-foreground/50">
             התחברות למערכת

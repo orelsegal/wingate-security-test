@@ -585,7 +585,7 @@ const RoleHomePage = () => {
       {/* Branding */}
       <div className="mt-16 text-center">
         <span className="text-[8.5px] text-muted-foreground/20 font-normal tracking-wider">
-          האקדמיה למצוינות · מכון וינגייט
+          מסלול · האקדמיה למצוינות בספורט
         </span>
       </div>
     </div>

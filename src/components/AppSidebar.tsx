@@ -1,4 +1,5 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -8,39 +9,60 @@ import EditableElement from "@/components/builder/EditableElement";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 type NavKey = keyof ReturnType<typeof useUiLabels>["labels"]["nav"];
+type NavGroup = "work" | "content" | "management";
 
 interface MenuItemDef {
   key: NavKey;
   icon: typeof Home;
   path: string;
   roles: UserRole[];
+  group: NavGroup;
 }
 
+/* Admin/developer sidebar is grouped into three sections (report 5A).
+   Array order = order within each section AND the flat order for the
+   per-role lists below. No route changed, nothing removed. */
 const allMenuItems: MenuItemDef[] = [
-  { key: "dashboard",      icon: Home,         path: "/",                roles: ["developer", "admin", "teacher", "parent", "coach"] },
-  { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"] },
-  { key: "yearPlan",       icon: CalendarRange, path: "/year-plan-2026", roles: ["developer", "admin"] },
-  { key: "myGroups",       icon: Layers,       path: "/my-groups",       roles: ["teacher"] },
-  { key: "teacherCourses", icon: BookOpen,     path: "/teacher-courses", roles: ["teacher"] },
-  { key: "students",       icon: Users,        path: "/students",        roles: ["developer", "admin", "teacher", "coach"] },
-  { key: "groups",         icon: Layers,       path: "/groups",          roles: ["developer", "admin", "teacher", "coach"] },
-  { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["developer", "admin", "teacher"] },
-  // admin/developer only: student writes are admin-gated in RLS, so
-  // teacher/coach could open the form but never save (P0 fix)
-  { key: "dataEntry",      icon: ClipboardEdit, path: "/data-entry",     roles: ["developer", "admin"] },
-  { key: "gradeEntry",     icon: BookOpen,     path: "/grade-entry",     roles: ["developer", "admin", "teacher"] },
-  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher", "student"] },
-  { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["developer", "admin"] },
-  { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["developer", "admin"] },
-  { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels",    roles: ["developer", "admin"] },
-  { key: "adminUsers",     icon: UserCog,           path: "/admin/users",     roles: ["developer", "admin"] },
+  // ── work (עבודה שוטפת) ──
+  { key: "dashboard",      icon: Home,         path: "/",                roles: ["developer", "admin", "teacher", "parent", "coach"], group: "work" },
+  { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"], group: "work" },
+  { key: "myGroups",       icon: Layers,       path: "/my-groups",       roles: ["teacher"], group: "work" },
+  { key: "students",       icon: Users,        path: "/students",        roles: ["developer", "admin", "teacher", "coach"], group: "work" },
   // System-Owner only (extra gate below — role admin alone is not enough)
-  { key: "learningGroups", icon: Layers,            path: "/admin/learning-groups", roles: ["admin"] },
-  { key: "guardians",      icon: Users,             path: "/admin/guardians",       roles: ["admin"] },
-  { key: "staffMgmt",      icon: Dumbbell,          path: "/admin/staff",           roles: ["admin"] },
-  { key: "dataImport",     icon: Database,          path: "/admin/data-import",     roles: ["admin"] },
-  { key: "adminSettings",  icon: Settings,          path: "/admin/settings",  roles: ["developer", "admin"] },
+  { key: "learningGroups", icon: Layers,            path: "/admin/learning-groups", roles: ["admin"], group: "work" },
+  { key: "groups",         icon: Layers,       path: "/groups",          roles: ["developer", "admin", "teacher", "coach"], group: "work" },
+  { key: "gradeEntry",     icon: BookOpen,     path: "/grade-entry",     roles: ["developer", "admin", "teacher"], group: "work" },
+  { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["developer", "admin", "teacher"], group: "work" },
+  // ── content & planning (תוכן ותכנון) ──
+  { key: "teacherCourses", icon: BookOpen,     path: "/teacher-courses", roles: ["teacher"], group: "content" },
+  { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher", "student"], group: "content" },
+  { key: "calendar",       icon: CalendarDays, path: "/calendar",        roles: ["developer", "admin", "coach", "parent"], group: "content" },
+  { key: "yearPlan",       icon: CalendarRange, path: "/year-plan-2026", roles: ["developer", "admin"], group: "content" },
+  // ── management (ניהול) ──
+  { key: "adminUsers",     icon: UserCog,           path: "/admin/users",     roles: ["developer", "admin"], group: "management" },
+  { key: "guardians",      icon: Users,             path: "/admin/guardians",       roles: ["admin"], group: "management" },
+  { key: "staffMgmt",      icon: Dumbbell,          path: "/admin/staff",           roles: ["admin"], group: "management" },
+  { key: "dataImport",     icon: Database,          path: "/admin/data-import",     roles: ["admin"], group: "management" },
+  // admin/developer only: student writes are admin-gated in RLS (P0 fix)
+  { key: "dataEntry",      icon: ClipboardEdit, path: "/data-entry",     roles: ["developer", "admin"], group: "management" },
+  { key: "dataManagement", icon: Database,     path: "/data-management", roles: ["developer", "admin"], group: "management" },
+  { key: "userActivity",   icon: Activity,     path: "/user-activity",   roles: ["developer", "admin"], group: "management" },
+  { key: "adminLabels",    icon: SlidersHorizontal, path: "/admin/labels",    roles: ["developer", "admin"], group: "management" },
+  { key: "adminSettings",  icon: Settings,          path: "/admin/settings",  roles: ["developer", "admin"], group: "management" },
 ];
+
+const GROUP_META: { id: NavGroup; label: string }[] = [
+  { id: "work",       label: "עבודה שוטפת" },
+  { id: "content",    label: "תוכן ותכנון" },
+  { id: "management", label: "ניהול" },
+];
+
+/* explicit flat order for the non-grouped roles (report 5A) */
+const ROLE_ORDER: Partial<Record<UserRole, NavKey[]>> = {
+  teacher: ["dashboard", "myGroups", "students", "gradeEntry", "teacherCourses", "groups", "courses", "roadmaps"],
+  coach:   ["dashboard", "students", "groups", "calendar"],
+  parent:  ["dashboard", "calendar"],
+};
 
 interface AppSidebarProps {
   onNavigate?: () => void;
@@ -62,10 +84,49 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
     return v !== false;
   });
 
+  const isGrouped = user?.role === "admin" || user?.role === "developer";
+  const isActive = (path: string) =>
+    location.pathname === path || (path !== "/" && path !== "/student-home" && location.pathname.startsWith(path));
+
+  // collapsible group state; default open, and the section holding the
+  // active route is always forced open so the active item stays visible
+  const [collapsed, setCollapsed] = useState<Record<NavGroup, boolean>>({ work: false, content: false, management: false });
+
   const handleLogout = async () => {
     await logout();
     navigate("/login", { replace: true });
   };
+
+  const renderItem = (item: MenuItemDef) => {
+    const active = isActive(item.path);
+    const title = labels.nav[item.key];
+    return (
+      <EditableElement key={item.key + item.path} id={`sidebar.nav.${item.key}`} type="nav-item" pageKey="sidebar" defaultLabel={title}>
+        {({ label }) => (
+          <button
+            onClick={() => { navigate(item.path); onNavigate?.(); }}
+            aria-current={active ? "page" : undefined}
+            className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-primary/50 ${
+              active
+                ? "bg-sidebar-primary text-white font-semibold shadow-sm"
+                : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground font-medium"
+            }`}
+          >
+            <item.icon className={`h-[15px] w-[15px] shrink-0 transition-colors ${active ? "text-white" : "text-sidebar-muted"}`} strokeWidth={active ? 2 : 1.5} />
+            <span>{label}</span>
+          </button>
+        )}
+      </EditableElement>
+    );
+  };
+
+  // flat order for non-grouped roles
+  const flatItems = (() => {
+    const order = user ? ROLE_ORDER[user.role] : undefined;
+    if (!order) return menuItems;
+    const idx = (k: NavKey) => { const i = order.indexOf(k); return i < 0 ? 999 : i; };
+    return [...menuItems].sort((a, b) => idx(a.key) - idx(b.key));
+  })();
 
   return (
     <aside className="w-[256px] min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-s border-sidebar-border" dir="rtl">
@@ -76,8 +137,8 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             <img src={wingateLogoSrc} alt="מכון וינגייט" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-[13.5px] font-bold tracking-tight text-start leading-tight text-sidebar-foreground font-heading">האקדמיה למצוינות</h1>
-            <p className="text-[9.5px] text-sidebar-muted/70 mt-0.5 text-start font-medium tracking-wide">מכון וינגייט</p>
+            <h1 className="text-[15px] font-bold tracking-tight text-start leading-tight text-sidebar-foreground font-heading">מסלול</h1>
+            <p className="text-[9.5px] text-sidebar-muted/70 mt-0.5 text-start font-medium tracking-wide">האקדמיה למצוינות בספורט</p>
           </div>
         </div>
       </button>
@@ -86,38 +147,40 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3.5 pt-5 pb-4">
-        <p className="text-[9px] font-semibold text-sidebar-muted/40 tracking-[0.12em] uppercase px-3 mb-3">
-          {user ? labels.roleTitles[user.role] : "תפריט"}
-        </p>
-        <div className="space-y-0.5">
-          {menuItems.map((item) => {
-            const active = location.pathname === item.path || (item.path !== "/" && item.path !== "/student-home" && location.pathname.startsWith(item.path));
-            const title = labels.nav[item.key];
-            return (
-              <EditableElement
-                key={item.key + item.path}
-                id={`sidebar.nav.${item.key}`}
-                type="nav-item"
-                pageKey="sidebar"
-                defaultLabel={title}
-              >
-                {({ label }) => (
+        {isGrouped ? (
+          /* admin/developer: three collapsible sections */
+          <div className="space-y-4">
+            {GROUP_META.map((g) => {
+              const items = menuItems.filter(m => m.group === g.id);
+              if (items.length === 0) return null;
+              const hasActive = items.some(m => isActive(m.path));
+              const open = !collapsed[g.id] || hasActive;
+              return (
+                <div key={g.id}>
                   <button
-                    onClick={() => { navigate(item.path); onNavigate?.(); }}
-                    className={`w-full flex flex-row items-center gap-3 px-3 py-2.5 rounded-xl text-[12.5px] transition-all duration-200 text-start ${
-                      active
-                        ? "bg-sidebar-primary text-white font-semibold shadow-sm"
-                        : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground font-medium"
-                    }`}
+                    onClick={() => setCollapsed(c => ({ ...c, [g.id]: !c[g.id] }))}
+                    className="w-full flex items-center justify-between px-3 mb-1.5 group focus-visible:outline-none"
+                    aria-expanded={open}
                   >
-                    <item.icon className={`h-[15px] w-[15px] shrink-0 transition-colors ${active ? "text-white" : "text-sidebar-muted"}`} strokeWidth={active ? 2 : 1.5} />
-                    <span>{label}</span>
+                    <span className="text-[9px] font-semibold text-sidebar-muted/40 tracking-[0.12em] uppercase">{g.label}</span>
+                    <ChevronDown className={`h-3 w-3 text-sidebar-muted/40 transition-transform ${open ? "" : "-rotate-90"}`} strokeWidth={2} />
                   </button>
-                )}
-              </EditableElement>
-            );
-          })}
+                  {open && <div className="space-y-0.5">{items.map(renderItem)}</div>}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* teacher / coach / parent / student: flat, per-role order */
+          <>
+            <p className="text-[9px] font-semibold text-sidebar-muted/40 tracking-[0.12em] uppercase px-3 mb-3">
+              {user ? labels.roleTitles[user.role] : "תפריט"}
+            </p>
+            <div className="space-y-0.5">{flatItems.map(renderItem)}</div>
+          </>
+        )}
 
+        <div className="space-y-0.5 mt-1">
           {/* Dev tools — developer only */}
           {user?.role === "developer" && (
             <>

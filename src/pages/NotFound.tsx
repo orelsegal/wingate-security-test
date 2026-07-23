@@ -33,7 +33,7 @@ const NotFound = () => {
           חזרה לדף הראשי
         </Button>
         <p className="text-[9px] text-muted-foreground/30 font-normal tracking-wider mt-4">
-          האקדמיה למצוינות · מכון וינגייט
+          מסלול · האקדמיה למצוינות בספורט
         </p>
       </div>
     </div>
