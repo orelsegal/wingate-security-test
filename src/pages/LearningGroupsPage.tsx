@@ -493,10 +493,12 @@ const StudentsSection = ({ details, canManage, onAddStudents, onAddClass, onRemo
   onAddStudents: () => void; onAddClass: () => void;
   onRemove: (id: string, name: string) => void;
 }) => {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const { data: allStudents = [] } = useStudents();
   const sportOf = useMemo(() => new Map((allStudents as any[]).map(s => [s.id, s.sport])), [allStudents]);
   const list = details.active_students.filter(s => !q || s.full_name.includes(q));
+  const openProfile = (id: string) => navigate(`/students/${id}`);
   return (
     <div className="card-premium p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
@@ -527,7 +529,17 @@ const StudentsSection = ({ details, canManage, onAddStudents, onAddClass, onRemo
       ) : (
         <div className="divide-y divide-border/50">
           {list.map(s => (
-            <div key={s.student_id} className="flex items-center justify-between gap-2 py-2">
+            /* the WHOLE row opens the student profile (read-only per the
+               viewer's role; RLS decides what the profile shows). A nested
+               real <button> would be invalid inside a button, so the row is
+               a keyboard-operable role="button" and the remove action stops
+               propagation. */
+            <div key={s.student_id}
+              role="button" tabIndex={0}
+              aria-label={`פתיחת הפרופיל של ${s.full_name}`}
+              onClick={() => openProfile(s.student_id)}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProfile(s.student_id); } }}
+              className="flex items-center justify-between gap-2 py-2 px-2 -mx-2 rounded-lg cursor-pointer hover:bg-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-foreground break-words">{s.full_name}</p>
                 <p className="text-[11px] text-muted-foreground">
@@ -536,7 +548,7 @@ const StudentsSection = ({ details, canManage, onAddStudents, onAddClass, onRemo
                 </p>
               </div>
               {canManage && (
-                <button onClick={() => onRemove(s.student_id, s.full_name)}
+                <button onClick={e => { e.stopPropagation(); onRemove(s.student_id, s.full_name); }}
                   className="h-8 px-2.5 rounded-lg text-[11.5px] text-destructive hover:bg-destructive/10 shrink-0">
                   הסרה מהקבוצה
                 </button>
