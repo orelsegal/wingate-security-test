@@ -1,5 +1,5 @@
 import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
@@ -88,30 +88,48 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   const isActive = (path: string) =>
     location.pathname === path || (path !== "/" && path !== "/student-home" && location.pathname.startsWith(path));
 
-  // collapsible group state. Defaults: only "work" open; the section
-  // holding the ACTIVE route is always forced open (below) so the active
-  // item can never hide inside a closed group. Manual open/close choices
-  // persist in localStorage across screens and sessions.
+  // SINGLE-OPEN accordion: exactly one group may be open at a time.
+  // Priority on load/refresh/direct-URL: the group holding the ACTIVE
+  // route → then a valid stored id → then "work". Navigating to a screen
+  // syncs the open group to that screen's group (so a manual open of
+  // another group lasts only until the next navigation). Storage holds a
+  // SINGLE id ("work" | "content" | "management"), not JSON.
   const NAV_GROUPS_KEY = "maslul_nav_groups";
-  const [collapsed, setCollapsed] = useState<Record<NavGroup, boolean>>(() => {
-    const defaults: Record<NavGroup, boolean> = { work: false, content: true, management: true };
+  const VALID_GROUPS: NavGroup[] = ["work", "content", "management"];
+  const activeGroupOf = (): NavGroup | null => {
+    const hit = allMenuItems.find(m => user && m.roles.includes(user.role)
+      && (location.pathname === m.path || (m.path !== "/" && m.path !== "/student-home" && location.pathname.startsWith(m.path))));
+    return hit?.group ?? null;
+  };
+  const [openGroup, setOpenGroup] = useState<NavGroup | null>(() => {
+    const byRoute = activeGroupOf();
+    if (byRoute) return byRoute;
     try {
       const raw = localStorage.getItem(NAV_GROUPS_KEY);
-      if (!raw) return defaults;
-      const saved = JSON.parse(raw);
-      return {
-        work: typeof saved.work === "boolean" ? saved.work : defaults.work,
-        content: typeof saved.content === "boolean" ? saved.content : defaults.content,
-        management: typeof saved.management === "boolean" ? saved.management : defaults.management,
-      };
-    } catch { return defaults; }
+      if (raw && (VALID_GROUPS as string[]).includes(raw)) return raw as NavGroup;
+    } catch { /* storage unavailable */ }
+    return "work";
   });
-  const toggleGroup = (id: NavGroup) =>
-    setCollapsed(c => {
-      const next = { ...c, [id]: !c[id] };
-      try { localStorage.setItem(NAV_GROUPS_KEY, JSON.stringify(next)); } catch { /* storage unavailable */ }
-      return next;
-    });
+  const persistGroup = (id: NavGroup) => {
+    try { localStorage.setItem(NAV_GROUPS_KEY, id); } catch { /* storage unavailable */ }
+  };
+  // route change → the target's group becomes the single open group
+  useEffect(() => {
+    const g = activeGroupOf();
+    if (g) { setOpenGroup(g); persistGroup(g); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, user?.role]);
+  const toggleGroup = (id: NavGroup) => {
+    if (id === openGroup) {
+      // collapsing the group that holds the active screen would hide it —
+      // keep it open; any other open group may collapse to none
+      if (activeGroupOf() === id) return;
+      setOpenGroup(null);
+      return;
+    }
+    setOpenGroup(id);
+    persistGroup(id);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -174,8 +192,8 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             {GROUP_META.map((g) => {
               const items = menuItems.filter(m => m.group === g.id);
               if (items.length === 0) return null;
-              const hasActive = items.some(m => isActive(m.path));
-              const open = !collapsed[g.id] || hasActive;
+              // single-open accordion: exactly one group is ever open
+              const open = openGroup === g.id;
               return (
                 <div key={g.id}>
                   <button
