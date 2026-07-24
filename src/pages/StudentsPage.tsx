@@ -195,6 +195,17 @@ const StudentsPage = () => {
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  // "תובנות ופילוח" — collapsed by default (directory-first); an open
+  // choice persists for the session only (sessionStorage, no DB)
+  const [insightsOpen, setInsightsOpen] = useState<boolean>(() => {
+    try { return sessionStorage.getItem("maslul_students_insights") === "1"; } catch { return false; }
+  });
+  const toggleInsights = () => {
+    const v = !insightsOpen;
+    setInsightsOpen(v);
+    try { sessionStorage.setItem("maslul_students_insights", v ? "1" : "0"); } catch { /* storage unavailable */ }
+  };
+
   const branches = useMemo(() => Array.from(new Set(students.map(s => s.sport))).sort(), [students]);
   const classOptions = useMemo(() => Array.from(new Set(students.map(s => s.class_name).filter(Boolean))).sort(), [students]);
   const allSubjectNames = useMemo(() => subjectsList.map((s: any) => s.subject_name as string), [subjectsList]);
@@ -417,125 +428,41 @@ const StudentsPage = () => {
   return (
     <div className="p-4 md:p-8 lg:p-10 max-w-[1400px]">
 
-      {/* ── ACTION BAR ── */}
+      {/* ── TITLE + admin actions (directory-first: the list is the point;
+             management stays available but never crowds the search) ── */}
       <section className="mb-5">
         <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-[20px] sm:text-[22px] font-semibold text-foreground me-auto">ספורטאים</h1>
           {isAdmin && (
-            <Button onClick={() => { setEditStudent(null); setDuplicateStudent(null); setFormOpen(true); }} className="gap-1.5" size="sm">
-              <UserPlus className="h-3.5 w-3.5" />
-              הוסף ספורטאי
-            </Button>
+            <>
+              <Button onClick={() => { setEditStudent(null); setDuplicateStudent(null); setFormOpen(true); }} className="gap-1.5" size="sm">
+                <UserPlus className="h-3.5 w-3.5" />
+                הוסף ספורטאי
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/data-management")}>
+                <Settings2 className="h-3.5 w-3.5" />
+                ניהול נתונים
+              </Button>
+              <DataExportTools students={filtered} label="ספורטאים" showImport />
+              {/* View toggle — admin/developer only; other roles get cards */}
+              <div className="flex items-center gap-1 border border-border rounded-lg p-0.5 bg-card">
+                <button onClick={() => setViewMode("cards")} className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="כרטיסים">
+                  <LayoutGrid className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+                <button onClick={() => setViewMode("table")} className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="טבלה">
+                  <TableIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+                <button onClick={() => setViewMode("summary")} className={`h-7 px-2 rounded-md flex items-center gap-1 transition-all ${viewMode === "summary" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="טבלת סיכום לפי מקצועות">
+                  <Rows3 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+              </div>
+            </>
           )}
-          {isAdmin && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/data-management")}>
-              <Settings2 className="h-3.5 w-3.5" />
-              ניהול נתונים
-            </Button>
-          )}
-          {isAdmin && <DataExportTools students={filtered} label="ספורטאים" showImport />}
-
-          {/* View toggle */}
-          <div className="mr-auto flex items-center gap-1 border border-border rounded-lg p-0.5 bg-card">
-            <button onClick={() => setViewMode("cards")} className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="כרטיסים">
-              <LayoutGrid className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </button>
-            <button onClick={() => setViewMode("table")} className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="טבלה">
-              <TableIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </button>
-            <button onClick={() => setViewMode("summary")} className={`h-7 px-2 rounded-md flex items-center gap-1 transition-all ${viewMode === "summary" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`} title="טבלת סיכום לפי מקצועות">
-              <Rows3 className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </button>
-          </div>
         </div>
       </section>
 
-      {/* ── Factual counts (no invented status) ── */}
-      <section className="mb-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard label="מספר תלמידים" value={totalStudents} icon={Users} accent="neutral" />
-          <KpiCard label="עם מפת בגרות" value={bagrutMap ? bagrutMap.size : 0} icon={LayoutGrid} accent="neutral" />
-          <KpiCard label="עם נתוני אזרחות" value={civicsMap.size} icon={PieChart} accent="neutral" />
-          <KpiCard label="רשומות לימודיות" value={allProgress.length} icon={Rows3} accent="neutral" />
-        </div>
-      </section>
-
-      {/* ── Admin breakdowns: factual counts only, click to filter ── */}
-      {isBagrutViewer && (() => {
-        const numCell = "w-10 sm:w-14 text-center tabular-nums text-[12px] shrink-0";
-        const headCell = "w-10 sm:w-14 text-center text-[10px] text-muted-foreground shrink-0 leading-tight";
-        const COLS = ["תלמידים", "מפת בגרות", "עם ציון", "רשומות ציון"];
-        const BreakdownCard = ({ title, rows, isActive, onPick }: {
-          title: string;
-          rows: { name: string; a: number; b: number; c: number; d: number; clickable?: boolean }[];
-          isActive: (name: string) => boolean;
-          onPick: (name: string) => void;
-        }) => (
-          <div className="card-premium overflow-hidden">
-            <div className="px-3 py-2 bg-muted/30 border-b border-border/60 flex items-center justify-between gap-2">
-              <p className="text-[12px] font-semibold text-foreground">{title}</p>
-            </div>
-            <div className="px-3 pt-1.5 flex items-center gap-1.5" dir="rtl">
-              <span className="flex-1 min-w-0" />
-              {COLS.map((c) => <span key={c} className={headCell}>{c}</span>)}
-            </div>
-            <div className="p-1.5 space-y-0.5">
-              {rows.map((r) => {
-                const active = isActive(r.name);
-                const clickable = r.clickable !== false;
-                return (
-                  <button
-                    key={r.name}
-                    onClick={clickable ? () => onPick(r.name) : undefined}
-                    className={`w-full flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-start transition-colors border ${
-                      active ? "bg-primary/10 border-primary/30" : "border-transparent"
-                    } ${clickable ? "hover:bg-accent/40 cursor-pointer" : "cursor-default"}`}
-                    dir="rtl"
-                  >
-                    <span className={`flex-1 min-w-0 break-words text-[12px] leading-snug ${active ? "text-primary font-semibold" : "text-foreground"}`}>{r.name}</span>
-                    <span className={`${numCell} font-semibold text-foreground`}>{r.a}</span>
-                    <span className={`${numCell} text-muted-foreground`}>{r.b}</span>
-                    <span className={`${numCell} text-muted-foreground`}>{r.c}</span>
-                    <span className={`${numCell} text-muted-foreground`}>{r.d}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-        const toRow = ([name, r]: [string, { total: number; bagrut: number; withGrade: number; gradeN: number }], clickable = true) =>
-          ({ name, a: r.total, b: r.bagrut, c: r.withGrade, d: r.gradeN, clickable });
-        return (
-          <section className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[12px] font-semibold text-foreground">פילוח נתונים · לחיצה על שורה מסננת את הרשימה</p>
-              {hasFilters && (
-                <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors px-2">ניקוי פילטרים</button>
-              )}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <BreakdownCard
-                title="לפי ענף ספורט"
-                rows={breakdowns.sports.map((e) => toRow(e))}
-                isActive={(n) => branchFilters.length === 1 && branchFilters[0] === n}
-                onPick={(n) => setBranchFilters(branchFilters.length === 1 && branchFilters[0] === n ? [] : [n])}
-              />
-              <BreakdownCard
-                title="לפי כיתה"
-                rows={breakdowns.classes.map((e) => toRow(e))}
-                isActive={(n) => classFilter === n}
-                onPick={(n) => setClassFilter(classFilter === n ? null : n)}
-              />
-              <BreakdownCard
-                title="לפי שכבה"
-                rows={breakdowns.gradesRows.map((e) => toRow(e, e[0] !== "אחר"))}
-                isActive={(n) => gradeFilter === n}
-                onPick={(n) => setGradeFilter(gradeFilter === n ? null : n)}
-              />
-            </div>
-          </section>
-        );
-      })()}
-
+      {/* ── Admin breakdowns builder (rendered INSIDE the collapsed
+             "תובנות ופילוח" block further down, after the counter) ── */}
       {/* ── Filters row (always visible, dropdown style) ── */}
       <section className="mb-5">
         <div className="card-premium p-3">
@@ -629,6 +556,113 @@ const StudentsPage = () => {
             ))}
           </div>
         </div>
+
+        {/* ── תובנות ופילוח — admin only, COLLAPSED by default (directory
+               first). Open state lasts for the session (sessionStorage).
+               Clicking a breakdown row filters exactly like before. ── */}
+        {isBagrutViewer && (
+          <div className="mb-4">
+            <button
+              onClick={toggleInsights}
+              aria-expanded={insightsOpen}
+              className="w-full card-premium px-4 py-2.5 flex items-center justify-between gap-2 text-start hover:bg-accent/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              <span className="text-[13px] font-semibold text-foreground inline-flex items-center gap-2">
+                <PieChart className="h-4 w-4 text-primary" strokeWidth={1.6} />
+                תובנות ופילוח
+              </span>
+              <span className="inline-flex items-center gap-2">
+                {hasFilters && <span className="text-[11px] text-muted-foreground">סינון פעיל</span>}
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${insightsOpen ? "" : "-rotate-90"}`} strokeWidth={1.8} />
+              </span>
+            </button>
+            {insightsOpen && (
+              <div className="mt-3 space-y-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <KpiCard label="מספר תלמידים" value={totalStudents} icon={Users} accent="neutral" />
+                  <KpiCard label="עם מפת בגרות" value={bagrutMap ? bagrutMap.size : 0} icon={LayoutGrid} accent="neutral" />
+                  <KpiCard label="עם נתוני אזרחות" value={civicsMap.size} icon={PieChart} accent="neutral" />
+                  <KpiCard label="רשומות לימודיות" value={allProgress.length} icon={Rows3} accent="neutral" />
+                </div>
+                {(() => {
+                  const numCell = "w-10 sm:w-14 text-center tabular-nums text-[12px] shrink-0";
+                  const headCell = "w-10 sm:w-14 text-center text-[10px] text-muted-foreground shrink-0 leading-tight";
+                  const COLS = ["תלמידים", "מפת בגרות", "עם ציון", "רשומות ציון"];
+                  const BreakdownCard = ({ title, rows, isActive, onPick }: {
+                    title: string;
+                    rows: { name: string; a: number; b: number; c: number; d: number; clickable?: boolean }[];
+                    isActive: (name: string) => boolean;
+                    onPick: (name: string) => void;
+                  }) => (
+                    <div className="card-premium overflow-hidden">
+                      <div className="px-3 py-2 bg-muted/30 border-b border-border/60 flex items-center justify-between gap-2">
+                        <p className="text-[12px] font-semibold text-foreground">{title}</p>
+                      </div>
+                      <div className="px-3 pt-1.5 flex items-center gap-1.5" dir="rtl">
+                        <span className="flex-1 min-w-0" />
+                        {COLS.map((c) => <span key={c} className={headCell}>{c}</span>)}
+                      </div>
+                      <div className="p-1.5 space-y-0.5">
+                        {rows.map((r) => {
+                          const active = isActive(r.name);
+                          const clickable = r.clickable !== false;
+                          return (
+                            <button
+                              key={r.name}
+                              onClick={clickable ? () => onPick(r.name) : undefined}
+                              className={`w-full flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-start transition-colors border ${
+                                active ? "bg-primary/10 border-primary/30" : "border-transparent"
+                              } ${clickable ? "hover:bg-accent/40 cursor-pointer" : "cursor-default"}`}
+                              dir="rtl"
+                            >
+                              <span className={`flex-1 min-w-0 break-words text-[12px] leading-snug ${active ? "text-primary font-semibold" : "text-foreground"}`}>{r.name}</span>
+                              <span className={`${numCell} font-semibold text-foreground`}>{r.a}</span>
+                              <span className={`${numCell} text-muted-foreground`}>{r.b}</span>
+                              <span className={`${numCell} text-muted-foreground`}>{r.c}</span>
+                              <span className={`${numCell} text-muted-foreground`}>{r.d}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                  const toRow = ([name, r]: [string, { total: number; bagrut: number; withGrade: number; gradeN: number }], clickable = true) =>
+                    ({ name, a: r.total, b: r.bagrut, c: r.withGrade, d: r.gradeN, clickable });
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[12px] font-semibold text-foreground">פילוח נתונים · לחיצה על שורה מסננת את הרשימה</p>
+                        {hasFilters && (
+                          <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors px-2">ניקוי פילטרים</button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <BreakdownCard
+                          title="לפי ענף ספורט"
+                          rows={breakdowns.sports.map((e) => toRow(e))}
+                          isActive={(n) => branchFilters.length === 1 && branchFilters[0] === n}
+                          onPick={(n) => setBranchFilters(branchFilters.length === 1 && branchFilters[0] === n ? [] : [n])}
+                        />
+                        <BreakdownCard
+                          title="לפי כיתה"
+                          rows={breakdowns.classes.map((e) => toRow(e))}
+                          isActive={(n) => classFilter === n}
+                          onPick={(n) => setClassFilter(classFilter === n ? null : n)}
+                        />
+                        <BreakdownCard
+                          title="לפי שכבה"
+                          rows={breakdowns.gradesRows.map((e) => toRow(e, e[0] !== "אחר"))}
+                          isActive={(n) => gradeFilter === n}
+                          onPick={(n) => setGradeFilter(gradeFilter === n ? null : n)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        )}
 
         {filtered.length === 0 ? (
           <div className="card-premium">
