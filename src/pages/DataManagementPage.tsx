@@ -8,11 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSports, useSubjects } from "@/hooks/useStudents";
+import { useSports, useSubjects, useStudents } from "@/hooks/useStudents";
 import { useUiLabels } from "@/context/UiLabelsContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
-
-const CLASSES = ["ט'1", "ט'2", "ט'3", "י'1", "י'2", "י'3", "יא'1", "יא'2", "יא'3"];
 
 const DataManagementPage = () => {
   const { user } = useAuth();
@@ -32,17 +30,18 @@ const DataManagementPage = () => {
   const [editSportName, setEditSportName] = useState("");
   const [deleteSportTarget, setDeleteSportTarget] = useState<any>(null);
 
-  // Subjects state
+  // Subjects state (delete intentionally removed — Phase 2C.0a containment:
+  // subject deletion is fully blocked, server-side included, until archive)
   const [newSubject, setNewSubject] = useState("");
   const [editSubjectId, setEditSubjectId] = useState<string | null>(null);
   const [editSubjectName, setEditSubjectName] = useState("");
-  const [deleteSubjectTarget, setDeleteSubjectTarget] = useState<any>(null);
 
-  // Classes state
-  const [classes, setClasses] = useState<string[]>(CLASSES);
-  const [newClass, setNewClass] = useState("");
-  const [editClassIdx, setEditClassIdx] = useState<number | null>(null);
-  const [editClassName, setEditClassName] = useState("");
+  // Classes are READ-ONLY: real values derived from students.class_name.
+  // The old local-state CRUD saved nothing and is gone (Phase 2C.0a).
+  const { data: allStudents = [] } = useStudents();
+  const classes = Array.from(
+    new Set((allStudents as any[]).map((s) => (s.class_name || "").trim()).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b, "he"));
 
   // === SPORTS CRUD ===
   const handleAddSport = async () => {
@@ -106,42 +105,11 @@ const DataManagementPage = () => {
     queryClient.invalidateQueries({ queryKey: ["all-student-progress"] });
   };
 
-  const handleDeleteSubject = async () => {
-    if (!deleteSubjectTarget) return;
-    // Delete related progress and roadmaps first
-    await supabase.from("student_subject_progress").delete().eq("subject_id", deleteSubjectTarget.id);
-    await supabase.from("subject_roadmaps").delete().eq("subject_id", deleteSubjectTarget.id);
-    const { error } = await supabase.from("subjects").delete().eq("id", deleteSubjectTarget.id);
-    if (error) { toast.error("שגיאה: " + error.message); return; }
-    toast.success(`"${deleteSubjectTarget.subject_name}" נמחק`);
-    setDeleteSubjectTarget(null);
-    queryClient.invalidateQueries({ queryKey: ["subjects"] });
-    queryClient.invalidateQueries({ queryKey: ["all-student-progress"] });
-  };
-
-  // === CLASSES (local) ===
-  const handleAddClass = () => {
-    const name = newClass.trim();
-    if (!name || classes.includes(name)) return;
-    setClasses([...classes, name]);
-    setNewClass("");
-    toast.success(`"${name}" נוסף`);
-  };
-
-  const handleSaveClass = () => {
-    if (editClassIdx === null || !editClassName.trim()) return;
-    const updated = [...classes];
-    updated[editClassIdx] = editClassName.trim();
-    setClasses(updated);
-    setEditClassIdx(null);
-    toast.success("עודכן בהצלחה");
-  };
-
-  const handleDeleteClass = (idx: number) => {
-    const name = classes[idx];
-    setClasses(classes.filter((_, i) => i !== idx));
-    toast.success(`"${name}" נמחק`);
-  };
+  // NOTE (Phase 2C.0a): handleDeleteSubject removed on purpose. The old
+  // flow hard-deleted student_subject_progress + subject_roadmaps before
+  // the subject itself. Deletion is now also blocked at the server
+  // (FK ON DELETE RESTRICT + REVOKE DELETE on subjects) until archive.
+  // The classes local-state CRUD is gone too: it never persisted.
 
   const isLoading = loadingSports || loadingSubjects;
 
@@ -241,57 +209,42 @@ const DataManagementPage = () => {
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditSubjectId(subj.id); setEditSubjectName(subj.subject_name); }}>
                           <Pencil className="h-3 w-3" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteSubjectTarget(subj)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
                       </div>
                     </>
                   )}
                 </div>
               ))}
               {(subjects as any[]).length === 0 && (
-                <p className="text-[13px] text-muted-foreground py-6 text-center">אין מקצועות — הוסף את הראשון</p>
+                <p className="text-[13px] text-muted-foreground py-6 text-center">אין מקצועות. הוסיפי את הראשון.</p>
               )}
             </div>
+            <p className="text-[12px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 leading-relaxed">
+              מחיקת מקצוע אינה זמינה כרגע כדי להגן על נתוני התלמידים. מנגנון ארכוב יתווסף בשלב הבא.
+            </p>
           </div>
         </TabsContent>
 
         {/* CLASSES TAB */}
+        {/* CLASSES TAB — read-only. The old add/edit/delete only mutated
+            local state and silently vanished on refresh (fake save). */}
         <TabsContent value="classes">
           <div className="card-premium p-5 space-y-4">
-            <div className="flex gap-2">
-              <Input value={newClass} onChange={(e) => setNewClass(e.target.value)} placeholder="שם כיתה חדשה..." className="h-9 text-[13px] flex-1"
-                onKeyDown={(e) => e.key === "Enter" && handleAddClass()} />
-              <Button size="sm" onClick={handleAddClass} className="gap-1.5 h-9">
-                <Plus className="h-3.5 w-3.5" /> הוסף
-              </Button>
-            </div>
             <div className="divide-y divide-border">
-              {classes.map((cls, idx) => (
-                <div key={cls + idx} className="flex items-center justify-between py-3 px-1">
-                  {editClassIdx === idx ? (
-                    <div className="flex items-center gap-2 flex-1">
-                      <Input value={editClassName} onChange={(e) => setEditClassName(e.target.value)} className="h-8 text-[13px] flex-1"
-                        onKeyDown={(e) => e.key === "Enter" && handleSaveClass()} autoFocus />
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-success" onClick={handleSaveClass}><Check className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditClassIdx(null)}><X className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="text-[13px] font-medium text-foreground">{cls}</span>
-                      <div className="flex items-center gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditClassIdx(idx); setEditClassName(cls); }}>
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteClass(idx)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </>
-                  )}
+              {classes.map((cls) => (
+                <div key={cls} className="flex items-center justify-between py-3 px-1">
+                  <span className="text-[13px] font-medium text-foreground">{cls}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {(allStudents as any[]).filter((s) => (s.class_name || "").trim() === cls).length} תלמידים
+                  </span>
                 </div>
               ))}
+              {classes.length === 0 && (
+                <p className="text-[13px] text-muted-foreground py-6 text-center">אין עדיין כיתות בנתוני התלמידים.</p>
+              )}
             </div>
+            <p className="text-[12px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 leading-relaxed">
+              כיתות מוצגות מתוך נתוני התלמידים. ניהול כיתות יתווסף לאחר הגדרת מודל שנתי מסודר.
+            </p>
           </div>
         </TabsContent>
       </Tabs>
@@ -303,15 +256,6 @@ const DataManagementPage = () => {
         onConfirm={handleDeleteSport}
         title="מחיקת ענף ספורט"
         description={`האם למחוק את "${deleteSportTarget?.sport_name}"? אם יש ספורטאים משויכים, הפעולה תיכשל.`}
-        confirmLabel="מחק"
-        destructive
-      />
-      <ConfirmDialog
-        open={!!deleteSubjectTarget}
-        onClose={() => setDeleteSubjectTarget(null)}
-        onConfirm={handleDeleteSubject}
-        title="מחיקת מקצוע לימוד"
-        description={`האם למחוק את "${deleteSubjectTarget?.subject_name}"? כל רשומות ההתקדמות ומפות הדרכים הקשורות יימחקו.`}
         confirmLabel="מחק"
         destructive
       />
