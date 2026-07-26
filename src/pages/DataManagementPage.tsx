@@ -6,7 +6,7 @@ import { Loader2, Plus, Pencil, Trash2, Check, X, Dumbbell, BookOpen, Graduation
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -305,7 +305,7 @@ const DataManagementPage = () => {
                       <Button size="icon" variant="ghost" className="h-7 w-7 text-success" onClick={handleSaveSport} disabled={savingSport} title="שמירה">
                         {savingSport ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditSportId(null)} title="ביטול"><X className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 sm:h-7 sm:w-7" onClick={() => setEditSportId(null)} title="ביטול"><X className="h-3.5 w-3.5" /></Button>
                     </div>
                   ) : (
                     <>
@@ -315,31 +315,39 @@ const DataManagementPage = () => {
                       </div>
                       <div className="hidden sm:block">{sportUsage(sport.sport_name)}</div>
                       <div className="flex items-center gap-0.5 shrink-0">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" title="שינוי שם"
+                        <Button size="icon" variant="ghost" className="h-9 w-9 sm:h-7 sm:w-7" title="שינוי שם"
                           onClick={() => { setEditSportId(sport.id); setEditSportName(sport.sport_name); }}>
                           <Pencil className="h-3 w-3" />
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="פעולות נוספות" aria-label={`פעולות נוספות עבור ${sport.sport_name}`}>
+                            <Button size="icon" variant="ghost" className="h-9 w-9 sm:h-7 sm:w-7" title="פעולות נוספות" aria-label={`פעולות נוספות עבור ${sport.sport_name}`}>
                               <MoreHorizontal className="h-3.5 w-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          {/* !animate-none: the menu's visibility must not depend on
+                              the 150ms enter animation. When CSS animations are
+                              frozen (hidden/occluded window, OS throttling), an
+                              animation-gated menu stays mounted at opacity 0 —
+                              "open" but invisible — which users experience as the
+                              button doing nothing. Verified in a real browser. */}
+                          <DropdownMenuContent align="end" className="!animate-none">
                             {/* FAIL-CLOSED: there is NO server-side in-use guard for
                                 sports (RLS only gates who deletes; students.sport is
                                 plain TEXT, no FK/trigger/RPC). The in-use check is
                                 client-side, so delete is offered ONLY when the count
-                                is known — never as a fallback while it is unknown. */}
+                                is known — never as a fallback while it is unknown.
+                                Explanations are non-interactive Labels, not disabled
+                                menu items: a message is not an action. */}
                             {loadingStudents ? (
-                              <DropdownMenuItem disabled className="text-[12px] text-muted-foreground">
+                              <DropdownMenuLabel className="text-[12px] font-normal text-muted-foreground">
                                 טוען נתוני שימוש...
-                              </DropdownMenuItem>
+                              </DropdownMenuLabel>
                             ) : studentsError ? (
                               <>
-                                <DropdownMenuItem disabled className="text-[12px] text-muted-foreground max-w-[240px] whitespace-normal leading-snug">
+                                <DropdownMenuLabel className="text-[12px] font-normal text-muted-foreground max-w-[240px] whitespace-normal leading-snug">
                                   לא ניתן לבדוק אם הענף נמצא בשימוש. נסי שוב לפני מחיקה.
-                                </DropdownMenuItem>
+                                </DropdownMenuLabel>
                                 <DropdownMenuItem className="text-[12.5px]" onClick={() => refetchStudents()}>
                                   ניסיון חוזר
                                 </DropdownMenuItem>
@@ -347,9 +355,9 @@ const DataManagementPage = () => {
                             ) : (inUseCount as number) > 0 ? (
                               /* blocked + explained; the client-side pre-delete check
                                  in handleDeleteSport stays as an extra safety net */
-                              <DropdownMenuItem disabled className="text-[12px] text-muted-foreground max-w-[240px] whitespace-normal leading-snug">
+                              <DropdownMenuLabel className="text-[12px] font-normal text-muted-foreground max-w-[240px] whitespace-normal leading-snug">
                                 לא ניתן למחוק. משויך ל{inUseCount === 1 ? "ספורטאי אחד" : `־${inUseCount} ספורטאים`}
-                              </DropdownMenuItem>
+                              </DropdownMenuLabel>
                             ) : (
                               <DropdownMenuItem className="text-[12.5px] gap-2 text-destructive focus:text-destructive" onClick={() => setDeleteSportTarget(sport)}>
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -409,7 +417,7 @@ const DataManagementPage = () => {
                       <Button size="icon" variant="ghost" className="h-7 w-7 text-success" onClick={handleSaveSubject} disabled={savingSubject} title="שמירה">
                         {savingSubject ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditSubjectId(null)} title="ביטול"><X className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 sm:h-7 sm:w-7" onClick={() => setEditSubjectId(null)} title="ביטול"><X className="h-3.5 w-3.5" /></Button>
                     </div>
                   ) : (
                     <>
@@ -419,7 +427,7 @@ const DataManagementPage = () => {
                       </div>
                       <div className="hidden sm:block">{usage}</div>
                       <div className="shrink-0">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" title="שינוי שם"
+                        <Button size="icon" variant="ghost" className="h-9 w-9 sm:h-7 sm:w-7" title="שינוי שם"
                           onClick={() => { setEditSubjectId(subj.id); setEditSubjectName(subj.subject_name); }}>
                           <Pencil className="h-3 w-3" />
                         </Button>
