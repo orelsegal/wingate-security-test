@@ -477,14 +477,18 @@ const StudentsPage = () => {
         type BRow = { name: string; a: number; b: number; c: number; d: number; clickable?: boolean };
         const toRow = ([name, r]: [string, { total: number; bagrut: number; withGrade: number; gradeN: number }], clickable = true): BRow =>
           ({ name, a: r.total, b: r.bagrut, c: r.withGrade, d: r.gradeN, clickable });
+        // drill-down: pick a category → set its filter AND jump to the
+        // athletes list (toggle off if it was already the active one).
+        // The chip + counter live in the athletes view; without the mode
+        // switch the click had no visible effect (2B.1b-i bug).
         const tabs = {
           sport: { label: "לפי ענף", rows: breakdowns.sports.map((e) => toRow(e)),
             isActive: (n: string) => branchFilters.length === 1 && branchFilters[0] === n,
-            onPick: (n: string) => setBranchFilters(branchFilters.length === 1 && branchFilters[0] === n ? [] : [n]) },
+            onPick: (n: string) => { setBranchFilters(branchFilters.length === 1 && branchFilters[0] === n ? [] : [n]); setMode("athletes"); } },
           grade: { label: "לפי שכבה", rows: breakdowns.gradesRows.map((e) => toRow(e, e[0] !== "אחר")),
-            isActive: (n: string) => gradeFilter === n, onPick: (n: string) => setGradeFilter(gradeFilter === n ? null : n) },
+            isActive: (n: string) => gradeFilter === n, onPick: (n: string) => { setGradeFilter(gradeFilter === n ? null : n); setMode("athletes"); } },
           class: { label: "לפי כיתה", rows: breakdowns.classes.map((e) => toRow(e)),
-            isActive: (n: string) => classFilter === n, onPick: (n: string) => setClassFilter(classFilter === n ? null : n) },
+            isActive: (n: string) => classFilter === n, onPick: (n: string) => { setClassFilter(classFilter === n ? null : n); setMode("athletes"); } },
         } as const;
         const active = tabs[insightTab];
         return (
@@ -516,7 +520,9 @@ const StudentsPage = () => {
                   const clickable = r.clickable !== false;
                   return (
                     <button key={r.name} onClick={clickable ? () => active.onPick(r.name) : undefined}
-                      className={`w-full flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-start transition-colors border ${
+                      aria-label={clickable ? `סינון רשימת הספורטאים לפי ${r.name}` : undefined}
+                      aria-pressed={clickable ? isOn : undefined}
+                      className={`w-full flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-start transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                         isOn ? "bg-primary/10 border-primary/30" : "border-transparent"
                       } ${clickable ? "hover:bg-accent/40 cursor-pointer" : "cursor-default"}`} dir="rtl">
                       <span className={`flex-1 min-w-0 break-words text-[12px] leading-snug ${isOn ? "text-primary font-semibold" : "text-foreground"}`}>{r.name}</span>
@@ -617,6 +623,36 @@ const StudentsPage = () => {
           </div>
         </div>
       </section>
+
+      {/* ── Active-filter chips: visible state of what is filtering the
+             list, each removable; drives the drill-down feedback ── */}
+      {(() => {
+        const chips: { key: string; label: string; onRemove: () => void }[] = [];
+        if (search) chips.push({ key: "search", label: `חיפוש: "${search}"`, onRemove: () => setSearch("") });
+        branchFilters.forEach((b) => chips.push({ key: `branch-${b}`, label: `ענף: ${b}`, onRemove: () => setBranchFilters((prev) => prev.filter((x) => x !== b)) }));
+        if (gradeFilter) chips.push({ key: "grade", label: `שכבה: ${gradeFilter}`, onRemove: () => setGradeFilter(null) });
+        if (classFilter) chips.push({ key: "class", label: `כיתה: ${classFilter}`, onRemove: () => setClassFilter(null) });
+        if (bagrutFilter) chips.push({ key: "bagrut", label: `מפת בגרות: ${bagrutFilter === "with" ? "עם" : "בלי"}`, onRemove: () => setBagrutFilter(null) });
+        if (gradesFilter) chips.push({ key: "grades", label: `ציונים: ${gradesFilter === "with" ? "עם" : "בלי"}`, onRemove: () => setGradesFilter(null) });
+        if (statusFilter) chips.push({ key: "status", label: `סטטוס: ${adminStatusConfig[statusFilter].label}`, onRemove: () => setStatusFilter(null) });
+        if (chips.length === 0) return null;
+        return (
+          <section className="mb-4 -mt-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {chips.map((c) => (
+                <span key={c.key} className="inline-flex items-center gap-1 h-7 ps-2 pe-1 rounded-full bg-primary/10 text-primary text-[11.5px] font-medium border border-primary/20">
+                  {c.label}
+                  <button onClick={c.onRemove} aria-label={`הסרת סינון ${c.label}`}
+                    className="w-4 h-4 rounded-full inline-flex items-center justify-center hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+                    <X className="h-3 w-3" strokeWidth={2} />
+                  </button>
+                </span>
+              ))}
+              <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors px-1.5">נקה הכל</button>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ── Header above grid ── */}
       <section>
