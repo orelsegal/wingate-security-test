@@ -326,9 +326,27 @@ const DataManagementPage = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {inUseCount !== null && inUseCount > 0 ? (
-                              /* delete stays visible but blocked + explained; the
-                                 server-side check in handleDeleteSport is unchanged */
+                            {/* FAIL-CLOSED: there is NO server-side in-use guard for
+                                sports (RLS only gates who deletes; students.sport is
+                                plain TEXT, no FK/trigger/RPC). The in-use check is
+                                client-side, so delete is offered ONLY when the count
+                                is known — never as a fallback while it is unknown. */}
+                            {loadingStudents ? (
+                              <DropdownMenuItem disabled className="text-[12px] text-muted-foreground">
+                                טוען נתוני שימוש...
+                              </DropdownMenuItem>
+                            ) : studentsError ? (
+                              <>
+                                <DropdownMenuItem disabled className="text-[12px] text-muted-foreground max-w-[240px] whitespace-normal leading-snug">
+                                  לא ניתן לבדוק אם הענף נמצא בשימוש. נסי שוב לפני מחיקה.
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-[12.5px]" onClick={() => refetchStudents()}>
+                                  ניסיון חוזר
+                                </DropdownMenuItem>
+                              </>
+                            ) : (inUseCount as number) > 0 ? (
+                              /* blocked + explained; the client-side pre-delete check
+                                 in handleDeleteSport stays as an extra safety net */
                               <DropdownMenuItem disabled className="text-[12px] text-muted-foreground max-w-[240px] whitespace-normal leading-snug">
                                 לא ניתן למחוק. משויך ל{inUseCount === 1 ? "ספורטאי אחד" : `־${inUseCount} ספורטאים`}
                               </DropdownMenuItem>
