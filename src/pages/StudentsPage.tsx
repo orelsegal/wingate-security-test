@@ -421,7 +421,7 @@ const StudentsPage = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 lg:p-10 max-w-[1400px]">
+    <div className="p-4 md:p-8 lg:p-10 max-w-[1400px] mx-auto">
 
       {/* ── TITLE + admin actions (directory-first: the list is the point;
              management stays available but never crowds the search) ── */}
@@ -536,7 +536,7 @@ const StudentsPage = () => {
               </div>
             </div>
             {hasFilters && (
-              <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors">ניקוי פילטרים</button>
+              <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"><X className="h-3 w-3" strokeWidth={2} />נקה הכול</button>
             )}
           </section>
         );
@@ -544,20 +544,23 @@ const StudentsPage = () => {
 
       {/* ═══════════ ATHLETES MODE — filters + counter + list ═══════════ */}
       {mode === "athletes" && (<>
-      {/* ── Filters row (always visible, dropdown style) ── */}
-      <section className="mb-5">
-        <div className="card-premium p-3">
+      {/* ── Search + filters. Search is the primary action: wide, taller,
+             first in the visual scan. Filters stay secondary & compact. ── */}
+      <section className="mb-4">
+        <div className="card-premium p-3 space-y-2">
+          {/* primary: search */}
+          <div className="relative">
+            <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground/70 pointer-events-none" strokeWidth={1.6} />
+            <input
+              type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="חיפוש לפי שם, כיתה או ענף"
+              aria-label="חיפוש ספורטאי"
+              className="w-full h-11 ps-11 pe-9 bg-background border border-border rounded-xl text-[13.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all"
+            />
+            {search && <button onClick={() => setSearch("")} aria-label="ניקוי חיפוש" className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" strokeWidth={1.5} /></button>}
+          </div>
+          {/* secondary: compact filter dropdowns */}
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={clearAll}
-              className={`h-9 px-3 inline-flex items-center gap-1.5 rounded-xl text-[12px] font-medium transition-colors border ${!hasFilters ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border hover:bg-accent/40"}`}
-              title="הצג את כל הספורטאים"
-            >
-              <Users className="h-3.5 w-3.5" strokeWidth={1.6} />
-              כל הספורטאים
-              <span className="tabular-nums opacity-80">({totalStudents})</span>
-            </button>
-
             <FilterSelect label="כל הענפים" value={branchFilters.length > 0 ? `${branchFilters.length} ענפים` : ""} onClear={branchFilters.length ? () => setBranchFilters([]) : undefined}>
               {branches.map((b) => (
                 <DropdownMenuCheckboxItem key={b} checked={branchFilters.includes(b)} onCheckedChange={(c) => setBranchFilters((prev) => c ? [...prev, b] : prev.filter(x => x !== b))} className="text-[12px]">{b}</DropdownMenuCheckboxItem>
@@ -607,19 +610,6 @@ const StudentsPage = () => {
               </FilterSelect>
             )}
 
-            <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
-              <input
-                type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="חיפוש תלמיד..."
-                className="w-full h-9 ps-9 pe-3 bg-background border border-border rounded-xl text-[12px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/25 transition-all"
-              />
-              {search && <button onClick={() => setSearch("")} className="absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" strokeWidth={1.5} /></button>}
-            </div>
-
-            {hasFilters && (
-              <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors px-2">נקה הכל</button>
-            )}
           </div>
         </div>
       </section>
@@ -637,18 +627,22 @@ const StudentsPage = () => {
         if (statusFilter) chips.push({ key: "status", label: `סטטוס: ${adminStatusConfig[statusFilter].label}`, onRemove: () => setStatusFilter(null) });
         if (chips.length === 0) return null;
         return (
-          <section className="mb-4 -mt-2">
+          <section className="mb-4 -mt-1">
             <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-muted-foreground me-0.5">מסנן לפי</span>
               {chips.map((c) => (
-                <span key={c.key} className="inline-flex items-center gap-1 h-7 ps-2 pe-1 rounded-full bg-primary/10 text-primary text-[11.5px] font-medium border border-primary/20">
+                <span key={c.key} className="inline-flex items-center gap-1 h-7 ps-2.5 pe-1 rounded-full bg-success/12 text-foreground text-[11.5px] font-medium border border-success/35">
                   {c.label}
                   <button onClick={c.onRemove} aria-label={`הסרת סינון ${c.label}`}
-                    className="w-4 h-4 rounded-full inline-flex items-center justify-center hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+                    className="w-4 h-4 rounded-full inline-flex items-center justify-center text-muted-foreground hover:bg-success/20 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
                     <X className="h-3 w-3" strokeWidth={2} />
                   </button>
                 </span>
               ))}
-              <button onClick={clearAll} className="text-[11px] font-medium text-destructive/80 hover:text-destructive transition-colors px-1.5">נקה הכל</button>
+              <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5">
+                <X className="h-3 w-3" strokeWidth={2} />
+                נקה הכול
+              </button>
             </div>
           </section>
         );
@@ -657,7 +651,7 @@ const StudentsPage = () => {
       {/* ── Header above grid ── */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[12px] text-muted-foreground">מציג {filtered.length} מתוך {totalStudents} ספורטאים</span>
+          <span className="text-[12.5px] text-muted-foreground">מציג <span className="font-semibold text-foreground tabular-nums">{filtered.length}</span> מתוך <span className="tabular-nums">{totalStudents}</span> ספורטאים</span>
           <div className="flex items-center gap-1">
             {(["name"] as const).map((col) => (
               <button key={col} onClick={() => toggleSort(col)} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-muted-foreground hover:bg-accent transition-colors">
@@ -800,8 +794,12 @@ const StudentsPage = () => {
             </div>
           </div>
         ) : (
-          /* ── CARD VIEW (screenshot style) ── */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          /* ── CARD VIEW — responsive auto-fit grid: fills the row at any
+                count, no fixed column count, so 1–3 results are not pushed
+                to the RTL start edge with a huge empty left side. Cards cap
+                at 320px (single card never over-stretches); justify-center
+                centers a short row without manual margins/spacers. ── */
+          <div className="grid gap-3 justify-center" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 320px))" }}>
             {filtered.map((student) => {
               const bd = bagrutMap?.get(student.id);
               const groups = bd ? groupBagrut(sectionForClass(student.class_name), bd, civicsMap.get(student.id)) : [];
@@ -814,10 +812,12 @@ const StudentsPage = () => {
                   className="bg-card rounded-2xl border border-border p-4 cursor-pointer hover:shadow-md transition-all"
                 >
                   {/* Header */}
-                  <div className="flex items-start justify-between gap-2 mb-2" dir="rtl">
+                  <div className="flex items-start justify-between gap-2 mb-2.5" dir="rtl">
                     <div className="min-w-0">
-                      <p className="text-[14px] font-bold text-foreground leading-tight truncate">{student.full_name}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{student.sport} · {student.class_name}</p>
+                      <p className="text-[15px] font-bold text-foreground leading-tight truncate">{student.full_name}</p>
+                      <p className="text-[11.5px] text-muted-foreground mt-1">
+                        <span className="text-foreground/75">{student.sport}</span> · {student.class_name}
+                      </p>
                     </div>
                     {isAdmin && (
                       <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
