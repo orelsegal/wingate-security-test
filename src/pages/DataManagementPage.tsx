@@ -353,11 +353,20 @@ const DataManagementPage = () => {
                                 </DropdownMenuItem>
                               </>
                             ) : (inUseCount as number) > 0 ? (
-                              /* blocked + explained; the client-side pre-delete check
-                                 in handleDeleteSport stays as an extra safety net */
-                              <DropdownMenuLabel className="text-[12px] font-normal text-muted-foreground max-w-[240px] whitespace-normal leading-snug">
-                                לא ניתן למחוק. משויך ל{inUseCount === 1 ? "ספורטאי אחד" : `־${inUseCount} ספורטאים`}
-                              </DropdownMenuLabel>
+                              /* in-use: the delete ACTION stays visible but disabled,
+                                 with the explanation under it. A text-only bubble was
+                                 read as "the menu did not open" (production QA
+                                 finding). The client-side pre-delete check in
+                                 handleDeleteSport stays as an extra safety net. */
+                              <>
+                                <DropdownMenuItem disabled className="text-[12.5px] gap-2">
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  מחיקת ענף
+                                </DropdownMenuItem>
+                                <DropdownMenuLabel className="text-[11.5px] font-normal text-muted-foreground max-w-[240px] whitespace-normal leading-snug pt-0">
+                                  לא ניתן למחוק. משויך ל{inUseCount === 1 ? "ספורטאי אחד" : `־${inUseCount} ספורטאים`}
+                                </DropdownMenuLabel>
+                              </>
                             ) : (
                               <DropdownMenuItem className="text-[12.5px] gap-2 text-destructive focus:text-destructive" onClick={() => setDeleteSportTarget(sport)}>
                                 <Trash2 className="h-3.5 w-3.5" />
