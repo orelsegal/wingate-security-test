@@ -70,6 +70,8 @@ const BlitzBuilderPage           = lazy(() => import("./pages/BlitzBuilderPage")
 const DailyChallengePage         = lazy(() => import("./pages/DailyChallengePage"));
 const DailyChallengeAdminPage    = lazy(() => import("./pages/DailyChallengeAdminPage"));
 const NotFound                   = lazy(() => import("./pages/NotFound"));
+// "פלוס" — אפליקציה עצמאית (חינוך פיננסי לנוער), שמירה מקומית בלבד, ללא auth
+const PlusApp                    = lazy(() => import("./plus/PlusApp"));
 
 // ── Shared route-level loading fallback ─────────────────────────────────────
 import OlympicLoader from "@/components/OlympicLoader";
@@ -101,6 +103,7 @@ const App = () => (
             <Route path="/login"          element={<LoginPage />} />
             <Route path="/onboarding"     element={<OnboardingPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/plus/*"         element={<PlusApp />} />
 
             {/* ── Full-screen protected (no AppLayout) ───────── */}
             <Route path="/admin/builder"  element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />

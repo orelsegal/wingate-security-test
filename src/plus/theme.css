@@ -1,0 +1,93 @@
+/* ─────────────────────────────────────────────────────────────
+   "פלוס" — ערכת נושא עצמאית, תחומה ל-.plus-theme בלבד.
+   דורסת את משתני ה-CSS של shadcn רק בתוך עץ האפליקציה של פלוס,
+   כך שהאפליקציה הראשית (מסלול) לא מושפעת.
+   ───────────────────────────────────────────────────────────── */
+
+.plus-theme {
+  /* רקע בהיר וחם, טקסט פחם כהה */
+  --background: 40 33% 97%;
+  --foreground: 200 15% 15%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 200 15% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 200 15% 15%;
+
+  /* צבע מוביל: ירוק-מנטה עמוק / טורקיז מעודן */
+  --primary: 172 55% 28%;
+  --primary-foreground: 0 0% 100%;
+  --primary-glow: 172 45% 40%;
+  --primary-soft: 168 40% 90%;
+
+  /* צבע משני: קורל במינון קטן */
+  --secondary: 12 70% 94%;
+  --secondary-foreground: 12 55% 35%;
+
+  --muted: 40 20% 93%;
+  --muted-foreground: 200 8% 44%;
+
+  --accent: 168 40% 92%;
+  --accent-foreground: 172 55% 22%;
+
+  --destructive: 0 70% 48%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 160 60% 32%;
+  --success-foreground: 0 0% 100%;
+  --warning: 35 90% 45%;
+  --warning-foreground: 0 0% 100%;
+
+  --border: 40 15% 86%;
+  --input: 40 15% 86%;
+  --ring: 172 55% 28%;
+
+  --radius: 1rem;
+
+  font-family: "Assistant", "Heebo", sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 100dvh;
+}
+
+.plus-theme h1,
+.plus-theme h2,
+.plus-theme h3 {
+  font-family: "Rubik", "Heebo", sans-serif;
+}
+
+/* "העתיד שלי נבנה" — קו הצמיחה */
+.plus-growth-path {
+  stroke: hsl(var(--primary));
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s ease-out;
+}
+
+/* מיקרו-אנימציה עדינה בהשלמת פעולה משמעותית */
+@keyframes plus-complete {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.plus-animate-complete {
+  animation: plus-complete 0.35s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plus-theme *,
+  .plus-theme *::before,
+  .plus-theme *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.plus-theme[data-reduce-motion="true"] *,
+.plus-theme[data-reduce-motion="true"] *::before,
+.plus-theme[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
