@@ -86,7 +86,28 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
+/* "פלוס" רצה מבודדת לחלוטין: בלי AuthProvider ובלי שאר ה-providers של מסלול,
+   כדי שפתיחת /plus לא תיצור שום קריאה ל-Supabase או לשירות חיצוני אחר.
+   הבידוד נעשה לפי הנתיב בזמן טעינת העמוד — שאר האפליקציה לא מושפעת. */
+const isPlusPath = () =>
+  typeof window !== "undefined" && window.location.pathname.startsWith("/plus");
+
+const PlusStandalone = () => (
+  <ErrorBoundary>
+    <BrowserRouter>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/plus/*" element={<PlusApp />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  </ErrorBoundary>
+);
+
+const App = () =>
+  isPlusPath() ? <PlusStandalone /> : <MainApp />;
+
+const MainApp = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>

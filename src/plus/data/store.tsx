@@ -35,6 +35,26 @@ import { LESSONS, BADGES } from "./content";
 
 const USER_KEY = "plus.user.v1";
 const DEMO_KEY = "plus.demo.v1";
+/** דגל מצב הדגמה — ב-sessionStorage כדי שרענון לא יזרוק בחזרה לנתונים האישיים,
+ *  אבל גם לא יישאר תקוע במצב הדגמה בפתיחה הבאה של הדפדפן. */
+const DEMO_FLAG_KEY = "plus.demoMode";
+
+function readDemoFlag(): boolean {
+  try {
+    return sessionStorage.getItem(DEMO_FLAG_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeDemoFlag(on: boolean) {
+  try {
+    if (on) sessionStorage.setItem(DEMO_FLAG_KEY, "1");
+    else sessionStorage.removeItem(DEMO_FLAG_KEY);
+  } catch {
+    // אחסון חסום — מצב ההדגמה פשוט לא ישרוד רענון
+  }
+}
 
 export function todayIso(): string {
   const d = new Date();
@@ -284,8 +304,10 @@ export interface PlusStore {
 const PlusContext = createContext<PlusStore | null>(null);
 
 export function PlusProvider({ children }: { children: ReactNode }) {
-  const [isDemo, setIsDemo] = useState(false);
-  const [state, setState] = useState<PlusState>(() => load(USER_KEY) ?? emptyState());
+  const [isDemo, setIsDemo] = useState(readDemoFlag);
+  const [state, setState] = useState<PlusState>(() =>
+    readDemoFlag() ? (load(DEMO_KEY) ?? demoState()) : (load(USER_KEY) ?? emptyState())
+  );
 
   useEffect(() => {
     save(isDemo ? DEMO_KEY : USER_KEY, state);
@@ -472,6 +494,7 @@ export function PlusProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setDemoMode = useCallback((on: boolean) => {
+    writeDemoFlag(on);
     setIsDemo(on);
     if (on) {
       setState(load(DEMO_KEY) ?? demoState());
@@ -489,6 +512,7 @@ export function PlusProvider({ children }: { children: ReactNode }) {
     } catch {
       // גם אם האחסון חסום — מאפסים בזיכרון
     }
+    writeDemoFlag(false);
     setIsDemo(false);
     setState(emptyState());
   }, []);
