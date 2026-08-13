@@ -1,9 +1,10 @@
 import { useAuth } from "@/context/AuthContext";
 import { useStudent, useStudentProgress } from "@/hooks/useStudents";
-import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe, Scale, Feather, Calculator, Activity, Landmark, Languages, ChevronLeft, AlertTriangle, Sparkles } from "lucide-react";
+import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe, Scale, Feather, Calculator, Activity, Landmark, Languages, ChevronLeft, AlertTriangle, Sparkles, Lightbulb } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
+import { openSubjectApp } from "@/lib/openSubjectApp";
 
 /* ═══ Subject color/icon map ═══ */
 const subjectMeta: Record<string, { icon: any; bg: string; fg: string; pill: string }> = {
@@ -16,6 +17,7 @@ const subjectMeta: Record<string, { icon: any; bg: string; fg: string; pill: str
   "אנגלית":    { icon: Globe,    bg: "bg-sky-50",     fg: "text-sky-700",     pill: "bg-sky-100 text-sky-800" },
   "מתמטיקה":   { icon: Calculator,bg:"bg-green-50",   fg: "text-green-700",   pill: "bg-green-100 text-green-800" },
   "חינוך גופני":{ icon: Activity, bg:"bg-yellow-50",  fg: "text-yellow-700",  pill: "bg-yellow-100 text-yellow-800" },
+  "מבוא למדעים":{ icon: Lightbulb, bg:"bg-[hsl(45,35%,93%)]", fg: "text-[hsl(45,45%,42%)]", pill: "bg-amber-100 text-amber-800" },
 };
 const metaFor = (name: string) => subjectMeta[name] || { icon: BookOpen, bg: "bg-slate-50", fg: "text-slate-700", pill: "bg-slate-100 text-slate-800" };
 
@@ -305,6 +307,36 @@ const StudentHomePage = () => {
               </button>
             );
           })}
+
+          {/* מבוא למדעים — אפליקציה חיצונית (Phase A). כניסה גלויה אחת שפותחת
+              את science2 בטאב חדש; אין מדדי התקדמות פנימיים למקצוע חיצוני. */}
+          {(() => {
+            const m = metaFor("מבוא למדעים");
+            const Icon = m.icon;
+            return (
+              <button
+                onClick={() => openSubjectApp("science")}
+                className={`group ${m.bg} rounded-2xl border border-border/60 p-4 text-right shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">נפתח בטאב חדש</span>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <h3 className="text-[14px] font-semibold text-foreground leading-tight">מבוא למדעים</h3>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">קורס אינטראקטיבי</p>
+                    </div>
+                    <div className="w-9 h-9 rounded-xl bg-white/70 flex items-center justify-center">
+                      <Icon className={`h-4 w-4 ${m.fg}`} strokeWidth={2} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-border/40 text-[11px]">
+                  <span className="font-semibold text-foreground">כניסה לאפליקציה</span>
+                  <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground group-hover:-translate-x-0.5 transition-transform" strokeWidth={2} />
+                </div>
+              </button>
+            );
+          })()}
         </div>
       </section>
 

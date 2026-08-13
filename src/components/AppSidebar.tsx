@@ -1,7 +1,8 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings, ChevronDown, Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { openSubjectApp } from "@/lib/openSubjectApp";
 import type { UserRole } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
 import { useIsSystemOwner } from "@/hooks/useSystemOwner";
@@ -246,7 +247,9 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
 
           {/* Subjects list — visible to students between dashboard and messages */}
           {user?.role === "student" && (() => {
-            const subjects: { name: string; icon: typeof Home; path: string }[] = [
+            // `external` items open a subject app via the registry (Phase A),
+            // instead of navigating to an internal route.
+            const subjects: { name: string; icon: typeof Home; path: string; external?: "science" }[] = [
               { name: "תנ״ך",        icon: BookOpen,   path: "/subjects/" + encodeURIComponent("תנ״ך") },
               { name: "לשון",        icon: Languages,  path: "/subjects/" + encodeURIComponent("לשון") },
               { name: "היסטוריה",    icon: Scroll,     path: "/subjects/" + encodeURIComponent("היסטוריה") },
@@ -255,6 +258,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
               { name: "חינוך גופני", icon: Dumbbell,   path: "/subjects/" + encodeURIComponent("חינוך גופני") },
               { name: "ספרות",       icon: Feather,    path: "/subjects/" + encodeURIComponent("ספרות") + "/literature" },
               { name: "אזרחות",      icon: Scale,      path: "/subjects/" + encodeURIComponent("אזרחות") },
+              { name: "מבוא למדעים", icon: Lightbulb,  path: "", external: "science" },
             ];
             return (
               <div className="pt-2 mt-1 border-t border-sidebar-border/60">
@@ -262,11 +266,14 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
                   מקצועות
                 </p>
                 {subjects.map((s) => {
-                  const active = decodeURIComponent(location.pathname) === decodeURIComponent(s.path);
+                  const active = !s.external && decodeURIComponent(location.pathname) === decodeURIComponent(s.path);
                   return (
                     <button
                       key={s.name}
-                      onClick={() => { navigate(s.path); onNavigate?.(); }}
+                      onClick={() => {
+                        if (s.external) { openSubjectApp(s.external); return; }
+                        navigate(s.path); onNavigate?.();
+                      }}
                       className={`w-full flex flex-row items-center gap-3 px-3 py-2 rounded-xl text-[12.5px] transition-all duration-200 text-start ${
                         active
                           ? "bg-sidebar-primary text-white font-semibold shadow-sm"
