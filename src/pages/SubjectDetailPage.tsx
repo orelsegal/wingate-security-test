@@ -8,6 +8,7 @@ import DataExportTools from "@/components/DataExportTools";
 import TeacherAIAssistant from "@/components/TeacherAIAssistant";
 import { courseContent } from "@/lib/courseContent";
 import ScenicRoadmap from "@/components/ScenicRoadmap";
+import { subjectAppUrl } from "@/lib/openSubjectApp";
 
 const SubjectDetailPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
@@ -17,6 +18,11 @@ const SubjectDetailPage = () => {
   const studentId = user?.scopeFilter?.[0] || "";
   const { data: progress = [], isLoading } = useStudentProgress(studentId);
   const decoded = decodeURIComponent(subjectName || "");
+
+  // Phase A: external subject-app links from the registry. Validated + fail-closed:
+  // a null url hides the banner rather than rendering a broken link.
+  const literature70Url = subjectAppUrl("literature-70");
+  const civics70Url = subjectAppUrl("civics-70");
 
   useEffect(() => {
     if (decoded) saveLastVisited(`/subjects/${encodeURIComponent(decoded)}`, decoded);
@@ -170,8 +176,8 @@ const SubjectDetailPage = () => {
         </div>
       </div>
 
-      {/* מפת קורס ספרות */}
-      {decoded === "ספרות" && (
+      {/* מפת קורס ספרות — ספרות 70% כאפליקציה חיצונית (Phase A, registry) */}
+      {decoded === "ספרות" && literature70Url && (
         <div className="mb-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl border border-amber-200 shadow-[var(--shadow-card)] p-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -179,16 +185,41 @@ const SubjectDetailPage = () => {
               <div>
                 <h3 className="text-[16px] font-bold text-foreground">מפת קורס ספרות לבגרות</h3>
                 <p className="text-[12px] text-muted-foreground mt-1">30 יחידות עם 10 יצירות חובה ואפליקציות אינטראקטיביות</p>
-                <span className="inline-block mt-2 text-[11px] bg-amber-200 text-amber-900 px-3 py-1 rounded-full font-semibold">70% — חלק שני</span>
+                <span className="inline-block mt-2 text-[11px] bg-amber-200 text-amber-900 px-3 py-1 rounded-full font-semibold">70% — חלק שני · נפתח בטאב חדש</span>
               </div>
             </div>
             <a
-              href="https://seferut-bagrut.vercel.app/?guest=1"
+              href={literature70Url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-2xl font-semibold text-[13px] hover:bg-primary/90 transition-colors shrink-0"
             >
               <span>פתח מפת קורס</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* אזרחות 70% כאפליקציה חיצונית (Phase A, registry) */}
+      {decoded === "אזרחות" && civics70Url && (
+        <div className="mb-6 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-3xl border border-teal-200 shadow-[var(--shadow-card)] p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span className="text-[32px]">⚖️</span>
+              <div>
+                <h3 className="text-[16px] font-bold text-foreground">מסלול אזרחות לבגרות</h3>
+                <p className="text-[12px] text-muted-foreground mt-1">מרחב למידה ותרגול לבגרות באזרחות</p>
+                <span className="inline-block mt-2 text-[11px] bg-teal-200 text-teal-900 px-3 py-1 rounded-full font-semibold">70% — בגרות חיצונית · נפתח בטאב חדש</span>
+              </div>
+            </div>
+            <a
+              href={civics70Url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-2xl font-semibold text-[13px] hover:bg-primary/90 transition-colors shrink-0"
+            >
+              <span>פתח את האפליקציה</span>
               <span>↗</span>
             </a>
           </div>
