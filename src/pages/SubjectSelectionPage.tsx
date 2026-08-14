@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, Globe, Calculator, Languages, Scroll, Scale, Load
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
 import { Progress } from "@/components/ui/progress";
+import { openSubjectApp } from "@/lib/openSubjectApp";
 
 const subjectMeta: Record<string, { icon: any; color: string; iconColor: string; subtitle: string }> = {
   "אנגלית": { icon: Globe, color: "bg-[hsl(210,30%,94%)]", iconColor: "text-[hsl(210,40%,50%)]", subtitle: "5 יח״ל · Module E · F · G" },
@@ -75,7 +76,12 @@ const SubjectSelectionPage = () => {
           return (
             <button
               key={name}
-              onClick={() => name === "מבוא למדעים" ? navigate("/science-intro") : navigate(`/subjects/${encodeURIComponent(name)}`)}
+              onClick={() => {
+                // Phase A: מדעים נפתח כאפליקציה חיצונית דרך ה-registry.
+                // /science-intro הפנימי נשאר בקוד וזמין ב-URL ישיר ל-rollback.
+                if (name === "מבוא למדעים") { openSubjectApp("science"); return; }
+                navigate(`/subjects/${encodeURIComponent(name)}`);
+              }}
               className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 cursor-pointer animate-fade-in-up"
               style={{ animationDelay: `${60 + i * 40}ms` }}
             >
