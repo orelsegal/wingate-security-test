@@ -47,9 +47,9 @@ export const roleLabels: Record<UserRole, string> = {
 
 export const roleDescriptions: Record<UserRole, string> = {
   developer: "פיתוח ועיצוב המערכת — גישה מלאה לכלי הבנייה",
-  admin: "ניהול מלא — ספורטאים, ציונים, דוחות והגדרות",
-  teacher: "מעקב אחר כל הספורטאים והמקצועות",
-  parent: "צפייה בהתקדמות הילד/ה שלי",
+  admin: "ניהול מלא — תלמידים, ציונים, דוחות והגדרות",
+  teacher: "מעקב אחר התלמידים בקבוצות הלימוד שלי",
+  parent: "צפייה בהתקדמות הילד שלי",
   coach: "מעקב אחר ספורטאי הענף שלי",
   student: "צפייה בלוח זמנים, מפת דרכים ולמידה",
 };

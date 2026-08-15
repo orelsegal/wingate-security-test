@@ -150,8 +150,10 @@ export default function AIInsightsPanel({
         onClick={() => setCollapsed(!collapsed)}
         className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-border/60 bg-card hover:bg-muted/40 transition-colors cursor-pointer"
       >
+        {/* Honesty fix: this panel is a fixed rule-based heuristic, not AI.
+            It must not be branded as AI (product glossary §9). */}
         <Brain className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-        <h2 className="text-[12.5px] font-semibold text-foreground tracking-tight">תובנות חכמות</h2>
+        <h2 className="text-[12.5px] font-semibold text-foreground tracking-tight">תובנות מהנתונים · לפי כללים קבועים</h2>
         <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold">{insights.length}</span>
         <ChevronLeft className={`h-3.5 w-3.5 text-muted-foreground/60 transition-transform duration-200 mr-auto ${collapsed ? "-rotate-90" : "rotate-90"}`} strokeWidth={1.5} />
       </button>

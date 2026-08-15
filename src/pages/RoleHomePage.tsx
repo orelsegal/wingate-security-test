@@ -207,9 +207,9 @@ const SubjectsList = ({ navigate }: { navigate: (p: string) => void }) => {
 const MainEntryButtons = ({ navigate }: { navigate: (p: string) => void }) => {
   const entries = [
     { id: "subjects", title: "מקצועות", icon: BookOpen, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/subjects" },
-    { id: "students", title: "ספורטאים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
-    { id: "groups", title: "קבוצות", icon: Layers, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/groups" },
-    { id: "progress", title: "התקדמות לימודית", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", path: "/courses" },
+    { id: "students", title: "תלמידים־ספורטאים", icon: Users, color: "bg-[hsl(210,40%,93%)]", iconColor: "text-[hsl(210,45%,48%)]", path: "/students" },
+    { id: "groups", title: "כיתות", icon: Layers, color: "bg-[hsl(35,35%,93%)]", iconColor: "text-[hsl(35,45%,42%)]", path: "/groups" },
+    { id: "progress", title: "מעקב לימודי", icon: BarChart3, color: "bg-[hsl(150,25%,93%)]", iconColor: "text-[hsl(150,35%,42%)]", path: "/courses" },
   ];
 
   return (
@@ -306,31 +306,41 @@ const TeacherHome = () => {
 
   // Factual only — no default statuses, no averages
   const active = students.filter(s => !(s as any).archived);
-  const sportsCount = new Set(active.map(s => s.sport).filter(Boolean)).size;
   const classesCount = new Set(active.map(s => s.class_name).filter(Boolean)).size;
 
   const quickActions = [
-    { id: "my-groups", title: "הקבוצות שלי",   desc: "קבוצות הלימוד שבהן את/ה מלמד/ת", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary",    path: "/my-groups" },
-    { id: "content",  title: "תוכן לימודי",    desc: "מקצועות, קורסים וחומרי לימוד", icon: BookOpen,     color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/teacher-courses" },
+    { id: "my-groups", title: "הקבוצות שלי",   desc: "קבוצות הלימוד שלך", icon: GraduationCap, color: "bg-primary/10", iconColor: "text-primary",    path: "/my-groups" },
+    { id: "content",  title: "מקצועות ומסלולי למידה", desc: "מקצועות, קורסים וחומרי לימוד", icon: BookOpen,     color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", path: "/teacher-courses" },
     { id: "grade",    title: "הזנת ציונים",    desc: "עדכון ציוני תלמידים",        icon: ClipboardEdit,color: "bg-emerald-50",   iconColor: "text-emerald-700",  path: "/grade-entry" },
-    { id: "students", title: "הספורטאים שלי",  desc: "תלמידי קבוצות הלימוד שלך",   icon: Users,        color: "bg-sky-50",       iconColor: "text-sky-700",      path: "/students" },
+    { id: "students", title: "התלמידים שלי",  desc: "תלמידי קבוצות הלימוד שלך",   icon: Users,        color: "bg-sky-50",       iconColor: "text-sky-700",      path: "/students" },
   ];
 
   return (
     <>
       <ContinueCard navigate={navigate} />
 
+      {/* Teacher with no assigned groups: say it plainly, no system-wide numbers */}
+      {active.length === 0 && (
+        <div className="bg-card rounded-2xl border border-border p-5 mb-4 shadow-[var(--shadow-card)]">
+          <p className="text-[14px] font-semibold text-foreground">עדיין לא שויכו לך קבוצות לימוד</p>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            לאחר השיוך יופיעו כאן התלמידים, המשימות וההגשות שבאחריותך. לשיוך קבוצות אפשר לפנות למנהל המערכת.
+          </p>
+        </div>
+      )}
+
       <TeacherGroups navigate={navigate} />
 
-      {/* KPI strip — factual counts only */}
-      <InsightStrip
-        pageKey="home-teacher"
-        items={[
-          { id: "teacher-stat-total",   label: "סה״כ ספורטאים", value: active.length || "—", icon: Users,    color: "text-primary" },
-          { id: "teacher-stat-sports",  label: "ענפי ספורט",     value: sportsCount || "—",   icon: Dumbbell, color: "text-primary" },
-          { id: "teacher-stat-classes", label: "כיתות",           value: classesCount || "—",  icon: BookOpen, color: "text-primary" },
-        ]}
-      />
+      {/* KPI strip — factual, scoped to the teacher's own students only */}
+      {active.length > 0 && (
+        <InsightStrip
+          pageKey="home-teacher"
+          items={[
+            { id: "teacher-stat-total",   label: "התלמידים שלי", value: active.length, icon: Users,    color: "text-primary" },
+            { id: "teacher-stat-classes", label: "כיתות",         value: classesCount || "—",  icon: BookOpen, color: "text-primary" },
+          ]}
+        />
+      )}
 
       {/* Quick actions grid */}
       <div className="grid grid-cols-2 gap-3">
@@ -407,15 +417,25 @@ const ParentHome = () => {
               </p>
             </div>
 
-            {/* Factual grade counts, or an honest empty state */}
+            {/* Factual grade counts, phrased for a parent (correct singular/plural) */}
             <div className="bg-muted/30 rounded-xl p-3">
-              {totalRows > 0 ? (
-                <p className="text-[13px] text-foreground">
-                  {gradedRows} ציונים קיימים מתוך {totalRows} רשומות לימודיות
-                </p>
-              ) : (
+              {totalRows === 0 ? (
                 <p className="text-[13px] text-muted-foreground">
                   נתוני ציונים ובגרות עדיין אינם זמינים לצפייה בחשבון הורה
+                </p>
+              ) : gradedRows === 0 ? (
+                <>
+                  <p className="text-[13px] font-medium text-foreground">עדיין אין ציונים להצגה</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">
+                    {totalRows === 1
+                      ? "קיימת רשומה לימודית אחת ללא ציון."
+                      : `קיימות ${totalRows} רשומות לימודיות ללא ציון.`}
+                  </p>
+                </>
+              ) : (
+                <p className="text-[13px] text-foreground">
+                  {gradedRows === 1 ? "ציון אחד" : `${gradedRows} ציונים`} מתוך{" "}
+                  {totalRows === 1 ? "רשומה לימודית אחת" : `${totalRows} רשומות לימודיות`}
                 </p>
               )}
             </div>

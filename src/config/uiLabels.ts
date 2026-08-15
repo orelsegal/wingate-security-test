@@ -35,6 +35,7 @@ export interface UiLabels {
     guardians: string;
     staffMgmt: string;
     dataImport: string;
+    mentorDemo: string;
   };
   /** Sidebar role-titled section header */
   roleTitles: {
@@ -90,16 +91,16 @@ export interface UiLabels {
 export const defaultUiLabels: UiLabels = {
   nav: {
     dashboard: "תמונת מצב",
-    studentHome: "תמונת מצב",
+    studentHome: "המסלול שלי",
     yearPlan: "שנת 2026",
-    teacherCourses: "תוכן לימודי",
+    teacherCourses: "מקצועות ומסלולי למידה",
     myGroups: "הקבוצות שלי",
-    students: "ספורטאים",
+    students: "תלמידים־ספורטאים",
     groups: "כיתות",
-    courses: "התקדמות לימודית",
+    courses: "מעקב לימודי",
     dataEntry: "הזנת נתונים",
     gradeEntry: "הזנת ציונים",
-    roadmaps: "מפות דרכים",
+    roadmaps: "מסלולי למידה",
     calendar: "לוח שנה",
     userActivity: "פעילות משתמשים",
     dataManagement: "ניהול מערכת",
@@ -112,14 +113,15 @@ export const defaultUiLabels: UiLabels = {
     guardians: "ניהול הורים",
     staffMgmt: "ניהול צוות",
     dataImport: "ייבוא ועדכון נתונים",
+    mentorDemo: "הכיתה שלי · הדגמת מאמנטור",
   },
   roleTitles: {
     developer: "סביבת פיתוח",
-    admin: "מרכז ניהול",
-    teacher: "מרכז עבודה",
-    student: "המרחב שלי",
-    parent: "התקדמות הילד/ה",
-    coach: "מרכז המאמן",
+    admin: "תמונת מצב",
+    teacher: "סביבת ההוראה שלי",
+    student: "המסלול שלי",
+    parent: "התקדמות הילד שלי",
+    coach: "הספורטאים שלי",
   },
   roleLabels: {
     developer: "מפתח",
@@ -131,19 +133,19 @@ export const defaultUiLabels: UiLabels = {
   },
   pages: {
     adminDashboard: {
-      titleAdmin: "מפת מצב לימודית",
-      titleTeacher: "מעקב מקצועות לימוד",
+      titleAdmin: "תמונת מצב",
+      titleTeacher: "סביבת ההוראה שלי",
       subtitle: "סמסטר א׳ תשפ״ה",
     },
-    courses: { title: "סטטוס לימודי לפי מקצוע" },
-    dataEntry: { title: "ממשק ניהול", subtitle: "הוספת ספורטאים, הזנת ציונים וייבוא מאסיבי" },
+    courses: { title: "מעקב לימודי לפי מקצוע" },
+    dataEntry: { title: "הזנת נתונים", subtitle: "הוספת תלמידים, הזנת ציונים וייבוא מרוכז" },
     dataManagement: { title: "ניהול נתונים", subtitle: "ניהול ענפי ספורט, מקצועות לימוד וכיתות" },
     userActivity: { title: "פעילות משתמשים", subtitle: "מעקב כניסות ופעילות במערכת" },
   },
   buttons: {
-    save: "שמור",
+    save: "שמירת השינויים",
     cancel: "ביטול",
-    addStudent: "הוסף ספורטאי",
+    addStudent: "תלמיד חדש",
     manageData: "ניהול נתונים",
     filter: "סינון",
   },
@@ -153,8 +155,8 @@ export const defaultUiLabels: UiLabels = {
     red: "בסיכון",
   },
   entities: {
-    student: "ספורטאי",
-    students: "ספורטאים",
+    student: "תלמיד",
+    students: "תלמידים",
   },
   visibility: {
     /** Default all true. Admin may hide non-critical items in the labels editor. */

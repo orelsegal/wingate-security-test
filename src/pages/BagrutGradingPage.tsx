@@ -95,11 +95,9 @@ const BagrutGradingPage = () => {
     toast({ title: "הועתק" });
   };
 
-  const sendWhatsApp = () => {
-    if (!result) return;
-    const text = `📋 הערכת בגרות — ${subject || "כללי"}\n\n📊 ציון: ${result.grade}/100\n\n${Object.entries(result.rubric).map(([k, v]) => `• ${RUBRIC_LABELS[k]}: ${v.score}/${v.max}`).join("\n")}\n\n💬 משוב:\n${result.feedback}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-  };
+  /* wa.me sharing removed (security): AI feedback + grade must not travel in
+     an external URL, and AI content is never sent onward without teacher
+     review. Copying stays local; sharing is the teacher's own decision. */
 
   const exportExcel = () => {
     if (!result) return;
@@ -263,10 +261,6 @@ const BagrutGradingPage = () => {
               <Button variant="outline" size="sm" onClick={copyFeedback} className="gap-1.5 text-[10px] h-8 rounded-xl">
                 <Copy className="h-3 w-3" strokeWidth={1.5} />
                 העתק משוב
-              </Button>
-              <Button variant="outline" size="sm" onClick={sendWhatsApp} className="gap-1.5 text-[10px] h-8 rounded-xl">
-                <MessageCircle className="h-3 w-3" strokeWidth={1.5} />
-                שלח לוואטסאפ
               </Button>
               <Button variant="outline" size="sm" onClick={exportExcel} className="gap-1.5 text-[10px] h-8 rounded-xl">
                 <Download className="h-3 w-3" strokeWidth={1.5} />

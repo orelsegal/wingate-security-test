@@ -3,7 +3,6 @@ import { Sparkles, CheckCircle2, AlertCircle, Loader2, Plus, Trash2 } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 export type FieldKind = "text" | "longtext" | "table" | "tagged-list" | "checklist";
@@ -75,28 +74,21 @@ const useAiCheck = (itemId: string, field: FieldDef, getAnswer: () => string) =>
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AiResult | null>(() => loadJSON<AiResult | null>(aiKey(itemId, field.id), null));
 
+  /* AI-check DEACTIVATED (product contract, 2026-08-15):
+     AI feedback must never reach a student without teacher approval, and no
+     approval mechanism exists yet. The previous behavior also sent student
+     answers to an external AI gateway without an authorization gate. The
+     call is blocked client-side until an approval flow ships; previously
+     stored results still render, labeled as non-binding practice. */
   const run = useCallback(async () => {
-    const answer = getAnswer().trim();
-    if (!answer) {
-      toast({ title: "כתבו תשובה לפני שמבקשים בדיקה", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("civics-check", {
-        body: { question: field.question || field.label || "שלב במטלת אזרחות", expectation: field.expectation, answer },
-      });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      const r = data as AiResult;
-      setResult(r);
-      try { localStorage.setItem(aiKey(itemId, field.id), JSON.stringify(r)); } catch {}
-    } catch (e: any) {
-      toast({ title: "שגיאה בבדיקת AI", description: e?.message || "נסה שוב", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  }, [field, itemId, getAnswer]);
+    void getAnswer;
+    void setLoading;
+    void setResult;
+    toast({
+      title: "בדיקת ה־AI מושבתת בשלב זה",
+      description: "משוב AI לתלמיד מחייב אישור מורה; הרכיב יחזור כשמנגנון האישור יחובר.",
+    });
+  }, [getAnswer]);
 
   return { loading, result, run };
 };
@@ -111,10 +103,15 @@ const AiBar = ({ loading, result, onCheck }: { loading: boolean; result: AiResul
         className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-primary/80 hover:text-primary transition-colors disabled:opacity-50"
       >
         {loading ? <Loader2 className="h-3 w-3 animate-spin" strokeWidth={1.8} /> : <Sparkles className="h-3 w-3" strokeWidth={1.8} />}
-        {loading ? "בודק…" : "בדיקת AI"}
+        בדיקת AI · מושבתת זמנית
       </button>
     </div>
-    {result && <AiFeedback result={result} />}
+    {result && (
+      <>
+        <p className="text-[10px] text-muted-foreground text-end">משוב תרגול שנשמר בעבר · אינו הערכה ואינו ציון</p>
+        <AiFeedback result={result} />
+      </>
+    )}
   </div>
 );
 

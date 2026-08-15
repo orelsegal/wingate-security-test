@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import WingateBadge from "@/components/WingateBadge";
 import EditableElement from "@/components/builder/EditableElement";
 import { roleTitles } from "@/lib/schoolUtils";
+import { useStudent } from "@/hooks/useStudents";
 
 interface AppHeaderProps {
   onMenuToggle?: () => void;
@@ -26,15 +27,15 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
   let title = "";
 
   if (path.startsWith("/students")) {
-    crumbs.push({ label: "ספורטאים", path: "/students" });
-    title = "ספורטאים";
+    crumbs.push({ label: "תלמידים־ספורטאים", path: "/students" });
+    title = "תלמידים־ספורטאים";
     if (path.match(/^\/students\/.+/)) {
-      crumbs.push({ label: "פרופיל ספורטאי" });
-      title = "פרופיל ספורטאי";
+      crumbs.push({ label: "פרופיל תלמיד" });
+      title = "פרופיל תלמיד";
     }
   } else if (path.startsWith("/courses")) {
-    crumbs.push({ label: "התקדמות לימודית" });
-    title = "התקדמות לימודית";
+    crumbs.push({ label: "מעקב לימודי" });
+    title = "מעקב לימודי";
   } else if (path.startsWith("/data-entry")) {
     crumbs.push({ label: "הזנת נתונים" });
     title = "הזנת נתונים";
@@ -64,12 +65,12 @@ const useBreadcrumbs = (role?: UserRole): { crumbs: Crumb[]; title: string } => 
     crumbs.push({ label: "הקבוצות שלי" });
     title = "הקבוצות שלי";
   } else if (path.startsWith("/teacher-course/")) {
-    crumbs.push({ label: "תוכן לימודי", path: "/teacher-courses" });
+    crumbs.push({ label: "מקצועות ומסלולי למידה", path: "/teacher-courses" });
     crumbs.push({ label: "פרטי קורס" });
     title = "פרטי קורס";
   } else if (path.startsWith("/teacher-courses")) {
-    crumbs.push({ label: "תוכן לימודי" });
-    title = "תוכן לימודי";
+    crumbs.push({ label: "מקצועות ומסלולי למידה" });
+    title = "מקצועות ומסלולי למידה";
   } else if (path.startsWith("/teacher-subjects")) {
     crumbs.push({ label: "עריכת מקצועות" });
     title = "עריכת מקצועות";
@@ -119,6 +120,16 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
   const { title } = useBreadcrumbs(user?.role);
   const isHome = location.pathname === "/" || location.pathname === "/student-home";
 
+  // Parent header is personal when the child's name is known (RLS-scoped
+  // query; react-query dedupes with ParentHome's identical fetch).
+  const parentChildId = user?.role === "parent" ? user?.scopeFilter?.[0] || "" : "";
+  const { data: parentChild } = useStudent(parentChildId);
+  const homeTitle = user
+    ? (user.role === "parent" && parentChild?.full_name
+        ? `ההתקדמות של ${parentChild.full_name}`
+        : roleTitles[user.role])
+    : "תמונת מצב";
+
   const handleLogout = async () => {
     await logout();
     navigate("/login", { replace: true });
@@ -148,7 +159,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
           <EditableElement
             id="header-page-title"
             type="page-title"
-            defaultLabel={isHome ? (user ? roleTitles[user.role] : "תמונת מצב") : title}
+            defaultLabel={isHome ? homeTitle : title}
             pageKey="global"
             hideWhenInvisible={false}
           >
@@ -157,7 +168,7 @@ const AppHeader = ({ onMenuToggle }: AppHeaderProps) => {
                 className="text-[14px] md:text-[15px] font-semibold text-foreground tracking-tight leading-tight"
                 style={inlineStyle}
               >
-                {isHome ? (user ? roleTitles[user.role] : "תמונת מצב") : title}
+                {isHome ? homeTitle : title}
               </h1>
             )}
           </EditableElement>

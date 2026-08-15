@@ -34,6 +34,8 @@ const allMenuItems: MenuItemDef[] = [
   { key: "groups",         icon: Layers,       path: "/groups",          roles: ["developer", "admin", "teacher", "coach"], group: "work" },
   { key: "gradeEntry",     icon: BookOpen,     path: "/grade-entry",     roles: ["developer", "admin", "teacher"], group: "work" },
   { key: "courses",        icon: BookOpen,     path: "/courses",         roles: ["developer", "admin", "teacher"], group: "work" },
+  // אב־טיפוס מסך המאמנטור — נתונים סינתטיים, נגיש למנהל/מפתח בלבד
+  { key: "mentorDemo",     icon: Users,        path: "/mentor-demo",     roles: ["developer", "admin"], group: "work" },
   // ── content & planning (תוכן ותכנון) ──
   { key: "teacherCourses", icon: BookOpen,     path: "/teacher-courses", roles: ["teacher"], group: "content" },
   { key: "roadmaps",       icon: LayoutTemplate, path: "/roadmaps",      roles: ["developer", "admin", "teacher", "student"], group: "content" },
@@ -250,7 +252,7 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             // `external` items open a subject app via the registry (Phase A),
             // instead of navigating to an internal route.
             const subjects: { name: string; icon: typeof Home; path: string; external?: "science" }[] = [
-              { name: "תנ״ך",        icon: BookOpen,   path: "/subjects/" + encodeURIComponent("תנ״ך") },
+              { name: "תנ״ך",        icon: BookOpen,   path: "/subjects/" + encodeURIComponent("תנ״ך") + "/tanakh-30" },
               { name: "לשון",        icon: Languages,  path: "/subjects/" + encodeURIComponent("לשון") },
               { name: "היסטוריה",    icon: Scroll,     path: "/subjects/" + encodeURIComponent("היסטוריה") },
               { name: "אנגלית",      icon: Globe,      path: "/subjects/" + encodeURIComponent("אנגלית") },

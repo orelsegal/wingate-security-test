@@ -148,9 +148,13 @@ export default function DataExportTools({
 
     text += `${"─".repeat(30)}\nסה״כ: ${subjectProgress ? `${subjectProgress.length} מקצועות` : `${effectiveStudents.length} ${label}`}`;
 
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank");
-    toast.success("נפתח חלון שליחה לוואטסאפ");
+    /* Security fix: student names/statuses/notes must never travel inside an
+       external URL (wa.me leaked them into browser history and access logs).
+       The report is copied locally instead; sharing is a human decision. */
+    navigator.clipboard.writeText(text).then(
+      () => toast.success("הדוח הועתק. שימו לב: אין להעביר פרטי תלמידים בערוצים חיצוניים ללא אישור."),
+      () => toast.error("ההעתקה נכשלה"),
+    );
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +185,7 @@ export default function DataExportTools({
         </Button>
         <Button variant="outline" size="sm" className="gap-1.5 text-[11px]" onClick={handleWhatsAppExport}>
           <MessageCircle className="h-3.5 w-3.5" />
-          {compact ? "וואטסאפ" : "שלח לוואטסאפ"}
+          {compact ? "העתקה" : "העתקת דוח"}
         </Button>
         {showImport && (
           <Button variant="outline" size="sm" className="gap-1.5 text-[11px]" onClick={() => setImportOpen(true)}>

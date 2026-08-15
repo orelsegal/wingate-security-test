@@ -28,11 +28,12 @@ export const classToGrade = (className: string): string => {
 export const GRADE_ORDER = ["י״ב", "י״א", "י׳", "ט׳"] as const;
 
 /** Human-readable titles per role, shown in home pages and header */
+/* Aligned with docs/PRODUCT_GLOSSARY.md (same values as uiLabels.roleTitles) */
 export const roleTitles: Record<UserRole, string> = {
-  developer: "מרכז פיתוח",
-  admin: "מרכז ניהול",
-  teacher: "מרכז עבודה",
-  student: "המרחב שלי",
-  parent: "התקדמות הילד/ה",
-  coach: "מרכז המאמן",
+  developer: "סביבת פיתוח",
+  admin: "תמונת מצב",
+  teacher: "סביבת ההוראה שלי",
+  student: "המסלול שלי",
+  parent: "התקדמות הילד שלי",
+  coach: "הספורטאים שלי",
 };

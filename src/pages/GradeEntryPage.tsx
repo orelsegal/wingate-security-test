@@ -161,7 +161,7 @@ const GradeEntryPage = () => {
           הזנת ציונים
         </h1>
         <p className="text-sm text-muted-foreground">
-          בחר/י מקצוע, ראה/י את כל הספורטאים בו, והזן/י ציונים ישירות בטבלה
+          בחרו מקצוע וכיתה כדי לעדכן ציונים לתלמידים שבאחריותכם.
         </p>
       </div>
 
@@ -170,7 +170,7 @@ const GradeEntryPage = () => {
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">מקצוע</Label>
             <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
-              <SelectTrigger><SelectValue placeholder="בחר מקצוע..." /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="בחירת מקצוע..." /></SelectTrigger>
               <SelectContent>
                 {subjects?.map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.subject_name}</SelectItem>
@@ -196,7 +196,7 @@ const GradeEntryPage = () => {
               size="lg"
             >
               <Save className="h-4 w-4" />
-              שמור הכל {dirtyCount ? `(${dirtyCount})` : ""}
+              שמירת השינויים {dirtyCount ? `(${dirtyCount})` : ""}
             </Button>
           </div>
         </CardContent>
@@ -209,7 +209,7 @@ const GradeEntryPage = () => {
               <div className="flex items-center gap-2">
                 <UsersIcon className="h-4 w-4 text-primary" strokeWidth={1.5} />
                 <span className="text-sm font-semibold">
-                  {selectedSubject?.subject_name} · {filteredStudents.length} ספורטאים
+                  {selectedSubject?.subject_name} · {filteredStudents.length} תלמידים
                 </span>
               </div>
               <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
@@ -290,7 +290,7 @@ const GradeEntryPage = () => {
                           ) : (
                             <Save className="h-3.5 w-3.5" />
                           )}
-                          {r.saved ? "נשמר" : "שמור"}
+                          {r.saved ? "נשמר" : "שמירה"}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -299,7 +299,7 @@ const GradeEntryPage = () => {
                 {!filteredStudents.length && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
-                      אין ספורטאים בכיתה זו
+                      אין תלמידים בכיתה זו
                     </TableCell>
                   </TableRow>
                 )}
@@ -310,7 +310,7 @@ const GradeEntryPage = () => {
       ) : (
         <Card className="card-premium">
           <CardContent className="py-16 text-center text-muted-foreground text-sm">
-            בחר/י מקצוע מלמעלה כדי להתחיל בהזנת ציונים
+            בחרו מקצוע וכיתה כדי להציג את רשימת התלמידים.
           </CardContent>
         </Card>
       )}

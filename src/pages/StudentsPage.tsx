@@ -346,7 +346,7 @@ const StudentsPage = () => {
     // Export factual fields + the manual admin status only (no averages, no default status)
     const data = (selected.size > 0 ? filtered.filter(s => selected.has(s.id)) : filtered).map(s => ({
       "שם מלא": s.full_name, "ענף": s.sport, "כיתה": s.class_name,
-      "סטטוס ניהולי": adminStatusConfig[adminStatusOf(s.id)].label,
+      "מצב המעקב": adminStatusConfig[adminStatusOf(s.id)].label,
       "הערת סטטוס": adminStatusMap?.get(s.id)?.status_note || "",
     }));
     const ws = XLSX.utils.json_to_sheet(data);
@@ -597,7 +597,7 @@ const StudentsPage = () => {
 
             {isBagrutViewer && (
               <FilterSelect
-                label="סטטוס ניהולי"
+                label="מצב המעקב"
                 value={statusFilter ? adminStatusConfig[statusFilter].label : ""}
                 onClear={statusFilter ? () => setStatusFilter(null) : undefined}
               >
@@ -837,7 +837,7 @@ const StudentsPage = () => {
                       <button
                         onClick={(e) => { e.stopPropagation(); setStatusEditStudent(student); }}
                         className={`mb-3 inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded-full border text-[11px] font-medium ${cfg.chip} hover:opacity-80 transition-opacity`}
-                        title="שינוי סטטוס ניהולי"
+                        title="שינוי מצב המעקב"
                         dir="rtl"
                       >
                         <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
