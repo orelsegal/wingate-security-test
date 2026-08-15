@@ -11,10 +11,7 @@
 | מורים רואים/כותבים `student_custom_values` של כל תלמיד | אותו scope | T9 PASS |
 | רגרסיה: הורה/תלמיד | ללא שינוי התנהגות | T10–T11 PASS |
 
-**סטטוס החלה על ה־DB החי: ממתין.** בסביבה זו אין Supabase CLI ואין הרשאות DB (רק anon key). ההחלה דורשת אחת מהדרכים:
-- Supabase Dashboard → SQL Editor → הדבקת תוכן ה־migration והרצתה (פרויקט `flfemffhswlpgpbvhuvy`), או
-- `supabase db push` לאחר `supabase login` במכונה מורשית, או
-- החלה דרך Lovable אם היא מסנכרנת migrations.
+**סטטוס החלה על ה־DB החי: ממתין לאוראל.** המנגנון הקנוני בפרויקט (אומת מהיסטוריית ההחלות של יולי) הוא הרצת הקובץ עם `psql` ישירות מול ה־pooler, עם סיסמת ה־DB שמוזנת ידנית. תוכנית ההחלה המלאה, כולל preflight, post-checks ו־rollback: **`docs/RLS_APPLY_PLAN.md`**.
 
 עד ההחלה, הפרצות פעילות ב־production. ההרצה המקומית (`scripts/rls-harness/run.sh`) מוכיחה שה־migration חלה נקי על כל 46 המיגרציות הקיימות.
 

@@ -21,8 +21,10 @@ describe("Tanakh year-map prototype", () => {
     expect(screen.getByText(/מסלול הלמידה השנתי/)).toBeTruthy();
     expect(screen.getByText("עלילות ראשית")).toBeTruthy();
     expect(screen.getByText("בין שאול לדוד")).toBeTruthy();
-    // honest prototype banner
-    expect(screen.getByText(/אב־טיפוס להדגמה/)).toBeTruthy();
+    // honest prototype notice — short student line + folded technical detail
+    expect(screen.getByText(/גרסת הדגמה/)).toBeTruthy();
+    expect(screen.getByText(/יחידה 1 פתוחה להתנסות/)).toBeTruthy();
+    expect(screen.getByText(/מידע נוסף לצוות/)).toBeTruthy();
     expect(screen.getByText(/מצבי תצוגה בלבד/)).toBeTruthy();
     // all 9 unit titles present
     TANAKH_UNITS.forEach(u => {

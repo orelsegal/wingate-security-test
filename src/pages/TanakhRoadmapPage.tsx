@@ -70,13 +70,21 @@ const TanakhRoadmapPage = () => {
     <div className="min-h-full bg-[hsl(42,45%,96%)]" dir="rtl">
       <div className="p-5 md:p-8 lg:p-10 max-w-[980px] mx-auto">
 
-        {/* ── prototype banner: honest scope ── */}
+        {/* ── prototype notice: short for students; technical detail folded ── */}
         <div className="mb-5 rounded-xl border border-indigo-200 bg-indigo-50/70 px-4 py-2.5">
-          <p className="text-[11px] text-indigo-900 leading-relaxed">
-            <span className="font-bold">אב־טיפוס להדגמה.</span>{" "}
-            מצבי ההתקדמות (עכשיו/הבא/עדיין לא פתוח) הם מצבי תצוגה בלבד ואינם נשמרים בשרת.
-            התוכן לקוח מחומרי ההוראה של צוות תנ״ך; יחידה 1 מלאה, שאר היחידות בכותרתן בלבד.
+          <p className="text-[11.5px] text-indigo-900 leading-relaxed">
+            <span className="font-bold">גרסת הדגמה.</span>{" "}
+            יחידה 1 פתוחה להתנסות. יתר היחידות מוצגות לצורך המחשת המסלול השנתי.
           </p>
+          <details className="mt-1">
+            <summary className="text-[10.5px] text-indigo-800/80 cursor-pointer select-none hover:underline">
+              מידע נוסף לצוות
+            </summary>
+            <p className="text-[10.5px] text-indigo-900/80 leading-relaxed mt-1">
+              מצבי ההתקדמות (עכשיו/הבא/עדיין לא פתוח) הם מצבי תצוגה בלבד ואינם נשמרים בשרת.
+              טיוטות ביחידה 1 נשמרות במכשיר בלבד. התוכן לקוח מחומרי ההוראה של צוות תנ״ך.
+            </p>
+          </details>
         </div>
 
         {/* ── opening ── */}

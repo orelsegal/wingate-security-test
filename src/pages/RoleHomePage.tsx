@@ -417,15 +417,25 @@ const ParentHome = () => {
               </p>
             </div>
 
-            {/* Factual grade counts, or an honest empty state */}
+            {/* Factual grade counts, phrased for a parent (correct singular/plural) */}
             <div className="bg-muted/30 rounded-xl p-3">
-              {totalRows > 0 ? (
-                <p className="text-[13px] text-foreground">
-                  {gradedRows} ציונים קיימים מתוך {totalRows} רשומות לימודיות
-                </p>
-              ) : (
+              {totalRows === 0 ? (
                 <p className="text-[13px] text-muted-foreground">
                   נתוני ציונים ובגרות עדיין אינם זמינים לצפייה בחשבון הורה
+                </p>
+              ) : gradedRows === 0 ? (
+                <>
+                  <p className="text-[13px] font-medium text-foreground">עדיין אין ציונים להצגה</p>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">
+                    {totalRows === 1
+                      ? "קיימת רשומה לימודית אחת ללא ציון."
+                      : `קיימות ${totalRows} רשומות לימודיות ללא ציון.`}
+                  </p>
+                </>
+              ) : (
+                <p className="text-[13px] text-foreground">
+                  {gradedRows === 1 ? "ציון אחד" : `${gradedRows} ציונים`} מתוך{" "}
+                  {totalRows === 1 ? "רשומה לימודית אחת" : `${totalRows} רשומות לימודיות`}
                 </p>
               )}
             </div>

@@ -83,21 +83,37 @@ const MentorDemoPage = () => {
 
   return (
     <div className="p-5 md:p-8 lg:p-10 max-w-[1100px] mx-auto" dir="rtl">
-      {/* prototype banner — the whole screen is synthetic */}
-      <div className="mb-5 rounded-xl border border-violet-200 bg-violet-50/70 px-4 py-2.5">
-        <p className="text-[11px] text-violet-900 leading-relaxed">
-          <span className="font-bold">אב־טיפוס · נתונים סינתטיים בלבד.</span>{" "}
-          תפקיד המאמנטור טרם קיים במודל ההרשאות; המסך מדגים את גבולות המידע והזרימות המתוכננים.
-          שום פעולה כאן אינה נשמרת בשרת.
-        </p>
-      </div>
-
-      <header className="mb-6">
-        <h1 className="text-[24px] md:text-[28px] font-semibold text-foreground tracking-tight">הכיתה שלי</h1>
+      <header className="mb-5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h1 className="text-[24px] md:text-[28px] font-semibold text-foreground tracking-tight">הכיתה שלי</h1>
+          <span className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full bg-violet-100 text-violet-800 border border-violet-200">
+            נתוני הדגמה · לא נשמר בשרת
+          </span>
+        </div>
         <p className="text-[13px] text-muted-foreground mt-1">
-          מאמנטור · כיתה ט2 (דמה) · {SYNTH_CLASS.length} תלמידים · מבט דפוסים חוצה־מקצועות, ללא ציונים וללא תוכן תשובות
+          מאמנטור · כיתה ט2 (דמה) · {SYNTH_CLASS.length} תלמידים
         </p>
       </header>
+
+      {/* ── the three things that need attention, first ── */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+        {attention.slice(0, 3).map(s => {
+          const m = patternMeta[s.pattern];
+          return (
+            <div key={s.id} className="card-premium p-4">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <p className="text-[13px] font-semibold text-foreground">{s.name}</p>
+                <span className={`text-[10.5px] font-medium px-2 py-0.5 rounded-full border shrink-0 ${m.chip}`}>{m.label}</span>
+              </div>
+              <p className="text-[11.5px] text-muted-foreground">{s.patternNote}</p>
+              <p className="text-[11px] mt-1.5">
+                <span className="text-muted-foreground">נדרש לפעול: </span>
+                <span className="font-semibold text-foreground">{s.owner}</span>
+              </p>
+            </div>
+          );
+        })}
+      </section>
 
       {/* class-wide pattern view */}
       <section className="card-premium overflow-hidden mb-6">
@@ -121,9 +137,6 @@ const MentorDemoPage = () => {
             </div>
           );
         })}
-        <p className="px-5 py-2.5 text-[10.5px] text-muted-foreground bg-muted/30">
-          גבול המידע של המאמנטור: דפוס והמתנה בלבד. ציונים, תשובות ותוכן משוב אינם נגישים בתפקיד זה.
-        </p>
       </section>
 
       {/* care flow: report → owner → status → next action → closure */}
@@ -134,14 +147,13 @@ const MentorDemoPage = () => {
           <span className="text-[10.5px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200 font-medium">הדגמה · לא נשמר בשרת</span>
         </div>
 
+        {/* only the four fields a mentor needs: reason, owner, next action, care state */}
         <div className="rounded-xl border border-border bg-muted/20 p-4 mb-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-[13px] font-semibold text-foreground">יואב (דמה) · עצירה ממושכת בתנ״ך</p>
-              <p className="text-[11.5px] text-muted-foreground mt-0.5">
-                נפתח על ידי: המורה לתנ״ך (דמה) · 12.8 · נפרד מהמשוב הלימודי על המשימות עצמן
-              </p>
-            </div>
+            <p className="text-[13px] font-semibold text-foreground">
+              <span className="text-muted-foreground font-medium">סיבה: </span>
+              יואב (דמה) · עצירה ממושכת בתנ״ך
+            </p>
             <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
               careStatus === "closed" ? "bg-emerald-50 text-emerald-800 border-emerald-200"
               : careStatus === "in_progress" ? "bg-amber-50 text-amber-900 border-amber-200"
@@ -188,11 +200,11 @@ const MentorDemoPage = () => {
           {!careOwner && <span className="text-[10.5px] text-muted-foreground">להמשך נדרש אחראי לטיפול</span>}
         </div>
 
-        <div>
-          <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+        <details>
+          <summary className="text-[11px] font-medium text-muted-foreground cursor-pointer select-none hover:underline inline-flex items-center gap-1.5">
             <UserCheck className="h-3.5 w-3.5" strokeWidth={1.7} /> יומן הטיפול
-          </p>
-          <ul className="space-y-1">
+          </summary>
+          <ul className="space-y-1 mt-1.5">
             {log.map((e, i) => (
               <li key={i} className="text-[11.5px] text-foreground/80 flex items-start gap-2">
                 <span className="text-muted-foreground tabular-nums shrink-0">{e.at}</span>
@@ -200,21 +212,22 @@ const MentorDemoPage = () => {
               </li>
             ))}
           </ul>
-        </div>
+        </details>
       </section>
 
-      {/* what this role never sees */}
-      <section className="rounded-2xl border border-border bg-muted/20 p-4 mb-8">
-        <p className="text-[12px] font-semibold text-foreground flex items-center gap-1.5 mb-1.5">
+      {/* role boundaries + prototype detail — folded, out of the main flow */}
+      <details className="rounded-2xl border border-border bg-muted/20 p-4 mb-8">
+        <summary className="text-[12px] font-semibold text-foreground cursor-pointer select-none inline-flex items-center gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 text-warning" strokeWidth={1.7} />
-          מה המאמנטור אינו רואה, בכוונה
+          גבולות התפקיד ומצב ההדגמה
+        </summary>
+        <p className="text-[11.5px] text-muted-foreground leading-relaxed mt-1.5">
+          המאמנטור אינו רואה בכוונה: ציונים, תוכן תשובות והגשות, משוב לימודי מפורט,
+          והערות מעקב של מקצועות שאינם באחריותו. התלמיד וההורה אינם חשופים לתיוג הפנימי שבמסך זה.
+          המסך כולו הוא אב־טיפוס על נתונים סינתטיים ואינו נשמר בשרת; אכיפה אמיתית של הגבולות
+          תדרוש הוספת התפקיד למודל ההרשאות וב־RLS, צעד שטרם בוצע.
         </p>
-        <p className="text-[11.5px] text-muted-foreground leading-relaxed">
-          ציונים · תוכן תשובות והגשות · משוב לימודי מפורט · הערות מעקב של מקצועות שאינם באחריותו.
-          התלמיד וההורה אינם חשופים לתיוג הפנימי שבמסך זה. אכיפה אמיתית של הגבולות האלה תדרוש
-          הוספת התפקיד למודל ההרשאות וב־RLS — צעד שטרם בוצע.
-        </p>
-      </section>
+      </details>
 
       <SendUpdateDialog
         open={sendOpen}
