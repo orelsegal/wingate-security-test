@@ -4,7 +4,10 @@ import { Loader2, Target, Hourglass, CheckCircle2, AlertCircle, BookOpen, Globe,
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
-import { openSubjectApp } from "@/lib/openSubjectApp";
+import { openSubjectApp, openSubjectAppSameWindow } from "@/lib/openSubjectApp";
+
+/** תוכן פנימי גנרי שטרם אושר — מוקפא; אין ניווט למסלול (טבלת מקור האמת) */
+const IN_PREPARATION = new Set(["לשון", "היסטוריה", "אנגלית", "מתמטיקה", "חינוך גופני"]);
 
 /* ═══ Subject color/icon map ═══ */
 const subjectMeta: Record<string, { icon: any; bg: string; fg: string; pill: string }> = {
@@ -153,8 +156,9 @@ const StudentHomePage = () => {
               </p>
             </div>
           </div>
-          {/* Next task — a real action, not a generic subject label.
-              For תנ״ך the entry point is the year-map prototype (unit 1). */}
+          {/* Next task — a real action only. תנ״ך opens its approved year map;
+              אזרחות/ספרות open the canonical products; frozen generic tracks
+              get NO call-to-action (they are not an active product). */}
           {nextSubject && (nextSubject.name === "תנ״ך" ? (
             <button
               onClick={() => navigate(`/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`)}
@@ -170,36 +174,54 @@ const StudentHomePage = () => {
                 <ChevronLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2} />
               </span>
             </button>
-          ) : (
+          ) : nextSubject.name === "אזרחות" ? (
             <button
-              onClick={() => navigate(`/subjects/${encodeURIComponent(nextSubject.name)}`)}
+              onClick={() => openSubjectAppSameWindow("civics-70")}
               className="group shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-white text-[13px] font-semibold bg-primary hover:bg-primary/90 transition-colors shadow-sm"
             >
-              <span>המשימה הבאה: {nextSubject.name}</span>
+              <span>המשימה הבאה: אזרחות · מעבר לאפליקציה</span>
               <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2} />
             </button>
-          ))}
+          ) : nextSubject.name === "ספרות" ? (
+            <button
+              onClick={() => navigate(`/subjects/${encodeURIComponent("ספרות")}/literature`)}
+              className="group shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-white text-[13px] font-semibold bg-primary hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              <span>המשימה הבאה: ספרות</span>
+              <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2} />
+            </button>
+          ) : null)}
         </div>
 
-        {/* Needs-attention chips — only red/yellow subjects */}
+        {/* Needs-attention chips — only red/yellow subjects. Navigation follows
+            the source-of-truth table; frozen tracks stay informational. */}
         {atRisk.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border/50">
             <p className="text-[10.5px] font-medium text-muted-foreground mb-2">דורש תשומת לב</p>
             <div className="flex flex-wrap gap-2">
-              {atRisk.map((s) => (
-                <button
-                  key={s.name}
-                  onClick={() => navigate(`/subjects/${encodeURIComponent(s.name)}`)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-medium transition-colors ${
-                    s.status === "red"
-                      ? "bg-destructive/8 text-destructive hover:bg-destructive/15"
-                      : "bg-warning/10 text-warning hover:bg-warning/20"
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${s.status === "red" ? "bg-destructive" : "bg-warning"}`} />
-                  {s.name}
-                </button>
-              ))}
+              {atRisk.map((s) => {
+                const go =
+                  s.name === "תנ״ך" ? () => navigate(`/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`)
+                  : s.name === "ספרות" ? () => navigate(`/subjects/${encodeURIComponent("ספרות")}/literature`)
+                  : s.name === "אזרחות" ? () => openSubjectAppSameWindow("civics-70")
+                  : null;
+                const cls = `flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-medium ${
+                  s.status === "red"
+                    ? "bg-destructive/8 text-destructive"
+                    : "bg-warning/10 text-warning"
+                }`;
+                return go ? (
+                  <button key={s.name} onClick={go} className={`${cls} transition-colors hover:opacity-80`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${s.status === "red" ? "bg-destructive" : "bg-warning"}`} />
+                    {s.name}
+                  </button>
+                ) : (
+                  <span key={s.name} className={cls}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${s.status === "red" ? "bg-destructive" : "bg-warning"}`} />
+                    {s.name}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}
@@ -289,16 +311,33 @@ const StudentHomePage = () => {
             const Icon = m.icon;
             const statusLabel = s.pct === 0 ? "טרם החל" : s.pct === 100 ? "הושלם" : "בתהליך";
             const statusBg = s.pct === 0 ? "bg-violet-100 text-violet-700" : s.pct === 100 ? "bg-emerald-100 text-emerald-700" : "bg-sky-100 text-sky-700";
+            const inPrep = IN_PREPARATION.has(s.name);
+            /* Canonical apps: no progress bar/% in the shell (no sync exists;
+               a number here would be invented) — a clear nav action instead. */
+            const canonicalCta =
+              s.name === "ספרות" ? "לשער המקצוע"
+              : s.name === "אזרחות" ? "מעבר לאפליקציה"
+              : null;
+            const go = inPrep ? undefined
+              : s.name === "תנ״ך" ? () => navigate(`/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`)
+              : s.name === "ספרות" ? () => navigate(`/subjects/${encodeURIComponent("ספרות")}/literature`)
+              : s.name === "אזרחות" ? () => openSubjectAppSameWindow("civics-70")
+              : () => navigate(`/subjects/${encodeURIComponent(s.name)}`);
+            const Card: "button" | "div" = inPrep ? "div" : "button";
             return (
-              <button key={i} onClick={() => navigate(s.name === "תנ״ך"
-                  ? `/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`
-                  : `/subjects/${encodeURIComponent(s.name)}`)}
-                className={`group ${m.bg} rounded-2xl border border-border/60 p-4 text-right shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up`}
+              <Card key={i} onClick={go} aria-disabled={inPrep || undefined}
+                className={`group ${m.bg} rounded-2xl border border-border/60 p-4 text-right shadow-[var(--shadow-card)] ${
+                  inPrep ? "opacity-90 select-none" : "hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
+                } transition-all duration-300 animate-fade-in-up`}
                 style={{ animationDelay: `${i * 40}ms` }}>
                 <div className="flex items-start justify-between mb-3">
+                  {/* real DB status renders; the pct-derived fallback chip is
+                      hidden on canonical-app cards (no progress sync exists) */}
                   {s.status === "green" || s.status === "yellow" || s.status === "red"
                     ? <StatusBadge type={s.status} />
-                    : <span className={`text-[9.5px] font-medium px-2 py-0.5 rounded-full ${statusBg}`}>{statusLabel}</span>}
+                    : canonicalCta
+                      ? <span />
+                      : <span className={`text-[9.5px] font-medium px-2 py-0.5 rounded-full ${statusBg}`}>{statusLabel}</span>}
                   <div className="flex items-center gap-2">
                     <div>
                       <h3 className="text-[14px] font-semibold text-foreground leading-tight">{s.name}</h3>
@@ -309,18 +348,35 @@ const StudentHomePage = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[14px] font-bold text-foreground tabular-nums">{s.pct}%</span>
-                  <span className="text-[10px] text-muted-foreground">התקדמות</span>
-                </div>
-                <div className="h-1.5 bg-white/70 rounded-full overflow-hidden mb-3">
-                  <div className={`h-full rounded-full ${m.fg.replace("text-", "bg-")} transition-all duration-700`} style={{ width: `${s.pct}%` }} />
-                </div>
+                {canonicalCta ? (
+                  <div className="flex items-center justify-end gap-1 mb-3 mt-1">
+                    <span className={`inline-flex items-center gap-1 text-[11.5px] font-semibold ${m.fg}`}>
+                      {canonicalCta}
+                      <ChevronLeft className="h-3 w-3" strokeWidth={2} />
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[14px] font-bold text-foreground tabular-nums">{s.pct}%</span>
+                      <span className="text-[10px] text-muted-foreground">התקדמות</span>
+                    </div>
+                    <div className="h-1.5 bg-white/70 rounded-full overflow-hidden mb-3">
+                      <div className={`h-full rounded-full ${m.fg.replace("text-", "bg-")} transition-all duration-700`} style={{ width: `${s.pct}%` }} />
+                    </div>
+                  </>
+                )}
                 <div className="flex items-center justify-between pt-2 border-t border-border/40 text-[10px]">
                   <span className="text-muted-foreground">{s.grade != null ? `ציון: ${s.grade}` : "אין ציון עדיין"}</span>
-                  <span className="text-muted-foreground">{s.missing > 0 ? `${s.missing} מטלות` : "לא נקבע מועד"}</span>
+                  {inPrep ? (
+                    <span className="font-semibold px-1.5 py-0.5 rounded-full bg-white/70 text-muted-foreground border border-border/60">
+                      מסלול בהכנה
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">{s.missing > 0 ? `${s.missing} מטלות` : "לא נקבע מועד"}</span>
+                  )}
                 </div>
-              </button>
+              </Card>
             );
           })}
 

@@ -20,8 +20,8 @@ const LiteratureHubPage = () => {
   const cards = [
     {
       id: "30",
-      title: "הערכה פנימית · 30%",
-      subtitle: "לרוץ עם מילים — יחידת ההערכה הבית-ספרית",
+      title: "לרוץ עם מילים · 30%",
+      subtitle: "יחידת ההערכה הבית-ספרית",
       meta: "מעבר לאפליקציה · חזרה עם כפתור החזרה בדפדפן",
       Icon: BookOpen,
       iconBg: "bg-[hsl(270,25%,94%)]",
@@ -31,8 +31,8 @@ const LiteratureHubPage = () => {
     },
     {
       id: "70",
-      title: "בגרות חיצונית · 70%",
-      subtitle: "ספרות לבגרות — פרוזה, שירה ודרמה",
+      title: "ספרות לבגרות · 70%",
+      subtitle: "פרוזה, שירה ודרמה · הכנה לבחינת הבגרות",
       meta: "מעבר לאפליקציה · חזרה עם כפתור החזרה בדפדפן",
       Icon: GraduationCap,
       iconBg: "bg-[hsl(35,30%,94%)]",
@@ -62,7 +62,7 @@ const LiteratureHubPage = () => {
           {decoded}
         </h1>
         <p className="text-[12.5px] text-muted-foreground mt-1.5">
-          בחירת חלק — הערכה פנימית 30% או בגרות חיצונית 70%
+          שני חלקי המקצוע · 30% ו־70% · אפליקציות הלמידה
         </p>
       </div>
 

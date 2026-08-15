@@ -4,7 +4,7 @@
  * every entry redirects to the clean literature gate, which sends students
  * to the canonical apps (לרוץ עם מילים 30% / ספרות לבגרות 70%).
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -36,6 +36,24 @@ describe("ספרות redirects to the canonical gate", () => {
   });
 });
 
+describe("אזרחות forwards to the canonical app (frozen internal view)", () => {
+  const realLocation = window.location;
+  afterEach(() => {
+    Object.defineProperty(window, "location", { value: realLocation, writable: true, configurable: true });
+  });
+
+  it("renders the interstitial, navigates same-window, never shows internal units", () => {
+    const assign = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: { ...realLocation, assign }, writable: true, configurable: true,
+    });
+    renderAt(`/subjects/${encodeURIComponent("אזרחות")}`);
+    expect(screen.getByText(/מעבירים אתכם לאפליקציית האזרחות/)).toBeTruthy();
+    expect(assign).toHaveBeenCalledWith("https://israel-civics-coach.lovable.app/");
+    expect(screen.queryByText(/יחידות לימוד/)).toBeNull();
+  });
+});
+
 describe("the literature gate itself", () => {
   it("offers exactly the two canonical parts, same-window, with a return hint", () => {
     render(
@@ -45,9 +63,11 @@ describe("the literature gate itself", () => {
         </Routes>
       </MemoryRouter>,
     );
-    expect(screen.getByText(/הערכה פנימית · 30%/)).toBeTruthy();
-    expect(screen.getByText(/לרוץ עם מילים/)).toBeTruthy();
-    expect(screen.getByText(/בגרות חיצונית · 70%/)).toBeTruthy();
+    expect(screen.getByText(/לרוץ עם מילים · 30%/)).toBeTruthy();
+    expect(screen.getByText(/ספרות לבגרות · 70%/)).toBeTruthy();
+    // the retired פנימי/חיצוני vocabulary must not face users
+    expect(screen.queryByText(/פנימי/)).toBeNull();
+    expect(screen.queryByText(/חיצוני/)).toBeNull();
     // clear same-window + return affordance, and no stale "new tab" copy
     expect(screen.getAllByText(/חזרה עם כפתור החזרה בדפדפן/).length).toBe(2);
     expect(screen.queryByText(/נפתח בטאב חדש/)).toBeNull();
