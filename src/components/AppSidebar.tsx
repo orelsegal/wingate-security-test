@@ -26,6 +26,8 @@ interface MenuItemDef {
 const allMenuItems: MenuItemDef[] = [
   // ── work (עבודה שוטפת) ──
   { key: "dashboard",      icon: Home,         path: "/",                roles: ["developer", "admin", "teacher", "parent", "coach"], group: "work" },
+  // חדר הבקרה — שני הרמזורים על נתוני האמת (RLS: קריאת admin בלבד)
+  { key: "trafficBoard",   icon: Activity,     path: "/control/traffic", roles: ["developer", "admin"], group: "work" },
   { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"], group: "work" },
   { key: "myGroups",       icon: Layers,       path: "/my-groups",       roles: ["teacher"], group: "work" },
   { key: "students",       icon: Users,        path: "/students",        roles: ["developer", "admin", "teacher", "coach"], group: "work" },
