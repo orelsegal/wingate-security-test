@@ -1,13 +1,16 @@
 /**
- * LiteratureHubPage — חלוקת ספרות לשני חלקים:
- *   • 30% — הערכה פנימית (לרוץ עם מילים)
- *   • 70% — בגרות חיצונית
- * שני הכרטיסים פותחים את אפליקציית המקצוע החיצונית דרך ה-registry
- * (Phase A). העמודים הפנימיים נשארים בקוד וזמינים ב-URL ישיר ל-rollback.
+ * LiteratureHubPage — שער המקצוע הנקי של ספרות:
+ *   • 30% — לרוץ עם מילים (larutz-im-milim.web.app)
+ *   • 70% — ספרות לבגרות (seferut-bagrut.vercel.app)
+ * הכרטיסים מנווטים לאפליקציות הקנוניות דרך ה-registry (Phase A),
+ * באותו חלון: embedding נפסל כי שתי האפליקציות דורשות כניסת Google,
+ * ודפי האימות של Google מסרבים להיטען בתוך iframe — ההטמעה הייתה
+ * נשברת בדיוק בשלב הכניסה. חזרה: כפתור החזרה של הדפדפן.
+ * העמודים הפנימיים נשארים בקוד וזמינים ב-URL ישיר ל-rollback.
  */
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, BookOpen, GraduationCap, ChevronLeft } from "lucide-react";
-import { openSubjectApp, isSubjectAppAvailable } from "@/lib/openSubjectApp";
+import { openSubjectAppSameWindow, isSubjectAppAvailable } from "@/lib/openSubjectApp";
 
 const LiteratureHubPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
@@ -17,24 +20,24 @@ const LiteratureHubPage = () => {
   const cards = [
     {
       id: "30",
-      title: "הערכה פנימית · 30%",
-      subtitle: "לרוץ עם מילים — יחידת הערכה בית-ספרית",
-      meta: "פעיל · נפתח בטאב חדש",
+      title: "לרוץ עם מילים · 30%",
+      subtitle: "יחידת ההערכה הבית-ספרית",
+      meta: "מעבר לאפליקציה · חזרה עם כפתור החזרה בדפדפן",
       Icon: BookOpen,
       iconBg: "bg-[hsl(270,25%,94%)]",
       iconColor: "text-[hsl(270,35%,50%)]",
-      onClick: () => openSubjectApp("literature-30"),
+      onClick: () => openSubjectAppSameWindow("literature-30"),
       disabled: !isSubjectAppAvailable("literature-30"),
     },
     {
       id: "70",
-      title: "בגרות חיצונית · 70%",
-      subtitle: "8 יחידות בגרות — פרוזה, שירה ודרמה",
-      meta: "פעיל · נפתח בטאב חדש",
+      title: "ספרות לבגרות · 70%",
+      subtitle: "פרוזה, שירה ודרמה · הכנה לבחינת הבגרות",
+      meta: "מעבר לאפליקציה · חזרה עם כפתור החזרה בדפדפן",
       Icon: GraduationCap,
       iconBg: "bg-[hsl(35,30%,94%)]",
       iconColor: "text-[hsl(35,40%,45%)]",
-      onClick: () => openSubjectApp("literature-70"),
+      onClick: () => openSubjectAppSameWindow("literature-70"),
       disabled: !isSubjectAppAvailable("literature-70"),
     },
   ];
@@ -59,7 +62,7 @@ const LiteratureHubPage = () => {
           {decoded}
         </h1>
         <p className="text-[12.5px] text-muted-foreground mt-1.5">
-          בחירת חלק — הערכה פנימית 30% או בגרות חיצונית 70%
+          שני חלקי המקצוע · 30% ו־70% · אפליקציות הלמידה
         </p>
       </div>
 

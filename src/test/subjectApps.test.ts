@@ -8,6 +8,7 @@ import {
   subjectAppUrl,
   isSubjectAppAvailable,
   openSubjectApp,
+  openSubjectAppSameWindow,
 } from "@/lib/openSubjectApp";
 
 /** The exact URLs each entry point must lead to (Phase A canonical targets). */
@@ -123,5 +124,41 @@ describe("openSubjectApp — isolated new tab", () => {
     expect(openSubjectApp("mind-map-learner")).toBe(false);
     expect(openSubjectApp("tanakh-70")).toBe(false);
     expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe("openSubjectAppSameWindow — literature gate navigation", () => {
+  /** jsdom's window.location.assign is non-configurable, so the whole
+   *  location object is swapped for a stub and restored afterwards. */
+  const realLocation = window.location;
+  const stubLocation = (assign: (url: string) => void) => {
+    Object.defineProperty(window, "location", {
+      value: { ...realLocation, assign },
+      writable: true,
+      configurable: true,
+    });
+  };
+  afterEach(() => {
+    Object.defineProperty(window, "location", {
+      value: realLocation,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("navigates the current window to the exact canonical URL", () => {
+    const assign = vi.fn();
+    stubLocation(assign);
+    expect(openSubjectAppSameWindow("literature-30")).toBe(true);
+    expect(assign).toHaveBeenCalledWith("https://larutz-im-milim.web.app/#station-9");
+    expect(openSubjectAppSameWindow("literature-70")).toBe(true);
+    expect(assign).toHaveBeenCalledWith("https://seferut-bagrut.vercel.app/");
+  });
+
+  it("fails closed for an unknown product without navigating", () => {
+    const assign = vi.fn();
+    stubLocation(assign);
+    expect(openSubjectAppSameWindow("nope")).toBe(false);
+    expect(assign).not.toHaveBeenCalled();
   });
 });

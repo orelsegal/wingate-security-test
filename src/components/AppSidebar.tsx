@@ -2,7 +2,7 @@ import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Databas
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { openSubjectApp } from "@/lib/openSubjectApp";
+import { openSubjectApp, openSubjectAppSameWindow } from "@/lib/openSubjectApp";
 import type { UserRole } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
 import { useIsSystemOwner } from "@/hooks/useSystemOwner";
@@ -247,20 +247,24 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
             </>
           )}
 
-          {/* Subjects list — visible to students between dashboard and messages */}
+          {/* Subjects list — visible to students between dashboard and messages.
+              Per the source-of-truth table: canonical apps open via the
+              registry; generic unapproved internal tracks are frozen and
+              shown as dignified, non-clickable "בהכנה" rows. */}
           {user?.role === "student" && (() => {
-            // `external` items open a subject app via the registry (Phase A),
-            // instead of navigating to an internal route.
-            const subjects: { name: string; icon: typeof Home; path: string; external?: "science" }[] = [
+            const subjects: {
+              name: string; icon: typeof Home; path?: string;
+              external?: "science"; canonicalSameWindow?: "civics-70"; prep?: boolean;
+            }[] = [
               { name: "תנ״ך",        icon: BookOpen,   path: "/subjects/" + encodeURIComponent("תנ״ך") + "/tanakh-30" },
-              { name: "לשון",        icon: Languages,  path: "/subjects/" + encodeURIComponent("לשון") },
-              { name: "היסטוריה",    icon: Scroll,     path: "/subjects/" + encodeURIComponent("היסטוריה") },
-              { name: "אנגלית",      icon: Globe,      path: "/subjects/" + encodeURIComponent("אנגלית") },
-              { name: "מתמטיקה",     icon: Calculator, path: "/roadmaps/math" },
-              { name: "חינוך גופני", icon: Dumbbell,   path: "/subjects/" + encodeURIComponent("חינוך גופני") },
               { name: "ספרות",       icon: Feather,    path: "/subjects/" + encodeURIComponent("ספרות") + "/literature" },
-              { name: "אזרחות",      icon: Scale,      path: "/subjects/" + encodeURIComponent("אזרחות") },
-              { name: "מבוא למדעים", icon: Lightbulb,  path: "", external: "science" },
+              { name: "אזרחות",      icon: Scale,      canonicalSameWindow: "civics-70" },
+              { name: "מבוא למדעים", icon: Lightbulb,  external: "science" },
+              { name: "לשון",        icon: Languages,  prep: true },
+              { name: "היסטוריה",    icon: Scroll,     prep: true },
+              { name: "אנגלית",      icon: Globe,      prep: true },
+              { name: "מתמטיקה",     icon: Calculator, prep: true },
+              { name: "חינוך גופני", icon: Dumbbell,   prep: true },
             ];
             return (
               <div className="pt-2 mt-1 border-t border-sidebar-border/60">
@@ -268,13 +272,29 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
                   מקצועות
                 </p>
                 {subjects.map((s) => {
-                  const active = !s.external && decodeURIComponent(location.pathname) === decodeURIComponent(s.path);
+                  if (s.prep) {
+                    return (
+                      <div
+                        key={s.name}
+                        aria-disabled="true"
+                        className="w-full flex flex-row items-center gap-3 px-3 py-2 rounded-xl text-[12.5px] text-start font-medium text-sidebar-muted/45 cursor-default select-none"
+                      >
+                        <s.icon className="h-[15px] w-[15px] shrink-0 text-sidebar-muted/40" strokeWidth={1.5} />
+                        <span>{s.name}</span>
+                        <span className="ms-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sidebar-accent/60 text-sidebar-muted/60">
+                          בהכנה
+                        </span>
+                      </div>
+                    );
+                  }
+                  const active = !!s.path && decodeURIComponent(location.pathname) === decodeURIComponent(s.path);
                   return (
                     <button
                       key={s.name}
                       onClick={() => {
                         if (s.external) { openSubjectApp(s.external); return; }
-                        navigate(s.path); onNavigate?.();
+                        if (s.canonicalSameWindow) { openSubjectAppSameWindow(s.canonicalSameWindow); return; }
+                        if (s.path) { navigate(s.path); onNavigate?.(); }
                       }}
                       className={`w-full flex flex-row items-center gap-3 px-3 py-2 rounded-xl text-[12.5px] transition-all duration-200 text-start ${
                         active

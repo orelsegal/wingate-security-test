@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { ArrowRight, Loader2, BookOpen, Play, ClipboardList, Pencil, Home, MessageCircleQuestion, Trophy, Zap, GraduationCap, CheckCircle2, Lock, Flame, Gift, BarChart3, Star, Map as MapIcon, Calculator, Sparkles, Award, ChevronLeft, Crown, Shield, Target } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
@@ -8,7 +8,7 @@ import DataExportTools from "@/components/DataExportTools";
 import TeacherAIAssistant from "@/components/TeacherAIAssistant";
 import { courseContent } from "@/lib/courseContent";
 import ScenicRoadmap from "@/components/ScenicRoadmap";
-import { subjectAppUrl } from "@/lib/openSubjectApp";
+import { subjectAppUrl, openSubjectAppSameWindow } from "@/lib/openSubjectApp";
 
 const SubjectDetailPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
@@ -26,6 +26,14 @@ const SubjectDetailPage = () => {
 
   useEffect(() => {
     if (decoded) saveLastVisited(`/subjects/${encodeURIComponent(decoded)}`, decoded);
+  }, [decoded]);
+
+  // אזרחות: a canonical app exists (israel-civics-coach) — the internal units
+  // view is frozen. Any arrival here (direct URL, old link) is forwarded
+  // safely to the canonical app, same-window, via the validated registry —
+  // the same pattern approved for literature.
+  useEffect(() => {
+    if (decoded === "אזרחות") openSubjectAppSameWindow("civics-70");
   }, [decoded]);
 
   const subjectProgress = useMemo(
@@ -85,6 +93,33 @@ const SubjectDetailPage = () => {
     if (!n) return;
     navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`);
   };
+
+  // ספרות has REAL canonical apps (לרוץ עם מילים 30% + ספרות לבגרות 70%).
+  // The internal "יחידות לימוד" view duplicated them, so every entry point
+  // (subjects grid, student home, direct URL) redirects to the clean
+  // literature gate, which sends students to the canonical apps.
+  // Placed AFTER all hooks so the hook order stays stable when this same
+  // mounted component re-renders with a different :subjectName param.
+  if (decoded === "ספרות") {
+    return <Navigate to={`/subjects/${encodeURIComponent("ספרות")}/literature`} replace />;
+  }
+
+  // אזרחות: the effect above already navigates same-window; render an honest
+  // interstitial with a manual fallback instead of the frozen internal view.
+  if (decoded === "אזרחות") {
+    return (
+      <div className="p-10 text-center" dir="rtl">
+        <p className="text-[14px] font-medium text-foreground">מעבירים אתכם לאפליקציית האזרחות</p>
+        <p className="text-[12px] text-muted-foreground mt-1.5">האפליקציה נפתחת באותו חלון; חזרה עם כפתור החזרה בדפדפן.</p>
+        <button
+          onClick={() => openSubjectAppSameWindow("civics-70")}
+          className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white bg-primary hover:bg-primary/90 px-5 py-2.5 rounded-full transition-colors"
+        >
+          מעבר לאפליקציה
+        </button>
+      </div>
+    );
+  }
 
   const doneCount = nodes.filter(n => n.status === "done").length;
   const totalCount = nodes.length || 1;
