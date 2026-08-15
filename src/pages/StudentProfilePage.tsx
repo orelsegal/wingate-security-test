@@ -527,7 +527,7 @@ const StudentProfilePage = () => {
             return (
               <div className="card-premium p-4" dir="rtl">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <p className="text-[12px] font-semibold text-foreground">סטטוס ניהולי</p>
+                  <p className="text-[12px] font-semibold text-foreground">מצב המעקב</p>
                   <button onClick={() => setStatusEditorOpen(true)} className="text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded">
                     שינוי סטטוס
                   </button>

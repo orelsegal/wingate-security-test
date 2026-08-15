@@ -69,10 +69,8 @@ const TeacherAIAssistant = ({ defaultSubject, compact }: Props) => {
     toast({ title: "הועתק" });
   };
 
-  const sendWhatsApp = () => {
-    if (!result) return;
-    window.open(`https://wa.me/?text=${encodeURIComponent(result.content)}`, "_blank");
-  };
+  /* wa.me sharing removed (security): AI-generated content is never pushed
+     to an external channel; the teacher copies and decides what to share. */
 
   // Collapsed view — just a button
   if (!isExpanded && compact) {
@@ -174,10 +172,6 @@ const TeacherAIAssistant = ({ defaultSubject, compact }: Props) => {
             <Button variant="outline" size="sm" onClick={copyContent} className="gap-1.5 text-[10px] h-7 rounded-lg">
               <Copy className="h-3 w-3" strokeWidth={1.5} />
               העתק
-            </Button>
-            <Button variant="outline" size="sm" onClick={sendWhatsApp} className="gap-1.5 text-[10px] h-7 rounded-lg">
-              <Send className="h-3 w-3" strokeWidth={1.5} />
-              שלח לוואטסאפ
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setResult(null)} className="text-[10px] h-7 rounded-lg mr-auto">
               צור תוכן חדש

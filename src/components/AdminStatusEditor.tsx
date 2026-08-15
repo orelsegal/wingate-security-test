@@ -57,9 +57,9 @@ const AdminStatusEditor = ({ student, current, open, onOpenChange }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader>
-          <DialogTitle className="text-[15px]">סטטוס ניהולי — {student?.full_name}</DialogTitle>
+          <DialogTitle className="text-[15px]">מצב המעקב — {student?.full_name}</DialogTitle>
           <DialogDescription className="text-[12px]">
-            הסטטוס נקבע ידנית בלבד ואינו מחושב מציונים.
+            המצב נקבע על ידי הצוות ואינו מחושב אוטומטית מציונים.
           </DialogDescription>
         </DialogHeader>
 

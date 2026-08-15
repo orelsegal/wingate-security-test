@@ -100,71 +100,81 @@ const OpsBoard = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-3 items-start mb-5">
-      {/* ── alerts, ordered by urgency ── */}
-      <div className="card-premium px-4 sm:px-5 py-3.5 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <AlertTriangle className="h-4 w-4 text-primary" strokeWidth={1.6} />
-          <h2 className="text-[14px] font-semibold text-foreground">דורש טיפול</h2>
-          {openCount > 0 && (
-            <span className="text-[11px] text-muted-foreground">{openCount} פריטים פתוחים</span>
+      {/* ── two separate areas: student follow-up vs data completeness.
+             "דורש טיפול" is reserved for real student follow-up only ── */}
+      <div className="min-w-0 space-y-3">
+        {alerts.attention.length > 0 && (
+          <div className="card-premium px-4 sm:px-5 py-3.5 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-4 w-4 text-destructive" strokeWidth={1.6} />
+              <h2 className="text-[14px] font-semibold text-foreground">מעקב תלמידים</h2>
+            </div>
+            <AlertRow tone="red"
+              title={`${alerts.attention.length} תלמידים במצב מעקב "דורש טיפול" או "במעקב"`}
+              explain="המצב נקבע על ידי הצוות ואינו מחושב אוטומטית מציונים"
+              names={alerts.attention.map(a => a.name)}
+              action="לרשימת התלמידים" onAction={() => navigate("/students")} />
+          </div>
+        )}
+
+        <div className="card-premium px-4 sm:px-5 py-3.5 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <Database className="h-4 w-4 text-primary" strokeWidth={1.6} />
+            <h2 className="text-[14px] font-semibold text-foreground">השלמות נתונים נדרשות</h2>
+            {openCount - alerts.attention.length > 0 && (
+              <span className="text-[11px] text-muted-foreground">{openCount - alerts.attention.length} פריטים פתוחים</span>
+            )}
+          </div>
+          {openCount - alerts.attention.length === 0 && !alerts.bootstrap ? (
+            <p className="text-[12.5px] text-muted-foreground py-2 flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.6} />
+              אין כרגע השלמות נתונים פתוחות.
+            </p>
+          ) : (
+            <div>
+              {alerts.invalidNid.length > 0 && (
+                <AlertRow tone="warn"
+                  title={`${alerts.invalidNid.length} תלמידים ללא מספר זהות תקין`}
+                  explain="יש לתקן את פרטי הזיהוי לפני ייבוא הנתונים הבא."
+                  action="להזנת נתונים" onAction={() => navigate("/data-entry")} />
+              )}
+              {alerts.noCoach.length > 0 && (
+                <AlertRow tone="warn"
+                  title={`${alerts.noCoach.length} תלמידים פעילים ללא שיוך מאמן`}
+                  explain="אין שדה מאמן ברשומה ואין שיוך מנוהל פעיל"
+                  names={alerts.noCoach.map(a => a.name)}
+                  action="לרשימת התלמידים" onAction={() => navigate("/students")} />
+              )}
+              {alerts.noGuardians && alerts.noGuardians.length > 0 && (
+                <AlertRow tone="warn"
+                  title={`${alerts.noGuardians.length} תלמידים פעילים ללא קשר הורה`}
+                  explain="אין קשר הורה פעיל במערכת; הוספה דרך טאב הקשרים בפרופיל"
+                  action="לרשימת התלמידים" onAction={() => navigate("/students")} />
+              )}
+            </div>
+          )}
+          {alerts.bootstrap && (
+            <div className="flex items-start gap-3 py-2.5 border-t border-border/50 mt-1">
+              <span className="mt-1 w-2 h-2 rounded-full shrink-0 bg-muted-foreground/40" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-foreground">טרם יובאו קשרי הורים ומאמנים.</p>
+                <p className="text-[11.5px] text-muted-foreground mt-0.5">
+                  לאחר השלמת הייבוא יוצגו כאן הקשרים המאושרים.
+                </p>
+              </div>
+              <button onClick={() => navigate("/admin/data-import")}
+                className="shrink-0 inline-flex items-center gap-1 text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded pt-0.5">
+                לייבוא ועדכון נתונים
+                <ArrowLeft className="h-3 w-3" strokeWidth={1.8} />
+              </button>
+            </div>
+          )}
+          {!isSystemOwner && (
+            <p className="text-[11px] text-muted-foreground mt-2">
+              בדיקת קשרי הורים ומאמנים מנוהלים זמינה לבעלי המערכת בלבד.
+            </p>
           )}
         </div>
-        {openCount === 0 && !alerts.bootstrap ? (
-          <p className="text-[12.5px] text-muted-foreground py-2 flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.6} />
-            אין כרגע התראות פתוחות.
-          </p>
-        ) : (
-          <div>
-            {alerts.attention.length > 0 && (
-              <AlertRow tone="red"
-                title={`${alerts.attention.length} תלמידים בסטטוס ניהולי צהוב או אדום`}
-                explain="סומנו ידנית כדורשים מעקב"
-                names={alerts.attention.map(a => a.name)}
-                action="לרשימת הספורטאים" onAction={() => navigate("/students")} />
-            )}
-            {alerts.noCoach.length > 0 && (
-              <AlertRow tone="warn"
-                title={`${alerts.noCoach.length} תלמידים פעילים ללא מאמן/ת`}
-                explain="אין שדה מאמן ברשומה ואין שיוך מנוהל פעיל"
-                names={alerts.noCoach.map(a => a.name)}
-                action="לרשימת הספורטאים" onAction={() => navigate("/students")} />
-            )}
-            {alerts.noGuardians && alerts.noGuardians.length > 0 && (
-              <AlertRow tone="warn"
-                title={`${alerts.noGuardians.length} תלמידים פעילים ללא קשר הורה`}
-                explain="אין קשר הורה פעיל במערכת; הוספה דרך טאב הקשרים בפרופיל"
-                action="לרשימת הספורטאים" onAction={() => navigate("/students")} />
-            )}
-            {alerts.invalidNid.length > 0 && (
-              <AlertRow tone="info"
-                title={`${alerts.invalidNid.length} תלמידים ללא תעודת זהות תקינה`}
-                explain="חסרה או לא עוברת בדיקת תקינות; משפיע על ייבוא עתידי"
-                action="להזנת נתונים" onAction={() => navigate("/data-entry")} />
-            )}
-          </div>
-        )}
-        {alerts.bootstrap && (
-          <div className="flex items-start gap-3 py-2.5 border-t border-border/50 mt-1">
-            <span className="mt-1 w-2 h-2 rounded-full shrink-0 bg-muted-foreground/40" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-foreground">קשרי הורים ומאמנים טרם יובאו למערכת.</p>
-              <p className="text-[11.5px] text-muted-foreground mt-0.5">
-                לאחר השלמת הייבוא יוצגו כאן רק חוסרים אמיתיים.
-              </p>
-            </div>
-            <button onClick={() => navigate("/admin/data-import")}
-              className="shrink-0 inline-flex items-center gap-1 text-[11.5px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded pt-0.5">
-              לייבוא ועדכון נתונים
-              <ArrowLeft className="h-3 w-3" strokeWidth={1.8} />
-            </button>
-          </div>
-        )}
-        {!isSystemOwner && (
-          <p className="text-[11px] text-muted-foreground mt-2">
-            בדיקת קשרי הורים ומאמנים מנוהלים זמינה לבעלי המערכת בלבד.
-          </p>
-        )}
       </div>
 
       {/* ── side rail: real counts + import status ── */}

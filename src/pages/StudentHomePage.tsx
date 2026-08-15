@@ -89,7 +89,6 @@ const StudentHomePage = () => {
   }, [progress]);
 
   const overallPct = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
-  const targetPct = 14;
 
   // ── Derived status / risk / next-step (from perSubject already computed above) ──
   const redCount = perSubject.filter(s => s.status === "red").length;
@@ -124,7 +123,6 @@ const StudentHomePage = () => {
       <div className="flex items-baseline justify-between mb-4">
         <h1 className="text-[20px] font-semibold text-foreground tracking-tight">
           המסלול של <span className="text-primary">{student?.full_name || user?.name}</span>
-          <span className="text-[12px] text-muted-foreground font-normal mr-2">תלמיד/ה</span>
         </h1>
       </div>
 
@@ -148,21 +146,39 @@ const StudentHomePage = () => {
               </div>
               <p className="text-[12px] text-muted-foreground mt-1 leading-relaxed">
                 {atRisk.length === 0
-                  ? "כל הכבוד! את/ה במסלול בכל המקצועות 🎉"
+                  ? (overallPct === 0
+                      ? "המסלול שלך מוכן. אפשר להתחיל מהמשימה הבאה."
+                      : "המסלול שלך מתקדם יפה. אפשר להמשיך למשימה הבאה.")
                   : `${atRisk.length} מקצועות דורשים תשומת לב${redCount > 0 ? ` · ${redCount} בסיכון` : ""}${yellowCount > 0 ? ` · ${yellowCount} עם פערים` : ""}`}
               </p>
             </div>
           </div>
-          {/* Next step */}
-          {nextSubject && (
+          {/* Next task — a real action, not a generic subject label.
+              For תנ״ך the entry point is the year-map prototype (unit 1). */}
+          {nextSubject && (nextSubject.name === "תנ״ך" ? (
+            <button
+              onClick={() => navigate(`/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`)}
+              className="group shrink-0 text-start rounded-2xl border border-primary/25 bg-primary/5 hover:bg-primary/10 transition-colors px-4 py-3"
+            >
+              <p className="text-[10.5px] font-semibold text-primary mb-0.5">המשימה הבאה שלך</p>
+              <p className="text-[13px] font-semibold text-foreground leading-snug">
+                תנ״ך · יחידה 1: בריאה, אדם ואחריות
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">התחלה: פתיחה והבנת הטקסט</p>
+              <span className="inline-flex items-center gap-1.5 mt-2 text-[12px] font-semibold text-primary">
+                להתחלת היחידה
+                <ChevronLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2} />
+              </span>
+            </button>
+          ) : (
             <button
               onClick={() => navigate(`/subjects/${encodeURIComponent(nextSubject.name)}`)}
               className="group shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-white text-[13px] font-semibold bg-primary hover:bg-primary/90 transition-colors shadow-sm"
             >
-              <span>הצעד הבא: {nextSubject.name}</span>
+              <span>המשימה הבאה: {nextSubject.name}</span>
               <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2} />
             </button>
-          )}
+          ))}
         </div>
 
         {/* Needs-attention chips — only red/yellow subjects */}
@@ -238,28 +254,26 @@ const StudentHomePage = () => {
         </div>
       </div>
 
-      {/* Progress chart — minimal */}
+      {/* Progress chart — minimal. No "weekly target": there is no real,
+          sourced target definition, so none is displayed. */}
       <div className="bg-card rounded-2xl border border-border p-5 md:p-6 shadow-[var(--shadow-card)] mb-7">
         <div className="flex items-baseline justify-between mb-5">
-          <span className="text-[10.5px] text-muted-foreground">יעד שבועי {targetPct}%</span>
+          <span className="text-[10.5px] text-muted-foreground">התקדמות לפי מקצוע</span>
           <h2 className="text-[13px] font-semibold text-foreground">מהזינוק לקו הסיום</h2>
         </div>
         <div className="space-y-3">
-          {perSubject.map((s, i) => {
-            const onTrack = s.pct >= targetPct;
-            return (
-              <div key={i} className="flex items-center gap-3">
-                <span className="text-[11px] text-foreground/80 w-24 shrink-0 text-end truncate">{s.name}</span>
-                <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${onTrack ? "bg-foreground/80" : "bg-foreground/35"}`}
-                    style={{ width: `${Math.max(s.pct, 1)}%` }}
-                  />
-                </div>
-                <span className="text-[10.5px] font-medium text-muted-foreground tabular-nums w-10 text-end">{s.pct}%</span>
+          {perSubject.map((s, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span className="text-[11px] text-foreground/80 w-24 shrink-0 text-end truncate">{s.name}</span>
+              <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700 bg-foreground/70"
+                  style={{ width: `${Math.max(s.pct, 1)}%` }}
+                />
               </div>
-            );
-          })}
+              <span className="text-[10.5px] font-medium text-muted-foreground tabular-nums w-10 text-end">{s.pct}%</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -276,7 +290,9 @@ const StudentHomePage = () => {
             const statusLabel = s.pct === 0 ? "טרם החל" : s.pct === 100 ? "הושלם" : "בתהליך";
             const statusBg = s.pct === 0 ? "bg-violet-100 text-violet-700" : s.pct === 100 ? "bg-emerald-100 text-emerald-700" : "bg-sky-100 text-sky-700";
             return (
-              <button key={i} onClick={() => navigate(`/subjects/${encodeURIComponent(s.name)}`)}
+              <button key={i} onClick={() => navigate(s.name === "תנ״ך"
+                  ? `/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`
+                  : `/subjects/${encodeURIComponent(s.name)}`)}
                 className={`group ${m.bg} rounded-2xl border border-border/60 p-4 text-right shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up`}
                 style={{ animationDelay: `${i * 40}ms` }}>
                 <div className="flex items-start justify-between mb-3">

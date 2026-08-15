@@ -9,13 +9,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import DataExportTools from "@/components/DataExportTools";
 import { adminStatusConfig, ADMIN_STATUS_ORDER, type AdminStatus, type AdminStatusRow } from "@/lib/adminStatus";
+import { normalizeNid } from "@/lib/importPreview";
 
 interface Props {
   /** When true, omits outer padding so the parent container provides spacing. */
   embedded?: boolean;
 }
 
-/** Admin "תחנת מצב": factual counts + the manual admin traffic light only.
+/** Admin "תמונת מצב": factual counts + the human-set follow-up state only.
  *  No avg_score, no overall_status, no computed statuses of any kind. */
 const DashboardContent = ({ embedded = false }: Props) => {
   const navigate = useNavigate();
@@ -28,15 +29,6 @@ const DashboardContent = ({ embedded = false }: Props) => {
   const [statusFilter, setStatusFilter] = useState<AdminStatus | "all">("all");
 
   // Factual admin-only data (RLS enforces; non-admins never run these)
-  const { data: bagrutIds } = useQuery({
-    queryKey: ["all-bagrut-ids"],
-    enabled: isAdminRole,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("student_bagrut_data" as any).select("student_id");
-      if (error) throw error;
-      return new Set(((data as any[]) || []).map(r => r.student_id));
-    },
-  });
   const { data: adminStatusMap } = useQuery({
     queryKey: ["admin-status"],
     enabled: isAdminRole,
@@ -53,9 +45,19 @@ const DashboardContent = ({ embedded = false }: Props) => {
 
   const active = useMemo(() => students.filter(s => !(s as any).archived), [students]);
   const totalStudents = active.length;
-  const civicsCount = useMemo(
-    () => new Set((allProgress as any[]).filter(p => p.subjects?.subject_name === "אזרחות" && p.details).map(p => p.student_id)).size,
+  /* Student-centric factual counts, all derived from data already loaded.
+     Each number states its source; no metric is invented. */
+  const withTrack = useMemo(
+    () => new Set((allProgress as any[]).map(p => p.student_id)).size,
     [allProgress],
+  );
+  const withGrades = useMemo(
+    () => new Set((allProgress as any[]).filter(p => p.grade != null && p.grade > 0).map(p => p.student_id)).size,
+    [allProgress],
+  );
+  const missingInfo = useMemo(
+    () => active.filter(s => !normalizeNid((s as any).national_id).valid).length,
+    [active],
   );
 
   const statusOf = (id: string): AdminStatus => adminStatusMap?.get(id)?.status || "gray";
@@ -126,7 +128,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
             {isAdminRole && (
               <label className="flex items-center gap-2 h-9 px-3.5 rounded-xl border border-border bg-card text-[12px] cursor-pointer hover:border-primary/30 transition-colors">
                 <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" strokeWidth={1.5} />
-                <span className="text-muted-foreground font-medium">סטטוס ניהולי:</span>
+                <span className="text-muted-foreground font-medium">מצב המעקב:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as AdminStatus | "all")}
@@ -141,7 +143,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
             {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
               <DataExportTools
                 students={students}
-                label="כל הספורטאים"
+                label="כל התלמידים"
                 contextLabel="כל המערכת"
                 showImport
               />
@@ -150,16 +152,21 @@ const DashboardContent = ({ embedded = false }: Props) => {
         </div>
       </section>
 
-      {/* ── Factual KPI cards (admin) — no averages, no computed statuses ── */}
+      {/* ── Factual KPI cards (admin) — student-centric, source-labeled;
+             no averages, no computed statuses ── */}
       {isAdminRole && (
         <section className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "תלמידים", value: totalStudents, sub: "פעילים במערכת", icon: Users },
-            { label: "עם מפת בגרות", value: bagrutIds ? bagrutIds.size : "—", sub: "מתוך גיליון מפת הדרך", icon: LayoutGrid },
-            { label: "עם נתוני אזרחות", value: civicsCount, sub: "מקובץ ציוני האזרחות", icon: PieChart },
-            { label: "רשומות לימודיות", value: (allProgress as any[]).length, sub: "רשומות מקצוע במערכת", icon: Rows3 },
+            { label: "תלמידים פעילים", value: totalStudents, sub: "רשומים ופעילים במערכת", icon: Users, to: "/students" },
+            { label: "עם מסלול לימודי", value: withTrack, sub: "יש להם רשומת מקצוע אחת לפחות", icon: LayoutGrid, to: "/courses" },
+            { label: "עם ציונים במערכת", value: withGrades, sub: "נרשם להם ציון אחד לפחות", icon: PieChart, to: "/grade-entry" },
+            { label: "עם מידע חסר", value: missingInfo, sub: "תעודת זהות חסרה או שגויה · לתיקון לפני הייבוא הבא", icon: Rows3, to: "/data-entry" },
           ].map((k) => (
-            <div key={k.label} className="card-premium p-5 md:p-6">
+            <button
+              key={k.label}
+              onClick={() => navigate(k.to)}
+              className="card-premium p-5 md:p-6 text-start hover:shadow-[var(--shadow-card-hover)] transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11.5px] font-medium text-muted-foreground">{k.label}</span>
                 <k.icon className="h-3.5 w-3.5 text-muted-foreground/30" strokeWidth={1.5} />
@@ -168,7 +175,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
                 {k.value}
               </p>
               <p className="text-[11px] text-muted-foreground/50 mt-2.5">{k.sub}</p>
-            </div>
+            </button>
           ))}
         </section>
       )}
@@ -177,12 +184,12 @@ const DashboardContent = ({ embedded = false }: Props) => {
       {isAdminRole && totalStudents > 0 && (
         <section className="card-premium p-5 md:p-6 mb-8 md:mb-10">
           <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
-            <h2 className="text-[13px] font-medium text-foreground/70">סטטוס ניהולי · נקבע ידנית בלבד</h2>
+            <h2 className="text-[13px] font-medium text-foreground/70">מצב המעקב</h2>
             <span className="text-[11px] text-muted-foreground/60">
               {definedCount} הוגדרו · {statusCounts.gray} טרם הוגדרו
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground/60 mb-4">אינו מחושב מציונים או מנתונים; משקף החלטות של המנהלת.</p>
+          <p className="text-[11px] text-muted-foreground/60 mb-4">המצב נקבע על ידי הצוות ואינו מחושב אוטומטית מציונים.</p>
 
           <div className="flex h-2 rounded-full overflow-hidden bg-muted/60 gap-px mb-4">
             {ADMIN_STATUS_ORDER.map((st) => {
@@ -212,14 +219,14 @@ const DashboardContent = ({ embedded = false }: Props) => {
           <div>
             <h2 className="text-[15px] font-medium text-foreground/80">תלמידים לפי ענף</h2>
             <p className="text-[12px] text-muted-foreground mt-0.5">
-              {isAdminRole ? "ספירות בלבד · סטטוס ניהולי ידני" : "ספירות בלבד"}
+              {isAdminRole ? "ספירות בלבד · מצב המעקב נקבע על ידי הצוות" : "ספירות בלבד"}
             </p>
           </div>
           <button
             onClick={() => navigate("/students")}
             className="inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
-            <span>כל הספורטאים</span>
+            <span>כל התלמידים</span>
             <ChevronLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
           </button>
         </div>
@@ -228,16 +235,16 @@ const DashboardContent = ({ embedded = false }: Props) => {
           {/* Column headers (desktop) */}
           <div
             className="hidden md:grid px-5 py-3 border-b border-border bg-muted/50 gap-4 items-center"
-            style={{ gridTemplateColumns: isAdminRole ? "1fr 56px 76px 76px 92px 92px" : "1fr 80px" }}
+            style={{ gridTemplateColumns: isAdminRole ? "1fr 52px 100px 72px 88px 84px" : "1fr 80px" }}
           >
             <span className="text-[11px] font-medium text-muted-foreground text-start">ענף</span>
             <span className="text-[11px] font-medium text-muted-foreground text-center">סה"כ</span>
             {isAdminRole && (
               <>
-                <span className="text-[11px] font-medium text-muted-foreground text-center">תקין</span>
-                <span className="text-[11px] font-medium text-muted-foreground text-center">במעקב</span>
-                <span className="text-[11px] font-medium text-muted-foreground text-center">דורש טיפול</span>
-                <span className="text-[11px] font-medium text-muted-foreground text-center">טרם הוגדר</span>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">{adminStatusConfig.green.label}</span>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">{adminStatusConfig.orange.label}</span>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">{adminStatusConfig.red.label}</span>
+                <span className="text-[11px] font-medium text-muted-foreground text-center">{adminStatusConfig.gray.label}</span>
               </>
             )}
           </div>
@@ -254,7 +261,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
                 </div>
                 {isAdminRole && (
                   <p className="text-[11px] text-muted-foreground mt-1.5">
-                    תקין {b.green} · במעקב {b.orange} · דורש טיפול {b.red} · טרם הוגדר {b.gray}
+                    {adminStatusConfig.green.label} {b.green} · {adminStatusConfig.orange.label} {b.orange} · {adminStatusConfig.red.label} {b.red} · {adminStatusConfig.gray.label} {b.gray}
                   </p>
                 )}
               </div>
@@ -262,7 +269,7 @@ const DashboardContent = ({ embedded = false }: Props) => {
               {/* Desktop row */}
               <div
                 className="hidden md:grid px-5 py-4 items-center gap-4"
-                style={{ gridTemplateColumns: isAdminRole ? "1fr 56px 76px 76px 92px 92px" : "1fr 80px" }}
+                style={{ gridTemplateColumns: isAdminRole ? "1fr 52px 100px 72px 88px 84px" : "1fr 80px" }}
               >
                 <span className="text-[13.5px] font-semibold text-foreground">{b.name}</span>
                 <span className="text-[13px] text-muted-foreground text-center tabular-nums">{b.total}</span>

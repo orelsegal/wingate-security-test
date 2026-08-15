@@ -257,6 +257,10 @@ export default function DailyChallengePage() {
     <div className="min-h-screen bg-gradient-to-b from-violet-50/50 via-white to-emerald-50/30 p-5 md:p-10" dir="rtl">
       {showMonsters && <MonsterBurst onDone={() => setShowMonsters(false)} />}
       <div className="max-w-[680px] mx-auto">
+        {/* honest content-source label: auto-generated practice, not reviewed teaching material */}
+        <p className="text-center text-[10px] text-muted-foreground mb-2">
+          שאלות התרגול נוצרות אוטומטית ואינן חומר לימוד שנבדק על ידי מורה
+        </p>
         {/* Header bar */}
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => navigate("/play")} className="rounded-full p-2 hover:bg-white/70 transition-colors" aria-label="סגור">

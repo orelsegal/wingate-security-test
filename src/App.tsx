@@ -63,6 +63,9 @@ const Literature70RoadmapPage    = lazy(() => import("./pages/Literature70Roadma
 const Literature70UnitPage       = lazy(() => import("./pages/Literature70UnitPage"));
 const CivicsAssessmentPage       = lazy(() => import("./pages/CivicsAssessmentPage"));
 const CivicsJourneyPage          = lazy(() => import("./pages/CivicsJourneyPage"));
+const TanakhRoadmapPage          = lazy(() => import("./pages/TanakhRoadmapPage"));
+const TanakhUnitPage             = lazy(() => import("./pages/TanakhUnitPage"));
+const MentorDemoPage             = lazy(() => import("./pages/MentorDemoPage"));
 const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
 const PlayHubPage                = lazy(() => import("./pages/PlayHubPage"));
 const BlitzPlayPage              = lazy(() => import("./pages/BlitzPlayPage"));
@@ -137,6 +140,11 @@ const App = () => (
               {/* Civics deep routes — mirror literature structure */}
               <Route path="/subjects/:subjectName/civics-30"                       element={<CivicsAssessmentPage />} />
               <Route path="/subjects/:subjectName/civics-30/journey"               element={<CivicsJourneyPage />} />
+              {/* Tanakh year-map prototype — mirrors the same deep-route pattern */}
+              <Route path="/subjects/:subjectName/tanakh-30"                       element={<TanakhRoadmapPage />} />
+              <Route path="/subjects/:subjectName/tanakh-30/unit/:unitId"          element={<TanakhUnitPage />} />
+              {/* מאמנטור class view — synthetic prototype, admin/developer only */}
+              <Route path="/mentor-demo"                        element={<MentorDemoPage />} />
               <Route path="/subjects/:subjectName/:partId"      element={<SubjectPartPage />} />
               <Route path="/teacher-subjects"                   element={<TeacherSubjectEditorPage />} />
               <Route path="/history-course"                     element={<HistoryCoursePage />} />

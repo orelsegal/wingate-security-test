@@ -88,11 +88,12 @@ const SubjectDetailPage = () => {
 
   const doneCount = nodes.filter(n => n.status === "done").length;
   const totalCount = nodes.length || 1;
-  const xp = Math.round(pct * 11.4);
-  const level = Math.max(1, Math.floor(pct / 12) + 1);
-  const nextLevel = level + 1;
-  const xpToNext = Math.max(0, nextLevel * 200 - xp);
-  const streak = 7;
+  /* No XP / levels / streaks: those were fabricated client-side numbers with
+     no approved product contract behind them (removed per product glossary).
+     The stats below are all derived from real progress data. */
+  const currentNode = nodes.find(n => n.status === "current") || null;
+  const currentIdx = currentNode ? nodes.indexOf(currentNode) : -1;
+  const nextNode = currentIdx >= 0 ? nodes[currentIdx + 1] || null : null;
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
   if (!subjectData) {
@@ -103,17 +104,6 @@ const SubjectDetailPage = () => {
       </div>
     );
   }
-
-  const componentRows = [
-    { icon: Play,                  title: "שיעור וידאו",   sub: "הסבר מלא על הנושא",       done: doneCount > 0 },
-    { icon: ClipboardList,         title: "כרטיסי סיכום",  sub: "עיקרי הדברים בקצרה",       done: doneCount > 0 },
-    { icon: Pencil,                title: "תרגול מודרך",   sub: "דוגמאות ופתרונות שלב אחר שלב", done: doneCount > 0 },
-    { icon: Home,                  title: "תרגול בית",      sub: "משימות לתרגול עצמאי",       done: doneCount > 1 },
-    { icon: MessageCircleQuestion, title: "שאלות פתוחות",   sub: "תרגול חשיבה ויישום",        done: false },
-    { icon: Trophy,                title: "חידון",          sub: "בדיקת הבנה",                done: false },
-    { icon: Zap,                   title: "שאלות אתגר",     sub: "יישום מתקדם",               done: false, locked: true },
-    { icon: GraduationCap,         title: "מבחן סיום",      sub: "סיכום והערכה",              done: false, locked: true },
-  ];
 
   return (
     <div className="p-5 md:p-8 lg:p-10 max-w-[1280px] mx-auto" dir="rtl">
@@ -152,26 +142,27 @@ const SubjectDetailPage = () => {
               </div>
             </div>
           </div>
-          {[
-            { label: "נקודות ניסיון", value: xp, suffix: "XP", color: "text-violet-600" },
-            { label: "היכן אתה נמצא", value: level, prefix: "רמה ", color: "text-amber-600" },
-            { label: "נושאים הושלמו", value: `${doneCount}/${totalCount}`, color: "text-emerald-600" },
-          ].map((s, i) => (
-            <div key={i} className="text-center">
-              <p className="text-[26px] font-bold text-foreground tabular-nums leading-none">
-                {s.prefix}{s.value} {s.suffix && <span className={`text-[11px] font-semibold ${s.color} mr-1`}>{s.suffix}</span>}
+          <div className="text-center">
+            <p className="text-[26px] font-bold text-foreground tabular-nums leading-none">{doneCount}/{totalCount}</p>
+            <p className="text-[10.5px] text-muted-foreground mt-1.5">נושאים הושלמו</p>
+          </div>
+          <div className="text-center md:col-span-2">
+            <p className="text-[14px] font-bold text-foreground leading-snug">
+              {currentNode ? currentNode.title : "כל היחידות הושלמו"}
+            </p>
+            <p className="text-[10.5px] text-muted-foreground mt-1.5">היחידה הנוכחית</p>
+          </div>
+          {/* Next station — shown only with its real unlock condition */}
+          <div className="bg-muted/40 rounded-2xl p-3 text-center border border-border">
+            <p className="text-[9.5px] text-muted-foreground">התחנה הבאה</p>
+            <p className="text-[13px] font-bold text-foreground leading-snug mt-1">
+              {nextNode ? nextNode.title : "אין תחנה נוספת"}
+            </p>
+            {nextNode && (
+              <p className="text-[9px] text-muted-foreground mt-1.5 leading-relaxed">
+                השלימו את היחידה הנוכחית כדי לפתוח את התחנה הבאה
               </p>
-              <p className="text-[10.5px] text-muted-foreground mt-1.5">{s.label}</p>
-            </div>
-          ))}
-          {/* Next goal */}
-          <div className="bg-gradient-to-l from-amber-50 to-rose-50 rounded-2xl p-3 text-center border border-amber-100">
-            <p className="text-[9.5px] text-muted-foreground">היעד הבא</p>
-            <p className="text-[20px] font-bold text-foreground leading-none mt-1 tabular-nums">{nextLevel}</p>
-            <div className="mt-2 h-1.5 bg-white/80 rounded-full overflow-hidden">
-              <div className="h-full bg-amber-400 transition-all duration-700" style={{ width: `${Math.min(100, (xp % 200) / 2)}%` }} />
-            </div>
-            <p className="text-[9px] text-muted-foreground mt-1.5">נשארו {xpToNext} XP</p>
+            )}
           </div>
         </div>
       </div>
@@ -334,48 +325,24 @@ const SubjectDetailPage = () => {
         </div>
       )}
 
-      {/* Medal cabinet */}
-      <div className="mb-6">
-        <h2 className="text-[13px] font-bold text-foreground mb-3 flex items-center gap-2 justify-end">
-          ארון המדליות
-          <Award className="h-3.5 w-3.5 text-amber-500" strokeWidth={2} />
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { icon: Crown,  label: "אלוף/ה",     value: 100, color: "text-amber-500",  bg: "bg-amber-50" },
-            { icon: Shield, label: "חוסן",        value: 88,  color: "text-sky-500",    bg: "bg-sky-50" },
-            { icon: Target, label: "משיג יעדים",  value: 75,  color: "text-rose-500",   bg: "bg-rose-50" },
-            { icon: Trophy, label: "שליטה",       value: 60,  color: "text-violet-500", bg: "bg-violet-50" },
-          ].map((m, i) => {
-            const Icon = m.icon;
-            return (
-              <div key={i} className="bg-card rounded-2xl border border-border p-4 text-center shadow-[var(--shadow-card)] hover:shadow-md transition-all">
-                <div className={`w-10 h-10 mx-auto rounded-xl ${m.bg} flex items-center justify-center mb-2`}>
-                  <Icon className={`h-5 w-5 ${m.color}`} strokeWidth={1.8} />
-                </div>
-                <p className="text-[12px] font-semibold text-foreground">{m.label}</p>
-                <p className="text-[13px] font-bold text-muted-foreground mt-1 tabular-nums">{m.value}%</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* (ארון המדליות הוסר: הציג ערכים קבועים שאינם נתונים אמיתיים.) */}
 
-
-
-      {/* Bagrut grading shortcut */}
-      <button onClick={() => navigate(`/bagrut-grading?subject=${encodeURIComponent(decoded)}`)}
-        className="w-full bg-gradient-to-l from-primary/8 to-primary/[0.03] rounded-2xl border border-primary/12 p-4 text-start hover:from-primary/12 transition-all mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/12 flex items-center justify-center shrink-0">
-            <Award className="h-4 w-4 text-primary" strokeWidth={1.5} />
+      {/* Bagrut grading shortcut — staff tool, honest AI framing:
+          the AI only proposes; the teacher decides what reaches a student. */}
+      {isTeacher && (
+        <button onClick={() => navigate(`/bagrut-grading?subject=${encodeURIComponent(decoded)}`)}
+          className="w-full bg-gradient-to-l from-primary/8 to-primary/[0.03] rounded-2xl border border-primary/12 p-4 text-start hover:from-primary/12 transition-all mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/12 flex items-center justify-center shrink-0">
+              <Award className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[12px] font-semibold text-foreground">בדיקת תשובות בסגנון בגרות</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">כלי עזר למורה · ההצעה של המערכת אינה ציון; המורה מחליט מה מגיע לתלמיד</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-[12px] font-semibold text-foreground">בוחן בגרות חכם</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">הערכה ברמת בגרות אמיתית עם AI</p>
-          </div>
-        </div>
-      </button>
+        </button>
+      )}
 
       {/* Staff tools */}
       {(user?.role === "admin" || user?.role === "teacher" || user?.role === "coach") && (
