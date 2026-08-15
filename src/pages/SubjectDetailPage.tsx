@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { ArrowRight, Loader2, BookOpen, Play, ClipboardList, Pencil, Home, MessageCircleQuestion, Trophy, Zap, GraduationCap, CheckCircle2, Lock, Flame, Gift, BarChart3, Star, Map as MapIcon, Calculator, Sparkles, Award, ChevronLeft, Crown, Shield, Target } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useStudentProgress } from "@/hooks/useStudents";
@@ -85,6 +85,16 @@ const SubjectDetailPage = () => {
     if (!n) return;
     navigate(`/subjects/${encodeURIComponent(decoded)}/${n.partId}#${n.unitId}`);
   };
+
+  // ספרות has REAL canonical apps (לרוץ עם מילים 30% + ספרות לבגרות 70%).
+  // The internal "יחידות לימוד" view duplicated them, so every entry point
+  // (subjects grid, student home, direct URL) redirects to the clean
+  // literature gate, which sends students to the canonical apps.
+  // Placed AFTER all hooks so the hook order stays stable when this same
+  // mounted component re-renders with a different :subjectName param.
+  if (decoded === "ספרות") {
+    return <Navigate to={`/subjects/${encodeURIComponent("ספרות")}/literature`} replace />;
+  }
 
   const doneCount = nodes.filter(n => n.status === "done").length;
   const totalCount = nodes.length || 1;

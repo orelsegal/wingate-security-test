@@ -1,13 +1,16 @@
 /**
- * LiteratureHubPage — חלוקת ספרות לשני חלקים:
- *   • 30% — הערכה פנימית (לרוץ עם מילים)
- *   • 70% — בגרות חיצונית
- * שני הכרטיסים פותחים את אפליקציית המקצוע החיצונית דרך ה-registry
- * (Phase A). העמודים הפנימיים נשארים בקוד וזמינים ב-URL ישיר ל-rollback.
+ * LiteratureHubPage — שער המקצוע הנקי של ספרות:
+ *   • 30% — לרוץ עם מילים (larutz-im-milim.web.app)
+ *   • 70% — ספרות לבגרות (seferut-bagrut.vercel.app)
+ * הכרטיסים מנווטים לאפליקציות הקנוניות דרך ה-registry (Phase A),
+ * באותו חלון: embedding נפסל כי שתי האפליקציות דורשות כניסת Google,
+ * ודפי האימות של Google מסרבים להיטען בתוך iframe — ההטמעה הייתה
+ * נשברת בדיוק בשלב הכניסה. חזרה: כפתור החזרה של הדפדפן.
+ * העמודים הפנימיים נשארים בקוד וזמינים ב-URL ישיר ל-rollback.
  */
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, BookOpen, GraduationCap, ChevronLeft } from "lucide-react";
-import { openSubjectApp, isSubjectAppAvailable } from "@/lib/openSubjectApp";
+import { openSubjectAppSameWindow, isSubjectAppAvailable } from "@/lib/openSubjectApp";
 
 const LiteratureHubPage = () => {
   const { subjectName } = useParams<{ subjectName: string }>();
@@ -18,23 +21,23 @@ const LiteratureHubPage = () => {
     {
       id: "30",
       title: "הערכה פנימית · 30%",
-      subtitle: "לרוץ עם מילים — יחידת הערכה בית-ספרית",
-      meta: "פעיל · נפתח בטאב חדש",
+      subtitle: "לרוץ עם מילים — יחידת ההערכה הבית-ספרית",
+      meta: "מעבר לאפליקציה · חזרה עם כפתור החזרה בדפדפן",
       Icon: BookOpen,
       iconBg: "bg-[hsl(270,25%,94%)]",
       iconColor: "text-[hsl(270,35%,50%)]",
-      onClick: () => openSubjectApp("literature-30"),
+      onClick: () => openSubjectAppSameWindow("literature-30"),
       disabled: !isSubjectAppAvailable("literature-30"),
     },
     {
       id: "70",
       title: "בגרות חיצונית · 70%",
-      subtitle: "8 יחידות בגרות — פרוזה, שירה ודרמה",
-      meta: "פעיל · נפתח בטאב חדש",
+      subtitle: "ספרות לבגרות — פרוזה, שירה ודרמה",
+      meta: "מעבר לאפליקציה · חזרה עם כפתור החזרה בדפדפן",
       Icon: GraduationCap,
       iconBg: "bg-[hsl(35,30%,94%)]",
       iconColor: "text-[hsl(35,40%,45%)]",
-      onClick: () => openSubjectApp("literature-70"),
+      onClick: () => openSubjectAppSameWindow("literature-70"),
       disabled: !isSubjectAppAvailable("literature-70"),
     },
   ];

@@ -68,3 +68,17 @@ export function openSubjectApp(id: string): boolean {
   window.open(url, "_blank", "noopener,noreferrer");
   return true;
 }
+
+/**
+ * Navigates to an approved subject app IN THE SAME WINDOW (browser Back
+ * returns to the shell). Used where embedding was ruled out: both literature
+ * apps require Google sign-in, and Google's auth pages refuse to render
+ * inside a frame, so an iframe would break exactly at login. Same validation
+ * as openSubjectApp — anything off spec fails closed and nothing navigates.
+ */
+export function openSubjectAppSameWindow(id: string): boolean {
+  const url = safeSubjectAppUrl(SUBJECT_APPS[id]);
+  if (!url) return false;
+  window.location.assign(url);
+  return true;
+}
