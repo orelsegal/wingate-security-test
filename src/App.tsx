@@ -67,6 +67,7 @@ const TanakhRoadmapPage          = lazy(() => import("./pages/TanakhRoadmapPage"
 const TanakhUnitPage             = lazy(() => import("./pages/TanakhUnitPage"));
 const MentorDemoPage             = lazy(() => import("./pages/MentorDemoPage"));
 const LearningTrafficBoardPage   = lazy(() => import("./pages/LearningTrafficBoardPage"));
+const BagrutMapPage              = lazy(() => import("./pages/BagrutMapPage"));
 const PlayArenaPage              = lazy(() => import("./pages/PlayArenaPage"));
 const PlayHubPage                = lazy(() => import("./pages/PlayHubPage"));
 const BlitzPlayPage              = lazy(() => import("./pages/BlitzPlayPage"));
@@ -148,6 +149,7 @@ const App = () => (
               <Route path="/mentor-demo"                        element={<MentorDemoPage />} />
               {/* חדר בקרה — שני הרמזורים על נתוני האמת (admin; RLS enforces) */}
               <Route path="/control/traffic"                    element={<LearningTrafficBoardPage />} />
+              <Route path="/control/bagrut"                     element={<BagrutMapPage />} />
               <Route path="/subjects/:subjectName/:partId"      element={<SubjectPartPage />} />
               <Route path="/teacher-subjects"                   element={<TeacherSubjectEditorPage />} />
               <Route path="/history-course"                     element={<HistoryCoursePage />} />

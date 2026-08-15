@@ -37,6 +37,7 @@ export interface UiLabels {
     dataImport: string;
     mentorDemo: string;
     trafficBoard: string;
+    bagrutMap: string;
   };
   /** Sidebar role-titled section header */
   roleTitles: {
@@ -115,7 +116,8 @@ export const defaultUiLabels: UiLabels = {
     staffMgmt: "ניהול צוות",
     dataImport: "ייבוא ועדכון נתונים",
     mentorDemo: "הכיתה שלי · הדגמת מאמנטור",
-    trafficBoard: "חדר בקרה · רמזורים",
+    trafficBoard: "רמזור למידה",
+    bagrutMap: "מפת דרכים לבגרות",
   },
   roleTitles: {
     developer: "סביבת פיתוח",

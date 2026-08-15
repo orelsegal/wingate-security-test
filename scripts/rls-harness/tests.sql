@@ -250,6 +250,134 @@ begin
 end $$;
 rollback;
 
+-- ══ T12-T16 · learning_status: the five scoped roles ══════════════
+-- (Einat's model: admin=all · teacher=own subject · mentor=own class ·
+--  parent=own child · student=self. Enforced in RLS, not by hiding UI.)
+begin;
+
+insert into auth.users (id, email) values
+  ('00000000-0000-4000-8000-000000000020', 'ls-admin@test.local'),
+  ('00000000-0000-4000-8000-000000000021', 'ls-math-teacher@test.local'),
+  ('00000000-0000-4000-8000-000000000022', 'ls-eng-teacher@test.local'),
+  ('00000000-0000-4000-8000-000000000023', 'ls-mentor@test.local'),
+  ('00000000-0000-4000-8000-000000000024', 'ls-parent@test.local'),
+  ('00000000-0000-4000-8000-000000000025', 'ls-student@test.local');
+insert into public.user_roles (user_id, role) values
+  ('00000000-0000-4000-8000-000000000020', 'admin'),
+  ('00000000-0000-4000-8000-000000000021', 'teacher'),
+  ('00000000-0000-4000-8000-000000000022', 'teacher'),
+  ('00000000-0000-4000-8000-000000000023', 'mentor'),
+  ('00000000-0000-4000-8000-000000000024', 'parent'),
+  ('00000000-0000-4000-8000-000000000025', 'student');
+
+insert into public.subjects (id, subject_name) values
+  ('00000000-0000-4000-9000-00000000cc01', 'הרנס מתמטיקה LS'),
+  ('00000000-0000-4000-9000-00000000cc02', 'הרנס אנגלית LS');
+insert into public.students (id, full_name, class_name, sport) values
+  ('00000000-0000-4000-a000-00000000cc01', 'תלמיד כיתה י LS', 'י1', 'הרנס'),
+  ('00000000-0000-4000-a000-00000000cc02', 'תלמיד כיתה יא LS', 'יא2', 'הרנס');
+
+insert into public.teacher_subjects (teacher_user_id, subject_id) values
+  ('00000000-0000-4000-8000-000000000021', '00000000-0000-4000-9000-00000000cc01'),
+  ('00000000-0000-4000-8000-000000000022', '00000000-0000-4000-9000-00000000cc02');
+insert into public.mentor_classes (mentor_user_id, class_name) values
+  ('00000000-0000-4000-8000-000000000023', 'י1');
+update public.profiles set linked_student_id = '00000000-0000-4000-a000-00000000cc01'
+  where id in ('00000000-0000-4000-8000-000000000024','00000000-0000-4000-8000-000000000025');
+
+-- 4 rows: 2 students × 2 subjects
+insert into public.learning_status (student_id, subject_id, ramzor, grades_raw, notes, haliffa) values
+  ('00000000-0000-4000-a000-00000000cc01','00000000-0000-4000-9000-00000000cc01','אדום','40, 60, 65','המלצה לעבור ל3','{"מרכז למידה","שיחת מאמנטור"}'),
+  ('00000000-0000-4000-a000-00000000cc01','00000000-0000-4000-9000-00000000cc02','ירוק',null,null,'{}'),
+  ('00000000-0000-4000-a000-00000000cc02','00000000-0000-4000-9000-00000000cc01','צהוב',null,null,'{}'),
+  ('00000000-0000-4000-a000-00000000cc02','00000000-0000-4000-9000-00000000cc02',null,null,null,'{}');
+
+do $$
+declare n int; v text; arr text[];
+begin
+  -- verbatim multi-grade + multi-value haliffa survive the round trip
+  select grades_raw, haliffa into v, arr from public.learning_status
+    where student_id='00000000-0000-4000-a000-00000000cc01'
+      and subject_id='00000000-0000-4000-9000-00000000cc01';
+  if v <> '40, 60, 65' then raise exception 'T12 FAILED: grades not verbatim (%)', v; end if;
+  if array_length(arr,1) <> 2 then raise exception 'T12 FAILED: haliffa not multi-value'; end if;
+  raise notice 'T12 PASS: grades stored verbatim + haliffa is multi-value';
+
+  -- empty ramzor stays NULL — never defaults to green
+  select count(*) into n from public.learning_status where ramzor is null;
+  if n <> 1 then raise exception 'T12b FAILED: empty ramzor count = % (expected 1)', n; end if;
+  raise notice 'T12b PASS: empty ramzor stays NULL (לא הוזן), never green';
+end $$;
+
+-- T13 · math teacher sees ONLY math rows (both students), not English
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000021"}',true);
+set local role authenticated;
+do $$
+declare n int; bad int;
+begin
+  select count(*) into n from public.learning_status;
+  if n <> 2 then raise exception 'T13 FAILED: math teacher sees % rows (expected 2)', n; end if;
+  select count(*) into bad from public.learning_status
+    where subject_id <> '00000000-0000-4000-9000-00000000cc01';
+  if bad <> 0 then raise exception 'T13 FAILED: math teacher sees another subject'; end if;
+  -- may update own subject
+  update public.learning_status set notes = 'ok'
+    where subject_id = '00000000-0000-4000-9000-00000000cc01'
+      and student_id = '00000000-0000-4000-a000-00000000cc01';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'T13 FAILED: math teacher cannot write own subject'; end if;
+  raise notice 'T13 PASS: teacher scoped to own subject (read+write), other subjects invisible';
+end $$;
+reset role;
+
+-- T14 · mentor sees ONLY their class (both subjects), and cannot write
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000023"}',true);
+set local role authenticated;
+do $$
+declare n int; bad int;
+begin
+  select count(*) into n from public.learning_status;
+  if n <> 2 then raise exception 'T14 FAILED: mentor sees % rows (expected 2 = own class)', n; end if;
+  select count(*) into bad from public.learning_status
+    where student_id <> '00000000-0000-4000-a000-00000000cc01';
+  if bad <> 0 then raise exception 'T14 FAILED: mentor sees a student outside their class'; end if;
+  update public.learning_status set notes = 'nope' where true;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'T14 FAILED: mentor wrote (must be read-only)'; end if;
+  raise notice 'T14 PASS: mentor scoped to own class, read-only';
+end $$;
+reset role;
+
+-- T15 · parent sees only their child; T16 · student only self
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000024"}',true);
+set local role authenticated;
+do $$
+declare n int;
+begin
+  select count(*) into n from public.learning_status
+    where student_id <> '00000000-0000-4000-a000-00000000cc01';
+  if n <> 0 then raise exception 'T15 FAILED: parent sees another child'; end if;
+  raise notice 'T15 PASS: parent scoped to own child';
+end $$;
+reset role;
+
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000025"}',true);
+set local role authenticated;
+do $$
+declare n int;
+begin
+  select count(*) into n from public.learning_status
+    where student_id <> '00000000-0000-4000-a000-00000000cc01';
+  if n <> 0 then raise exception 'T16 FAILED: student sees another student'; end if;
+  update public.learning_status set notes = 'nope' where true;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'T16 FAILED: student wrote (must be read-only)'; end if;
+  raise notice 'T16 PASS: student scoped to self, read-only';
+end $$;
+reset role;
+
+rollback;
+
 -- ─── cleanup ───────────────────────────────────────────────────────
 begin;
 delete from public.pending_invites where email = 'invitee@test.local';

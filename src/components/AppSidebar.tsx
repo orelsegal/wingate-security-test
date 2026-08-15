@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings, ChevronDown, Lightbulb } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ClipboardEdit, Medal, LogOut, Database, Home, Layers, CalendarDays, Activity, Mail, CalendarRange, SlidersHorizontal, LayoutTemplate, Calculator, Globe, Languages, Scroll, Scale, Dumbbell, Feather, UserCog, Target, Settings, ChevronDown, Lightbulb, GraduationCap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -27,7 +27,9 @@ const allMenuItems: MenuItemDef[] = [
   // ── work (עבודה שוטפת) ──
   { key: "dashboard",      icon: Home,         path: "/",                roles: ["developer", "admin", "teacher", "parent", "coach"], group: "work" },
   // חדר הבקרה — שני הרמזורים על נתוני האמת (RLS: קריאת admin בלבד)
-  { key: "trafficBoard",   icon: Activity,     path: "/control/traffic", roles: ["developer", "admin"], group: "work" },
+  // שני הרמזורים של עינת. הגישה עצמה נאכפת ב-RLS לפי תפקיד; הסיידבר רק מציג.
+  { key: "bagrutMap",      icon: GraduationCap, path: "/control/bagrut",  roles: ["developer", "admin", "teacher"], group: "work" },
+  { key: "trafficBoard",   icon: Activity,      path: "/control/traffic", roles: ["developer", "admin", "teacher"], group: "work" },
   { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"], group: "work" },
   { key: "myGroups",       icon: Layers,       path: "/my-groups",       roles: ["teacher"], group: "work" },
   { key: "students",       icon: Users,        path: "/students",        roles: ["developer", "admin", "teacher", "coach"], group: "work" },
@@ -64,7 +66,7 @@ const GROUP_META: { id: NavGroup; label: string }[] = [
 
 /* explicit flat order for the non-grouped roles (report 5A) */
 const ROLE_ORDER: Partial<Record<UserRole, NavKey[]>> = {
-  teacher: ["dashboard", "myGroups", "students", "gradeEntry", "teacherCourses", "groups", "courses", "roadmaps"],
+  teacher: ["dashboard", "bagrutMap", "trafficBoard", "myGroups", "students", "gradeEntry", "teacherCourses", "groups", "courses", "roadmaps"],
   coach:   ["dashboard", "students", "groups", "calendar"],
   parent:  ["dashboard", "calendar"],
 };
