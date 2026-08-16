@@ -48,7 +48,7 @@ function generateInsights(students: StudentData[], role: UserRole): AIInsight[] 
       id: "red-alert",
       type: "critical",
       title: `${redStudents.length} ספורטאים בסיכון אקדמי`,
-      description: `הספורטאים ${redStudents.slice(0, 3).map(s => s.full_name).join(", ")}${redStudents.length > 3 ? ` ועוד ${redStudents.length - 3}` : ""} מסומנים באדום — מומלץ לזמן לשיחה אישית ולתאם תגבור`,
+      description: `הספורטאים ${redStudents.slice(0, 3).map(s => s.full_name).join(", ")}${redStudents.length > 3 ? ` ועוד ${redStudents.length - 3}` : ""} מסומנים כדורשי טיפול — מומלץ לזמן לשיחה אישית ולתאם תגבור`,
       icon: AlertTriangle,
       actionLabel: "צפה בספורטאים",
       actionPath: "/students?status=red",
@@ -64,7 +64,7 @@ function generateInsights(students: StudentData[], role: UserRole): AIInsight[] 
         id: `class-trend-${className}`,
         type: "warning",
         title: `כיתה ${className} במגמת ירידה`,
-        description: `${Math.round(pct * 100)}% מתלמידי הכיתה בסטטוס אדום — מומלץ לבחון עומס לימודי ולשקול תגבור קבוצתי`,
+        description: `${Math.round(pct * 100)}% מתלמידי הכיתה דורשים טיפול — מומלץ לבחון עומס לימודי ולשקול תגבור קבוצתי`,
         icon: TrendingUp,
       });
     }
@@ -115,7 +115,7 @@ function generateInsights(students: StudentData[], role: UserRole): AIInsight[] 
       id: "yellow-group",
       type: "suggestion",
       title: `${yellowStudents.length} ספורטאים עם פערים — הזדמנות לתגבור`,
-      description: "ניתן ליצור קבוצת תגבור ממוקדת עבור ספורטאים עם סטטוס צהוב לפני שיגלשו לאדום",
+      description: "ניתן ליצור קבוצת תגבור ממוקדת עבור ספורטאים שדורשים תשומת לב, לפני שיידרש טיפול",
       icon: Lightbulb,
     });
   }

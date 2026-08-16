@@ -45,7 +45,7 @@ const buildAchievements = (student: any, completedSubjects: number) => [
     unlocked: completedSubjects >= 3,
   },
   {
-    icon: TrendingUp, label: "בסטטוס ירוק", color: "from-emerald-400 to-teal-400", ring: "ring-emerald-100",
+    icon: TrendingUp, label: "במסלול", color: "from-emerald-400 to-teal-400", ring: "ring-emerald-100",
     unlocked: (student?.overall_status) === "green",
   },
   {

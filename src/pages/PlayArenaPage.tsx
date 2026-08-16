@@ -82,8 +82,8 @@ const PlayArenaPage = () => {
       done: (progress as any[]).some(p => p.completion_percent >= 80),
     },
     {
-      title: "הגיע לסטטוס ירוק",
-      sub: `${greenCount} מקצועות ירוקים כרגע`,
+      title: "הגיע למסלול",
+      sub: `${greenCount} מקצועות במסלול כרגע`,
       icon: Star,
       done: greenCount >= 1,
     },

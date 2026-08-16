@@ -10,6 +10,8 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useUiLabels } from "@/context/UiLabelsContext";
 import { defaultUiLabels } from "@/config/uiLabels";
+import { RamzorDot } from "@/components/RamzorBadge";
+import { metaFor } from "@/lib/learningTraffic";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -191,12 +193,12 @@ const AdminLabelsPage = () => {
           {(["green", "yellow", "red"] as const).map((s) => {
             const current = labels.statuses[s];
             const def = defaultUiLabels.statuses[s];
-            const dotClass = s === "green" ? "bg-green-500" : s === "yellow" ? "bg-yellow-400" : "bg-red-500";
-            const sLabel = s === "green" ? "ירוק (במסלול)" : s === "yellow" ? "צהוב (פערים)" : "אדום (בסיכון)";
+            // שם הצבע אינו מוצג — השורה מזוהה ברמזור עצמו ובניסוח המקצועי
+            const ramzor = s === "green" ? "ירוק" : s === "yellow" ? "צהוב" : "אדום";
             return (
               <div key={s} className="flex items-center gap-3">
-                <span className={`w-3 h-3 rounded-full shrink-0 ${dotClass}`} />
-                <span className="text-[12px] text-muted-foreground w-40 shrink-0">{sLabel}</span>
+                <RamzorDot status={ramzor} />
+                <span className="text-[12px] text-muted-foreground w-40 shrink-0">{metaFor(ramzor).label}</span>
                 <Input value={current} onChange={(e) => set(["statuses", s], e.target.value)}
                   className="h-8 text-[13px] flex-1" placeholder={def} />
                 {current !== def ? (

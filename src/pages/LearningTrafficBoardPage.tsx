@@ -3,9 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Search, SlidersHorizontal, ChevronLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useUiLabels } from "@/context/UiLabelsContext";
 import { useStudents } from "@/hooks/useStudents";
 import { supabase } from "@/integrations/supabase/client";
 import { classToGrade } from "@/lib/schoolUtils";
+import { groupBagrut, sectionForClass } from "@/lib/bagrutView";
+import { RamzorDot, RamzorChip } from "@/components/RamzorBadge";
+import WorkTable, { type WorkStudent } from "@/components/learning/WorkTable";
+import StudentDrawer, { type DrawerData } from "@/components/learning/StudentDrawer";
+import type { AssessmentComponent, AssessmentScore } from "@/lib/assessments";
 import {
   LEARNING_SUBJECTS, RAMZOR_VALUES, metaFor, tally,
   type Ramzor, type LearningStatusRow,
@@ -17,8 +23,12 @@ import {
  * נתונים: public.learning_status — רמזור · ציונים · הערות · חליפה (רב־ערכית)
  * · הערות חליפה, לכל תלמיד × מקצוע. RLS אוכף בשרת את חמשת התפקידים: מורה
  * מקבל רק את המקצוע שלו, מאמנטור רק את כיתתו, הורה/תלמיד רק את שלהם —
- * המסך אינו "מסתיר", השרת פשוט לא מחזיר. ריק = "לא הוזן", לעולם לא ירוק.
- * צבע לעולם לא עומד לבדו: לכל מצב יש גם מילה.
+ * המסך אינו "מסתיר", השרת פשוט לא מחזיר. תא ריק = "לא הוזן" — לעולם לא
+ * "במסלול" ולא אפס.
+ *
+ * שמות הצבעים הם אוצר המילים של הנתונים בלבד ואינם מוצגים למשתמש: בממשק
+ * יש רמזור חזותי (RamzorBadge) עם סימן צורני וניסוח מקצועי, כך שהמצב
+ * מזוהה גם ללא צבע.
  */
 
 interface StatusRow extends LearningStatusRow { subjects?: { subject_name?: string | null } | null }
@@ -26,6 +36,7 @@ type MaybeArchived = { archived?: boolean | null };
 
 const LearningTrafficBoardPage = () => {
   const { user } = useAuth();
+  const { labels } = useUiLabels();
   const navigate = useNavigate();
 
   const { data: students = [], isLoading: sLoad } = useStudents();
@@ -41,11 +52,50 @@ const LearningTrafficBoardPage = () => {
     },
   });
 
+  /* רכיבי הבגרות של אותו מקצוע — אותה טבלה שמזינה את מפת הבגרות,
+     ואותן הרשאות. משמשת רק להצגת ההקשר בתוך פירוט המקצוע. */
+  const bagrutQuery = useQuery({
+    queryKey: ["bagrut-map"],
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_bagrut_data" as "students")
+        .select("student_id, data");
+      if (error) throw error;
+      return (data as unknown as { student_id: string; data: Record<string, unknown> | null }[]) || [];
+    },
+  });
+
+  /* המקצועות שהמשתמש רשאי לכתוב בהם. RLS מחזיר למורה רק את השיוכים שלו,
+     ולכן הרשימה הזו היא תמונת ההרשאה מהשרת — לא הנחה של הלקוח. */
+  const mySubjectsQuery = useQuery({
+    queryKey: ["my-teacher-subjects"],
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_subjects" as "students")
+        .select("subject_id");
+      if (error) return [] as { subject_id: string }[];
+      return (data as unknown as { subject_id: string }[]) || [];
+    },
+  });
+  const subjectsQuery = useQuery({
+    queryKey: ["subjects-min"],
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("subjects").select("id, subject_name");
+      if (error) throw error;
+      return (data as unknown as { id: string; subject_name: string }[]) || [];
+    },
+  });
+
   const [q, setQ] = useState("");
   const [gradeF, setGradeF] = useState("all");
   const [sportF, setSportF] = useState("all");
   const [subjectF, setSubjectF] = useState("all");
   const [ramzorF, setRamzorF] = useState<"all" | Ramzor>("all");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [drawerId, setDrawerId] = useState<string | null>(null);
 
   const active = useMemo(
     () => students.filter(s => !(s as unknown as MaybeArchived).archived),
@@ -87,6 +137,109 @@ const LearningTrafficBoardPage = () => {
 
   const totals = useMemo(() => tally(rows.flatMap(r => r.st)), [rows]);
   const cellsShown = rows.reduce((n, r) => n + r.st.length, 0);
+
+  /* ── סביבת העבודה ── */
+  const activeSubject = useMemo(() => {
+    if (subjectF === "all") return null;
+    return (subjectsQuery.data || []).find(s => s.subject_name === subjectF) || null;
+  }, [subjectF, subjectsQuery.data]);
+
+  const taughtIds = useMemo(
+    () => new Set((mySubjectsQuery.data || []).map(r => r.subject_id)),
+    [mySubjectsQuery.data],
+  );
+  const isAdminRole = user?.role === "admin" || user?.role === "developer";
+  const canWriteActive = !!activeSubject && (isAdminRole || taughtIds.has(activeSubject.id));
+
+  /** רכיבי הבגרות של תלמיד במקצוע נתון — כלשונם, בלי פרשנות */
+  const bagrutByStudent = useMemo(() => {
+    const m = new Map<string, Record<string, unknown>>();
+    (bagrutQuery.data || []).forEach(r => m.set(r.student_id, r.data || {}));
+    return m;
+  }, [bagrutQuery.data]);
+  const bagrutParts = (studentId: string, subject: string) => {
+    const rec = bagrutByStudent.get(studentId);
+    if (!rec || !subject) return [];
+    const s = active.find(x => x.id === studentId);
+    const groups = groupBagrut(sectionForClass(s?.class_name), rec);
+    return (groups.find(g => g.subject === subject)?.items || [])
+      .map(it => ({ label: it.label, value: it.value.trim() }));
+  };
+
+  /* אותם מפתחות שבהם WorkTable משתמש — הנתונים מגיעים מה-cache, בלי קריאה נוספת */
+  const drawerComponents = useQuery({
+    queryKey: ["assessment-components", activeSubject?.id],
+    enabled: !!activeSubject && !!drawerId,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("assessment_components" as "students")
+        .select("id, subject_id, class_name, kind, name, due_date, weight, is_active")
+        .eq("subject_id" as never, activeSubject!.id as never);
+      if (error) throw error;
+      return (data as unknown as AssessmentComponent[]) || [];
+    },
+  });
+  const drawerScores = useQuery({
+    queryKey: ["assessment-scores", activeSubject?.id],
+    enabled: !!activeSubject && !!drawerId && !!drawerComponents.data?.length,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("assessment_scores" as "students")
+        .select("id, component_id, student_id, score, submitted, note, updated_at")
+        .in("component_id" as never, (drawerComponents.data || []).map(c => c.id) as never);
+      if (error) throw error;
+      return (data as unknown as (AssessmentScore & { updated_at?: string })[]) || [];
+    },
+  });
+
+  /** התלמידים שמזינים את טבלת העבודה — אותו dataset מסונן */
+  const workStudents: WorkStudent[] = useMemo(() => {
+    if (!activeSubject) return [];
+    return rows.map(({ s, st }) => {
+      const r = st.find(x => x.subjects?.subject_name === activeSubject.subject_name);
+      const rec = bagrutByStudent.get(s.id);
+      const groups = rec ? groupBagrut(sectionForClass(s.class_name), rec) : [];
+      const items = groups.flatMap(g => g.items);
+      const filled = items.filter(i => i.value.trim() !== "").length;
+      return {
+        id: s.id,
+        name: s.full_name,
+        className: s.class_name || "",
+        sport: s.sport || "",
+        bagrutPct: items.length ? Math.round((filled / items.length) * 100) : null,
+        ramzor: r?.ramzor ?? null,
+        notes: r?.notes ?? null,
+        haliffa: r?.haliffa ?? [],
+        haliffaNotes: r?.haliffa_notes ?? null,
+        gradesRaw: r?.grades_raw ?? null,
+      };
+    });
+  }, [rows, activeSubject, bagrutByStudent]);
+
+  /** הנתונים של פאנל הצד — מורכבים מאותם מקורות, בלי המצאה */
+  const drawerData: DrawerData | null = useMemo(() => {
+    if (!drawerId) return null;
+    const w = workStudents.find(x => x.id === drawerId);
+    const s = active.find(x => x.id === drawerId);
+    if (!w || !s) return null;
+    const rec = bagrutByStudent.get(drawerId);
+    const items = (rec ? groupBagrut(sectionForClass(s.class_name), rec) : []).flatMap(g => g.items);
+    const filled = items.filter(i => i.value.trim() !== "").length;
+    const mine = (drawerScores.data || []).filter(x => x.student_id === drawerId);
+    const map = new Map<string, AssessmentScore | undefined>();
+    mine.forEach(x => map.set(x.component_id, x));
+    const last = mine.map(x => x.updated_at).filter(Boolean).sort().pop() || null;
+    return {
+      ...w,
+      bagrutFilled: filled,
+      bagrutTotal: items.length,
+      components: drawerComponents.data || [],
+      scores: map,
+      lastUpdate: last ?? null,
+    };
+  }, [drawerId, workStudents, active, bagrutByStudent, drawerComponents.data, drawerScores.data]);
 
   if (sLoad || statusQuery.isLoading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
@@ -135,8 +288,8 @@ const LearningTrafficBoardPage = () => {
               aria-pressed={ramzorF === k}
               className={`card-premium p-4 text-start transition-all ${ramzorF === k ? "ring-2 ring-primary/40" : "hover:shadow-md"}`}>
               <div className="flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${m.dot}`} />
-                <span className="text-[11.5px] font-medium text-muted-foreground">{m.label}</span>
+                <RamzorDot status={k} size="md" />
+                <span className="text-[11.5px] font-medium" style={{ color: m.ink }}>{m.label}</span>
               </div>
               <p className="text-[26px] font-semibold text-foreground leading-none mt-2 tabular-nums">{totals[k]}</p>
               <p className="text-[10.5px] text-muted-foreground/70 mt-1.5">מתוך {cellsShown} רשומות מקצוע</p>
@@ -145,11 +298,11 @@ const LearningTrafficBoardPage = () => {
         })}
         <div className="card-premium p-4">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/35" />
-            <span className="text-[11.5px] font-medium text-muted-foreground">לא הוזן</span>
+            <RamzorDot status={null} size="md" />
+            <span className="text-[11.5px] font-medium" style={{ color: metaFor(null).ink }}>לא הוזן</span>
           </div>
           <p className="text-[26px] font-semibold text-foreground leading-none mt-2 tabular-nums">{totals["לא הוזן"]}</p>
-          <p className="text-[10.5px] text-muted-foreground/70 mt-1.5">אין מידע — לא ירוק ולא אפס</p>
+          <p className="text-[10.5px] text-muted-foreground/70 mt-1.5">אין מידע — לא "במסלול" ולא אפס</p>
         </div>
       </div>
 
@@ -175,9 +328,10 @@ const LearningTrafficBoardPage = () => {
           <option value="all">כל המקצועות</option>
           {LEARNING_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <select value={ramzorF} onChange={e => setRamzorF(e.target.value as "all" | Ramzor)} className={selectCls} aria-label="רמזור">
-          <option value="all">כל הרמזורים</option>
-          {RAMZOR_VALUES.map(r => <option key={r} value={r}>{r}</option>)}
+        {/* ערך הסינון נשאר ערך הנתונים; מה שנקרא הוא הניסוח המקצועי */}
+        <select value={ramzorF} onChange={e => setRamzorF(e.target.value as "all" | Ramzor)} className={selectCls} aria-label="מצב">
+          <option value="all">כל המצבים</option>
+          {RAMZOR_VALUES.map(r => <option key={r} value={r}>{metaFor(r).label}</option>)}
         </select>
         <label className="relative">
           <Search className="absolute top-1/2 -translate-y-1/2 right-2.5 h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.6} />
@@ -186,6 +340,29 @@ const LearningTrafficBoardPage = () => {
             className="h-9 w-44 rounded-lg border border-border bg-card pr-8 pl-3 text-[12px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/40" />
         </label>
       </div>
+
+      {/* ── סביבת העבודה: אותו מסך, אותו route. נפתחת כשנבחר מקצוע פעיל ── */}
+      {activeSubject ? (
+        <div className="mb-5">
+          <WorkTable
+            subjectId={activeSubject.id}
+            subjectName={activeSubject.subject_name}
+            students={workStudents}
+            canWrite={canWriteActive}
+            periodLabel={labels.nav.semester}
+            onOpenStudent={id => setDrawerId(id)}
+          />
+          {!canWriteActive && (
+            <p className="text-[11px] text-muted-foreground mt-2">
+              הצפייה בלבד — השרת אינו מתיר לך לכתוב במקצוע הזה.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className="text-[11.5px] text-muted-foreground mb-4">
+          בחרו מקצוע בפילוח כדי לפתוח את סביבת העבודה: הזנת ציונים, רכיבי הערכה וציון משוקלל, באותו מסך.
+        </p>
+      )}
 
       {/* כרטיסי תלמידים */}
       {rows.length === 0 ? (
@@ -200,58 +377,147 @@ const LearningTrafficBoardPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {rows.map(({ s, st }) => {
             const t = tally(st);
+            const open = openId === s.id;
             return (
-              <button key={s.id} onClick={() => navigate(`/students/${s.id}`)}
-                className="card-premium p-4 text-start hover:shadow-[var(--shadow-card-hover)] transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                <div className="flex items-start justify-between gap-3 mb-2.5">
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-semibold text-foreground">{s.full_name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {s.class_name || "ללא כיתה"} · {s.sport || "ללא ענף"}
-                    </p>
+              <div key={s.id} className="card-premium overflow-hidden">
+                <button onClick={() => setOpenId(open ? null : s.id)} aria-expanded={open}
+                  className="w-full p-4 text-start hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                  <div className="flex items-start justify-between gap-3 mb-2.5">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-semibold text-foreground">{s.full_name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {s.class_name || "ללא כיתה"} · {s.sport || "ללא ענף"}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary shrink-0">
+                      {open ? "סגירה" : "לפירוט"}
+                      <ChevronLeft className={`h-3.5 w-3.5 transition-transform ${open ? "-rotate-90" : ""}`} strokeWidth={2} />
+                    </span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary shrink-0">
-                    לפרטים
-                    <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
-                  </span>
-                </div>
 
-                {/* התפלגות המצב */}
-                <div className="flex flex-wrap gap-1.5 mb-2.5">
-                  {(["אדום", "צהוב", "ירוק", "לא הוזן"] as const).map(k => {
-                    if (!t[k]) return null;
-                    const m = metaFor(k === "לא הוזן" ? null : (k as Ramzor));
-                    return (
-                      <span key={k} className={`inline-flex items-center gap-1 text-[10.5px] font-medium px-2 py-0.5 rounded-full border ${m.chip}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${m.dot}`} />
-                        {t[k]} {m.label}
-                      </span>
-                    );
-                  })}
-                </div>
+                  {/* התפלגות המצב */}
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    {(["אדום", "צהוב", "ירוק", "לא הוזן"] as const).map(k => {
+                      if (!t[k]) return null;
+                      return (
+                        <RamzorChip
+                          key={k}
+                          status={k === "לא הוזן" ? null : (k as Ramzor)}
+                          prefix={`${t[k]} ·`}
+                        />
+                      );
+                    })}
+                  </div>
 
-                {/* המקצועות */}
-                <div className="flex flex-wrap gap-1.5">
-                  {st.length === 0 ? (
-                    <span className="text-[11px] text-muted-foreground">אין רשומות מקצוע</span>
-                  ) : st.map((r, i) => {
-                    const m = metaFor(r.ramzor);
-                    return (
-                      <span key={i} className={`inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full border ${m.chip}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${m.dot}`} />
-                        {r.subjects?.subject_name}
-                        {r.haliffa?.length ? " · מענה" : ""}
-                      </span>
-                    );
-                  })}
-                </div>
-              </button>
+                  {/* המקצועות — שם המקצוע גלוי, המצב נקרא מהעיגול ומה-tooltip */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {st.length === 0 ? (
+                      <span className="text-[11px] text-muted-foreground">אין רשומות מקצוע</span>
+                    ) : st.map((r, i) => (
+                      <RamzorChip
+                        key={i}
+                        status={r.ramzor}
+                        context={r.subjects?.subject_name || undefined}
+                        prefix={`${r.subjects?.subject_name ?? ""}${r.haliffa?.length ? " · מענה" : ""}`}
+                        labelHidden
+                      />
+                    ))}
+                  </div>
+                </button>
+
+                {open && (
+                  <div className="px-4 pb-4 pt-1 border-t border-border/60">
+                    {st.length === 0 ? (
+                      <p className="text-[11.5px] text-muted-foreground">אין רשומות מקצוע לתלמיד זה.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {st.map((r, i) => {
+                          const subject = r.subjects?.subject_name || "";
+                          const parts = bagrutParts(s.id, subject);
+                          return (
+                            <div key={i} className="rounded-xl border border-border/70 bg-muted/10 overflow-hidden">
+                              <p className="px-3 py-1.5 bg-muted/40 text-[12px] font-semibold text-foreground border-b border-border/60 flex items-center gap-2">
+                                <RamzorDot status={r.ramzor} context={subject} />
+                                {subject}
+                                <span className="text-[10.5px] font-medium" style={{ color: metaFor(r.ramzor).ink }}>
+                                  {metaFor(r.ramzor).label}
+                                </span>
+                              </p>
+                              <dl className="divide-y divide-border/40 text-[11.5px]">
+                                <Field label="ציונים" value={r.grades_raw} hint="כלשונם בקובץ, כולל ריבוי ערכים" />
+                                <Field label="הערת מורה" value={r.notes} />
+                                <Field label="מענה שנבחר" value={r.haliffa?.length ? r.haliffa.join(" · ") : null} />
+                                <Field label="הערות מענה" value={r.haliffa_notes} />
+                              </dl>
+                              {parts.length > 0 && (
+                                <div className="px-3 py-2 border-t border-border/50 bg-card/40">
+                                  <p className="text-[10.5px] text-muted-foreground mb-1.5">
+                                    רכיבי הבגרות של {subject} לתלמיד זה:
+                                  </p>
+                                  <ul className="space-y-0.5">
+                                    {parts.map((p, k) => (
+                                      <li key={k} className="flex items-center justify-between gap-2 text-[11px]">
+                                        <span className="text-muted-foreground truncate" title={p.label}>{p.label}</span>
+                                        <span className="flex items-center gap-1.5 shrink-0">
+                                          <span className={p.value ? "text-foreground font-medium" : "text-muted-foreground/50"}>
+                                            {p.value || "לא הוזן"}
+                                          </span>
+                                          <RamzorDot status={p.value ? "ירוק" : null} context={p.label} />
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <button onClick={() => navigate(`/students/${s.id}`)}
+                      className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-primary hover:underline">
+                      לכרטיס התלמיד המלא
+                      <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+                    </button>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
       )}
+
+      {/* פאנל הצד — הטבלה והפילטרים נשארים מאחוריו */}
+      {drawerData && (
+        <StudentDrawer data={drawerData} onClose={() => setDrawerId(null)}
+          onProfile={() => navigate(`/students/${drawerData.id}`)} />
+      )}
+
+      {/* ── מה שעדיין לא נבנה — נאמר במפורש, בלי להיראות פעיל ── */}
+      <section className="card-premium p-4 mt-5 border-dashed">
+        <h2 className="text-[13px] font-semibold text-foreground mb-1.5">הזנה ועדכון בידי הצוות — השלב הבא</h2>
+        <p className="text-[11.5px] text-muted-foreground leading-relaxed">
+          הזנת ציונים, הוספת משימה או מתכונת עם תאריך, בחירת מענה ורישום הערה — כל אלה
+          נצפו אצל עינת ועדיין אינם פעילים כאן. שכבת הכתיבה תיפתח רק אחרי שכללי ההרשאה
+          לכתיבה ייבדקו בשרת, כדי שמורה לא יוכל לכתוב על מקצוע שאינו שלו.
+          עד אז המסך הוא לקריאה בלבד ואינו מדמה שמירה.
+        </p>
+      </section>
     </div>
   );
 };
+
+/** שורת פירוט — ערך ריק מוצג כ"לא הוזן", לעולם לא כאילו הוזן */
+const Field = ({ label, value, hint }: { label: string; value?: string | null; hint?: string }) => (
+  <div className="flex items-start justify-between gap-3 px-3 py-1.5">
+    <dt className="text-muted-foreground shrink-0">
+      {label}
+      {hint && <span className="block text-[10px] text-muted-foreground/60">{hint}</span>}
+    </dt>
+    <dd className={`text-start ${value?.trim() ? "text-foreground font-medium" : "text-muted-foreground/50"}`}>
+      {value?.trim() || "לא הוזן"}
+    </dd>
+  </div>
+);
 
 export default LearningTrafficBoardPage;

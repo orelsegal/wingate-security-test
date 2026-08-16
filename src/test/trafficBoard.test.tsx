@@ -1,15 +1,17 @@
 /**
  * רמזור למידה — the cross-cohort board.
- * Provenance rules under test: empty is never green, colour never stands
- * alone, and every number carries a denominator. Access itself is enforced
- * by RLS in the DB (harness tests T12-T16), not by this component.
+ * Provenance rules under test: empty is never treated as "on track", the
+ * state is identifiable without colour, colour names never reach the UI,
+ * and every number carries a denominator. Access itself is enforced by RLS
+ * in the DB (harness tests T12-T16), not by this component.
  */
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LearningTrafficBoardPage from "@/pages/LearningTrafficBoardPage";
-import { tally, metaFor, bagrutBand, bagrutBandLabel, BAGRUT_THRESHOLDS } from "@/lib/learningTraffic";
+import { RamzorChip } from "@/components/RamzorBadge";
+import { tally, metaFor, bagrutBand, bagrutBandLabel, BAGRUT_THRESHOLDS, type Ramzor } from "@/lib/learningTraffic";
 
 describe("רמזור למידה · board", () => {
   it("renders the five-subject board shell with explicit denominators", () => {
@@ -34,10 +36,33 @@ describe("provenance rules (Einat's model)", () => {
     expect(metaFor(null).label).toBe("לא הוזן");
   });
 
-  it("every ramzor state carries a word, not only a colour", () => {
-    (["אדום", "צהוב", "ירוק"] as const).forEach(r => {
-      expect(metaFor(r).label).toBe(r);
-      expect(metaFor(r).dot).toBeTruthy();
+  it("never shows a colour name — professional wording only", () => {
+    const COLOURS = ["אדום", "צהוב", "ירוק"];
+    ([...COLOURS, null] as const).forEach(r => {
+      const m = metaFor(r as Ramzor | null);
+      COLOURS.forEach(c => expect(m.label).not.toContain(c));
+      expect(m.label.length).toBeGreaterThan(2);
+    });
+    expect(metaFor("אדום").label).toBe("דורש טיפול");
+    expect(metaFor("צהוב").label).toBe("דורש תשומת לב");
+    expect(metaFor("ירוק").label).toBe("במסלול");
+    expect(metaFor(null).label).toBe("לא הוזן");
+  });
+
+  it("state is identifiable without colour — unique symbol per state", () => {
+    const syms = (["אדום", "צהוב", "ירוק", null] as const).map(r => metaFor(r as Ramzor | null).symbol);
+    expect(new Set(syms).size).toBe(4);
+    expect(syms).toEqual(["!", "–", "✓", "?"]);
+  });
+
+  it("the badge exposes an accessible name and prints no colour word", () => {
+    (["אדום", "צהוב", "ירוק", null] as const).forEach(r => {
+      const { container, unmount } = render(<RamzorChip status={r as Ramzor | null} context="מתמטיקה" />);
+      const img = container.querySelector('[role="img"]');
+      expect(img?.getAttribute("aria-label")).toContain(metaFor(r as Ramzor | null).aria);
+      expect(img?.getAttribute("title")).toBeTruthy();
+      ["אדום", "צהוב", "ירוק"].forEach(c => expect(container.textContent).not.toContain(c));
+      unmount();
     });
   });
 

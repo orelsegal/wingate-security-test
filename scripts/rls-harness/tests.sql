@@ -378,6 +378,126 @@ reset role;
 
 rollback;
 
+
+-- ══ T17-T20 · assessment_components + assessment_scores ═══════════
+-- (the write layer of רמזור למידה: teacher works inside the same screen)
+begin;
+
+insert into auth.users (id, email) values
+  ('00000000-0000-4000-8000-000000000030', 'as-admin@test.local'),
+  ('00000000-0000-4000-8000-000000000031', 'as-math@test.local'),
+  ('00000000-0000-4000-8000-000000000032', 'as-eng@test.local'),
+  ('00000000-0000-4000-8000-000000000033', 'as-mentor@test.local');
+insert into public.user_roles (user_id, role) values
+  ('00000000-0000-4000-8000-000000000030', 'admin'),
+  ('00000000-0000-4000-8000-000000000031', 'teacher'),
+  ('00000000-0000-4000-8000-000000000032', 'teacher'),
+  ('00000000-0000-4000-8000-000000000033', 'mentor');
+
+insert into public.subjects (id, subject_name) values
+  ('00000000-0000-4000-9000-00000000dd01', 'הרנס מתמטיקה AS'),
+  ('00000000-0000-4000-9000-00000000dd02', 'הרנס אנגלית AS');
+insert into public.students (id, full_name, class_name, sport) values
+  ('00000000-0000-4000-a000-00000000dd01', 'תלמיד AS א', 'י1', 'הרנס'),
+  ('00000000-0000-4000-a000-00000000dd02', 'תלמיד AS ב', 'יא2', 'הרנס');
+insert into public.teacher_subjects (teacher_user_id, subject_id) values
+  ('00000000-0000-4000-8000-000000000031', '00000000-0000-4000-9000-00000000dd01'),
+  ('00000000-0000-4000-8000-000000000032', '00000000-0000-4000-9000-00000000dd02');
+insert into public.mentor_classes (mentor_user_id, class_name) values
+  ('00000000-0000-4000-8000-000000000033', 'י1');
+
+-- T17 · a teacher may create an assessment component in their own subject
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000031"}',true);
+set local role authenticated;
+do $$
+declare n int;
+begin
+  insert into public.assessment_components (id, subject_id, class_name, kind, name, due_date, weight)
+  values ('00000000-0000-4000-b000-00000000dd01',
+          '00000000-0000-4000-9000-00000000dd01', 'י1', 'מבדק', 'מבדק אלגברה', current_date, 30);
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'T17 FAILED: teacher cannot create a component in own subject'; end if;
+  raise notice 'T17 PASS: teacher creates an assessment component in own subject';
+end $$;
+reset role;
+
+-- T18 · a teacher may NOT create or read a component in another subject
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000032"}',true);
+set local role authenticated;
+do $$
+declare n int; blocked boolean := false;
+begin
+  begin
+    insert into public.assessment_components (subject_id, kind, name, weight)
+    values ('00000000-0000-4000-9000-00000000dd01', 'מבחן', 'ניסיון חדירה', 50);
+  exception when insufficient_privilege then blocked := true;
+  end;
+  if not blocked then raise exception 'T18 FAILED: teacher wrote a component in a subject that is not theirs'; end if;
+  select count(*) into n from public.assessment_components
+   where subject_id = '00000000-0000-4000-9000-00000000dd01';
+  if n <> 0 then raise exception 'T18 FAILED: teacher reads another subject''s components (% rows)', n; end if;
+  raise notice 'T18 PASS: another subject is neither writable nor readable';
+end $$;
+reset role;
+
+-- T19 · grades: own subject writable, foreign subject rejected
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000031"}',true);
+set local role authenticated;
+do $$
+declare n int;
+begin
+  insert into public.assessment_scores (component_id, student_id, score, submitted)
+  values ('00000000-0000-4000-b000-00000000dd01', '00000000-0000-4000-a000-00000000dd01', '87', true);
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'T19 FAILED: teacher cannot enter a grade in own subject'; end if;
+  -- empty stays empty: never coerced to zero
+  insert into public.assessment_scores (component_id, student_id, score, submitted)
+  values ('00000000-0000-4000-b000-00000000dd01', '00000000-0000-4000-a000-00000000dd02', null, false);
+  select count(*) into n from public.assessment_scores
+   where component_id = '00000000-0000-4000-b000-00000000dd01' and score is null;
+  if n <> 1 then raise exception 'T19 FAILED: empty grade did not stay empty'; end if;
+  raise notice 'T19 PASS: teacher enters grades in own subject; empty stays empty';
+end $$;
+reset role;
+
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000032"}',true);
+set local role authenticated;
+do $$
+declare n int; blocked boolean := false;
+begin
+  begin
+    insert into public.assessment_scores (component_id, student_id, score)
+    values ('00000000-0000-4000-b000-00000000dd01', '00000000-0000-4000-a000-00000000dd01', '100');
+  exception when insufficient_privilege then blocked := true;
+  end;
+  if not blocked then raise exception 'T19b FAILED: foreign teacher wrote a grade'; end if;
+  select count(*) into n from public.assessment_scores;
+  if n <> 0 then raise exception 'T19b FAILED: foreign teacher reads grades (% rows)', n; end if;
+  raise notice 'T19b PASS: a teacher cannot write or read grades outside their subject';
+end $$;
+reset role;
+
+-- T20 · mentor: reads their own class only, and cannot write
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000033"}',true);
+set local role authenticated;
+do $$
+declare n int; blocked boolean := false;
+begin
+  select count(*) into n from public.assessment_scores;
+  if n <> 1 then raise exception 'T20 FAILED: mentor sees % grade rows (expected 1 — own class only)', n; end if;
+  begin
+    update public.assessment_scores set score = '100'
+     where component_id = '00000000-0000-4000-b000-00000000dd01';
+    get diagnostics n = row_count;
+  exception when insufficient_privilege then blocked := true; n := 0;
+  end;
+  if not blocked and n > 0 then raise exception 'T20 FAILED: mentor wrote a grade'; end if;
+  raise notice 'T20 PASS: mentor reads own class only and cannot write';
+end $$;
+reset role;
+
+rollback;
+
 -- ─── cleanup ───────────────────────────────────────────────────────
 begin;
 delete from public.pending_invites where email = 'invitee@test.local';

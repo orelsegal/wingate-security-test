@@ -10,7 +10,17 @@ import EditableElement from "@/components/builder/EditableElement";
 import wingateLogoSrc from "@/assets/wingate-logo.png";
 
 type NavKey = keyof ReturnType<typeof useUiLabels>["labels"]["nav"];
-type NavGroup = "work" | "content" | "management";
+type NavGroup = "tracking" | "work" | "content" | "management";
+
+/* "מעקב והתקדמות" — שני כלי הליבה להבנת מצב התלמיד, באזור אחד מובחן.
+   חמרה בהירה כרקע, חמרה עמוקה לכותרת ולאייקונים. שאר הסיידבר נשאר ירוק.
+   אין gradient ואין צבע שונה לכל פריט — אזור אחד, שפה אחת. */
+const TRACK = {
+  bg: "#F7E9E2",
+  ink: "#9A4B32",
+  hover: "#F1D8CC",
+  border: "#E7CFC3",
+} as const;
 
 interface MenuItemDef {
   key: NavKey;
@@ -26,10 +36,9 @@ interface MenuItemDef {
 const allMenuItems: MenuItemDef[] = [
   // ── work (עבודה שוטפת) ──
   { key: "dashboard",      icon: Home,         path: "/",                roles: ["developer", "admin", "teacher", "parent", "coach"], group: "work" },
-  // חדר הבקרה — שני הרמזורים על נתוני האמת (RLS: קריאת admin בלבד)
-  // שני הרמזורים של עינת. הגישה עצמה נאכפת ב-RLS לפי תפקיד; הסיידבר רק מציג.
-  { key: "bagrutMap",      icon: GraduationCap, path: "/control/bagrut",  roles: ["developer", "admin", "teacher"], group: "work" },
-  { key: "trafficBoard",   icon: Activity,      path: "/control/traffic", roles: ["developer", "admin", "teacher"], group: "work" },
+  // ── מעקב והתקדמות ── שני הרמזורים; הגישה נאכפת ב-RLS, הסיידבר רק מציג
+  { key: "bagrutMap",      icon: GraduationCap, path: "/control/bagrut",  roles: ["developer", "admin", "teacher"], group: "tracking" },
+  { key: "trafficBoard",   icon: Activity,      path: "/control/traffic", roles: ["developer", "admin", "teacher"], group: "tracking" },
   { key: "studentHome",    icon: Home,         path: "/student-home",    roles: ["student"], group: "work" },
   { key: "myGroups",       icon: Layers,       path: "/my-groups",       roles: ["teacher"], group: "work" },
   { key: "students",       icon: Users,        path: "/students",        roles: ["developer", "admin", "teacher", "coach"], group: "work" },
@@ -66,7 +75,7 @@ const GROUP_META: { id: NavGroup; label: string }[] = [
 
 /* explicit flat order for the non-grouped roles (report 5A) */
 const ROLE_ORDER: Partial<Record<UserRole, NavKey[]>> = {
-  teacher: ["dashboard", "bagrutMap", "trafficBoard", "myGroups", "students", "gradeEntry", "teacherCourses", "groups", "courses", "roadmaps"],
+  teacher: ["dashboard", "myGroups", "students", "gradeEntry", "teacherCourses", "groups", "courses", "roadmaps"],
   coach:   ["dashboard", "students", "groups", "calendar"],
   parent:  ["dashboard", "calendar"],
 };
@@ -106,7 +115,10 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
   const activeGroupOf = (): NavGroup | null => {
     const hit = allMenuItems.find(m => user && m.roles.includes(user.role)
       && (location.pathname === m.path || (m.path !== "/" && m.path !== "/student-home" && location.pathname.startsWith(m.path))));
-    return hit?.group ?? null;
+    // "tracking" renders as its own always-visible block, not an accordion
+    // section — being on one of its routes must not collapse the others.
+    if (!hit || hit.group === "tracking") return null;
+    return hit.group;
   };
   const [openGroup, setOpenGroup] = useState<NavGroup | null>(() => {
     const byRoute = activeGroupOf();
@@ -166,12 +178,73 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
     );
   };
 
+  /* "מעקב והתקדמות" — אזור אחד מובחן, זהה למנהל ולמורה.
+     המצב הפעיל מזוהה גם ללא צבע: פס אנכי בצד ההתחלה, טקסט מודגש,
+     ניגודיות בהירות הפוכה ו-aria-current="page" עבור קוראי מסך. */
+  const trackingItems = menuItems.filter(m => m.group === "tracking");
+  const renderTrackingBlock = () => {
+    if (trackingItems.length === 0) return null;
+    return (
+      <section
+        className="rounded-xl p-2 mb-4 border"
+        style={{ background: TRACK.bg, borderColor: TRACK.border }}
+        aria-label="מעקב והתקדמות"
+      >
+        <h2
+          className="text-[10px] font-bold tracking-[0.1em] px-2 pt-1 pb-1.5"
+          style={{ color: TRACK.ink }}
+        >
+          מעקב והתקדמות
+        </h2>
+        <div className="space-y-0.5">
+          {trackingItems.map(item => {
+            const active = isActive(item.path);
+            const title = labels.nav[item.key];
+            return (
+              <button
+                key={item.key}
+                onClick={() => { navigate(item.path); onNavigate?.(); }}
+                aria-current={active ? "page" : undefined}
+                className="w-full relative flex flex-row items-center gap-3 ps-3 pe-2.5 py-2.5 rounded-lg text-[12.5px] text-start transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2"
+                style={{
+                  background: active ? TRACK.ink : "transparent",
+                  color: active ? "#FFFFFF" : TRACK.ink,
+                  fontWeight: active ? 700 : 500,
+                  ...( { "--tw-ring-color": TRACK.ink } as React.CSSProperties ),
+                }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.background = TRACK.hover; }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+              >
+                {/* סימון פעיל שאינו צבע בלבד: פס אנכי בצד ההתחלה (ימין ב-RTL) */}
+                {active && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-1.5 start-0 w-[3px] rounded-full"
+                    style={{ background: "#FFFFFF" }}
+                  />
+                )}
+                <item.icon
+                  className="h-[15px] w-[15px] shrink-0"
+                  strokeWidth={active ? 2.2 : 1.7}
+                  style={{ color: active ? "#FFFFFF" : TRACK.ink }}
+                />
+                <span>{title}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
   // flat order for non-grouped roles
   const flatItems = (() => {
+    // tracking items live in their own block above — never duplicated here
+    const rest = menuItems.filter(m => m.group !== "tracking");
     const order = user ? ROLE_ORDER[user.role] : undefined;
-    if (!order) return menuItems;
+    if (!order) return rest;
     const idx = (k: NavKey) => { const i = order.indexOf(k); return i < 0 ? 999 : i; };
-    return [...menuItems].sort((a, b) => idx(a.key) - idx(b.key));
+    return [...rest].sort((a, b) => idx(a.key) - idx(b.key));
   })();
 
   return (
@@ -193,6 +266,9 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3.5 pt-5 pb-4">
+        {/* מעקב והתקדמות — אזור הליבה, זהה בכל התפקידים ומעל שאר הניווט */}
+        {renderTrackingBlock()}
+
         {isGrouped ? (
           /* admin/developer: three collapsible sections */
           <div className="space-y-4">

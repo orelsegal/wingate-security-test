@@ -34,14 +34,35 @@ export interface LearningStatusRow {
   updated_at?: string;
 }
 
-/** תצוגה אחידה: צבע לעולם לא לבד — תמיד גם מילה. */
+/* ── שפת התצוגה של הרמזור ──────────────────────────────────────────────
+   שמות הצבעים ("אדום"/"צהוב"/"ירוק") הם אוצר המילים של הנתונים בלבד —
+   כך הם נשמרים ב-learning_status וכך הם מגיעים מהגיליון של עינת.
+   בממשק הם לעולם אינם מוצגים: המשתמש רואה רמזור חזותי + ניסוח מקצועי.
+
+   הזיהוי לעולם אינו נשען על צבע בלבד — לכל מצב יש גם סימן צורני ייחודי
+   (! – ✓ ?) וגם מילים. הצבעים כאן כהים מהטוקנים הכלליים כדי לעמוד
+   בניגודיות מול לבן (מחושב: 6.5 / 4.9 / 4.8 / 5.0 לעומת 4.5 הנדרש). */
 export const ramzorMeta: Record<Ramzor | "לא הוזן", {
-  label: string; dot: string; chip: string; order: number;
+  /** הניסוח שהמשתמש רואה — לא שם הצבע */
+  label: string;
+  /** סימן צורני, מזוהה גם בשחור־לבן ובעיוורון צבעים */
+  symbol: string;
+  /** תיאור מלא לקוראי מסך ול-tooltip */
+  aria: string;
+  /** רקע העיגול המלא */
+  solid: string;
+  /** דיו לטקסט על רקע בהיר */
+  ink: string;
+  /** רקע רך לשבב */
+  soft: string;
+  /** מסגרת השבב */
+  edge: string;
+  order: number;
 }> = {
-  "אדום":     { label: "אדום",     dot: "bg-destructive",                chip: "bg-destructive/10 text-destructive border-destructive/25", order: 0 },
-  "צהוב":     { label: "צהוב",     dot: "bg-[hsl(var(--warning))]",      chip: "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25", order: 1 },
-  "ירוק":     { label: "ירוק",     dot: "bg-[hsl(var(--success))]",      chip: "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/25", order: 2 },
-  "לא הוזן":  { label: "לא הוזן",  dot: "bg-muted-foreground/35",        chip: "bg-muted/50 text-muted-foreground border-border", order: 3 },
+  "אדום":    { label: "דורש טיפול",      symbol: "!", aria: "דורש טיפול",      solid: "hsl(0, 72%, 42%)",    ink: "hsl(0, 72%, 38%)",    soft: "hsla(0, 72%, 42%, 0.10)",    edge: "hsla(0, 72%, 42%, 0.28)",    order: 0 },
+  "צהוב":    { label: "דורש תשומת לב",   symbol: "–", aria: "דורש תשומת לב",   solid: "hsl(35, 92%, 33%)",   ink: "hsl(35, 92%, 30%)",   soft: "hsla(35, 92%, 33%, 0.10)",   edge: "hsla(35, 92%, 33%, 0.28)",   order: 1 },
+  "ירוק":    { label: "במסלול",          symbol: "✓", aria: "במסלול",          solid: "hsl(142, 72%, 30%)",  ink: "hsl(142, 72%, 27%)",  soft: "hsla(142, 72%, 30%, 0.10)",  edge: "hsla(142, 72%, 30%, 0.28)",  order: 2 },
+  "לא הוזן": { label: "לא הוזן",         symbol: "?", aria: "לא הוזן — אין מידע", solid: "hsl(215, 12%, 45%)", ink: "hsl(215, 14%, 38%)", soft: "hsla(215, 12%, 45%, 0.10)", edge: "hsla(215, 12%, 45%, 0.28)", order: 3 },
 };
 
 export const metaFor = (r: Ramzor | null | undefined) => ramzorMeta[r ?? "לא הוזן"];
