@@ -302,7 +302,7 @@ const LearningTrafficBoardPage = () => {
             <span className="text-[11.5px] font-medium" style={{ color: metaFor(null).ink }}>לא הוזן</span>
           </div>
           <p className="text-[26px] font-semibold text-foreground leading-none mt-2 tabular-nums">{totals["לא הוזן"]}</p>
-          <p className="text-[10.5px] text-muted-foreground/70 mt-1.5">אין מידע — לא "במסלול" ולא אפס</p>
+          <p className="text-[10.5px] text-muted-foreground/70 mt-1.5">אין מידע. לא "במסלול" ולא אפס</p>
         </div>
       </div>
 
@@ -354,7 +354,7 @@ const LearningTrafficBoardPage = () => {
           />
           {!canWriteActive && (
             <p className="text-[11px] text-muted-foreground mt-2">
-              הצפייה בלבד — השרת אינו מתיר לך לכתוב במקצוע הזה.
+              הצפייה בלבד. השרת אינו מתיר לך לכתוב במקצוע הזה.
             </p>
           )}
         </div>
@@ -495,9 +495,9 @@ const LearningTrafficBoardPage = () => {
 
       {/* ── מה שעדיין לא נבנה — נאמר במפורש, בלי להיראות פעיל ── */}
       <section className="card-premium p-4 mt-5 border-dashed">
-        <h2 className="text-[13px] font-semibold text-foreground mb-1.5">הזנה ועדכון בידי הצוות — השלב הבא</h2>
+        <h2 className="text-[13px] font-semibold text-foreground mb-1.5">הזנה ועדכון בידי הצוות, השלב הבא</h2>
         <p className="text-[11.5px] text-muted-foreground leading-relaxed">
-          הזנת ציונים, הוספת משימה או מתכונת עם תאריך, בחירת מענה ורישום הערה — כל אלה
+          הזנת ציונים, הוספת משימה או מתכונת עם תאריך, בחירת מענה ורישום הערה. כל אלה
           נצפו אצל עינת ועדיין אינם פעילים כאן. שכבת הכתיבה תיפתח רק אחרי שכללי ההרשאה
           לכתיבה ייבדקו בשרת, כדי שמורה לא יוכל לכתוב על מקצוע שאינו שלו.
           עד אז המסך הוא לקריאה בלבד ואינו מדמה שמירה.

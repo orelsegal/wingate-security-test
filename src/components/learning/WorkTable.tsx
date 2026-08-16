@@ -133,7 +133,7 @@ const WorkTable = ({ subjectId, subjectName, students, canWrite, periodLabel, on
         <h2 className="text-[13.5px] font-semibold text-foreground">סביבת העבודה טרם הופעלה במסד הנתונים</h2>
         <p className="text-[12px] text-muted-foreground mt-1.5 leading-relaxed">
           המסך מוכן והרשאות הכתיבה נבדקו, אך טבלאות רכיבי ההערכה עדיין לא הורצו על מסד הנתונים.
-          עד להרצה אין הזנה — והמסך לא יעמיד פנים שהוא שומר.
+          עד להרצה אין הזנה, והמסך לא יעמיד פנים שהוא שומר.
         </p>
       </section>
     );
@@ -172,7 +172,7 @@ const WorkTable = ({ subjectId, subjectName, students, canWrite, periodLabel, on
       {hasPreview && (
         <div className="px-4 py-2 border-b border-border/60 bg-muted/30 flex items-center justify-between gap-3 flex-wrap">
           <p className="text-[11.5px] text-foreground">
-            תצוגה מקדימה של שינוי משקלים — הציונים המשוקללים למטה מחושבים לפי המשקלים החדשים. השינוי טרם נשמר.
+            תצוגה מקדימה של שינוי משקלים. הציונים המשוקללים למטה מחושבים לפי המשקלים החדשים. השינוי טרם נשמר.
           </p>
           <span className="flex items-center gap-2">
             <button onClick={() => setWeightPreview({})}
@@ -374,7 +374,7 @@ const ScoreCell = ({ value, submitted, disabled, state, error, label, onCommit }
       {state === "saving" && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" aria-label="שומר" />}
       {state === "saved" && <Check className="h-3 w-3" style={{ color: metaFor("ירוק").ink }} aria-label="נשמר" />}
       {state === "error" && (
-        <button onClick={() => onCommit(dirty ? draft : value, submitted)} title={error || "השמירה נכשלה — ניסיון חוזר"}
+        <button onClick={() => onCommit(dirty ? draft : value, submitted)} title={error || "השמירה נכשלה. ניסיון חוזר"}
           aria-label={`השמירה נכשלה. ניסיון חוזר · ${label}`}
           className="inline-flex items-center" style={{ color: metaFor("אדום").ink }}>
           <RotateCcw className="h-3 w-3" strokeWidth={2.2} />

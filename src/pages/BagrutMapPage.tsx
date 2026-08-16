@@ -529,7 +529,7 @@ const StudentCard = ({ r, open, onToggle, onProfile }: {
                   borderColor: metaFor(g.state === "הושלם" ? "ירוק" : g.state === "חלקי" ? "צהוב" : null).edge,
                   color: metaFor(g.state === "הושלם" ? "ירוק" : g.state === "חלקי" ? "צהוב" : null).ink,
                 }}
-                title={`${g.subject}: ${g.filled} מתוך ${g.total} רכיבים — ${g.state}`}>
+                title={`${g.subject}: ${g.filled} מתוך ${g.total} רכיבים, ${g.state}`}>
                 <RamzorDot status={g.state === "הושלם" ? "ירוק" : g.state === "חלקי" ? "צהוב" : null} context={g.subject} />
                 {g.subject} {g.filled}/{g.total}
               </span>

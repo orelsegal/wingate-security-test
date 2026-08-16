@@ -62,7 +62,7 @@ export const ramzorMeta: Record<Ramzor | "לא הוזן", {
   "אדום":    { label: "דורש טיפול",      symbol: "!", aria: "דורש טיפול",      solid: "hsl(0, 72%, 42%)",    ink: "hsl(0, 72%, 38%)",    soft: "hsla(0, 72%, 42%, 0.10)",    edge: "hsla(0, 72%, 42%, 0.28)",    order: 0 },
   "צהוב":    { label: "דורש תשומת לב",   symbol: "–", aria: "דורש תשומת לב",   solid: "hsl(35, 92%, 33%)",   ink: "hsl(35, 92%, 30%)",   soft: "hsla(35, 92%, 33%, 0.10)",   edge: "hsla(35, 92%, 33%, 0.28)",   order: 1 },
   "ירוק":    { label: "במסלול",          symbol: "✓", aria: "במסלול",          solid: "hsl(142, 72%, 30%)",  ink: "hsl(142, 72%, 27%)",  soft: "hsla(142, 72%, 30%, 0.10)",  edge: "hsla(142, 72%, 30%, 0.28)",  order: 2 },
-  "לא הוזן": { label: "לא הוזן",         symbol: "?", aria: "לא הוזן — אין מידע", solid: "hsl(215, 12%, 45%)", ink: "hsl(215, 14%, 38%)", soft: "hsla(215, 12%, 45%, 0.10)", edge: "hsla(215, 12%, 45%, 0.28)", order: 3 },
+  "לא הוזן": { label: "לא הוזן",         symbol: "?", aria: "לא הוזן, אין מידע", solid: "hsl(215, 12%, 45%)", ink: "hsl(215, 14%, 38%)", soft: "hsla(215, 12%, 45%, 0.10)", edge: "hsla(215, 12%, 45%, 0.28)", order: 3 },
 };
 
 export const metaFor = (r: Ramzor | null | undefined) => ramzorMeta[r ?? "לא הוזן"];
