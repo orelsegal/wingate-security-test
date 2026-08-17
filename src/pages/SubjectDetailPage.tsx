@@ -34,6 +34,7 @@ const SubjectDetailPage = () => {
   // the same pattern approved for literature.
   useEffect(() => {
     if (decoded === "אזרחות") openSubjectAppSameWindow("civics-70");
+    if (decoded === "אנגלית") openSubjectAppSameWindow("english-11");
   }, [decoded]);
 
   const subjectProgress = useMemo(
@@ -113,6 +114,24 @@ const SubjectDetailPage = () => {
         <p className="text-[12px] text-muted-foreground mt-1.5">האפליקציה נפתחת באותו חלון; חזרה עם כפתור החזרה בדפדפן.</p>
         <button
           onClick={() => openSubjectAppSameWindow("civics-70")}
+          className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white bg-primary hover:bg-primary/90 px-5 py-2.5 rounded-full transition-colors"
+        >
+          מעבר לאפליקציה
+        </button>
+      </div>
+    );
+  }
+
+  // אנגלית: פיילוט. ה-effect שלמעלה כבר מנווט באותו חלון; מוצג interstitial
+  // כן, ולא התוכן הפנימי הגנרי שהוקפא.
+  if (decoded === "אנגלית") {
+    return (
+      <div className="p-10 text-center" dir="rtl">
+        <p className="text-[14px] font-medium text-foreground">מעבירים אתכם לאפליקציית האנגלית</p>
+        <p className="text-[12px] text-muted-foreground mt-1.5">האפליקציה נפתחת באותו חלון; חזרה עם כפתור החזרה בדפדפן.</p>
+        <p className="text-[12px] text-muted-foreground mt-1">פיילוט: הדגמה חזותית של מפת הדרכים. אין בה עדיין שמירה, הגשה או בדיקת מורה.</p>
+        <button
+          onClick={() => openSubjectAppSameWindow("english-11")}
           className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white bg-primary hover:bg-primary/90 px-5 py-2.5 rounded-full transition-colors"
         >
           מעבר לאפליקציה
