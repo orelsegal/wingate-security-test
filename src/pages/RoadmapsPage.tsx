@@ -7,7 +7,8 @@ import { openSubjectAppSameWindow } from "@/lib/openSubjectApp";
  *   ספרות → שער האפליקציות הקנוניות (30% לרוץ עם מילים · 70% ספרות לבגרות)
  *   אזרחות → האפליקציה הקנונית, באותו חלון (דפוס הספרות)
  *   תנ״ך → מפת השנה המאושרת (מוצר פנימי)
- *   אנגלית/מתמטיקה/לשון/היסטוריה/חינוך גופני → "בהכנה": תוכן פנימי גנרי
+ *   אנגלית → אפליקציית מפת הדרכים, באותו חלון. פיילוט: הדגמה חזותית בלבד.
+ *   מתמטיקה/לשון/היסטוריה/חינוך גופני → "בהכנה": תוכן פנימי גנרי
  *     שטרם אושר — לא לחיץ, לא מבטיח מסלול. העמודים נשארים ב-URL ישיר בלבד.
  * (מדעים נכנס מהבית, מהסיידבר וממסך המקצועות — זהו launcher של מסלולים,
  *  ומדעים החיצוני אינו מסלול פנימי.)
@@ -39,7 +40,11 @@ const ENTRIES: Entry[] = [
     kind: "canonical", cta: "מעבר לאפליקציה",
     action: () => openSubjectAppSameWindow("civics-70"),
   },
-  { name: "אנגלית",      icon: Globe,      bg: "bg-[hsl(210,30%,94%)]", fg: "text-[hsl(210,40%,45%)]", kind: "prep" },
+  {
+    name: "אנגלית", icon: Globe, bg: "bg-[hsl(210,30%,94%)]", fg: "text-[hsl(210,40%,45%)]",
+    kind: "canonical", cta: "מעבר לאפליקציה",
+    action: () => openSubjectAppSameWindow("english-11"),
+  },
   { name: "מתמטיקה",     icon: Calculator, bg: "bg-[hsl(270,25%,94%)]", fg: "text-[hsl(262,38%,46%)]", kind: "prep" },
   { name: "לשון",        icon: Languages,  bg: "bg-[hsl(150,25%,93%)]", fg: "text-[hsl(150,32%,34%)]", kind: "prep" },
   { name: "היסטוריה",    icon: Scroll,     bg: "bg-[hsl(35,30%,94%)]",  fg: "text-[hsl(28,48%,42%)]",  kind: "prep" },

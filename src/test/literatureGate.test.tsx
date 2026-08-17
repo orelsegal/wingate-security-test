@@ -54,6 +54,27 @@ describe("אזרחות forwards to the canonical app (frozen internal view)", ()
   });
 });
 
+describe("אנגלית — פיילוט שנפתח באותו חלון", () => {
+  const realLocation = window.location;
+  afterEach(() => {
+    Object.defineProperty(window, "location", { value: realLocation, writable: true, configurable: true });
+  });
+
+  it("מציג interstitial כן, מנווט באותו חלון, ואינו מציג את התוכן הפנימי המוקפא", () => {
+    const assign = vi.fn();
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    Object.defineProperty(window, "location", {
+      value: { ...realLocation, assign }, writable: true, configurable: true,
+    });
+    renderAt(`/subjects/${encodeURIComponent("אנגלית")}`);
+    expect(screen.getByText(/מעבירים אתכם לאפליקציית האנגלית/)).toBeTruthy();
+    expect(screen.getByText(/פיילוט: הדגמה חזותית/)).toBeTruthy();
+    expect(assign).toHaveBeenCalledWith("https://wingate-english-roadmap.vercel.app/");
+    expect(open).not.toHaveBeenCalled();
+    expect(screen.queryByText(/יחידות לימוד/)).toBeNull();
+  });
+});
+
 describe("the literature gate itself", () => {
   it("offers exactly the two canonical parts, same-window, with a return hint", () => {
     render(

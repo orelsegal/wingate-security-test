@@ -17,6 +17,7 @@ const EXPECTED: Record<string, string> = {
   "literature-30": "https://larutz-im-milim.web.app/#station-9",
   "civics-70": "https://israel-civics-coach.lovable.app/",
   science: "https://science2-eta.vercel.app/",
+  "english-11": "https://wingate-english-roadmap.vercel.app/",
 };
 
 afterEach(() => {
@@ -24,9 +25,9 @@ afterEach(() => {
 });
 
 describe("subject-app registry — exact canonical URLs", () => {
-  it("has exactly the four approved products", () => {
+  it("has exactly the five approved products", () => {
     expect(Object.keys(SUBJECT_APPS).sort()).toEqual(
-      ["civics-70", "literature-30", "literature-70", "science"],
+      ["civics-70", "english-11", "literature-30", "literature-70", "science"],
     );
   });
 
@@ -36,6 +37,12 @@ describe("subject-app registry — exact canonical URLs", () => {
       expect(isSubjectAppAvailable(id)).toBe(true);
     });
   }
+
+  it("אנגלית י״א נמצאת ברשימת ההיתר ופותרת לכתובת המאושרת", () => {
+    expect(ALLOWED_SUBJECT_APP_HOSTS).toContain("wingate-english-roadmap.vercel.app");
+    expect(subjectAppUrl("english-11")).toBe("https://wingate-english-roadmap.vercel.app/");
+    expect(isSubjectAppAvailable("english-11")).toBe(true);
+  });
 
   it("ספרות 70% never carries ?guest=1", () => {
     expect(subjectAppUrl("literature-70")).not.toContain("guest");
@@ -153,6 +160,8 @@ describe("openSubjectAppSameWindow — literature gate navigation", () => {
     expect(assign).toHaveBeenCalledWith("https://larutz-im-milim.web.app/#station-9");
     expect(openSubjectAppSameWindow("literature-70")).toBe(true);
     expect(assign).toHaveBeenCalledWith("https://seferut-bagrut.vercel.app/");
+    expect(openSubjectAppSameWindow("english-11")).toBe(true);
+    expect(assign).toHaveBeenCalledWith("https://wingate-english-roadmap.vercel.app/");
   });
 
   it("fails closed for an unknown product without navigating", () => {

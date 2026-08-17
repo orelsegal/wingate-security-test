@@ -7,7 +7,10 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { openSubjectApp, openSubjectAppSameWindow } from "@/lib/openSubjectApp";
 
 /** תוכן פנימי גנרי שטרם אושר — מוקפא; אין ניווט למסלול (טבלת מקור האמת) */
-const IN_PREPARATION = new Set(["לשון", "היסטוריה", "אנגלית", "מתמטיקה", "חינוך גופני"]);
+const IN_PREPARATION = new Set(["לשון", "היסטוריה", "מתמטיקה", "חינוך גופני"]);
+
+/** פיילוט: אפליקציה חיצונית פעילה, אך עדיין הדגמה בלי שמירה או הגשה */
+const DEMO = new Set(["אנגלית"]);
 
 /* ═══ Subject color/icon map ═══ */
 const subjectMeta: Record<string, { icon: any; bg: string; fg: string; pill: string }> = {
@@ -204,6 +207,7 @@ const StudentHomePage = () => {
                   s.name === "תנ״ך" ? () => navigate(`/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`)
                   : s.name === "ספרות" ? () => navigate(`/subjects/${encodeURIComponent("ספרות")}/literature`)
                   : s.name === "אזרחות" ? () => openSubjectAppSameWindow("civics-70")
+                  : s.name === "אנגלית" ? () => openSubjectAppSameWindow("english-11")
                   : null;
                 const cls = `flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-medium ${
                   s.status === "red"
@@ -322,6 +326,7 @@ const StudentHomePage = () => {
               : s.name === "תנ״ך" ? () => navigate(`/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30`)
               : s.name === "ספרות" ? () => navigate(`/subjects/${encodeURIComponent("ספרות")}/literature`)
               : s.name === "אזרחות" ? () => openSubjectAppSameWindow("civics-70")
+              : s.name === "אנגלית" ? () => openSubjectAppSameWindow("english-11")
               : () => navigate(`/subjects/${encodeURIComponent(s.name)}`);
             const Card: "button" | "div" = inPrep ? "div" : "button";
             return (
@@ -371,6 +376,10 @@ const StudentHomePage = () => {
                   {inPrep ? (
                     <span className="font-semibold px-1.5 py-0.5 rounded-full bg-white/70 text-muted-foreground border border-border/60">
                       מסלול בהכנה
+                    </span>
+                  ) : DEMO.has(s.name) ? (
+                    <span className="font-semibold px-1.5 py-0.5 rounded-full bg-white/70 text-muted-foreground border border-border/60">
+                      פיילוט · הדגמה
                     </span>
                   ) : (
                     <span className="text-muted-foreground">{s.missing > 0 ? `${s.missing} מטלות` : "לא נקבע מועד"}</span>

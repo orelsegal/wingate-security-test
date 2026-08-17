@@ -1,7 +1,7 @@
 /**
  * Phase A — central registry of the external subject-app links.
  *
- * These four entries are the ONLY approved external learning-app targets.
+ * These five entries are the ONLY approved external learning-app targets.
  * Every entry is validated against an exact-hostname allowlist before it is
  * ever opened (see src/lib/openSubjectApp.ts); anything off spec fails closed
  * and the product is shown as unavailable rather than opened.
@@ -15,6 +15,10 @@
  *   - mind-map-learner.lovable.app — excluded (separate security incident).
  *   - ?guest=1 on ספרות 70% — never used; the canonical root is the target.
  *   - תנ״ך 30% / 70% — out of Phase A scope entirely.
+ *
+ * אנגלית י״א היא פיילוט. האפליקציה היא הדגמה חזותית בלבד: אין בה שמירה,
+ * הגשה, משתמשים או בדיקת מורה. נקודות הכניסה מציגות אותה כ"הדגמה", ולכן
+ * אין כאן הבטחה למסלול מלא.
  */
 
 export type SubjectAppStatus = "active" | "coming_soon" | "disabled";
@@ -53,6 +57,13 @@ export const SUBJECT_APPS: Record<string, SubjectApp> = {
     hostname: "israel-civics-coach.lovable.app",
     status: "active",
   },
+  "english-11": {
+    id: "english-11",
+    displayName: "אנגלית · י״א",
+    url: "https://wingate-english-roadmap.vercel.app/",
+    hostname: "wingate-english-roadmap.vercel.app",
+    status: "active",
+  },
   science: {
     id: "science",
     displayName: "מדעים",
@@ -71,4 +82,5 @@ export const ALLOWED_SUBJECT_APP_HOSTS: readonly string[] = [
   "larutz-im-milim.web.app",
   "israel-civics-coach.lovable.app",
   "science2-eta.vercel.app",
+  "wingate-english-roadmap.vercel.app",
 ];

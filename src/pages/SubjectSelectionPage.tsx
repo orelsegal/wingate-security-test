@@ -10,13 +10,14 @@ import { openSubjectApp, openSubjectAppSameWindow } from "@/lib/openSubjectApp";
  *   ספרות → שער האפליקציות הקנוניות (דרך ה-redirect של /subjects/ספרות)
  *   אזרחות → האפליקציה הקנונית, באותו חלון (דפוס הספרות)
  *   מבוא למדעים → האפליקציה הקנונית (טאב חדש, Phase A)
- *   אנגלית/מתמטיקה/היסטוריה/לשון → "בהכנה": תוכן פנימי גנרי שטרם אושר —
+ *   אנגלית → אפליקציית מפת הדרכים, באותו חלון. פיילוט, מסומן "הדגמה".
+ *   מתמטיקה/היסטוריה/לשון → "בהכנה": תוכן פנימי גנרי שטרם אושר —
  *     הכרטיס אינו לחיץ ואינו מבטיח מסלול. העמודים נשארים ב-URL ישיר בלבד.
  * נקודות הסטטוס אדום/צהוב/ירוק הוסרו מכרטיסי המקצועות (אישור מפורש).
  */
 
 const subjectMeta: Record<string, { icon: any; color: string; iconColor: string; subtitle: string; cta?: string }> = {
-  "אנגלית": { icon: Globe, color: "bg-[hsl(210,30%,94%)]", iconColor: "text-[hsl(210,40%,50%)]", subtitle: "5 יח״ל" },
+  "אנגלית": { icon: Globe, color: "bg-[hsl(210,30%,94%)]", iconColor: "text-[hsl(210,40%,50%)]", subtitle: "5 יח״ל · מפת הדרכים לשנה", cta: "מעבר לאפליקציה" },
   "מתמטיקה": { icon: Calculator, color: "bg-[hsl(270,25%,94%)]", iconColor: "text-[hsl(270,35%,50%)]", subtitle: "4/5 יח״ל · לפי רמה" },
   "היסטוריה": { icon: Scroll, color: "bg-[hsl(35,30%,94%)]", iconColor: "text-[hsl(35,40%,45%)]", subtitle: "30% + 70%" },
   "אזרחות": { icon: Scale, color: "bg-[hsl(180,20%,93%)]", iconColor: "text-[hsl(180,30%,42%)]", subtitle: "מרחב הלמידה לבגרות", cta: "מעבר לאפליקציה" },
@@ -28,7 +29,10 @@ const subjectMeta: Record<string, { icon: any; color: string; iconColor: string;
 const subjectOrder = ["אנגלית", "מתמטיקה", "היסטוריה", "אזרחות", "ספרות", "לשון", "מבוא למדעים"];
 
 /** תוכן פנימי גנרי שטרם אושר כמוצר — מוקפא, לא לחיץ */
-const IN_PREPARATION = new Set(["אנגלית", "מתמטיקה", "היסטוריה", "לשון"]);
+const IN_PREPARATION = new Set(["מתמטיקה", "היסטוריה", "לשון"]);
+
+/** פיילוט: אפליקציה חיצונית פעילה, אך עדיין הדגמה בלי שמירה או הגשה */
+const DEMO = new Set(["אנגלית"]);
 
 const SubjectSelectionPage = () => {
   const navigate = useNavigate();
@@ -76,6 +80,7 @@ const SubjectSelectionPage = () => {
           const grade = prog?.grade;
           const Icon = meta.icon;
           const inPrep = IN_PREPARATION.has(name);
+          const isDemo = DEMO.has(name);
 
           const cardInner = (
             <div className="flex items-center gap-4">
@@ -88,6 +93,11 @@ const SubjectSelectionPage = () => {
                   {inPrep && (
                     <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
                       בהכנה
+                    </span>
+                  )}
+                  {isDemo && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                      הדגמה
                     </span>
                   )}
                   {grade != null && (
@@ -130,6 +140,7 @@ const SubjectSelectionPage = () => {
                 // Phase A: קנוניות דרך ה-registry, fail-closed.
                 if (name === "מבוא למדעים") { openSubjectApp("science"); return; }
                 if (name === "אזרחות") { openSubjectAppSameWindow("civics-70"); return; }
+                if (name === "אנגלית") { openSubjectAppSameWindow("english-11"); return; }
                 navigate(`/subjects/${encodeURIComponent(name)}`);
               }}
               className="group bg-card rounded-2xl border border-border p-4 text-start transition-all duration-300 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 cursor-pointer animate-fade-in-up"

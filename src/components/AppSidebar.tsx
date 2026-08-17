@@ -334,15 +334,15 @@ const AppSidebar = ({ onNavigate }: AppSidebarProps) => {
           {user?.role === "student" && (() => {
             const subjects: {
               name: string; icon: typeof Home; path?: string;
-              external?: "science"; canonicalSameWindow?: "civics-70"; prep?: boolean;
+              external?: "science"; canonicalSameWindow?: "civics-70" | "english-11"; prep?: boolean;
             }[] = [
               { name: "תנ״ך",        icon: BookOpen,   path: "/subjects/" + encodeURIComponent("תנ״ך") + "/tanakh-30" },
               { name: "ספרות",       icon: Feather,    path: "/subjects/" + encodeURIComponent("ספרות") + "/literature" },
               { name: "אזרחות",      icon: Scale,      canonicalSameWindow: "civics-70" },
               { name: "מבוא למדעים", icon: Lightbulb,  external: "science" },
+              { name: "אנגלית",      icon: Globe,      canonicalSameWindow: "english-11" },
               { name: "לשון",        icon: Languages,  prep: true },
               { name: "היסטוריה",    icon: Scroll,     prep: true },
-              { name: "אנגלית",      icon: Globe,      prep: true },
               { name: "מתמטיקה",     icon: Calculator, prep: true },
               { name: "חינוך גופני", icon: Dumbbell,   prep: true },
             ];
