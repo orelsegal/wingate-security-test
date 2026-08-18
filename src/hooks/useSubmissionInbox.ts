@@ -8,16 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
  * מוקלד. זו הנקודה היחידה בקובץ שמוותרת על הטיפוסים, והצורה שחוזרת
  * מאומתת מיד ל-InboxRow. כשהטיפוסים ייווצרו מחדש, מוחקים את השורה הזאת.
  */
-const db = supabase as unknown as {
-  from: (t: string) => {
-    select: (q: string) => {
-      in: (c: string, v: readonly string[]) => {
-        order: (c: string, o: { ascending: boolean }) =>
-          Promise<{ data: unknown[] | null; error: { message: string } | null }>;
-      };
-    };
-  };
+type Ref = { referencedTable?: string; ascending?: boolean };
+type Q = {
+  select: (q: string) => Q;
+  in: (c: string, v: readonly string[]) => Q;
+  order: (c: string, o?: Ref) => Q;
+  limit: (n: number, o?: Ref) => Q;
+  then: (
+    r: (v: { data: unknown[] | null; error: { message: string; code?: string } | null }) => void,
+  ) => Promise<void>;
 };
+const db = supabase as unknown as { from: (t: string) => Q };
 
 /**
  * תיבת ההגשות של המורה — נתונים אמיתיים.
@@ -37,8 +38,8 @@ const db = supabase as unknown as {
  *
  * הערה על היקף: המדיניות על students נשענת על is_teacher_of_student,
  * שהוא group scoped ולא subject scoped. הוא אינו יכול להרחיב גישה
- * להגשות — אלה כבר סוננו — אבל הוא רחב יותר מהחוזה, ולכן שם התלמידה
- * מגיע דרך שער מעט רחב יותר מהתשובה עצמה.
+ * להגשות — אלה כבר סוננו — אבל שם התלמידה מגיע דרך שער מעט רחב יותר
+ * מהתשובה עצמה. המדיניות הזאת אינה משתנה כאן.
  */
 
 /** רק מצבים עמידים שקיימים בפועל בחוזה החי.
@@ -57,11 +58,13 @@ export interface InboxRow {
   updated_at: string;
   task: { id: string; title: string; external_app: string; external_key: string } | null;
   student: { id: string; full_name: string; class_name: string | null } | null;
-  /** הגרסה האחרונה בלבד. content הוא ה-jsonb שהתלמידה מסרה. */
+  /** הגרסה האחרונה בלבד, כפי שהמסד החזיר אותה. */
   latest: { revision: number; content: unknown; created_at: string } | null;
+  /** true כאשר הגרסה שחזרה אינה תואמת ל-submissions.revision. */
+  revisionMismatch: boolean;
 }
 
-interface RawRow extends Omit<InboxRow, "latest"> {
+interface RawRow extends Omit<InboxRow, "latest" | "revisionMismatch"> {
   versions: { revision: number; content: unknown; created_at: string }[] | null;
 }
 
@@ -72,28 +75,47 @@ const SELECT = `
   versions:submission_versions ( revision, content, created_at )
 `;
 
-export function useSubmissionInbox() {
+/**
+ * enabled — ה-hook לא יורה כלל למשתמש שאינו מורשה. ה-guard בעמוד הוא
+ * שכבת UX; RLS נשארת שכבת האבטחה, ושתיהן פועלות במקביל.
+ */
+export function useSubmissionInbox(enabled: boolean) {
   return useQuery<InboxRow[]>({
     queryKey: ["submission-inbox"],
+    enabled,
     staleTime: 30_000,
+    retry: false,
     queryFn: async () => {
-      const { data, error } = await db
+      // הגרסה האחרונה בלבד: PostgREST ממיין ומגביל את ה-relation המוטמע
+      // בצד השרת, אחת לכל שורת אב. ההיסטוריה כולה אינה יורדת לדפדפן.
+      const { data, error } = (await db
         .from("submissions")
         .select(SELECT)
         .in("status", PENDING_STATUSES)
-        .order("submitted_at", { ascending: true });
+        .order("submitted_at", { ascending: true })
+        .order("revision", { referencedTable: "submission_versions", ascending: false })
+        .limit(1, { referencedTable: "submission_versions" })) as unknown as {
+        data: unknown[] | null;
+        error: { message: string; code?: string } | null;
+      };
 
-      if (error) throw error;
+      if (error) {
+        // פרטי השגיאה נשארים לדיאגנוסטיקה בלבד ואינם מוצגים למשתמש.
+        // אין כאן תוכן תלמידה: רק קוד וטקסט של המסד.
+        console.error("[submission-inbox] query failed", {
+          code: error.code, message: error.message,
+        });
+        throw new Error("INBOX_QUERY_FAILED");
+      }
 
-      // Keep only the newest version per submission. Done here rather than
-      // in the query so a submission whose versions are not readable still
-      // renders as a row with no answer, instead of vanishing silently.
       return ((data ?? []) as unknown as RawRow[]).map(r => {
-        const latest = (r.versions ?? [])
-          .slice()
-          .sort((a, b) => b.revision - a.revision)[0] ?? null;
+        const latest = (r.versions ?? [])[0] ?? null;
         const { versions: _drop, ...rest } = r;
-        return { ...rest, latest } as InboxRow;
+        return {
+          ...rest,
+          latest,
+          revisionMismatch: latest != null && latest.revision !== r.revision,
+        } as InboxRow;
       });
     },
   });

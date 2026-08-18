@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { Loader2, Inbox, AlertTriangle, FileText, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Loader2, Inbox, AlertTriangle, FileText, RefreshCw, ShieldOff } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { useSubmissionInbox, type InboxRow } from "@/hooks/useSubmissionInbox";
 import "@/styles/teacher-review-demo.css";
+
+/** רק תפקידים שבודקים הגשות. RLS נשארת שכבת האבטחה; זה guard של UX,
+ *  ובנוסף הוא מונע מהשאילתה לרוץ בכלל למי שאינו אמור לראות את המסך. */
+const ALLOWED_ROLES = ["teacher", "admin", "developer"] as const;
 
 /**
  * /teacher-review — תיבת ההגשות האמיתית.
@@ -42,8 +48,37 @@ function AnswerBody({ content }: { content: unknown }) {
 }
 
 export default function TeacherReviewInboxPage() {
-  const { data, isLoading, isError, error, refetch, isFetching } = useSubmissionInbox();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const allowed = !!user && (ALLOWED_ROLES as readonly string[]).includes(user.role);
+
+  // enabled=false — ה-hook אינו יורה כלל למשתמש לא מורשה.
+  const { data, isLoading, isError, refetch, isFetching } = useSubmissionInbox(allowed);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  if (!allowed) {
+    return (
+      <div className="trd">
+        <div className="trd-wrap">
+          <header className="trd-head">
+            <p className="trd-eyebrow">אקדמיית וינגייט</p>
+            <h1>אין לך הרשאה למסך הזה</h1>
+            <p>בדיקת הגשות פתוחה לצוות ההוראה בלבד.</p>
+          </header>
+          <p className="trd-empty">
+            <ShieldOff size={22} aria-hidden="true" />
+            <br />
+            אם לדעתך זו טעות, פנו לרכזת המקצוע.
+          </p>
+          <div className="trd-actions">
+            <button type="button" className="trd-btn return" onClick={() => navigate("/")}>
+              חזרה למסך הבית
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const rows: InboxRow[] = data ?? [];
   const selected = rows.find(r => r.id === selectedId) ?? null;
@@ -68,15 +103,24 @@ export default function TeacherReviewInboxPage() {
           </p>
         )}
 
-        {/* ── שגיאה ── */}
+        {/* ── שגיאה. הודעה כללית בלבד; פרטי המסד נשארים בקונסול ── */}
         {isError && (
           <div className="trd-result returned" role="alert">
             <AlertTriangle size={17} aria-hidden="true" />
             <span>
               <b>לא הצלחנו לטעון את ההגשות</b>
-              {(error as Error)?.message || "שגיאה לא ידועה"}
-              <span className="demo">
-                לא בוצע שינוי. אפשר לנסות שוב, ואם זה חוזר כדאי לדווח.
+              משהו השתבש בטעינה. לא בוצע שום שינוי.
+              <span className="demo">אם זה חוזר, כדאי לדווח לתמיכה.</span>
+              <span style={{ display: "block", marginTop: ".7rem" }}>
+                <button
+                  type="button"
+                  className="trd-btn return"
+                  onClick={() => refetch()}
+                  disabled={isFetching}
+                >
+                  <RefreshCw size={15} aria-hidden="true" />
+                  {isFetching ? "מנסה שוב…" : "ניסיון חוזר"}
+                </button>
               </span>
             </span>
           </div>
@@ -179,6 +223,11 @@ export default function TeacherReviewInboxPage() {
                   {selected.latest && <span style={{ fontWeight: 400, opacity: .7 }}>
                     {" "}· גרסה {selected.latest.revision}
                   </span>}
+                  {selected.revisionMismatch && (
+                    <span className="trd-state returned" style={{ marginInlineStart: ".5rem" }}>
+                      הגרסה שהתקבלה אינה הגרסה האחרונה שנרשמה
+                    </span>
+                  )}
                 </h3>
                 <AnswerBody content={selected.latest?.content ?? null} />
               </div>
