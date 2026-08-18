@@ -23,6 +23,7 @@ const StudentProfilePage         = lazy(() => import("./pages/StudentProfilePage
 const CoursesPage                = lazy(() => import("./pages/CoursesPage"));
 const DataEntryPage              = lazy(() => import("./pages/DataEntryPage"));
 const GradeEntryPage             = lazy(() => import("./pages/GradeEntryPage"));
+import TeacherReviewDemoPage from "./pages/TeacherReviewDemoPage";
 const DataManagementPage         = lazy(() => import("./pages/DataManagementPage"));
 const StudentHomePage            = lazy(() => import("./pages/StudentHomePage"));
 const StudentLearningTrafficLight = lazy(() => import("./pages/StudentLearningTrafficLight"));
@@ -125,6 +126,8 @@ const App = () => (
               <Route path="/courses"                            element={<CoursesPage />} />
               <Route path="/data-entry"                         element={<DataEntryPage />} />
               <Route path="/grade-entry"                        element={<GradeEntryPage />} />
+              {/* הדגמה בלבד: תיבת בדיקות מורה + הצעת AI. נתונים פיקטיביים, ללא מסד. */}
+              <Route path="/teacher-review-demo"                element={<TeacherReviewDemoPage />} />
               <Route path="/data-management"                    element={<DataManagementPage />} />
               <Route path="/student-home"                       element={<StudentHomePage />} />
               <Route path="/student-learning"                   element={<StudentLearningTrafficLight />} />
