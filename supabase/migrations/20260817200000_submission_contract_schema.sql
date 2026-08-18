@@ -273,6 +273,11 @@ revoke all on public.learning_tasks, public.submissions, public.submission_versi
               public.feedback_drafts, public.teacher_reviews, public.submission_state_events,
               public.operation_receipts
   from public, anon;
+-- Supabase grants ALL on new public tables to authenticated by default, so
+-- the receipts table has to be taken back explicitly. RLS with no policy
+-- would already return zero rows, but a table nothing should ever reach
+-- must not carry a grant either.
+revoke all on public.operation_receipts from authenticated;
 -- SELECT is granted to authenticated on every contract table; RLS below is
 -- what actually decides which rows come back. Without the grant even an
 -- authorised teacher gets "permission denied" instead of an empty set.
