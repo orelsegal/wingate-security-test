@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════════════════════════════════
+   תיבת בדיקות מורה — הדגמה.
+
+   השפה החזותית של "לרוץ עם מילים", בערכים שלה: נייר חם, דיו חום,
+   חימר לפעולה אחת, מרווה לאישור. אין כאן צבע חדש, gradient גנרי או
+   glassmorphism, ואין העתקה של מסך האזרחות: משם נלקח רק סדר העבודה,
+   כלומר תשובה מול הצעה ואז החלטה.
+
+   מסך של מורה הוא סביבת עבודה, לא dashboard: קו שיער במקום מסגרת,
+   משטח אחד לכל אזור, וטיפוגרפיה שנושאת את ההיררכיה.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.trd {
+  --paper:      #FBF6EC;
+  --paper-2:    #F3EBDC;
+  --edge:       #E3D5BE;
+  --ink-1:      #4A3521;
+  --ink-2:      #6B5031;
+  --ink-3:      #594932;
+  --clay:       #C56F49;
+  --clay-deep:  #BC6644;
+  --moss:       #5B7566;
+  --moss-tint:  #E7EEE8;
+  --amber-tint: #F7EEDC;
+
+  direction: rtl;
+  min-height: 100vh;
+  background:
+    radial-gradient(60% 24% at 50% 0%, rgba(214,196,166,.26) 0%, transparent 72%),
+    linear-gradient(180deg, #F5EEE1 0%, #F2E9DA 60%, #EFE5D3 100%);
+  color: var(--ink-1);
+  font-family: 'Assistant', 'Heebo', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+}
+
+/* ── שורת ההדגמה. קבועה, ולא ניתנת להתעלמות ──────────────────────── */
+.trd-demo-bar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .5rem 1rem; min-height: 40px;
+  background: var(--clay-deep); color: #FFF2E4;
+  font-size: .82rem; font-weight: 700; text-align: center;
+}
+.trd-demo-bar svg { flex: none; }
+
+.trd-wrap { max-width: 1240px; margin: 0 auto; padding: 1.4rem 1rem 4rem; }
+
+.trd-head { margin-bottom: 1.5rem; }
+.trd-eyebrow {
+  font-size: .72rem; font-weight: 800; letter-spacing: .09em;
+  color: var(--clay); margin: 0 0 .35rem;
+}
+.trd-head h1 {
+  font-size: clamp(1.5rem, 5vw, 1.95rem); font-weight: 900; line-height: 1.2;
+  margin: 0 0 .3rem; color: var(--ink-1);
+}
+.trd-head p { margin: 0; font-size: .95rem; color: var(--ink-3); max-width: 58ch; }
+
+/* ── תיבת ההגשות ──────────────────────────────────────────────────── */
+.trd-tabs {
+  display: flex; gap: .4rem; flex-wrap: wrap;
+  border-bottom: 1px solid var(--edge); margin-bottom: 1rem; padding-bottom: .55rem;
+}
+.trd-tab {
+  display: inline-flex; align-items: center; gap: .45rem;
+  min-height: 44px; padding: 0 .95rem; border-radius: 999px;
+  background: transparent; border: 1.5px solid transparent; cursor: pointer;
+  font: inherit; font-size: .88rem; font-weight: 700; color: var(--ink-2);
+}
+.trd-tab:hover { background: rgba(251,246,236,.8); }
+.trd-tab[aria-selected="true"] {
+  background: var(--paper); border-color: var(--edge); color: var(--ink-1);
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 2px 6px rgba(92,67,36,.07);
+}
+.trd-tab .n {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .74rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: var(--paper-2); color: var(--ink-2);
+}
+.trd-tab[aria-selected="true"] .n { background: var(--clay); color: #FFF2E4; }
+
+.trd-list { list-style: none; margin: 0; padding: 0; }
+.trd-row {
+  display: flex; align-items: center; gap: .9rem; width: 100%;
+  min-height: 60px; padding: .7rem .85rem; text-align: start;
+  background: transparent; border: 0; border-top: 1px solid rgba(227,213,190,.8);
+  cursor: pointer; font: inherit; color: inherit;
+}
+.trd-list li:first-child .trd-row { border-top: 0; }
+.trd-row:hover { background: rgba(251,246,236,.75); }
+.trd-row[aria-current="true"] {
+  background: var(--paper); border-radius: 12px; border-top-color: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--clay);
+}
+.trd-row[aria-current="true"] + .trd-row { border-top-color: transparent; }
+
+.trd-avatar {
+  flex: none; width: 38px; height: 38px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--paper-2); border: 1px solid var(--edge);
+  font-size: .85rem; font-weight: 800; color: var(--ink-2);
+}
+.trd-row-body { flex: 1; min-width: 0; }
+.trd-name { display: block; font-size: .96rem; font-weight: 700; color: var(--ink-1); }
+.trd-sub {
+  display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+  margin-top: .12rem; font-size: .78rem; color: var(--ink-2);
+}
+.trd-sub .dot { color: #B49B75; }
+.trd-state {
+  flex: none; font-size: .72rem; font-weight: 800; padding: .2rem .6rem;
+  border-radius: 999px; border: 1px solid transparent; white-space: nowrap;
+}
+.trd-state.pending  { color: #8A5A22; background: var(--amber-tint); border-color: #E7D2A8; }
+.trd-state.returned { color: #A8512F; background: #F7E4D9;           border-color: #EFCBB6; }
+.trd-state.reviewed { color: var(--moss); background: var(--moss-tint); border-color: #CFE0D4; }
+
+.trd-empty {
+  padding: 2.2rem 1rem; text-align: center; color: var(--ink-2); font-size: .92rem;
+}
+
+/* ── מסך הבדיקה ───────────────────────────────────────────────────── */
+.trd-review { margin-top: 1.8rem; padding-top: 1.5rem; border-top: 1px solid var(--edge); }
+
+.trd-review-head { margin-bottom: 1.2rem; }
+.trd-review-head h2 {
+  font-size: 1.3rem; font-weight: 800; margin: 0 0 .2rem; color: var(--ink-1);
+}
+.trd-meta { display: flex; gap: .45rem; flex-wrap: wrap; align-items: center;
+            font-size: .82rem; color: var(--ink-2); }
+
+.trd-question {
+  margin: 0 0 1.4rem; padding: .9rem 1rem;
+  background: var(--paper); border: 1px solid var(--edge); border-radius: 14px;
+  font-size: .9rem; line-height: 1.7; color: var(--ink-3); max-width: 76ch;
+}
+.trd-question b { display: block; font-size: .74rem; font-weight: 800;
+                  letter-spacing: .06em; color: var(--clay); margin-bottom: .3rem; }
+
+/* דסקטופ: תשובה והצעה זו לצד זו. מובייל: תשובה, AI, החלטה. */
+.trd-cols { display: flex; flex-direction: column; gap: 1.6rem; }
+
+.trd-panel-h {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .76rem; font-weight: 800; letter-spacing: .06em;
+  color: var(--ink-2); margin: 0 0 .6rem;
+}
+.trd-panel-h svg { color: var(--clay); }
+
+.trd-answer {
+  background: #FFFDF9; border: 1px solid var(--edge); border-radius: 14px;
+  padding: 1.05rem 1.15rem; font-size: .95rem; line-height: 1.8; color: var(--ink-1);
+  white-space: pre-wrap; overflow-wrap: anywhere; max-width: 68ch;
+}
+
+/* ה-AI: מסומן, מוקף, ובגוון שאינו זהה לתשובת התלמידה */
+.trd-ai {
+  background: var(--paper); border: 1px solid var(--edge);
+  border-inline-start: 3px solid var(--clay); border-radius: 14px;
+  padding: 1.05rem 1.15rem;
+}
+.trd-ai-tag {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .72rem; font-weight: 800; letter-spacing: .05em;
+  color: #FFF2E4; background: var(--clay-deep);
+  padding: .22rem .65rem; border-radius: 999px; margin-bottom: .8rem;
+}
+.trd-ai h4 {
+  font-size: .82rem; font-weight: 800; color: var(--ink-2);
+  margin: 1rem 0 .4rem;
+}
+.trd-ai h4:first-of-type { margin-top: 0; }
+.trd-ai ul { margin: 0; padding-inline-start: 1.1rem; display: flex;
+             flex-direction: column; gap: .3rem; }
+.trd-ai li { font-size: .89rem; line-height: 1.65; color: var(--ink-3); }
+.trd-quote {
+  font-size: .87rem; line-height: 1.6; color: var(--ink-3);
+  padding-inline-start: .75rem; border-inline-start: 2px solid var(--edge);
+  margin: 0 0 .4rem; font-style: italic;
+}
+
+.trd-rubric { display: flex; flex-direction: column; gap: .55rem; margin-top: .5rem; }
+.trd-crit {
+  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+  padding-bottom: .55rem; border-bottom: 1px solid rgba(227,213,190,.7);
+}
+.trd-crit:last-child { border-bottom: 0; padding-bottom: 0; }
+.trd-crit-name { flex: 1; min-width: 9rem; font-size: .88rem; font-weight: 700; color: var(--ink-1); }
+.trd-crit-score {
+  font-size: .88rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink-1);
+}
+.trd-crit-level {
+  font-size: .72rem; font-weight: 700; padding: .12rem .5rem; border-radius: 999px;
+  background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--edge);
+}
+.trd-crit-note { flex-basis: 100%; font-size: .82rem; color: var(--ink-2); line-height: 1.55; }
+
+.trd-total {
+  display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap;
+  margin-top: .9rem; padding-top: .8rem; border-top: 1px solid var(--edge);
+  font-size: .88rem; color: var(--ink-2);
+}
+.trd-total b { font-size: 1.15rem; font-weight: 900; color: var(--ink-1);
+               font-variant-numeric: tabular-nums; }
+.trd-total .hint { flex-basis: 100%; font-size: .8rem; color: var(--ink-2); }
+
+.trd-conf {
+  display: inline-flex; align-items: center; gap: .4rem; margin-top: .8rem;
+  font-size: .8rem; font-weight: 700; padding: .25rem .65rem; border-radius: 999px;
+}
+.trd-conf.low    { color: #A8512F; background: #F7E4D9; }
+.trd-conf.medium { color: #8A5A22; background: var(--amber-tint); }
+.trd-conf.high   { color: var(--moss); background: var(--moss-tint); }
+.trd-conf-note { margin: .45rem 0 0; font-size: .82rem; color: var(--ink-2); line-height: 1.6; }
+
+.trd-ai-guard {
+  margin: 1rem 0 0; padding-top: .8rem; border-top: 1px solid var(--edge);
+  font-size: .82rem; font-weight: 700; color: var(--ink-2); line-height: 1.6;
+}
+
+/* ── החלטת המורה ──────────────────────────────────────────────────── */
+.trd-decision {
+  margin-top: 1.6rem; padding-top: 1.4rem; border-top: 1px solid var(--edge);
+}
+.trd-decision label {
+  display: block; font-size: .82rem; font-weight: 800; color: var(--ink-2); margin-bottom: .45rem;
+}
+.trd-decision textarea {
+  display: block; width: 100%; min-height: 9rem; padding: .95rem 1rem;
+  background: #FFFDF9; border: 1.5px solid #DFCBAA; border-radius: 14px;
+  font: inherit; font-size: .95rem; line-height: 1.75; color: var(--ink-1);
+  resize: vertical;
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 3px 10px rgba(92,67,36,.05);
+}
+.trd-decision textarea:focus {
+  outline: none; border-color: var(--clay); box-shadow: 0 0 0 3px rgba(197,111,73,.16);
+}
+.trd-prefill {
+  margin: .5rem 0 0; font-size: .8rem; color: var(--ink-2);
+}
+.trd-prefill button {
+  background: none; border: 0; padding: 0; font: inherit; font-weight: 700;
+  color: var(--clay); cursor: pointer; text-decoration: underline;
+  min-height: 44px;
+}
+
+.trd-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.1rem; }
+.trd-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  min-height: 48px; padding: 0 1.4rem; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: .95rem; font-weight: 800; border: 1.5px solid transparent;
+}
+.trd-btn.approve {
+  color: #F4F8F4; background: var(--moss); border-color: var(--moss);
+}
+.trd-btn.approve:hover { background: #4C6558; }
+.trd-btn.return {
+  color: var(--ink-1); background: var(--paper); border-color: #DFCBAA;
+}
+.trd-btn.return:hover { border-color: var(--clay); }
+.trd-btn.reset {
+  color: var(--ink-2); background: transparent; border-color: var(--edge);
+}
+.trd-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.trd-result {
+  display: flex; align-items: flex-start; gap: .6rem;
+  margin-top: 1.1rem; padding: .85rem 1rem; border-radius: 12px;
+  font-size: .9rem; line-height: 1.6;
+}
+.trd-result.approved { background: var(--moss-tint); border: 1px solid #CFE0D4; color: #3F5C4E; }
+.trd-result.returned { background: #F7E4D9; border: 1px solid #EFCBB6; color: #91402A; }
+.trd-result svg { flex: none; margin-top: .15rem; }
+.trd-result b { display: block; margin-bottom: .1rem; }
+.trd-result .demo { display: block; margin-top: .35rem; font-size: .8rem; font-weight: 700; }
+
+.trd :focus-visible { outline: 3px solid #33261A; outline-offset: 3px; }
+
+/* ── דסקטופ ───────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .trd-wrap { padding: 1.8rem 1.5rem 4rem; }
+  .trd-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.8rem; }
+  .trd-answer { max-width: none; }
+  .trd-decision { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trd * { transition: none !important; animation: none !important; }
+}
