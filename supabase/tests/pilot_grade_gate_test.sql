@@ -255,6 +255,102 @@ begin
   reset role;
 end $$;
 
+
+-- ── השומר: approve_submission הישן אינו יכול לאשר הגשת פיילוט ──────
+-- התרחיש האסור: approved (אין resubmit) בלי ציון (אין unlock). מוכיחים
+-- שהמסד עצמו חוסם אותו, לפני שינוי מצב, ואז שהלולאה התקינה עדיין חיה.
+do $$
+declare
+  v_sub uuid; v_teacher uuid; v_stu uuid;
+  v_status public.submission_status; v_n int; v_rev int;
+begin
+  select v into v_teacher from ids where k='teacher';
+  select v into v_stu     from ids where k='stu';
+
+  -- הגשה טרייה של תלמידת הפיילוט (משימה שנייה, כדי לא לגעת בקודמות)
+  insert into public.learning_tasks (subject_id, external_app, external_key, title)
+  values ((select v from ids where k='subj'), 'literature-30', 'station-5-guard', 'שער-שומר')
+  returning id into strict v_sub;  -- reuse var as task id רגעית
+  insert into ids values ('gtask', v_sub);
+
+  perform set_config('request.jwt.claims', json_build_object('sub',v_stu,'role','authenticated')::text, true);
+  set local role authenticated;
+  v_sub := public.submit_task(v_sub, '{"formula":"עבודת שומר"}'::jsonb, 'guard-submit-00001');
+  reset role;
+  insert into ids values ('gsub', v_sub);
+
+  -- 1 · הפונקציה הישנה נכשלת דטרמיניסטית, לפני שינוי מצב
+  perform set_config('request.jwt.claims', json_build_object('sub',v_teacher,'role','authenticated')::text, true);
+  set local role authenticated;
+  begin
+    perform public.approve_submission(v_sub, 'אישור ישן בלי ציון', 'guard-legacy-0001');
+    perform pg_temp.note(false, 'שומר: approve_submission הישן אישר הגשת פיילוט');
+  exception when others then
+    perform pg_temp.note(sqlerrm like '%pilot_approval_requires_grade%',
+                         'שומר: הישן נחסם — '||sqlerrm);
+  end;
+  reset role;
+
+  select status into v_status from public.submissions where id = v_sub;
+  perform pg_temp.note(v_status = 'awaiting_review', 'שומר: הסטטוס לא השתנה ('||v_status||')');
+  select count(*) into v_n from public.teacher_reviews where submission_id = v_sub;
+  perform pg_temp.note(v_n = 0, 'שומר: גם שורת הסקירה של הישן התגלגלה לאחור');
+
+  -- 2 · גם עדכון ישיר (למשל service_role) אינו עוקף את הטריגר
+  begin
+    update public.submissions set status='approved' where id = v_sub;
+    perform pg_temp.note(false, 'שומר: עדכון ישיר עקף את הטריגר');
+  exception when others then
+    perform pg_temp.note(sqlerrm like '%pilot_approval_requires_grade%',
+                         'שומר: גם עדכון ישיר נחסם');
+  end;
+
+  -- 3 · הלולאה התקינה חיה: החזרה → הגשה מחדש → grade_and_approve 90
+  perform set_config('request.jwt.claims', json_build_object('sub',v_teacher,'role','authenticated')::text, true);
+  set local role authenticated;
+  perform public.return_for_revision(v_sub, 'להשלים ראיות', 'guard-return-0001');
+  reset role;
+
+  perform set_config('request.jwt.claims', json_build_object('sub',v_stu,'role','authenticated')::text, true);
+  set local role authenticated;
+  v_rev := public.resubmit(v_sub, '{"formula":"עבודת שומר מתוקנת"}'::jsonb, 'guard-resubmit-01');
+  reset role;
+  perform pg_temp.note(v_rev = 2, 'שומר: resubmit עדיין אפשרי אחרי החסימה (rev 2)');
+
+  perform set_config('request.jwt.claims', json_build_object('sub',v_teacher,'role','authenticated')::text, true);
+  set local role authenticated;
+  perform public.grade_and_approve(v_sub, 90, 'מצוין אחרי תיקון', 'guard-approve-0001');
+  reset role;
+  select status into v_status from public.submissions where id = v_sub;
+  select count(*) into v_n from public.gate_unlocks
+   where task_id = (select v from ids where k='gtask')
+     and student_id = (select v from ids where k='rec');
+  perform pg_temp.note(v_status = 'approved' and v_n = 1,
+                       'שומר: grade_and_approve עובר את הטריגר ופותח (90)');
+end $$;
+
+-- ── השומר אינו נוגע במי שאינה בפיילוט: החוזה הישן כרגיל ────────────
+do $$
+declare v_sub uuid; v_teacher uuid; v_stu2 uuid; v_status public.submission_status;
+begin
+  select v into v_teacher from ids where k='teacher';
+  select v into v_stu2    from ids where k='stu2';
+
+  perform set_config('request.jwt.claims', json_build_object('sub',v_stu2,'role','authenticated')::text, true);
+  set local role authenticated;
+  v_sub := public.submit_task((select v from ids where k='gtask'),
+                              '{"formula":"לא פיילוט"}'::jsonb, 'guard-np-submit-01');
+  reset role;
+
+  perform set_config('request.jwt.claims', json_build_object('sub',v_teacher,'role','authenticated')::text, true);
+  set local role authenticated;
+  perform public.approve_submission(v_sub, 'אישור ישן, מחוץ לפיילוט', 'guard-np-appr-01');
+  reset role;
+  select status into v_status from public.submissions where id = v_sub;
+  perform pg_temp.note(v_status = 'approved',
+                       'מחוץ לפיילוט: approve_submission הישן עובד כרגיל');
+end $$;
+
 select n, case when ok then 'PASS' else 'FAIL' end as result, label from t_res order by n;
 do $$ declare f int; begin
   select count(*) into f from t_res where not ok;
