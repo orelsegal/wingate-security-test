@@ -242,6 +242,38 @@ begin
   reset role;
 end $$;
 
+
+-- ── סגירת חצי-המצב: student רק דרך מסלול האישור ────────────────────
+do $$
+declare v_admin uuid; v_new2 uuid; v_n int;
+begin
+  select v into v_admin from ids where k='admin';
+  select v into v_new2  from ids where k='new2';
+  perform pg_temp.as_user(v_admin); set local role authenticated;
+  begin
+    perform public.grant_role(v_new2, 'student');
+    perform pg_temp.note(false, 'חצי-מצב: grant_role העניק student ידנית');
+  exception when others then
+    perform pg_temp.note(sqlerrm like '%student_requires_approval_flow%',
+                         'חצי-מצב נסגר: grant_role מסרב ל-student');
+  end;
+  -- ‏teacher עדיין ניתן להענקה ידנית (הכלל חל רק על student)
+  perform public.grant_role(v_new2, 'viewer');
+  perform pg_temp.note(exists (select 1 from public.user_roles
+                               where user_id=v_new2 and role::text='viewer'),
+                       'חצי-מצב: הענקת viewer ידנית עדיין עובדת');
+  perform public.revoke_role(v_new2, 'viewer');
+
+  -- ‏admin_list_users מחזיר את מצב הקישור: התלמידה שאושרה מקושרת, זר לא
+  select count(*) into v_n from public.admin_list_users()
+   where 'student' = any(roles) and linked_student = true;
+  perform pg_temp.note(v_n >= 1, 'admin_list_users: תלמידה מאושרת מוצגת כמקושרת');
+  select count(*) into v_n from public.admin_list_users()
+   where user_id = v_new2 and linked_student = true;
+  perform pg_temp.note(v_n = 0, 'admin_list_users: זר אינו מקושר');
+  reset role;
+end $$;
+
 select n, case when ok then 'PASS' else 'FAIL' end as result, label from t_res order by n;
 do $$ declare f int; begin
   select count(*) into f from t_res where not ok;
