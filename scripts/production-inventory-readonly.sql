@@ -41,16 +41,22 @@ select 'הגשות', count(*)::text from public.submissions
 union all
 select 'סקירות מורה', count(*)::text from public.teacher_reviews;
 
--- 5 · טבלאות הפיילוט (יתמלא אחרי הרצת החבילות; שגיאה כאן = טרם הותקנו)
-select 'pilot_members' as מדד, count(*)::text as ערך from public.pilot_members
-union all
-select 'grades', count(*)::text from public.grades
-union all
-select 'gate_unlocks', count(*)::text from public.gate_unlocks
-union all
-select 'access_requests', count(*)::text from public.access_requests
-union all
-select 'role_audit', count(*)::text from public.role_audit;
+-- 5 · טבלאות הפיילוט. הסקריפט רץ ראשון, לפני ההתקנה, ולכן אסור לו
+--     להניח שהן קיימות: קודם דיווח קיום, ואז ספירות רק למה שקיים.
+select t as טבלת_פיילוט,
+       case when to_regclass('public.'||t) is not null then 'קיימת' else 'טרם הותקנה' end as מצב
+from unnest(array['pilot_members','grades','gate_unlocks','access_requests','role_audit']) t;
+
+do $$
+declare t text; n bigint;
+begin
+  foreach t in array array['pilot_members','grades','gate_unlocks','access_requests','role_audit'] loop
+    if to_regclass('public.'||t) is not null then
+      execute format('select count(*) from public.%I', t) into n;
+      raise notice '% · % שורות', t, n;
+    end if;
+  end loop;
+end $$;
 
 -- 6 · בעלת המערכת — קיום זהות מאומתת למייל הבעלים, מוסווה, בלי לחשוף אחרים
 select left(u.email, 3) || '…@' || split_part(u.email, '@', 2) as מייל_מוסווה,
