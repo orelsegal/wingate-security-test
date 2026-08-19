@@ -24,10 +24,14 @@ create schema if not exists auth;
 -- triggers to it apply unchanged. Real GoTrue owns this table on Supabase.
 create table if not exists auth.users (
   id uuid primary key,
+  instance_id uuid,
+  aud text,
+  role text,
   email text unique,
   email_confirmed_at timestamptz,
   raw_user_meta_data jsonb default '{}'::jsonb,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 -- Mirrors Supabase's auth.uid(): reads the JWT claims GUC. Tests simulate a
@@ -38,6 +42,14 @@ language sql stable
 as $$
   select (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')::uuid
 $$;
+
+-- Minimal stub of auth.identities (provider inventory queries).
+create table if not exists auth.identities (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  provider text not null,
+  created_at timestamptz default now()
+);
 
 grant usage on schema auth to anon, authenticated, service_role;
 grant select on auth.users to anon, authenticated, service_role;
