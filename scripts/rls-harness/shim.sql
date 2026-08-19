@@ -24,10 +24,14 @@ create schema if not exists auth;
 -- triggers to it apply unchanged. Real GoTrue owns this table on Supabase.
 create table if not exists auth.users (
   id uuid primary key,
+  instance_id uuid,
+  aud text,
+  role text,
   email text unique,
   email_confirmed_at timestamptz,
   raw_user_meta_data jsonb default '{}'::jsonb,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 -- Mirrors Supabase's auth.uid(): reads the JWT claims GUC. Tests simulate a
