@@ -1,49 +1,66 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- LIVE-QA SETUP · שלוש הכתיבות המינימליות · פרויקט flfemffhswlpgpbvhuvy
+-- LIVE-QA SETUP · שלושה שינויים לוגיים · פרויקט flfemffhswlpgpbvhuvy
 --
--- מה הסקריפט עושה, ורק את זה:
---   1. משייך את תלמידת הבדיקה לקבוצת הספרות.
---   2. מוסיף תפקיד teacher ל-orelman@gmail.com (בלי לגעת ב-super_admin).
---   3. משייך את orelman@gmail.com כמורת הקבוצה.
+--   1. שיוך תלמידת הבדיקה לקבוצת הספרות הפעילה.
+--   2. תפקיד teacher ל-orelman@gmail.com (בלי לגעת ב-super_admin).
+--   3. שיוך orelman@gmail.com כמורת הקבוצה (role_in_group ברירת מחדל 'teacher').
 --
--- בטיחות: טרנזקציה אחת; כל המזהים נשלפים לפי מייל/מקצוע ונבדקים לחד-
--- משמעיות (0 או יותר מ-1 התאמות = עצירה בלי שום שינוי); בטוח להרצה
--- כפולה; לא נוגע באף משתמש אחר; שתי פעולות התפקיד נרשמות ב-role_audit;
--- ובסוף שאילתת אימות שמדפיסה את שלוש העובדות.
+-- בפועל עד חמש פעולות INSERT: שלוש הרשומות + עד שתי שורות role_audit
+-- לשתי פעולות התפקיד. שום UPDATE ושום DELETE.
 --
--- ROLLBACK מדויק (אם תרצי לבטל אחרי הרצה):
---   delete from learning_group_students where group_id=<gid> and student_id=<sid>;
---   delete from user_roles where user_id=<orel_uid> and role='teacher';
---   delete from learning_group_teachers where group_id=<gid> and teacher_user_id=<orel_uid>;
---   (המזהים מודפסים באימות שבסוף ההרצה)
+-- בטיחות:
+--   · טרנזקציה אחת. כל המזהים נשלפים לפי מייל ולפי מזהה מקצוע הספרות
+--     שאושר, עם עצירה על 0 או יותר מהתאמה אחת. אף UUID אינו מומצא.
+--   · אם אין קבוצת ספרות פעילה, הסקריפט עוצר. יצירת קבוצה היא החלטה
+--     נפרדת שתתקבל אחרי פלט ה-precheck, בקובץ נפרד.
+--   · idempotent דרך בדיקות קיום מפורשות (לא ON CONFLICT: לטבלאות
+--     הקבוצות אין unique constraint על הצמד, רק אינדקסים חלקיים).
+--     גיבוי ברמת הסכימה, שמות מאומתים מהסכימה:
+--       learning_group_students · אינדקס ייחודי חלקי uq_lgs_active
+--         על (group_id, student_id) where left_at is null
+--       learning_group_teachers · uq_lgt_active
+--         על (group_id, teacher_user_id) where left_at is null
+--       user_roles · constraint ייחודי user_roles_user_id_role_key
+--         על (user_id, role)
+--   · שער אימות בתוך הטרנזקציה: שלוש העובדות נבדקות לפני ה-COMMIT,
+--     וכל כשל מרים exception שמגלגל לאחור את הכול. ה-SELECT שבסוף
+--     הוא תצוגה בלבד.
+--   · ביטול: בסוף ההרצה מודפסות שורות UNDO רק עבור רשומות שהסקריפט
+--     הזה יצר בפועל בהרצה הזאת. מה שהיה קיים קודם אינו מקבל שורת
+--     ביטול ואין למחוק אותו.
+--
+-- מייל תלמידת הבדיקה מופיע פעמיים (בבלוק ובתצוגה): "החלף הכל" על
+-- FILL-TEST-EMAIL-HERE בטוח; בדיקת המילוי היא תבנית מייל ואינה תלויה
+-- ב-placeholder.
 -- ═══════════════════════════════════════════════════════════════════════════
-
--- ── כאן ממלאים: המייל של תלמידת הבדיקה (פעם אחת, כאן בלבד) ──
-drop table if exists qa_p;
-create temp table qa_p as select lower('FILL-TEST-EMAIL-HERE') as em;
 
 begin;
 
 do $do$
 declare
+  v_email   constant text := lower('FILL-TEST-EMAIL-HERE');
   v_subject constant uuid := 'c42ab83c-1b60-409f-b30e-f23d56174ed4'; -- ספרות, המזהה שאושר
   v_test    uuid;   -- auth user של תלמידת הבדיקה
   v_student uuid;   -- שורת students המקושרת
   v_orel    uuid;   -- auth user של orelman@gmail.com
   v_group   uuid;   -- קבוצת הספרות
   v_n       int;
+  v_made_membership boolean := false;
+  v_made_role       boolean := false;
+  v_made_scope      boolean := false;
 begin
-  -- ── אימותי קדם: הכול חד-משמעי או שעוצרים ──────────────────────────────
+  -- ── אימותי קדם: הכול חד-משמעי או שעוצרים בלי שום שינוי ────────────────
+  if v_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+    raise exception 'PRE-CHECK · יש למלא בראש הבלוק מייל תקין של תלמידת הבדיקה.';
+  end if;
+
   if not exists (select 1 from public.subjects
                  where id = v_subject and subject_name like '%ספרות%') then
     raise exception 'PRE-CHECK · מזהה מקצוע הספרות אינו תואם. עצירה.';
   end if;
 
-  if (select em from qa_p) !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
-    raise exception 'PRE-CHECK · יש למלא בראש הקובץ מייל תקין של תלמידת הבדיקה.';
-  end if;
   select count(*), (array_agg(u.id))[1] into v_n, v_test
-  from auth.users u where lower(u.email) = (select em from qa_p);
+  from auth.users u where lower(u.email) = v_email;
   if v_n <> 1 then
     raise exception 'PRE-CHECK · % זהויות auth למייל הבדיקה (נדרש בדיוק 1).', v_n;
   end if;
@@ -72,17 +89,21 @@ begin
   from public.learning_groups g
   where g.subject_id = v_subject and g.status = 'active';
   if v_n = 0 then
-    raise exception 'PRE-CHECK · אין קבוצת ספרות פעילה. יש ליצור קבוצה קודם (משפט אופציונלי בתחתית הקובץ), ואז להריץ שוב.';
+    raise exception 'PRE-CHECK · אין קבוצת ספרות פעילה. עצירה. יצירת קבוצה תוכרע בנפרד אחרי פלט ה-precheck.';
   elsif v_n > 1 then
     raise exception 'PRE-CHECK · % קבוצות ספרות פעילות. יש לבחור מזהה קבוצה מפורשות ולעדכן את הסקריפט.', v_n;
   end if;
 
-  -- ── הכתיבה 1 · שיוך תלמידת הבדיקה לקבוצה ──────────────────────────────
-  insert into public.learning_group_students (group_id, student_id)
-  values (v_group, v_student)
-  on conflict do nothing;
+  -- ── שינוי 1 · שיוך תלמידת הבדיקה לקבוצה ───────────────────────────────
+  if not exists (select 1 from public.learning_group_students
+                 where group_id = v_group and student_id = v_student
+                   and left_at is null) then
+    insert into public.learning_group_students (group_id, student_id)
+    values (v_group, v_student);
+    v_made_membership := true;
+  end if;
 
-  -- ── הכתיבה 2 · תפקיד teacher לאורל, בתוספת בלבד ──────────────────────
+  -- ── שינוי 2 · תפקיד teacher לאורל, בתוספת בלבד ────────────────────────
   -- (הענקה עצמית חסומה ב-RPC במכוון; זו פעולת בעלים מפורשת, ולכן היא
   --  נרשמת ידנית באותו יומן שכל הענקה נרשמת בו)
   if not exists (select 1 from public.user_roles
@@ -91,28 +112,67 @@ begin
     insert into public.role_audit (actor, target, action, before, after)
     values (v_orel, v_orel, 'role_granted', null,
             jsonb_build_object('role', 'teacher', 'via', 'owner_sql_live_qa'));
+    v_made_role := true;
   end if;
 
-  -- ── הכתיבה 3 · אורל כמורת הקבוצה ─────────────────────────────────────
+  -- ── שינוי 3 · אורל כמורת הקבוצה ───────────────────────────────────────
   if not exists (select 1 from public.learning_group_teachers
-                 where group_id = v_group and teacher_user_id = v_orel) then
+                 where group_id = v_group and teacher_user_id = v_orel
+                   and left_at is null) then
     insert into public.learning_group_teachers (group_id, teacher_user_id)
     values (v_group, v_orel);
     insert into public.role_audit (actor, target, action, before, after)
     values (v_orel, v_orel, 'teacher_group_assigned', null,
             jsonb_build_object('group_id', v_group, 'via', 'owner_sql_live_qa'));
+    v_made_scope := true;
   end if;
 
-  raise notice 'SETUP DONE · group=% student=% orel=%', v_group, v_student, v_orel;
+  -- ── שער אימות: שלוש העובדות, בתוך הטרנזקציה, לפני COMMIT ──────────────
+  if not exists (select 1 from public.learning_group_students
+                 where group_id = v_group and student_id = v_student
+                   and left_at is null) then
+    raise exception 'ASSERT FAILED · תלמידת הבדיקה אינה בקבוצה. הכול גולגל לאחור.';
+  end if;
+  if not exists (select 1 from public.user_roles
+                 where user_id = v_orel and role::text = 'teacher')
+     or not exists (select 1 from public.user_roles
+                 where user_id = v_orel and role::text = 'super_admin') then
+    raise exception 'ASSERT FAILED · חסר teacher או super_admin לאורל. הכול גולגל לאחור.';
+  end if;
+  if not exists (select 1 from public.learning_group_teachers
+                 where group_id = v_group and teacher_user_id = v_orel
+                   and left_at is null) then
+    raise exception 'ASSERT FAILED · אורל אינה מורת הקבוצה. הכול גולגל לאחור.';
+  end if;
+
+  -- ── ביטול מדויק: רק מה שנוצר בהרצה הזאת ───────────────────────────────
+  raise notice 'SETUP OK · group=% student=% orel=%', v_group, v_student, v_orel;
+  if v_made_membership then
+    raise notice 'UNDO · delete from public.learning_group_students where group_id=''%'' and student_id=''%'';', v_group, v_student;
+  else
+    raise notice 'UNDO · שיוך התלמידה היה קיים קודם, אין שורת ביטול.';
+  end if;
+  if v_made_role then
+    raise notice 'UNDO · delete from public.user_roles where user_id=''%'' and role=''teacher'';', v_orel;
+  else
+    raise notice 'UNDO · תפקיד teacher היה קיים קודם, אין שורת ביטול.';
+  end if;
+  if v_made_scope then
+    raise notice 'UNDO · delete from public.learning_group_teachers where group_id=''%'' and teacher_user_id=''%'';', v_group, v_orel;
+  else
+    raise notice 'UNDO · שיוך המורה היה קיים קודם, אין שורת ביטול.';
+  end if;
 end $do$;
 
--- ── אימות אחרי הפעולה: שלוש שורות, שלושתן חייבות להיות true ───────────────
-select 'תלמידת הבדיקה בקבוצת ספרות' as בדיקה,
+-- ── תצוגה בלבד (השער האמיתי כבר נאכף למעלה, בתוך הטרנזקציה) ──────────────
+with qa_p as (select lower('FILL-TEST-EMAIL-HERE') as em)
+select 'תלמידת הבדיקה בקבוצת ספרות פעילה' as בדיקה,
   exists (
     select 1
     from auth.users u
     join public.profiles p on p.id = u.id
-    join public.learning_group_students gs on gs.student_id = p.linked_student_id
+    join public.learning_group_students gs
+      on gs.student_id = p.linked_student_id and gs.left_at is null
     join public.learning_groups g on g.id = gs.group_id
     where lower(u.email) = (select em from qa_p)
       and g.subject_id = 'c42ab83c-1b60-409f-b30e-f23d56174ed4'
@@ -127,21 +187,11 @@ union all
 select 'orelman מורת קבוצת הספרות',
   exists (
     select 1 from auth.users u
-    join public.learning_group_teachers gt on gt.teacher_user_id = u.id
+    join public.learning_group_teachers gt
+      on gt.teacher_user_id = u.id and gt.left_at is null
     join public.learning_groups g on g.id = gt.group_id
     where lower(u.email) = lower('orelman@gmail.com')
       and g.subject_id = 'c42ab83c-1b60-409f-b30e-f23d56174ed4'
   );
 
 commit;
-drop table if exists qa_p;
-
--- ═══════════════════════════════════════════════════════════════════════════
--- אופציונלי, רק אם ה-PRE-CHECK עצר על "אין קבוצת ספרות פעילה":
--- להסיר את ההערה, להריץ פעם אחת, ואז להריץ את הסקריפט הראשי שוב.
---
--- insert into public.learning_groups (name, subject_id, academic_year_start, status)
--- select 'ספרות 30% · פיילוט', 'c42ab83c-1b60-409f-b30e-f23d56174ed4', 2026, 'active'
--- where not exists (select 1 from public.learning_groups
---                   where subject_id = 'c42ab83c-1b60-409f-b30e-f23d56174ed4' and status = 'active');
--- ═══════════════════════════════════════════════════════════════════════════
