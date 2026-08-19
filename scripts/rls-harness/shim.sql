@@ -43,6 +43,14 @@ as $$
   select (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')::uuid
 $$;
 
+-- Minimal stub of auth.identities (provider inventory queries).
+create table if not exists auth.identities (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  provider text not null,
+  created_at timestamptz default now()
+);
+
 grant usage on schema auth to anon, authenticated, service_role;
 grant select on auth.users to anon, authenticated, service_role;
 grant execute on function auth.uid() to anon, authenticated, service_role;
