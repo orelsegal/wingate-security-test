@@ -18,7 +18,9 @@ name_clash as (
                ('group_join_codes'),('access_request_groups'),('join_code_attempts')) as t(name)
 ),
 
--- חתימה מדויקת, לא רק שם. חתימה ישנה שנשארת callable היא פרצה.
+-- חתימה מדויקת, לא רק שם. ההשוואה היא על טיפוסי הקלט בלבד
+-- (oidvectortypes), בלי שמות פרמטרים, כדי ששם כמו p_task לא ייצור
+-- MISMATCH מדומה.
 func_clash as (
   select 'function: ' || f.name || '(' || f.args || ')' as item,
          case
@@ -29,10 +31,10 @@ func_clash as (
            when exists (
              select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
              where n.nspname='public' and p.proname=f.name
-               and pg_get_function_identity_arguments(p.oid) = f.args
+               and replace(oidvectortypes(p.proargtypes), 'public.', '') = f.args
            ) then 'CONFLICT · same signature already exists'
            else 'MISMATCH · a different signature of this name exists: ' ||
-                (select string_agg(pg_get_function_identity_arguments(p.oid), ' | ')
+                (select string_agg(replace(oidvectortypes(p.proargtypes), 'public.', ''), ' | ')
                    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                   where n.nspname='public' and p.proname=f.name)
          end as verdict
@@ -248,12 +250,12 @@ helpers as (
          case when exists (
            select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
            where n.nspname='public' and p.proname=h.name
-             and pg_get_function_identity_arguments(p.oid) = h.args
+             and replace(oidvectortypes(p.proargtypes), 'public.', '') = h.args
          ) then 'OK · present'
          when exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                       where n.nspname='public' and p.proname=h.name)
            then 'MISMATCH · exists with a different signature: ' ||
-                (select string_agg(pg_get_function_identity_arguments(p.oid),' | ')
+                (select string_agg(replace(oidvectortypes(p.proargtypes), 'public.', ''),' | ')
                    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                   where n.nspname='public' and p.proname=h.name)
          else 'MISSING · the new code depends on it' end as verdict
