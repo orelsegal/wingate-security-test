@@ -17,7 +17,8 @@
 --   6. תקרת גודל מוצהרת ל-JSON. קבצים אינם נכנסים לטיוטה.
 --
 -- לא נגעתי ב-submit_task, resubmit, return_for_revision, approve_submission
--- ובשום טבלה קיימת. אין ALTER ואין DROP על אובייקט קיים.
+-- ובשום טבלה קיימת. ה-DROP-ים היחידים בקובץ מסירים חתימות קודמות של
+-- הפונקציות שהקובץ הזה עצמו יצר בגרסאות מוקדמות שלו, ותו לא.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- ── תקרת גודל ─────────────────────────────────────────────────────────────
@@ -25,6 +26,19 @@
 -- ואינם מקודדים לתוך JSON. מרוכז כאן כדי שיהיה מקום אחד לשנות בו.
 create or replace function public.app_draft_max_bytes()
 returns integer language sql immutable set search_path = '' as $$ select 65536 $$;
+
+-- ── חסימת משתמש מושעה ─────────────────────────────────────────────────────
+-- עזר משותף לכל ה-RPCs החדשים. משתמש שקיימת לו שורת profile עם suspended_at
+-- אינו פעיל, ולא משנה מה ה-role שלו ומה ה-session מחזיק. fail-closed:
+-- הבדיקה רצה בשרת בתוך כל פעולה, ואינה תלויה ב-UI.
+create or replace function public.app_actor_not_suspended()
+returns boolean language sql stable security definer set search_path = '' as $$
+  select auth.uid() is not null
+     and not exists (
+       select 1 from public.profiles p
+       where p.id = auth.uid() and p.suspended_at is not null
+     );
+$$;
 
 create table if not exists public.task_drafts (
   id          uuid primary key default gen_random_uuid(),
@@ -88,7 +102,8 @@ $$;
 drop policy if exists td_read_own on public.task_drafts;
 create policy td_read_own on public.task_drafts
   for select using (
-    student_id = public.app_current_student_id()
+    public.app_actor_not_suspended()
+    and student_id = public.app_current_student_id()
     and public.app_student_in_task_scope(student_id, task_id)
   );
 
@@ -104,6 +119,9 @@ create or replace function public.save_task_draft(
 ) returns bigint language plpgsql security definer set search_path = '' as $$
 declare v_student uuid; v_new bigint; v_exists boolean; v_block text;
 begin
+  if not public.app_actor_not_suspended() then
+    raise exception 'account_suspended';
+  end if;
   v_student := public.app_current_student_id();
   if v_student is null then
     raise exception 'no_student_identity'
@@ -191,6 +209,9 @@ returns table (content jsonb, revision bigint, updated_at timestamptz)
 language plpgsql security definer set search_path = '' as $$
 declare v_student uuid;
 begin
+  if not public.app_actor_not_suspended() then
+    raise exception 'account_suspended';
+  end if;
   v_student := public.app_current_student_id();
   if v_student is null then raise exception 'no_student_identity'; end if;
   if not public.app_student_in_task_scope(v_student, p_task) then
@@ -211,12 +232,15 @@ drop function if exists public.save_task_draft(uuid, jsonb, timestamptz);
 
 revoke all on function public.save_task_draft(uuid, jsonb, bigint) from public, anon;
 revoke all on function public.get_task_draft(uuid) from public, anon;
-revoke all on function public.app_student_in_task_scope(uuid, uuid) from public, anon;
-revoke all on function public.app_draft_block_reason(uuid, uuid) from public, anon;
-revoke all on function public.app_draft_max_bytes() from public, anon;
+-- עזרים פנימיים: נקראים רק מתוך פונקציות definer או מתוך policies.
+-- מה שמשמש RLS policy חייב EXECUTE ל-authenticated, כי ה-policy מוערך
+-- בהקשר המשתמש השואל. השאר אינם נחשפים ללקוח כלל.
+revoke all on function public.app_student_in_task_scope(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.app_actor_not_suspended() from public, anon, authenticated;
+revoke all on function public.app_draft_block_reason(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.app_draft_max_bytes() from public, anon, authenticated;
 
 grant execute on function public.save_task_draft(uuid, jsonb, bigint) to authenticated;
 grant execute on function public.get_task_draft(uuid) to authenticated;
-grant execute on function public.app_student_in_task_scope(uuid, uuid) to authenticated;
-grant execute on function public.app_draft_block_reason(uuid, uuid) to authenticated;
-grant execute on function public.app_draft_max_bytes() to authenticated;
+grant execute on function public.app_student_in_task_scope(uuid, uuid) to authenticated;  -- RLS
+grant execute on function public.app_actor_not_suspended() to authenticated;              -- RLS

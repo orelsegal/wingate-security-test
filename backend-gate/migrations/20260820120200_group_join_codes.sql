@@ -58,11 +58,11 @@ alter table public.access_request_groups enable row level security;
 -- מורה פעילה רואה את הקודים של הקבוצה שלה. תלמידה אינה רואה קודים כלל.
 drop policy if exists gjc_read_teacher on public.group_join_codes;
 create policy gjc_read_teacher on public.group_join_codes
-  for select using (public.app_can_manage_group_materials(group_id));
+  for select using (public.app_is_active_group_teacher(group_id));
 
 drop policy if exists arg_read_teacher on public.access_request_groups;
 create policy arg_read_teacher on public.access_request_groups
-  for select using (public.app_can_manage_group_materials(group_id));
+  for select using (public.app_is_active_group_teacher(group_id));
 
 revoke all on table public.group_join_codes      from public, anon, authenticated;
 revoke all on table public.access_request_groups from public, anon, authenticated;
@@ -76,7 +76,7 @@ returns table (code text, expires_at timestamptz)
 language plpgsql security definer set search_path = '' as $$
 declare v_code text; v_exp timestamptz;
 begin
-  if not public.app_can_manage_group_materials(p_group) then
+  if not public.app_is_active_group_teacher(p_group) then
     raise exception 'not_authorized'
       using hint = 'only an active teacher of that group can issue a code';
   end if;
@@ -84,8 +84,20 @@ begin
     raise exception 'invalid_ttl' using hint = 'between 1 and 120 days';
   end if;
 
-  -- שמונה תווים מתוך UUID אקראי. 0 ו-1 מוחלפים כדי שלא יתבלבלו עם O ו-I.
-  v_code := substr(translate(upper(replace(gen_random_uuid()::text, '-', '')), '01', 'GH'), 1, 8);
+  -- קוד חזק: 13 תווים הנגזרים מ-16 בתים אקראיים קריפטוגרפית
+  -- (uuid_send של gen_random_uuid מחזיר את בתי ה-UUID עצמם). האלפבית בן
+  -- 31 תווים קריאים בלי 0/O/1/I/L. אנטרופיה: 13 × log2(31) ≈ 64 ביט,
+  -- הרבה מעבר לרף 60. ה-hash לבדו אינו ההגנה: האנטרופיה וה-rate limit הם.
+  declare
+    v_bytes bytea := uuid_send(gen_random_uuid());
+    v_alpha constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    i integer;
+  begin
+    v_code := '';
+    for i in 0..12 loop
+      v_code := v_code || substr(v_alpha, 1 + (get_byte(v_bytes, i) % 31), 1);
+    end loop;
+  end;
   v_exp  := now() + make_interval(days => p_days);
 
   insert into public.group_join_codes (group_id, code_hash, created_by, expires_at)
@@ -102,7 +114,7 @@ declare v_group uuid;
 begin
   select group_id into v_group from public.group_join_codes where id = p_id;
   if v_group is null then raise exception 'code_not_found'; end if;
-  if not public.app_can_manage_group_materials(v_group) then raise exception 'not_authorized'; end if;
+  if not public.app_is_active_group_teacher(v_group) then raise exception 'not_authorized'; end if;
 
   update public.group_join_codes
      set revoked_at = now(), revoked_by = auth.uid()
@@ -110,19 +122,51 @@ begin
 end;
 $$;
 
+-- ── הגבלת ניסיונות מימוש ──────────────────────────────────────────────────
+-- רישום מתמשך בצד השרת של כל ניסיון, מוצלח או לא, לפי auth.uid(). החלון:
+-- עשרה ניסיונות בחמש עשרה דקות. מעבר לזה, גם קוד נכון מקבל את אותה שגיאה
+-- אחידה, כדי שלא יהיה אורקל.
+create table if not exists public.join_code_attempts (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null,
+  attempted_at timestamptz not null default now()
+);
+create index if not exists idx_jca_user_time on public.join_code_attempts (user_id, attempted_at);
+alter table public.join_code_attempts enable row level security;
+revoke all on table public.join_code_attempts from public, anon, authenticated;
+
 -- ── מימוש קוד על ידי התלמידה ──────────────────────────────────────────────
--- דורש session. הקוד נפתר בשרת, ולכן הלקוח אינו בוחר קבוצה. קוד שגוי,
--- פג או מבוטל מחזיר את אותה שגיאה בדיוק, בלי לרמוז אם הקבוצה קיימת.
+-- דורש session. הקוד נפתר בשרת, ולכן הלקוח אינו בוחר קבוצה.
+--
+-- למה כישלון מחזיר NULL ולא raise: exception מפילה את הטרנזקציה כולה, וגם
+-- רישום הניסיון היה מתגלגל אחורה איתה, כך שניסיונות כושלים לא היו נספרים
+-- וה-rate limit היה עיוור. NULL משאיר את הטרנזקציה חיה, הניסיון נשמר,
+-- והלקוח מקבל תשובה אחידה אחת לכל הכשלים: קוד שגוי, פג, מבוטל, חשבון
+-- מושעה או חריגה מהמכסה. אין אורקל ואין חשיפת קבוצה.
 create or replace function public.redeem_group_join_code(p_code text)
 returns uuid language plpgsql security definer set search_path = '' as $$
-declare v_uid uuid := auth.uid(); v_code record; v_req uuid; v_existing uuid;
+declare v_uid uuid := auth.uid(); v_code record; v_req uuid; v_existing uuid; v_recent int;
 begin
   if v_uid is null then
     raise exception 'not_signed_in'
       using hint = 'sign in with Google before entering a class code';
   end if;
+
+  -- כל ניסיון נרשם ונשמר, כולל כושלים. הבדיקה קודמת לכל השאר.
+  insert into public.join_code_attempts (user_id) values (v_uid);
+  select count(*) into v_recent
+    from public.join_code_attempts
+   where user_id = v_uid and attempted_at > now() - interval '15 minutes';
+  if v_recent > 10 then
+    return null;                       -- rate limited · תשובה אחידה
+  end if;
+
+  if not public.app_actor_not_suspended() then
+    return null;                       -- מושעה · תשובה אחידה
+  end if;
+
   if p_code is null or length(btrim(p_code)) = 0 then
-    raise exception 'invalid_code';
+    return null;
   end if;
 
   select * into v_code
@@ -132,8 +176,7 @@ begin
      and expires_at > now();
 
   if v_code.id is null then
-    raise exception 'invalid_code'
-      using hint = 'the code is wrong, expired, or no longer active';
+    return null;                       -- שגוי, פג או מבוטל · תשובה אחידה
   end if;
 
   -- בקשה ממתינה קיימת לאותה קבוצה: מחזירים אותה, בלי ליצור כפילות.
@@ -164,8 +207,10 @@ create or replace function public.approve_group_join(
 ) returns uuid language plpgsql security definer set search_path = '' as $$
 declare
   v_uid uuid := auth.uid(); v_req record; v_group uuid; v_student uuid;
+  v_profile record; v_linked uuid;
 begin
   if v_uid is null then raise exception 'not_signed_in'; end if;
+  if not public.app_actor_not_suspended() then raise exception 'not_authorized'; end if;
 
   select ar.*, arg.group_id into v_req
     from public.access_requests ar
@@ -176,7 +221,7 @@ begin
   if v_req.id is null then raise exception 'request_not_found'; end if;
   v_group := v_req.group_id;
 
-  if not public.app_can_manage_group_materials(v_group) then
+  if not public.app_is_active_group_teacher(v_group) then
     raise exception 'not_authorized'
       using hint = 'only an active teacher of that group can approve this request';
   end if;
@@ -185,10 +230,19 @@ begin
   if v_req.status = 'approved' then return v_req.user_id; end if;   -- retry בטוח
   if v_req.status <> 'pending' then raise exception 'already_decided'; end if;
 
+  -- הזהות קודמת לתפקיד: קודם מוודאים שיש profile אחד בדיוק, נועלים אותו,
+  -- ורק אחרי שהקישור הוכח מעניקים role ושיוך. כל raise מכאן והלאה מגלגל
+  -- לאחור את הטרנזקציה כולה: role, student, membership ו-audit יחד.
+  select * into v_profile from public.profiles where id = v_req.user_id for update;
+  if v_profile.id is null then
+    raise exception 'profile_missing'
+      using hint = 'the account has no profile row; nothing was approved';
+  end if;
+
   insert into public.user_roles (user_id, role) values (v_req.user_id, 'student')
   on conflict do nothing;
 
-  select p.linked_student_id into v_student from public.profiles p where p.id = v_req.user_id;
+  v_student := v_profile.linked_student_id;
 
   if v_student is null then
     if p_student_name is null or length(btrim(p_student_name)) = 0 then
@@ -203,10 +257,25 @@ begin
     perform set_config('app.allow_profile_link_write', 'off', true);
   end if;
 
+  -- אימות בפועל: הקישור חייב להיות כתוב בשורה. אסור approved בלי linked.
+  select linked_student_id into v_linked from public.profiles where id = v_req.user_id;
+  if v_linked is null or v_linked is distinct from v_student then
+    raise exception 'link_verification_failed'
+      using hint = 'the profile link did not persist; everything rolled back';
+  end if;
+
   -- תלמידה שכבר מקושרת מקבלת שיוך קבוצה בלבד. אין students כפול.
   insert into public.learning_group_students (group_id, student_id)
   values (v_group, v_student)
   on conflict do nothing;
+
+  -- אימות שהשיוך קיים ופעיל, בין אם נוצר עכשיו ובין אם היה קיים.
+  if not exists (
+    select 1 from public.learning_group_students
+    where group_id = v_group and student_id = v_student and left_at is null
+  ) then
+    raise exception 'membership_verification_failed';
+  end if;
 
   update public.access_requests
      set status = 'approved', decided_by = v_uid, decided_at = now()

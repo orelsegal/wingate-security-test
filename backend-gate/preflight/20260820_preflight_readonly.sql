@@ -15,7 +15,7 @@ name_clash as (
          case when to_regclass('public.' || t.name) is null then 'OK · free'
               else 'CONFLICT · already exists' end as verdict
   from (values ('task_drafts'),('task_materials'),('task_material_revisions'),
-               ('group_join_codes'),('access_request_groups')) as t(name)
+               ('group_join_codes'),('access_request_groups'),('join_code_attempts')) as t(name)
 ),
 
 -- חתימה מדויקת, לא רק שם. חתימה ישנה שנשארת callable היא פרצה.
@@ -53,7 +53,9 @@ func_clash as (
     ('create_group_join_code','uuid, integer'),
     ('revoke_group_join_code','uuid'),
     ('redeem_group_join_code','text'),
-    ('approve_group_join','uuid, text, text')
+    ('approve_group_join','uuid, text, text'),
+    ('app_actor_not_suspended',''),
+    ('app_is_active_group_teacher','uuid')
   ) as f(name, args)
 ),
 
@@ -118,7 +120,7 @@ migration_clash as (
              then 'CONFLICT · version already applied'
            else 'OK · not applied'
          end as verdict
-  from (values ('20260820120000'),('20260820120100'),('20260820120200')) as m(v)
+  from (values ('20260820120000'),('20260820120100'),('20260820120200'),('20260820120300')) as m(v)
 ),
 
 -- migration חלקית: חלק מהאובייקטים קיימים וחלק לא
@@ -126,12 +128,12 @@ partial as (
   select 'partial install check' as item,
          case
            when cnt = 0 then 'OK · nothing installed yet'
-           when cnt = 5 then 'CONFLICT · all five tables already exist'
-           else 'MISMATCH · partially installed · ' || cnt::text || ' of 5 tables exist'
+           when cnt = 6 then 'CONFLICT · all six tables already exist'
+           else 'MISMATCH · partially installed · ' || cnt::text || ' of 6 tables exist'
          end as verdict
   from (select count(*) as cnt from (values
           ('task_drafts'),('task_materials'),('task_material_revisions'),
-          ('group_join_codes'),('access_request_groups')) as t(n)
+          ('group_join_codes'),('access_request_groups'),('join_code_attempts')) as t(n)
         where to_regclass('public.' || t.n) is not null) x
 ),
 
@@ -195,6 +197,49 @@ sub_status as (
                    = 'approved,awaiting_review,resubmitted_awaiting,returned_for_revision,submitted'
               then ' · OK · matches the matrix in the migration'
               else ' · MISMATCH · the draft matrix must be revisited' end as verdict
+),
+
+-- ── 6ב · ערכי enum מדויקים ────────────────────────────────────────────────
+enum_exact as (
+  select 'enum ' || e.tname || ' exact values' as item,
+         coalesce((select string_agg(enumlabel, ' | ' order by enumsortorder)
+                     from pg_enum where enumtypid = to_regtype('public.' || e.tname)),
+                  'MISSING') ||
+         case
+           when to_regtype('public.' || e.tname) is null then ''
+           when (select string_agg(enumlabel, ',' order by enumlabel)
+                   from pg_enum where enumtypid = to_regtype('public.' || e.tname)) = e.want
+             then ' · OK'
+           else ' · MISMATCH · expected: ' || e.want
+         end as verdict
+  from (values
+    ('submission_status', 'approved,awaiting_review,resubmitted_awaiting,returned_for_revision,submitted'),
+    ('access_request_status', 'approved,pending,rejected')
+  ) as e(tname, want)
+),
+
+-- ── 6ג · עמודת שומר ההגשה ותאימות ספרות 30 · קריאה בלבד ──────────────────
+lit30_compat as (
+  select 'submission_enabled column on learning_tasks' as item,
+         case when exists (select 1 from information_schema.columns
+                           where table_name='learning_tasks' and column_name='submission_enabled')
+              then 'CONFLICT · already exists (partial install?)'
+              else 'OK · will be added with default true' end as verdict
+  union all
+  -- כמה תלמידות עם הגשה קיימת אינן רשומות פעילות בקבוצה פעילה של מקצוע
+  -- המשימה. יותר מאפס = לא להחיל את migration 4 עד שהשיוכים מוסדרים.
+  select 'lit30 compat: submitters not enrolled in an active group of the task subject',
+         (select count(distinct s.student_id)
+            from public.submissions s
+            join public.learning_tasks lt on lt.id = s.task_id
+           where not exists (
+             select 1 from public.learning_group_students lgs
+             join public.learning_groups lg on lg.id = lgs.group_id
+             where lgs.student_id = s.student_id
+               and lgs.left_at is null
+               and lg.status = 'active'
+               and lg.subject_id = lt.subject_id
+           ))::text || ' students · must be 0 before applying migration 4'
 ),
 
 -- ── 7 · helpers · חתימה מדויקת ────────────────────────────────────────────
@@ -284,6 +329,8 @@ from (
   union all select item, verdict from cols
   union all select item, verdict from group_status_values
   union all select item, verdict from sub_status
+  union all select item, verdict from enum_exact
+  union all select item, verdict from lit30_compat
   union all select item, verdict from helpers
   union all select item, verdict from uniq
   union all select item, verdict from grants_before

@@ -61,6 +61,7 @@ select k, gen_random_uuid() from unnest(array[
   'teacher_a1','teacher_a2','teacher_left','teacher_b','admin','super',
   'stud_a','stud_a2','stud_b','stud_out',
   'user_a','user_a2','user_b','user_out','user_new',
+  'user_susp','teacher_susp','user_noprofile',
   'task_a','task_a2','task_b'
 ]) as k;
 grant select on t_ids to public;
@@ -103,6 +104,19 @@ insert into public.learning_group_students (group_id, student_id, left_at) value
   (pg_temp.id('group_b'),  pg_temp.id('stud_b'),  null)
 on conflict do nothing;
 
+-- מושעים: תלמידה עם שיוך מלא ומורה משויכת, שתיהן עם suspended_at.
+-- user_noprofile הוא חשבון בלי שורת profile כלל, לבדיקת ה-rollback.
+insert into public.profiles (id, linked_student_id, suspended_at) values
+  (pg_temp.id('user_susp'), pg_temp.id('stud_a'), now()),
+  (pg_temp.id('teacher_susp'), null, now())
+on conflict (id) do update set suspended_at = excluded.suspended_at, linked_student_id = excluded.linked_student_id;
+insert into public.learning_group_teachers (group_id, teacher_user_id, role_in_group, left_at) values
+  (pg_temp.id('group_a1'), pg_temp.id('teacher_susp'), 'teacher', null)
+on conflict do nothing;
+insert into public.user_roles (user_id, role) values
+  (pg_temp.id('user_susp'), 'student'), (pg_temp.id('teacher_susp'), 'teacher')
+on conflict do nothing;
+
 insert into public.profiles (id, linked_student_id) values
   (pg_temp.id('user_a'),   pg_temp.id('stud_a')),
   (pg_temp.id('user_a2'),  pg_temp.id('stud_a2')),
@@ -123,6 +137,10 @@ insert into public.learning_tasks (id, subject_id, external_app, external_key, t
   (pg_temp.id('task_a'),  pg_temp.id('subject_a'), 'gate-test', 'task-a',  'בדיקה · משימה א', true),
   (pg_temp.id('task_a2'), pg_temp.id('subject_a'), 'gate-test', 'task-a2', 'בדיקה · משימה א2', true),
   (pg_temp.id('task_b'),  pg_temp.id('subject_b'), 'gate-test', 'task-b',  'בדיקה · משימה ב', true)
+on conflict (id) do nothing;
+insert into t_ids (k, v) values ('task_a2p', gen_random_uuid()) on conflict do nothing;
+insert into public.learning_tasks (id, subject_id, external_app, external_key, title, active) values
+  (pg_temp.id('task_a2p'), pg_temp.id('subject_a'), 'gate-test', 'task-a2p', 'בדיקה · מסלול ספרות', true)
 on conflict (id) do nothing;
 
 -- ═══ 1 · זהות נגזרת מהשרת ═══════════════════════════════════════════════
@@ -417,6 +435,9 @@ select pg_temp.chk('53 · replacing material left the submitted snapshot byte-id
 select pg_temp.act(pg_temp.id('teacher_a1'));
 select c.code as join_code from public.create_group_join_code(pg_temp.id('group_a1'), 14) c \gset
 
+select pg_temp.chk('53a · code format: 13 chars from the safe alphabet, ~64 bits',
+  :'join_code' ~ '^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{13}$');
+
 select pg_temp.chk('54 · the plaintext code is not stored',
   (select count(*) from public.group_join_codes where code_hash = :'join_code') = 0);
 
@@ -430,8 +451,8 @@ select pg_temp.chk('56 · redeeming without a session is refused',
   pg_temp.denied(format($q$select public.redeem_group_join_code(%L)$q$, :'join_code')));
 
 select pg_temp.act(pg_temp.id('user_new'));
-select pg_temp.chk('57 · a wrong code fails without revealing anything',
-  pg_temp.err($q$select public.redeem_group_join_code('ZZZZZZZZ')$q$) like '%invalid_code%');
+select pg_temp.chk('57 · a wrong code returns the uniform null, revealing nothing',
+  public.redeem_group_join_code('ZZZZZZZZZZZZZ') is null);
 
 select public.redeem_group_join_code(:'join_code') as req_id \gset
 select pg_temp.chk('58 · redeeming creates one pending request',
@@ -500,8 +521,8 @@ select g.id as code3_id from public.group_join_codes g
  where g.code_hash = encode(sha256(convert_to(:'code3','UTF8')),'hex') \gset
 select public.revoke_group_join_code(:'code3_id');
 select pg_temp.act(pg_temp.id('user_out'));
-select pg_temp.chk('69 · a revoked code fails with the same generic error',
-  pg_temp.err(format($q$select public.redeem_group_join_code(%L)$q$, :'code3')) like '%invalid_code%');
+select pg_temp.chk('69 · a revoked code returns the same uniform null',
+  public.redeem_group_join_code(:'code3') is null);
 
 reset role;
 -- הזזת הקוד לעבר. גם created_at זז, כי האילוץ דורש expires_at > created_at.
@@ -511,10 +532,155 @@ update public.group_join_codes
        revoked_at = null
  where id = :'code3_id';
 select pg_temp.act(pg_temp.id('user_out'));
-select pg_temp.chk('70 · an expired code fails the same way',
-  pg_temp.err(format($q$select public.redeem_group_join_code(%L)$q$, :'code3')) like '%invalid_code%');
+select pg_temp.chk('70 · an expired code returns the same uniform null',
+  public.redeem_group_join_code(:'code3') is null);
 
--- ═══ 17 · הקשחה ═════════════════════════════════════════════════════════
+
+-- ═══ 18 · חומר שפורסם נשאר גלוי בזמן החלפה ═══════════════════════════════
+-- mat_pdf פורסם עם path_new. מבקשים החלפה: התלמידה חייבת להמשיך לראות את
+-- החומר ולקרוא את האובייקט הישן, עד ש-finalize של המחליף מצליח.
+select pg_temp.act(pg_temp.id('teacher_a1'));
+select public.request_material_replacement(:'mat_pdf') as path_rep2 \gset
+
+select pg_temp.act(pg_temp.id('user_a'));
+select pg_temp.chk('77 · published material is still visible during replacement',
+  (select count(*) from public.task_materials where id = :'mat_pdf' and state = 'published') = 1);
+select pg_temp.chk('78 · the old object is still readable during replacement',
+  (select count(*) from storage.objects
+    where bucket_id='task-materials' and name = :'path_new') = 1);
+
+-- finalize של המחליף, ואז הנתיב מתחלף אטומית
+select pg_temp.act(pg_temp.id('teacher_a1'));
+insert into storage.objects (bucket_id, name, owner, metadata)
+values ('task-materials', :'path_rep2', pg_temp.id('teacher_a1'),
+        jsonb_build_object('size', 4096, 'mimetype', 'application/pdf'));
+select pg_temp.chk('79 · finalize keeps a published material published, on the new file',
+  public.finalize_task_material(:'mat_pdf', :'path_rep2')::text = 'published');
+select pg_temp.chk('80 · the active path swapped to the new object',
+  (select storage_path from public.task_materials where id = :'mat_pdf') = :'path_rep2');
+select pg_temp.chk('81 · the outgoing version got a full snapshot',
+  (select count(*) from public.task_material_revisions
+    where material_id = :'mat_pdf' and storage_path = :'path_new') = 1);
+
+-- ═══ 19 · רק הנתיב שהוקצה, בדיוק ═════════════════════════════════════════
+select public.request_material_replacement(:'mat_pdf') as path_rep3 \gset
+select pg_temp.chk('82 · a different uuid under the same material folder is refused',
+  pg_temp.denied(format($q$insert into storage.objects (bucket_id,name,owner,metadata)
+    values ('task-materials', %L, pg_temp.id('teacher_a1'), '{}'::jsonb)$q$,
+    :'mat_pdf' || '/' || gen_random_uuid()::text)));
+with u as (
+  insert into storage.objects (bucket_id, name, owner, metadata)
+  values ('task-materials', :'path_rep3', pg_temp.id('teacher_a1'),
+          jsonb_build_object('size', 1000, 'mimetype', 'application/pdf'))
+  returning 1
+)
+select pg_temp.chk('83 · the exact allocated path is accepted', (select count(*) from u) = 1);
+select public.finalize_task_material(:'mat_pdf', :'path_rep3');
+select pg_temp.chk('84 · re-uploading to a finalized path is refused',
+  pg_temp.denied(format($q$insert into storage.objects (bucket_id,name,owner,metadata)
+    values ('task-materials', %L, pg_temp.id('teacher_a1'), '{}'::jsonb)$q$, :'path_rep3')));
+select pg_temp.chk('85 · finalize cannot be replayed on a consumed path',
+  pg_temp.err(format($q$select public.finalize_task_material(%L::uuid, %L)$q$, :'mat_pdf', :'path_rep3'))
+    like '%path_not_allocated%');
+
+-- נתיב שהוקצה לחומר של מורה אחרת
+select pg_temp.act(pg_temp.id('teacher_a2'));
+select m.material_id as mat_other, m.upload_path as path_other from public.create_task_material(
+  pg_temp.id('task_a'), pg_temp.id('group_a2'), 'קובץ של האחרת', null, 'pdf', null) m \gset
+select pg_temp.act(pg_temp.id('teacher_a1'));
+select pg_temp.chk('86 · a path allocated to another teacher material is refused',
+  pg_temp.denied(format($q$insert into storage.objects (bucket_id,name,owner,metadata)
+    values ('task-materials', %L, pg_temp.id('teacher_a1'), '{}'::jsonb)$q$, :'path_other')));
+
+-- ═══ 20 · משתמשים מושעים ═════════════════════════════════════════════════
+select pg_temp.act(pg_temp.id('user_susp'));
+select pg_temp.chk('87 · a suspended student cannot save a draft',
+  pg_temp.err($q$select public.save_task_draft(pg_temp.id('task_a'),'{"x":1}'::jsonb,0)$q$)
+    like '%account_suspended%');
+select pg_temp.chk('88 · a suspended student cannot read drafts',
+  pg_temp.denied($q$select * from public.get_task_draft(pg_temp.id('task_a'))$q$));
+select pg_temp.chk('89 · a suspended student sees no published materials',
+  (select count(*) from public.task_materials) = 0);
+select pg_temp.chk('90 · a suspended student cannot submit',
+  pg_temp.err($q$select public.submit_task(pg_temp.id('task_a'),'{"a":1}'::jsonb,'idem-susp')$q$)
+    like '%account_suspended%');
+
+select pg_temp.act(pg_temp.id('teacher_susp'));
+select pg_temp.chk('91 · a suspended teacher is not an active group teacher',
+  not public.app_is_active_group_teacher(pg_temp.id('group_a1')));
+select pg_temp.chk('92 · a suspended teacher cannot create material',
+  pg_temp.err($q$select * from public.create_task_material(pg_temp.id('task_a'),
+    pg_temp.id('group_a1'),'x',null,'link','https://example.org/s')$q$) like '%not_authorized%');
+select pg_temp.act(pg_temp.id('user_susp'));
+select pg_temp.chk('92a · a suspended account gets the uniform null on redeem',
+  public.redeem_group_join_code('ANYCODEATALL2') is null);
+select pg_temp.act(pg_temp.id('teacher_susp'));
+select pg_temp.chk('93 · a suspended teacher cannot issue a class code',
+  pg_temp.err($q$select * from public.create_group_join_code(pg_temp.id('group_a1'),7)$q$)
+    like '%not_authorized%');
+
+-- ═══ 21 · rate limit על מימוש קוד ════════════════════════════════════════
+-- את הקוד לקבוצה a2 מייצרת המורה שלה
+select pg_temp.act(pg_temp.id('teacher_a2'));
+select c.code as rl_code from public.create_group_join_code(pg_temp.id('group_a2'), 7) c \gset
+select pg_temp.act(pg_temp.id('user_out'));
+-- אחד עשר ניסיונות שגויים ממלאים את החלון, וכולם נרשמים
+select count(*) from (
+  select public.redeem_group_join_code('WRONGCODE' || g) from generate_series(1, 11) g) x;
+reset role;
+select pg_temp.chk('94a · failed attempts persist in the rate log',
+  (select count(*) from public.join_code_attempts
+    where user_id = pg_temp.id('user_out')) >= 11);
+select pg_temp.act(pg_temp.id('user_out'));
+select pg_temp.chk('94 · after the window fills, even the correct code gets the uniform null',
+  public.redeem_group_join_code(:'rl_code') is null);
+
+-- ═══ 22 · approve בלי profile · rollback מלא ═════════════════════════════
+select pg_temp.act(pg_temp.id('teacher_a1'));
+select c.code as np_code from public.create_group_join_code(pg_temp.id('group_a1'), 7) c \gset
+-- טריגר הפלטפורמה יוצר שורת profile לכל משתמש חדש. מוחקים אותה במכוון
+-- כדי לדמות את המצב השבור שהשומר מגן מפניו.
+reset role;
+delete from public.profiles where id = pg_temp.id('user_noprofile');
+select pg_temp.act(pg_temp.id('user_noprofile'));
+select public.redeem_group_join_code(:'np_code') as np_req \gset
+select pg_temp.act(pg_temp.id('teacher_a1'));
+select pg_temp.chk('95 · approving an account with no profile row fails',
+  pg_temp.err(format($q$select public.approve_group_join(%L::uuid,'שם לבדיקה','ט')$q$, :'np_req'))
+    like '%profile_missing%');
+reset role;
+select pg_temp.chk('96 · the failed approval left no role behind',
+  (select count(*) from public.user_roles
+    where user_id = pg_temp.id('user_noprofile')) = 0);
+select pg_temp.chk('97 · the failed approval left no orphan student or membership',
+  (select count(*) from public.students st
+    where st.full_name = 'שם לבדיקה') = 0
+  and (select count(*) from public.role_audit
+    where target = pg_temp.id('user_noprofile') and action = 'approve_group_join') = 0);
+select pg_temp.chk('98 · the request is still pending, not half-approved',
+  (select status::text from public.access_requests where id = :'np_req') = 'pending');
+
+-- ═══ 23 · שומר ההגשה ═════════════════════════════════════════════════════
+reset role;
+update public.learning_tasks set submission_enabled = false where id = pg_temp.id('task_a2');
+select pg_temp.act(pg_temp.id('user_a2'));
+select pg_temp.chk('99 · a content target refuses submit',
+  pg_temp.err($q$select public.submit_task(pg_temp.id('task_a2'),'{"a":1}'::jsonb,'idem-content')$q$)
+    like '%submission_not_enabled%');
+select pg_temp.chk('100 · a content target still allows drafts',
+  public.save_task_draft(pg_temp.id('task_a2'), '{"a":"work"}'::jsonb, 0) = 1);
+
+-- יעד הגשה בהיקף: עובד (זה גם מסלול ספרות 30: default true + תלמידה רשומה)
+select pg_temp.chk('101 · an enabled target in scope accepts submit (literature-30 path)',
+  (select public.submit_task(pg_temp.id('task_a2p'),'{"a":"ok"}'::jsonb,'idem-lit30') is not null));
+
+-- מחוץ להיקף
+select pg_temp.act(pg_temp.id('user_out'));
+select pg_temp.chk('102 · submit outside an active scope is refused',
+  pg_temp.err($q$select public.submit_task(pg_temp.id('task_a'),'{"a":1}'::jsonb,'idem-oos')$q$)
+    like '%not_in_scope%');
+
+-- ═══ 24 · הקשחה ═════════════════════════════════════════════════════════
 reset role;
 select pg_temp.chk('71 · every new function is security definer with a locked search_path',
   (select count(*) from pg_proc
@@ -523,19 +689,19 @@ select pg_temp.chk('71 · every new function is security definer with a locked s
                       'move_task_material','request_material_replacement','finalize_task_material',
                       'set_material_state','app_can_manage_group_materials','app_student_sees_material',
                       'create_group_join_code','revoke_group_join_code','redeem_group_join_code',
-                      'approve_group_join')
-      and prosecdef and 'search_path=""' = any(proconfig)) = 16);
+                      'approve_group_join','app_is_active_group_teacher','app_actor_not_suspended')
+      and prosecdef and 'search_path=""' = any(proconfig)) = 18);
 
 select pg_temp.chk('72 · RLS is on for every new table',
   (select count(*) from pg_tables
     where tablename in ('task_drafts','task_materials','task_material_revisions',
-                        'group_join_codes','access_request_groups')
-      and rowsecurity) = 5);
+                        'group_join_codes','access_request_groups','join_code_attempts')
+      and rowsecurity) = 6);
 
 select pg_temp.chk('73 · authenticated has no direct write grant on the new tables',
   (select count(*) from information_schema.role_table_grants
     where table_name in ('task_drafts','task_materials','task_material_revisions',
-                         'group_join_codes','access_request_groups')
+                         'group_join_codes','access_request_groups','join_code_attempts')
       and grantee='authenticated' and privilege_type in ('INSERT','UPDATE','DELETE')) = 0);
 
 select pg_temp.chk('74 · no superseded save_task_draft signature is still callable',
