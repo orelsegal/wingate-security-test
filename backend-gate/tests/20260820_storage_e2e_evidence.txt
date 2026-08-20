@@ -1,0 +1,20 @@
+material=20b23f59-b128-4f73-82f4-dccd12fe61ca path=20b23f59-b128-4f73-82f4-dccd12fe61ca/01f18f9a-0f73-42d8-a161-06c5d1540a65
+PASS  1 · upload to the allocated path succeeds (HTTP 200)
+unauth-upload-body: {"statusCode":"403","error":"Unauthorized","message":"new row violates row-level security policy","code":"AccessDenied"}
+PASS  2 · a non-allocated uuid under the same material is RLS-denied
+PASS  3 · a teacher of another group is RLS-denied on upload
+PASS  4 · finalize verifies the real object, mime and size ("ready")
+PASS  5 · publish after finalize ("published")
+signed-url: /object/sign/task-materials/20b23f59-b128-4f73-82f4-dccd12fe…
+PASS  6 · an enrolled student receives a signed url via createSignedUrl
+PASS  7 · the signed url downloads (HTTP 200)
+PASS  8 · downloaded bytes are identical to the upload
+student-out-sign: {"statusCode":"404","error":"not_found","message":"Object not found","code":"NoSuchKey"}
+PASS  9 · a student of another group cannot sign (object hidden, no oracle)
+PASS  10 · a teacher of another group cannot sign
+PASS  11 · anon cannot sign
+PASS  12 · public access to the private bucket is refused
+PASS  13 · re-upload to a finalized path is RLS-denied
+PASS  14 · after unpublish the student can no longer sign
+
+STORAGE E2E vs REAL storage-api: PASS=14 FAIL=0
