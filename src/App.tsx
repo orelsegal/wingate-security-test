@@ -67,6 +67,7 @@ const CivicsAssessmentPage       = lazy(() => import("./pages/CivicsAssessmentPa
 const CivicsJourneyPage          = lazy(() => import("./pages/CivicsJourneyPage"));
 const TanakhRoadmapPage          = lazy(() => import("./pages/TanakhRoadmapPage"));
 const TanakhUnitPage             = lazy(() => import("./pages/TanakhUnitPage"));
+const TanakhArenaPage            = lazy(() => import("./pages/TanakhArenaPage"));
 const MentorDemoPage             = lazy(() => import("./pages/MentorDemoPage"));
 const LearningTrafficBoardPage   = lazy(() => import("./pages/LearningTrafficBoardPage"));
 const BagrutMapPage              = lazy(() => import("./pages/BagrutMapPage"));
@@ -151,6 +152,7 @@ const App = () => (
               {/* Tanakh year-map prototype — mirrors the same deep-route pattern */}
               <Route path="/subjects/:subjectName/tanakh-30"                       element={<TanakhRoadmapPage />} />
               <Route path="/subjects/:subjectName/tanakh-30/unit/:unitId"          element={<TanakhUnitPage />} />
+              <Route path="/subjects/:subjectName/tanakh-30/arena"                 element={<TanakhArenaPage />} />
               {/* מאמנטור class view — synthetic prototype, admin/developer only */}
               <Route path="/mentor-demo"                        element={<MentorDemoPage />} />
               {/* חדר בקרה — שני הרמזורים על נתוני האמת (admin; RLS enforces) */}
