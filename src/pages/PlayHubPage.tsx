@@ -83,6 +83,19 @@ const fireConfetti = () => {
   fire(0.1,  { spread: 120, startVelocity: 45 });
 };
 
+/* זירות מקצוע — זירות משחק קבועות במסלולי הלמידה, בנפרד מהאתגרים היומיים.
+   התוספת כאן היא קישור בלבד: הזירה עצמה חיה בעמוד המקצוע. */
+const SUBJECT_ARENAS = [
+  {
+    id: "tanakh",
+    subject: "תנ״ך",
+    title: "זירת המשחקים",
+    sub: "חמישה מיני־משחקים על חומר המסלול · כמה דקות לכל אחד",
+    note: "גרסת הדגמה · התוצאות נשמרות במכשיר",
+    path: `/subjects/${encodeURIComponent("תנ״ך")}/tanakh-30/arena`,
+  },
+];
+
 type Tab = "home" | "tasks" | "leaderboard" | "achievements";
 
 /* ─── Streak helpers (localStorage-based, no DB needed) ─────────────── */
@@ -357,6 +370,40 @@ const PlayHubPage = () => {
                     </div>
                   );
                 })()}
+              </div>
+            )}
+
+            {/* ── זירות מקצוע ── */}
+            {SUBJECT_ARENAS.length > 0 && (
+              <div className="bg-white rounded-3xl ring-1 ring-violet-100 p-5 shadow-[var(--shadow-card)]">
+                <h3 className="text-[15px] font-bold text-foreground text-end mb-3">זירות מקצוע</h3>
+                <div className="space-y-3">
+                  {SUBJECT_ARENAS.map((a) => (
+                    <div key={a.id} className="bg-gradient-to-b from-violet-50/40 to-white rounded-2xl ring-1 ring-violet-100/80 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 ring-1 ring-indigo-200/50 flex items-center justify-center shrink-0">
+                          <Gamepad2 className="h-6 w-6 text-indigo-600" strokeWidth={2} />
+                        </div>
+                        <div className="flex-1 min-w-0 text-end">
+                          <h4 className="text-[14.5px] font-bold text-foreground leading-tight">
+                            {a.subject} — {a.title}
+                          </h4>
+                          <p className="text-[12px] text-foreground/70 mt-1 leading-relaxed">{a.sub}</p>
+                          <span className="inline-block text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full mt-2">
+                            {a.note}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => navigate(a.path)}
+                        className="mt-4 w-full inline-flex items-center justify-center gap-2 bg-gradient-to-l from-indigo-500 to-violet-600 hover:brightness-110 text-white text-[13.5px] font-bold px-5 py-2.5 rounded-2xl shadow-[0_10px_24px_-12px_rgba(90,80,220,0.55)] transition-all hover:scale-[1.01]"
+                      >
+                        <Gamepad2 className="h-3.5 w-3.5" strokeWidth={2.4} />
+                        לזירה
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

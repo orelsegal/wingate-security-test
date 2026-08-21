@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { BookOpen, ChevronLeft, ScrollText, Landmark } from "lucide-react";
+import { BookOpen, ChevronLeft, ScrollText, Landmark, Gamepad2 } from "lucide-react";
 import { ARCS, TANAKH_UNITS, MOVES, LEGS, type TanakhUnit, type UnitState } from "@/tanakh/tanakhData";
 
 /**
@@ -111,13 +111,23 @@ const TanakhRoadmapPage = () => {
             עמוד השדרה: {LEGS.map(l => `${l.icon} ${l.title}`).join("  ·  ")}
           </p>
 
-          <button
-            onClick={() => navigate(`${base}/unit/1`)}
-            className="mt-5 inline-flex items-center gap-2 text-[14px] font-bold text-white bg-[hsl(232,45%,32%)] hover:bg-[hsl(232,45%,26%)] px-6 py-3 rounded-full shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(232,45%,45%)]"
-          >
-            להתחלת המסע · יחידה 1
-            <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
-          </button>
+          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+            <button
+              onClick={() => navigate(`${base}/unit/1`)}
+              className="inline-flex items-center gap-2 text-[14px] font-bold text-white bg-[hsl(232,45%,32%)] hover:bg-[hsl(232,45%,26%)] px-6 py-3 rounded-full shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(232,45%,45%)]"
+            >
+              להתחלת המסע · יחידה 1
+              <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
+            </button>
+            {/* זירת המשחקים — תרגול קצר על חומר המסלול, לא תחליף ליחידות */}
+            <button
+              onClick={() => navigate(`${base}/arena`)}
+              className="inline-flex items-center gap-2 text-[13.5px] font-bold text-[hsl(232,45%,32%)] bg-white border border-[hsl(232,25%,80%)] hover:bg-[hsl(232,40%,97%)] px-5 py-3 rounded-full shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(232,45%,45%)]"
+            >
+              <Gamepad2 className="h-4 w-4" strokeWidth={2} />
+              זירת המשחקים
+            </button>
+          </div>
         </header>
 
         {/* ── arc A: creation, light out of chaos ── */}
