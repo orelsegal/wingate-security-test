@@ -288,3 +288,27 @@
 @media (prefers-reduced-motion: reduce) {
   .trd * { transition: none !important; animation: none !important; }
 }
+
+/* ── לוח ההחלטה של המורה ──────────────────────────────────────────────
+   פריסה בלבד. הצבעים, הכפתורים והטיפוגרפיה הם אלה שכבר קיימים בקובץ. */
+.trd-actions-panel { display: grid; gap: .9rem; margin-top: 1.1rem; }
+.trd-grade-row { display: grid; gap: .35rem; }
+.trd-grade-row label {
+  font-size: .85rem; font-weight: 700; color: var(--ink-2);
+  display: flex; align-items: baseline; gap: .5rem;
+}
+.trd-threshold-hint { font-weight: 400; font-size: .78rem; color: var(--ink-3); opacity: .8; }
+.trd-grade-row input,
+.trd-grade-row textarea {
+  font: inherit; font-size: .92rem; color: var(--ink-1);
+  background: var(--paper); border: 1px solid var(--edge); border-radius: 10px;
+  padding: .55rem .7rem; width: 100%; resize: vertical;
+}
+.trd-grade-row input:focus-visible,
+.trd-grade-row textarea:focus-visible { outline: 2px solid var(--clay); outline-offset: 1px; }
+.trd-below-note, .trd-action-error {
+  margin: 0; font-size: .85rem; color: var(--ink-2);
+  display: flex; align-items: center; gap: .4rem;
+}
+.trd-action-btns { display: flex; flex-wrap: wrap; gap: .6rem; }
+.trd-action-btns .trd-btn[disabled] { opacity: .5; cursor: not-allowed; }

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Inbox, AlertTriangle, FileText, RefreshCw, ShieldOff } from "lucide-react";
+import { Loader2, Inbox, AlertTriangle, FileText, RefreshCw, ShieldOff, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionInbox, type InboxRow } from "@/hooks/useSubmissionInbox";
+import ReviewActions, { type ReviewOutcome } from "@/components/ReviewActions";
 import "@/styles/teacher-review-demo.css";
 
 /** רק תפקידים שבודקים הגשות. RLS נשארת שכבת האבטחה; זה guard של UX,
@@ -12,8 +13,12 @@ const ALLOWED_ROLES = ["teacher", "admin", "developer"] as const;
 /**
  * /teacher-review — תיבת ההגשות האמיתית.
  *
- * קוראת מ-submissions דרך RLS בלבד. אין נתוני דמה, אין AI, ואין עדיין
- * אישור או החזרה לתיקון: המסך הזה קורא, ולא כותב.
+ * קוראת מ-submissions דרך RLS בלבד. אין נתוני דמה ואין AI.
+ *
+ * ההחלטה של המורה נעשית כאן, במצב "decision": אישור עובר דרך
+ * approve_submission ואינו נושא ציון, והחזרה לתיקון עוברת דרך
+ * return_for_revision. בשני המקרים משוב הוא חובה, והשרת הוא זה שאוכף
+ * גם את ההרשאה וגם את המעבר בין המצבים. AI אינו מאשר ואינו מחזיר.
  *
  * /teacher-review-demo נשאר כפי שהוא, במסך נפרד, להצגה.
  */
@@ -55,6 +60,7 @@ export default function TeacherReviewInboxPage() {
   // enabled=false — ה-hook אינו יורה כלל למשתמש לא מורשה.
   const { data, isLoading, isError, refetch, isFetching } = useSubmissionInbox(allowed);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [done, setDone] = useState<{ id: string; name: string; outcome: ReviewOutcome } | null>(null);
 
   if (!allowed) {
     return (
@@ -90,10 +96,25 @@ export default function TeacherReviewInboxPage() {
           <p className="trd-eyebrow">אקדמיית וינגייט</p>
           <h1>הגשות לבדיקה</h1>
           <p>
-            ההגשות שהתלמידות שלך מסרו וממתינות לבדיקה. המסך קורא בלבד:
-            אישור והחזרה לתיקון עדיין לא מחוברים.
+            ההגשות שהתלמידות שלך מסרו וממתינות לבדיקה. פתיחת הגשה מציגה את
+            התשובה שנמסרה, ומשם אפשר לאשר או להחזיר לתיקון. בשני המקרים
+            נדרשת הערה לתלמידה.
           </p>
         </header>
+
+        {/* ── מה נעשה זה עתה. יושב מעל הרשימה בכוונה: אחרי החלטה השורה
+             יוצאת מהתור, וההודעה חייבת לשרוד את היעלמותה ── */}
+        {done && (
+          <p className="trd-result approved" role="status" aria-live="polite">
+            <CheckCircle2 size={17} aria-hidden="true" />
+            <span>
+              <b>{done.outcome.kind === "approved" ? "היחידה אושרה" : "הוחזרה לתיקון"}</b>
+              {done.outcome.kind === "approved"
+                ? `${done.name} תראה את האישור ואת ההערה שכתבת.`
+                : `${done.name} תראה את הסיבה שכתבת ותוכל להגיש מחדש.`}
+            </span>
+          </p>
+        )}
 
         {/* ── טעינה ── */}
         {isLoading && (
@@ -164,7 +185,10 @@ export default function TeacherReviewInboxPage() {
                     type="button"
                     className="trd-row"
                     aria-current={selectedId === r.id}
-                    onClick={() => setSelectedId(r.id === selectedId ? null : r.id)}
+                    onClick={() => {
+                      setDone(null);
+                      setSelectedId(r.id === selectedId ? null : r.id);
+                    }}
                   >
                     <span className="trd-avatar" aria-hidden="true">
                       {(r.student?.full_name ?? "?").trim()[0]}
@@ -233,9 +257,20 @@ export default function TeacherReviewInboxPage() {
               </div>
             </div>
 
-            <p className="trd-empty" style={{ textAlign: "start", paddingInline: 0 }}>
-              אישור והחזרה לתיקון עדיין אינם מחוברים במסך הזה.
-            </p>
+            <ReviewActions
+              submissionId={selected.id}
+              revision={selected.revision}
+              mode="decision"
+              onDone={(outcome) => {
+                setDone({
+                  id: selected.id,
+                  name: selected.student?.full_name ?? "התלמידה",
+                  outcome,
+                });
+                setSelectedId(null);
+                void refetch();
+              }}
+            />
           </section>
         )}
       </div>
