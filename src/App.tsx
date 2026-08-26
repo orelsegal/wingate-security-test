@@ -78,6 +78,8 @@ const BlitzBuilderPage           = lazy(() => import("./pages/BlitzBuilderPage")
 const DailyChallengePage         = lazy(() => import("./pages/DailyChallengePage"));
 const DailyChallengeAdminPage    = lazy(() => import("./pages/DailyChallengeAdminPage"));
 const NotFound                   = lazy(() => import("./pages/NotFound"));
+// "פלוס" — אפליקציה עצמאית (חינוך פיננסי לנוער), שמירה מקומית בלבד, ללא auth
+const PlusApp                    = lazy(() => import("./plus/PlusApp"));
 
 // ── Shared route-level loading fallback ─────────────────────────────────────
 import OlympicLoader from "@/components/OlympicLoader";
@@ -92,7 +94,28 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
+/* "פלוס" רצה מבודדת לחלוטין: בלי AuthProvider ובלי שאר ה-providers של מסלול,
+   כדי שפתיחת /plus לא תיצור שום קריאה ל-Supabase או לשירות חיצוני אחר.
+   הבידוד נעשה לפי הנתיב בזמן טעינת העמוד — שאר האפליקציה לא מושפעת. */
+const isPlusPath = () =>
+  typeof window !== "undefined" && window.location.pathname.startsWith("/plus");
+
+const PlusStandalone = () => (
+  <ErrorBoundary>
+    <BrowserRouter>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/plus/*" element={<PlusApp />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  </ErrorBoundary>
+);
+
+const App = () =>
+  isPlusPath() ? <PlusStandalone /> : <MainApp />;
+
+const MainApp = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
@@ -109,6 +132,7 @@ const App = () => (
             <Route path="/login"          element={<LoginPage />} />
             <Route path="/onboarding"     element={<OnboardingPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/plus/*"         element={<PlusApp />} />
 
             {/* ── Full-screen protected (no AppLayout) ───────── */}
             <Route path="/admin/builder"  element={<ProtectedRoute><AdminBuilderPage /></ProtectedRoute>} />
