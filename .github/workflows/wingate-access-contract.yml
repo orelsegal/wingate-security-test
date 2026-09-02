@@ -1,0 +1,46 @@
+name: Wingate access contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20260902150000_wingate_provision_student.sql"
+      - "supabase/tests/wingate_provision_stub.sql"
+      - "supabase/tests/wingate_provision_student_test.sql"
+      - ".github/workflows/wingate-access-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wingate_contract
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d wingate_contract"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGDATABASE: wingate_contract
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create focused schema
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/wingate_provision_stub.sql
+      - name: Apply canonical bridge migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20260902150000_wingate_provision_student.sql
+      - name: Verify behavior and permissions
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/wingate_provision_student_test.sql
