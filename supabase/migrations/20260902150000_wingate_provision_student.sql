@@ -90,7 +90,7 @@ begin
 
   -- One transaction-level lock per external class prevents two first logins
   -- from creating parallel groups before either mapping row exists.
-  perform pg_advisory_xact_lock(hashtextextended(v_app_id || E'\000' || v_class_id, 0));
+  perform pg_advisory_xact_lock(hashtextextended(v_app_id || chr(31) || v_class_id, 0));
 
   select weg.group_id, weg.teacher_user_id
     into v_group, v_existing_teacher
